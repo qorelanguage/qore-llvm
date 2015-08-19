@@ -1,0 +1,20 @@
+#Out-of-source build
+/build
+
+#In-source build - cmake
+/bin
+/CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+
+#In-source build - ninja
+/.ninja*
+build.ninja
+rules.ninja
+
+#In-source build - make
+Makefile
+
+#Eclipse
+/.project
+/.cproject
