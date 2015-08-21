@@ -1,42 +1,55 @@
 %{
 #include <math.h>
 #include <stdio.h>
+#include <string>
+#include <memory>
+
+void yyerror(const char *msg);
+int yylex(void);
+
+class Program;
+extern std::unique_ptr<Program> ROOT;
+
 %}
 
 %code requires {
-#define YYSTYPE double
-
-void yyerror(const char *msg);
-
-#ifdef __cplusplus
-extern "C"
-#endif 
-int yylex(void);
-
+#include "ast.h"
 }
 
-%token NUM
-%left '-' '+'
-%left '*' '/'
-%left NEG
-%right '^'
+%union {
+    int number;
+    char *string;
+    Expression *expression;
+    Statement *statement;
+    Program *program;
+}
+
+%token <number> NUMBER
+%token <string> STRING
+%token <string> IDENTIFIER
+%type <expression> expression assignment
+%type <statement> statement
+%type <program> program
 
 %%
-input:    /* empty string */
-        | input line
-;
+program
+    : /* empty string */            { ROOT = std::unique_ptr<Program>($$ = new Program()); }
+    | program statement             { $$ = $1->add($2); }
+    ;
 
-line:     '\n'
-        | exp '\n'  { printf ("\t%.10g\n", $1); }
-;
+statement
+    : ';'
+    | assignment ';'                { $$ = new ExpressionStatement($1); }
+    ;
 
-exp:      NUM                { $$ = $1;         }
-        | exp '+' exp        { $$ = $1 + $3;    }
-        | exp '-' exp        { $$ = $1 - $3;    }
-        | exp '*' exp        { $$ = $1 * $3;    }
-        | exp '/' exp        { $$ = $1 / $3;    }
-        | '-' exp  %prec NEG { $$ = -$2;        }
-        | exp '^' exp        { $$ = pow ($1, $3); }
-        | '(' exp ')'        { $$ = $2;         }
-;
+assignment
+    : IDENTIFIER '=' expression     { $$ = new Assignment($1, $3); }
+    ;
+
+expression
+    : IDENTIFIER                    { $$ = new VariableLoadExpression($1); }
+    | NUMBER                        { $$ = new IntegerLiteral($1); }
+    | STRING                        { $$ = new StringLiteral($1); }
+    | assignment                    { $$ = $1; }
+    ;
 %%

@@ -5,13 +5,10 @@
 
 %option noyywrap
 
-DIGIT    [0-9]
-ID       [a-z][a-z0-9]*
-
 %%
-{DIGIT}+          { yylval = atof(yytext); return NUM; }
-"+"|"-"|"*"|"/"   { return yytext[0]; }
-"("|")"           { return yytext[0]; }
-[\n]              { return '\n'; }
-[ ]               { }
+[0-9]+              { yylval.number = atoi(yytext); return NUMBER; }
+[a-z][a-z0-9]*      { yylval.string = strdup(yytext); return IDENTIFIER; }
+\"[^\"]*\"          { yylval.string = strdup(yytext + 1); yylval.string[strlen(yylval.string)-1] = 0; return STRING; }
+"="|";"             { return yytext[0]; }
+[ \t\r\n]           { }
 %%

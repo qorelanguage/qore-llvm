@@ -2,7 +2,7 @@
 /build-*
 
 #In-source build - generated
-tools/driver/lexer.c
+tools/driver/lexer.cpp
 tools/driver/parser.cpp
 tools/driver/parser.hpp
 
@@ -23,3 +23,4 @@ Makefile
 #Eclipse
 /.project
 /.cproject
+/.settings/
