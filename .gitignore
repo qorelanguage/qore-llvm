@@ -1,5 +1,10 @@
 #Out-of-source build
-/build
+/build-*
+
+#In-source build - generated
+tools/driver/lexer.c
+tools/driver/parser.cpp
+tools/driver/parser.hpp
 
 #In-source build - cmake
 /bin
