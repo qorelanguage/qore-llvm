@@ -21,6 +21,7 @@ extern std::unique_ptr<Program> ROOT;
     char *string;
     Expression *expression;
     Statement *statement;
+    ProgramBuilder *programBuilder;
     Program *program;
 }
 
@@ -29,12 +30,17 @@ extern std::unique_ptr<Program> ROOT;
 %token <string> IDENTIFIER
 %type <expression> expression assignment
 %type <statement> statement
+%type <programBuilder> statements
 %type <program> program
 
 %%
 program
-    : /* empty string */            { ROOT = std::unique_ptr<Program>($$ = new Program()); }
-    | program statement             { $$ = $1->add($2); }
+    : statements                    { ROOT = std::unique_ptr<Program>($1->build()); delete $1; }
+    ;
+
+statements
+    : /* empty string */            { $$ = new ProgramBuilder(); }
+    | statements statement          { $$ = $1->addStatement($2); }
     ;
 
 statement
