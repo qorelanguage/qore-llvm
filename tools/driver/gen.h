@@ -15,23 +15,32 @@ class CodeGenVisitor : public Visitor {
 
 public:
     CodeGenVisitor() {
-        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), {llvm::Type::getInt32Ty(ctx)}, false);
-        printFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print", nullptr);
-        ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), {llvm::Type::getInt8PtrTy(ctx)}, false);
-        printStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print_str", nullptr);
-        module->getFunctionList().push_back(printFunction);
-        module->getFunctionList().push_back(printStrFunction);
+        qvStruct = llvm::StructType::create(ctx, "QoreValue");
+        qvStruct->setBody(llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), nullptr);
+        llvm::Type* a[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
+        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), a, false);
+        printQvFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print_qv", nullptr);
+        ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt64Ty(ctx)}, false);
+        makeIntFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_int", nullptr);
+        ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt8PtrTy(ctx)}, false);
+        makeStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_str", nullptr);
+
+        module->getFunctionList().push_back(printQvFunction);
+        module->getFunctionList().push_back(makeIntFunction);
+        module->getFunctionList().push_back(makeStrFunction);
     }
 
     R visit(const class IntegerLiteral *e) override {
-        return llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), e->getValue(), true);
+        auto c = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx), e->getValue(), true);
+        return builder.CreateCall(makeIntFunction, c);
     }
 
     R visit(const class StringLiteral *e) override {
         llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->getValue(), true);
         llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
         gv->setUnnamedAddr(true);
-        return builder.CreateConstGEP2_32(gv, 0, 0);
+        auto c = builder.CreateConstGEP2_32(gv, 0, 0);
+        return builder.CreateCall(makeStrFunction, c);
     }
 
     R visit(const class VariableLoadExpression *e) override {
@@ -52,11 +61,10 @@ public:
 
     R visit(const class PrintStatement *s) override {
         llvm::Value *value = static_cast<llvm::Value*>(s->getExpression()->accept(*this));
-        if (value->getType()->isPointerTy()) {
-            builder.CreateCall(printStrFunction, value);
-        } else {
-            builder.CreateCall(printFunction, value);
-        }
+        auto tag = builder.CreateExtractValue(value, {0}, "qv.tag");
+        auto val = builder.CreateExtractValue(value, {1}, "qv.val");
+        llvm::Value* args[] = {tag, val};
+        builder.CreateCall(printQvFunction, args);
         return nullptr;
     }
 
@@ -77,8 +85,10 @@ private:
     llvm::IRBuilder<> builder{ctx};
     std::map<std::string, llvm::AllocaInst*> variables;
 
-    llvm::Function *printFunction;
-    llvm::Function *printStrFunction;
+    llvm::StructType *qvStruct;
+    llvm::Function *printQvFunction;
+    llvm::Function *makeIntFunction;
+    llvm::Function *makeStrFunction;
 };
 
 #endif /* TOOLS_DRIVER_GEN_H_ */

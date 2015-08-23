@@ -22,6 +22,7 @@ llvm_map_components_to_libnames(llvm_libs core mcjit native)
 
 target_link_libraries(qore-llvm
     common
+    runtime
     ${llvm_libs}
 )
 
