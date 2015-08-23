@@ -17,15 +17,21 @@ public:
     CodeGenVisitor() {
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), {llvm::Type::getInt32Ty(ctx)}, false);
         printFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print", nullptr);
+        ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), {llvm::Type::getInt8PtrTy(ctx)}, false);
+        printStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print_str", nullptr);
+        module->getFunctionList().push_back(printFunction);
+        module->getFunctionList().push_back(printStrFunction);
     }
 
     R visit(const class IntegerLiteral *e) override {
         return llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), e->getValue(), true);
     }
 
-    R visit(const class StringLiteral *) override {
-        //TODO
-        return llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 0, true);
+    R visit(const class StringLiteral *e) override {
+        llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->getValue(), true);
+        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
+        gv->setUnnamedAddr(true);
+        return builder.CreateConstGEP2_32(gv, 0, 0);
     }
 
     R visit(const class VariableLoadExpression *e) override {
@@ -46,14 +52,15 @@ public:
 
     R visit(const class PrintStatement *s) override {
         llvm::Value *value = static_cast<llvm::Value*>(s->getExpression()->accept(*this));
-        builder.CreateCall(printFunction, value);
+        if (value->getType()->isPointerTy()) {
+            builder.CreateCall(printStrFunction, value);
+        } else {
+            builder.CreateCall(printFunction, value);
+        }
         return nullptr;
     }
 
     R visit(const class Program *p) override {
-        llvm::Module *module{new llvm::Module("Q", ctx)};
-        module->getFunctionList().push_back(printFunction);
-
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
         llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
@@ -66,10 +73,12 @@ public:
 
 private:
     llvm::LLVMContext &ctx{llvm::getGlobalContext()};
+    llvm::Module *module{new llvm::Module("Q", ctx)};
     llvm::IRBuilder<> builder{ctx};
     std::map<std::string, llvm::AllocaInst*> variables;
 
     llvm::Function *printFunction;
+    llvm::Function *printStrFunction;
 };
 
 #endif /* TOOLS_DRIVER_GEN_H_ */
