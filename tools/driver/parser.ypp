@@ -25,6 +25,7 @@ extern std::unique_ptr<Program> ROOT;
     Program *program;
 }
 
+%token KW_PRINT
 %token <number> NUMBER
 %token <string> STRING
 %token <string> IDENTIFIER
@@ -46,6 +47,7 @@ statements
 statement
     : ';'
     | assignment ';'                { $$ = new ExpressionStatement($1); }
+    | KW_PRINT expression ';'       { $$ = new PrintStatement($2); }
     ;
 
 assignment

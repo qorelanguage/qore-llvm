@@ -14,6 +14,11 @@
 class CodeGenVisitor : public Visitor {
 
 public:
+    CodeGenVisitor() {
+        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), {llvm::Type::getInt32Ty(ctx)}, false);
+        printFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print", nullptr);
+    }
+
     R visit(const class IntegerLiteral *e) override {
         return llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), e->getValue(), true);
     }
@@ -39,13 +44,22 @@ public:
         return s->getExpression()->accept(*this);
     }
 
+    R visit(const class PrintStatement *s) override {
+        llvm::Value *value = static_cast<llvm::Value*>(s->getExpression()->accept(*this));
+        builder.CreateCall(printFunction, value);
+        return nullptr;
+    }
+
     R visit(const class Program *p) override {
         llvm::Module *module{new llvm::Module("Q", ctx)};
+        module->getFunctionList().push_back(printFunction);
+
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
-        llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "", module);
+        llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
         builder.SetInsertPoint(bb);
         p->forEachStatement([this](const Statement *s){s->accept(*this);});
+        builder.CreateRetVoid();
         llvm::verifyFunction(*f);
         return module;
     }
@@ -54,6 +68,8 @@ private:
     llvm::LLVMContext &ctx{llvm::getGlobalContext()};
     llvm::IRBuilder<> builder{ctx};
     std::map<std::string, llvm::AllocaInst*> variables;
+
+    llvm::Function *printFunction;
 };
 
 #endif /* TOOLS_DRIVER_GEN_H_ */

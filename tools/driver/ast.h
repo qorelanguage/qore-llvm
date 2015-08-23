@@ -17,6 +17,7 @@ public:
     virtual R visit(const class VariableLoadExpression *) = 0;
     virtual R visit(const class Assignment *) = 0;
     virtual R visit(const class ExpressionStatement *) = 0;
+    virtual R visit(const class PrintStatement *) = 0;
     virtual R visit(const class Program *) = 0;
 };
 
@@ -191,6 +192,29 @@ public:
 protected:
     std::ostream &out(std::ostream &os) const override {
         return os << "ExpressionStatement(" << expression.get() << ")";
+    }
+
+private:
+    std::unique_ptr<Expression> expression;
+};
+
+class PrintStatement : public Statement {
+
+public:
+    PrintStatement(Expression *expression) : expression(expression) {
+    }
+
+    Visitor::R accept(Visitor &v) const override {
+        return v.visit(this);
+    }
+
+    const Expression *getExpression() const {
+        return expression.get();
+    }
+
+protected:
+    std::ostream &out(std::ostream &os) const override {
+        return os << "PrintStatement(" << expression.get() << ")";
     }
 
 private:

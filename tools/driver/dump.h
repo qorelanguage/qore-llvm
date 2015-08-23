@@ -38,6 +38,12 @@ public:
         return nullptr;
     }
 
+    R visit(const class PrintStatement *s) override {
+        std::cout << i() << "PrintStatement: ";
+        s->getExpression()->accept(*this);
+        return nullptr;
+    }
+
     R visit(const class Program *program) override {
         std::cout << "Program {" << std::endl;
         ++indent;
