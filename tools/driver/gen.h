@@ -1,7 +1,7 @@
 #ifndef TOOLS_DRIVER_GEN_H_
 #define TOOLS_DRIVER_GEN_H_
 
-#include "ast.h"
+#include "qore/ast/ast.h"
 
 #include "llvm/ADT/APSInt.h"
 #include "llvm/IR/DataLayout.h"
@@ -24,7 +24,7 @@ public:
         makeIntFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_int", nullptr);
         ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt8PtrTy(ctx)}, false);
         makeStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_str", nullptr);
-
+//TODO declare these exactly as clang does, otherwise LTO does not work
         module->getFunctionList().push_back(printQvFunction);
         module->getFunctionList().push_back(makeIntFunction);
         module->getFunctionList().push_back(makeStrFunction);

@@ -2,9 +2,9 @@
 /build-*
 
 #In-source build - generated
-tools/driver/lexer.cpp
-tools/driver/parser.cpp
-tools/driver/parser.hpp
+lib/parser/lexer.cpp
+lib/parser/parser.cpp
+lib/parser/parser.hpp
 
 #In-source build - cmake
 /bin

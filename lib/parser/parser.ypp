@@ -13,7 +13,7 @@ extern std::unique_ptr<Program> ROOT;
 %}
 
 %code requires {
-#include "ast.h"
+#include "qore/ast/ast.h"
 }
 
 %union {

@@ -2,6 +2,7 @@
 #define TOOLS_DUMP_H_
 
 #include <iostream>
+#include "qore/ast/ast.h"
 
 class DumpVisitor : public Visitor {
 

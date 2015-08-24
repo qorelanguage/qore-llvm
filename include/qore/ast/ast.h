@@ -1,5 +1,5 @@
-#ifndef TOOLS_DRIVER_AST_H_
-#define TOOLS_DRIVER_AST_H_
+#ifndef INCLUDE_QORE_AST_AST_H_
+#define INCLUDE_QORE_AST_AST_H_
 
 #include <cstring>
 #include <iostream>
@@ -266,4 +266,4 @@ private:
     std::vector<std::unique_ptr<Statement>> body;
 };
 
-#endif /* TOOLS_DRIVER_AST_H_ */
+#endif /* INCLUDE_QORE_AST_AST_H_ */

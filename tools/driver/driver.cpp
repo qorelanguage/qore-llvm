@@ -1,35 +1,26 @@
 #include <iostream>
 #include "qore/common/common.h"
-#include "parser.hpp"
+#include "qore/parser/parser.h"
+#include "qore/runtime/runtime.h"
 #include "dump.h"
 #include "gen.h"
-#include "qore/runtime/runtime.h"
 
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "llvm/Support/TargetSelect.h"
 
-void yyerror(const char *msg) {
-    printf("Error: %s\n", msg);
-}
-
-void yy_scan_string(const char *yy_str);
-
-std::unique_ptr<Program> ROOT;
-
 int main() {
     //TODO force export of runtime symbols
     QoreValue qv = make_int(123);
     print_qv(qv);
 
-    yy_scan_string(R"(
+    std::unique_ptr<Program> ROOT = parse(R"(
 
 print 5;
 print "Hello, world!";
 
 )");
-    yyparse();
 
     std::cout << "Program:" << std::endl;
     ROOT->forEachStatement([](const Statement *s){ std::cout << "  " << s << std::endl; });
