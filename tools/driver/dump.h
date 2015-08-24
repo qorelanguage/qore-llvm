@@ -33,6 +33,11 @@ public:
         return nullptr;
     }
 
+    R visit(const class EmptyStatement *) override {
+        std::cout << i() << "EmptyStatement" << std::endl;
+        return nullptr;
+    }
+
     R visit(const class ExpressionStatement *s) override {
         std::cout << i() << "ExpressionStatement: ";
         s->getExpression()->accept(*this);

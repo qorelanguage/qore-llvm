@@ -16,6 +16,7 @@ public:
     virtual R visit(const class StringLiteral *) = 0;
     virtual R visit(const class VariableLoadExpression *) = 0;
     virtual R visit(const class Assignment *) = 0;
+    virtual R visit(const class EmptyStatement *) = 0;
     virtual R visit(const class ExpressionStatement *) = 0;
     virtual R visit(const class PrintStatement *) = 0;
     virtual R visit(const class Program *) = 0;
@@ -175,6 +176,22 @@ public:
     Statement &operator=(Statement &&) = delete;
 };
 
+class EmptyStatement : public Statement {
+
+public:
+    EmptyStatement() {
+    }
+
+    Visitor::R accept(Visitor &v) const override {
+        return v.visit(this);
+    }
+
+protected:
+    std::ostream &out(std::ostream &os) const override {
+        return os << "EmptyStatement";
+    }
+};
+
 class ExpressionStatement : public Statement {
 
 public:
@@ -235,6 +252,11 @@ public:
         for (const auto &s : body) {
             f(s.get());
         }
+    }
+
+//FIXME temp hack for interactive mode
+    std::unique_ptr<Statement> getSingleStatement() {
+        return body.empty() ? std::unique_ptr<Statement>(new EmptyStatement()) : std::move(body[0]);
     }
 
 protected:

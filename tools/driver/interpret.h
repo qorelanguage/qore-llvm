@@ -23,13 +23,16 @@ public:
     R visit(const class Assignment *) override {
         return nullptr;
     }
+    R visit(const class EmptyStatement *) override {
+        return nullptr;
+    }
     R visit(const class ExpressionStatement *) override {
         return nullptr;
     }
     R visit(const class PrintStatement *s) override {
         QoreValue *qv = static_cast<QoreValue*>(s->getExpression()->accept(*this));
         print_qv(*qv);
-        return nullptr;
+        return qv;
     }
     R visit(const class Program *p) override {
         p->forEachStatement([this](const Statement *s){s->accept(*this);});

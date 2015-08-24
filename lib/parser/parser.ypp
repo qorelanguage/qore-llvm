@@ -45,7 +45,7 @@ statements
     ;
 
 statement
-    : ';'
+    : ';'                           { $$ = new EmptyStatement(); }
     | assignment ';'                { $$ = new ExpressionStatement($1); }
     | KW_PRINT expression ';'       { $$ = new PrintStatement($2); }
     ;

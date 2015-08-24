@@ -22,7 +22,6 @@
 #endif
 
 //TODO napespaces
-//TODO interactive interpreter
 
 int main(int argc, char *argv[]) {
     int opt;
@@ -70,9 +69,23 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (!dumpAst && !interpret && !compileLl && !compileBc && !jit) {
+        interpret = true;
+    }
+
     if (optind >= argc) {
-        std::cerr << "Missing filename" << std::endl;
-        return -1;
+        if (dumpAst || compileLl || compileBc || jit) {
+            std::cerr << "Interactive mode supports -i only" << std::endl;
+            return -1;
+        }
+
+        InterpretVisitor iv;
+        while (true) {
+            std::unique_ptr<Statement> stmt = parseStatement();
+            if (stmt && !stmt->accept(iv)) {
+                return 0;
+            }
+        }
     }
 
     std::string outBase = outName.length() == 0 ? argv[optind] : outName;

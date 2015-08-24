@@ -53,6 +53,10 @@ public:
         return val;
     }
 
+    R visit(const class EmptyStatement *) override {
+        return nullptr;
+    }
+
     R visit(const class ExpressionStatement *s) override {
         return s->getExpression()->accept(*this);
     }

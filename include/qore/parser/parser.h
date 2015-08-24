@@ -6,5 +6,6 @@
 #include "qore/ast/ast.h"
 
 std::unique_ptr<Program> parse(const std::string &source);
+std::unique_ptr<Statement> parseStatement();
 
 #endif /* INCLUDE_QORE_PARSER_PARSER_H_ */

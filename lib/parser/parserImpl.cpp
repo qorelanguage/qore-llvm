@@ -2,6 +2,7 @@
 #include "parser.hpp"
 
 std::unique_ptr<Program> ROOT;
+bool lexNlIsEof;
 
 void yy_scan_string(const char *yy_str);
 
@@ -10,7 +11,18 @@ void yyerror(const char *msg) {
 }
 
 std::unique_ptr<Program> parse(const std::string &source) {
+    lexNlIsEof = false;
     yy_scan_string(source.c_str());
-    yyparse();
+    if (yyparse()) {
+        return nullptr;
+    }
     return std::move(ROOT);
+}
+
+std::unique_ptr<Statement> parseStatement() {
+    lexNlIsEof = true;
+    if (yyparse()) {
+        return nullptr;
+    }
+    return ROOT->getSingleStatement();
 }
