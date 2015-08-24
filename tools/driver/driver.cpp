@@ -14,10 +14,12 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 
+#ifdef QORE_ENABLE_JIT
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "llvm/Support/TargetSelect.h"
+#endif
 
 //TODO napespaces
 //TODO interactive interpreter
@@ -46,8 +48,13 @@ int main(int argc, char *argv[]) {
                 compileBc = true;
                 break;
             case 'j':
+#ifndef QORE_ENABLE_JIT
+                std::cerr << "JIT support not built" << std::endl;
+                return -1;
+#else
                 jit = true;
                 break;
+#endif
             case 'o':
                 outName = optarg;
                 break;
@@ -115,6 +122,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
+#ifdef QORE_ENABLE_JIT
         if (jit) {
             llvm::InitializeNativeTarget();
             llvm::InitializeNativeTargetAsmPrinter();
@@ -135,6 +143,7 @@ int main(int argc, char *argv[]) {
                 jitTest();
             }
         }
+#endif
     }
     return 0;
 }

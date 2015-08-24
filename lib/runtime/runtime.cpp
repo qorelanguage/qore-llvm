@@ -4,10 +4,13 @@
 void print_qv(struct QoreValue qv) {
     switch (qv.tag) {
         case Tag::Int:
-            std::cout << "Qore Print: " << qv.intValue << std::endl;
+            printf("Qore Print: %li\n", qv.intValue);
+//XXX using std::cout prevents LTO from inlining this function
+//            std::cout << "Qore Print: " << qv.intValue << std::endl;
             break;
         case Tag::Str:
-            std::cout << "Qore Print: " << qv.strValue << std::endl;
+            printf("Qore Print: %s\n", qv.strValue);
+//            std::cout << "Qore Print: " << qv.strValue << std::endl;
             break;
     }
 }

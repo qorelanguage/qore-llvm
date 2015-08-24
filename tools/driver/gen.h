@@ -15,16 +15,14 @@ class CodeGenVisitor : public Visitor {
 
 public:
     CodeGenVisitor() {
-        qvStruct = llvm::StructType::create(ctx, "QoreValue");
-        qvStruct->setBody(llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), nullptr);
         llvm::Type* a[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
+        qvStruct = llvm::StructType::get(ctx, a, false);
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), a, false);
         printQvFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print_qv", nullptr);
         ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt64Ty(ctx)}, false);
         makeIntFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_int", nullptr);
         ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt8PtrTy(ctx)}, false);
         makeStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_str", nullptr);
-//TODO declare these exactly as clang does, otherwise LTO does not work
         module->getFunctionList().push_back(printQvFunction);
         module->getFunctionList().push_back(makeIntFunction);
         module->getFunctionList().push_back(makeStrFunction);
