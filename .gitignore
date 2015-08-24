@@ -5,6 +5,9 @@
 lib/parser/lexer.cpp
 lib/parser/parser.cpp
 lib/parser/parser.hpp
+tools/sandbox/*.bc
+tools/sandbox/*.o
+tools/sandbox/sandbox
 
 #In-source build - cmake
 /bin

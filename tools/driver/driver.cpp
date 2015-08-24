@@ -29,8 +29,9 @@ int main(int argc, char *argv[]) {
     bool compileLl = false;
     bool compileBc = false;
     bool jit = false;
+    std::string outName;
 
-    while ((opt = getopt(argc, argv, "dilbj")) != -1) {
+    while ((opt = getopt(argc, argv, "dilbjo:")) != -1) {
         switch (opt) {
             case 'd':
                 dumpAst = true;
@@ -47,8 +48,11 @@ int main(int argc, char *argv[]) {
             case 'j':
                 jit = true;
                 break;
+            case 'o':
+                outName = optarg;
+                break;
             default:
-                std::cerr << "Usage: " << argv[0] << " [-dilb] file" << std::endl;
+                std::cerr << "Usage: " << argv[0] << " [-dilb] [-o output] file" << std::endl;
                 std::cerr << "Options:" << std::endl;
                 std::cerr << "  -d  dump AST" << std::endl;
                 std::cerr << "  -i  interpret" << std::endl;
@@ -64,7 +68,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    std::string outBase = argv[optind];
+    std::string outBase = outName.length() == 0 ? argv[optind] : outName;
     auto i = outBase.find_last_of('.');
     if (i != std::string::npos) {
         outBase.erase(outBase.begin() + i, outBase.end());
