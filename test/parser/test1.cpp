@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "qore/runtime/runtime.h"
 
 class Turtle {
 public:
@@ -49,14 +50,10 @@ TEST(PainterTest, CanDrawSomething) {
 }                                             // #5
 
 TEST(PainterTestF, CanDrawSomething) {
-  MockTurtle turtle;                          // #2
-  EXPECT_CALL(turtle, PenUp())              // #3
-      .Times(AtLeast(1));
+    QoreValue qv = make_str("TEST");
 
-  Painter painter(&turtle);                   // #4
-
-  EXPECT_TRUE(painter.DrawCircle(0, 0, 10));
-}                                             // #5
+    EXPECT_EQ(Tag::Str, qv.tag);
+}
 
 int main(int argc, char** argv) {
   // The following line must be executed to initialize Google Mock
