@@ -31,6 +31,14 @@ cmake -G "Eclipse CDT4 - Ninja" .
 ```
 Then in Eclipse: File | Import... | General | Existing Projects into Workspace
 
+### Vagrant build environment
+
+```bash
+vagrant up
+vagrant ssh
+cd /vagrant/
+```
+
 ## Running
 
 ### Interactive
