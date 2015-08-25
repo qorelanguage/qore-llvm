@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Generates Local coverage report
+
+# lcov must be installed
+# run this script after running tests compiled with COVERAGE=ON
+# the output is in build-coverage/index.html
+
+lcov -c -d . -o coverage.info
+lcov -r coverage.info */ext/src/q* -o coverage.info
+lcov -r coverage.info c++* -o coverage.info
+lcov -r coverage.info */test/* -o coverage.info
+genhtml coverage.info -o build-coverage --highlight --demangle-cpp
+rm coverage.info
