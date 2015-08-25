@@ -33,6 +33,18 @@ public:
         return nullptr;
     }
 
+    R visit(const class BinaryExpression *e) override {
+        std::cout << "BinaryExpression {" << std::endl;
+        ++indent;
+        std::cout << i() << "left: ";
+        e->getLeft()->accept(*this);
+        std::cout << i() << "right: ";
+        e->getRight()->accept(*this);
+        --indent;
+        std::cout << i() << "}" << std::endl;
+        return nullptr;
+    }
+
     R visit(const class EmptyStatement *) override {
         std::cout << i() << "EmptyStatement" << std::endl;
         return nullptr;

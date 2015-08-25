@@ -16,6 +16,7 @@ public:
     virtual R visit(const class StringLiteral *) = 0;
     virtual R visit(const class VariableLoadExpression *) = 0;
     virtual R visit(const class Assignment *) = 0;
+    virtual R visit(const class BinaryExpression *) = 0;
     virtual R visit(const class EmptyStatement *) = 0;
     virtual R visit(const class ExpressionStatement *) = 0;
     virtual R visit(const class PrintStatement *) = 0;
@@ -161,6 +162,34 @@ protected:
 private:
     std::string varName;
     std::unique_ptr<Expression> value;
+};
+
+class BinaryExpression : public Expression {
+
+public:
+    BinaryExpression(Expression *left, Expression *right) : left(left), right(right) {
+    }
+
+    Visitor::R accept(Visitor &v) const override {
+        return v.visit(this);
+    }
+
+    const Expression *getLeft() const {
+        return left.get();
+    }
+
+    const Expression *getRight() const {
+        return right.get();
+    }
+
+protected:
+    std::ostream &out(std::ostream &os) const override {
+        return os << "BinaryExpression(" << left.get() << " + " << right.get() << ")";
+    }
+
+private:
+    std::unique_ptr<Expression> left;
+    std::unique_ptr<Expression> right;
 };
 
 class Statement : public AstNode {

@@ -23,9 +23,14 @@ public:
         makeIntFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_int", nullptr);
         ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt8PtrTy(ctx)}, false);
         makeStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_str", nullptr);
+        llvm::Type* qv2[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
+        ft = llvm::FunctionType::get(qvStruct, qv2, false);
+        evalAddFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "eval_add", nullptr);
+
         module->getFunctionList().push_back(printQvFunction);
         module->getFunctionList().push_back(makeIntFunction);
         module->getFunctionList().push_back(makeStrFunction);
+        module->getFunctionList().push_back(evalAddFunction);
     }
 
     R visit(const class IntegerLiteral *e) override {
@@ -51,6 +56,17 @@ public:
         builder.CreateStore(val, ai);
         variables[e->getVarName()] = ai;
         return val;
+    }
+
+    R visit(const class BinaryExpression *e) override {
+        llvm::Value *l = static_cast<llvm::Value*>(e->getLeft()->accept(*this));
+        llvm::Value *r = static_cast<llvm::Value*>(e->getRight()->accept(*this));
+        auto tagL = builder.CreateExtractValue(l, {0}, "l.tag");
+        auto valL = builder.CreateExtractValue(l, {1}, "l.val");
+        auto tagR = builder.CreateExtractValue(r, {0}, "r.tag");
+        auto valR = builder.CreateExtractValue(r, {1}, "r.val");
+        llvm::Value* args[] = {tagL, valL, tagR, valR};
+        return builder.CreateCall(evalAddFunction, args);
     }
 
     R visit(const class EmptyStatement *) override {
@@ -91,6 +107,7 @@ private:
     llvm::Function *printQvFunction;
     llvm::Function *makeIntFunction;
     llvm::Function *makeStrFunction;
+    llvm::Function *evalAddFunction;
 };
 
 #endif /* TOOLS_DRIVER_GEN_H_ */

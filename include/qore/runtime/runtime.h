@@ -16,8 +16,9 @@ struct QoreValue {
     };
 };
 
-extern "C" void print_qv(struct QoreValue qv);
-extern "C" struct QoreValue make_int(int64_t value);
-extern "C" struct QoreValue make_str(const char *value);
+extern "C" void print_qv(QoreValue qv);
+extern "C" QoreValue make_int(int64_t value);
+extern "C" QoreValue make_str(const char *value);
+extern "C" QoreValue eval_add(QoreValue l, QoreValue r);
 
 #endif /* INCLUDE_QORE_RUNTIME_RUNTIME_H_ */

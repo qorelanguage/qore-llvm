@@ -23,6 +23,13 @@ public:
     R visit(const class Assignment *) override {
         return nullptr;
     }
+    R visit(const class BinaryExpression *e) override {
+        QoreValue *l = static_cast<QoreValue*>(e->getLeft()->accept(*this));
+        QoreValue *r = static_cast<QoreValue*>(e->getRight()->accept(*this));
+        QoreValue *result = new QoreValue();
+        *result = eval_add(*l, *r);
+        return result;
+    }
     R visit(const class EmptyStatement *) override {
         return nullptr;
     }
