@@ -11,6 +11,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(include)
 
+option(COVERAGE "Compile with coverage info" ON)
+
+if(COVERAGE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif(COVERAGE)
+
 add_subdirectory(lib)
 add_subdirectory(tools)
 add_subdirectory(test)
