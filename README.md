@@ -1,5 +1,7 @@
 # qore-llvm
 
+[![Build Status](https://hq.qoretechnologies.com/jenkins/buildStatus/icon?job=qore-llvm)](https://hq.qoretechnologies.com/jenkins/job/qore-llvm/)
+
 ## Building
 
 ### Out-of-source build using ninja

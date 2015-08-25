@@ -27,3 +27,6 @@ Makefile
 /.project
 /.cproject
 /.settings/
+
+#Vagrant
+.vagrant/
