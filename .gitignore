@@ -22,6 +22,9 @@ rules.ninja
 
 #In-source build - make
 Makefile
+ext/
+test/Testing
+CTestTestfile.*
 
 #Eclipse
 /.project
