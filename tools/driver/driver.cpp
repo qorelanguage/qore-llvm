@@ -6,8 +6,10 @@
 #include "qore/parser/parser.h"
 #include "qore/runtime/runtime.h"
 #include "dump.h"
-#include "gen.h"
 #include "interpret.h"
+
+#ifdef QORE_USE_LLVM
+#include "gen.h"
 
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"
@@ -19,6 +21,8 @@
 #include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "llvm/Support/TargetSelect.h"
+#endif
+
 #endif
 
 //TODO napespaces
@@ -41,11 +45,21 @@ int main(int argc, char *argv[]) {
                 interpret = true;
                 break;
             case 'l':
+#ifndef QORE_USE_LLVM
+                std::cerr << "LLVM support not built" << std::endl;
+                return -1;
+#else
                 compileLl = true;
                 break;
+#endif
             case 'b':
+#ifndef QORE_USE_LLVM
+                std::cerr << "LLVM support not built" << std::endl;
+                return -1;
+#else
                 compileBc = true;
                 break;
+#endif
             case 'j':
 #ifndef QORE_ENABLE_JIT
                 std::cerr << "JIT support not built" << std::endl;
@@ -110,6 +124,7 @@ int main(int argc, char *argv[]) {
         root->accept(iv);
     }
 
+#ifdef QORE_USE_LLVM
     if (compileLl || compileBc || jit) {
         CodeGenVisitor cgv;
         std::unique_ptr<llvm::Module> module(static_cast<llvm::Module*>(root->accept(cgv)));
@@ -158,5 +173,6 @@ int main(int argc, char *argv[]) {
         }
 #endif
     }
+#endif
     return 0;
 }
