@@ -9,6 +9,10 @@ tools/sandbox/*.bc
 tools/sandbox/*.o
 tools/sandbox/sandbox
 
+#In-source build - doxygen
+/doc
+Doxyfile
+
 #In-source build - cmake
 /bin
 /CMakeCache.txt
