@@ -5,7 +5,7 @@ option(QORE_COVERAGE "Compile with coverage info" ON)
 option(QORE_USE_LLVM "Generate LLVM IR code" ON)
 option(QORE_ENABLE_JIT "Enable JIT (ignored when QORE_USE_LLVM is OFF)" ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -fvisibility=hidden")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
