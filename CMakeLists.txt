@@ -36,7 +36,7 @@ add_custom_target(cppcheck
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 add_custom_target(cppcheck-eclipse 
-    cppcheck ${CPP_CHECK_OPTIONS} --template='{file}\:{line}\: {severity}\: {id} - {message}' ${CPP_CHECK_FILES} 2>&1 | sed 's/style/info/'
+    cppcheck ${CPP_CHECK_OPTIONS} --template='{file}\:{line}\: {severity}\: {id} - {message}' ${CPP_CHECK_FILES} 2>&1 | sed 's/style/info/' | sed 's/information/info/'
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 

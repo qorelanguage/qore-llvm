@@ -7,6 +7,9 @@
 class DumpVisitor : public Visitor {
 
 public:
+    DumpVisitor() {
+    }
+
     R visit(const class IntegerLiteral *e) override {
         std::cout << "IntegerLiteral " << e->getValue() << std::endl;
         return nullptr;

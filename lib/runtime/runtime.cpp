@@ -26,7 +26,7 @@ QoreValue make_int(int64_t value) {
 QoreValue make_str(const char *value) {
     QoreValue qv;
     qv.tag = Tag::Str;
-    qv.strValue = value;
+    qv.strValue = strdup(value);    //TODO strdup
     return qv;
 }
 
@@ -45,5 +45,5 @@ QoreValue eval_add(QoreValue l, QoreValue r) {
     std::string str;
     append(str, l);
     append(str, r);
-    return make_str(strdup(str.c_str()));
+    return make_str(str.c_str());
 }

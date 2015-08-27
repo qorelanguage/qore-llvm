@@ -14,7 +14,7 @@ public:
     }
     R visit(const class StringLiteral *e) override {
         QoreValue *qv = new QoreValue();
-        *qv = make_str(strdup(e->getValue().c_str()));  //TODO strdup
+        *qv = make_str(e->getValue().c_str());
         return qv;
     }
     R visit(const class VariableLoadExpression *) override {
