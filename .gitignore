@@ -19,6 +19,9 @@ Doxyfile
 CMakeFiles
 cmake_install.cmake
 
+#In-source build - cppcheck
+cppcheck.xml
+
 #In-source build - ninja
 /.ninja*
 build.ninja

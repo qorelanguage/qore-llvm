@@ -29,6 +29,17 @@ if(DOXYGEN_FOUND)
     )
 endif(DOXYGEN_FOUND)
 
+set(CPP_CHECK_OPTIONS --enable=all -I include -I /usr/local/include --config-exclude=/usr -i parser.cpp -i lexer.cpp --inline-suppr --std=c++11)
+set(CPP_CHECK_FILES lib tools)
+add_custom_target(cppcheck
+    cppcheck ${CPP_CHECK_OPTIONS} --xml ${CPP_CHECK_FILES} 2> ${CMAKE_BINARY_DIR}/cppcheck.xml
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+add_custom_target(cppcheck-eclipse 
+    cppcheck ${CPP_CHECK_OPTIONS} --template='{file}\:{line}\: {severity}\: {id} - {message}' ${CPP_CHECK_FILES} 2>&1 | sed 's/style/info/'
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
 add_subdirectory(lib)
 add_subdirectory(tools)
 add_subdirectory(test)
