@@ -1,4 +1,3 @@
 add_library(common STATIC
-    common.cpp
+    logger.cpp
 )
-
