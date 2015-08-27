@@ -31,6 +31,26 @@
 #ifndef INCLUDE_QORE_COMMON_LOGGING_H_
 #define INCLUDE_QORE_COMMON_LOGGING_H_
 
+/**
+ * \brief Logs a message with custom location using QORE_LOG_COMPONENT as the component name.
+ * \param M the message to log
+ * \param FU the name of current function
+ * \param FI the name of the source file
+ * \param L the line number of the log message
+ */
+#define LOG_EX(M, FU, FI, L)        CLOG_EX(QORE_LOG_COMPONENT, M, FU, FI, L)
+
+/**
+ * \brief Logs a message using QORE_LOG_COMPONENT as the component name.
+ * \param M the message to log
+ */
+#define LOG(M)                      CLOG(QORE_LOG_COMPONENT, M)
+
+/**
+ * \brief Logs the entry and exit of a function using QORE_LOG_COMPONENT as the component name.
+ */
+#define LOG_FUNCTION()              CLOG_FUNCTION(QORE_LOG_COMPONENT)
+
 #ifdef QORE_LOGGING
 
 #include <sstream>
@@ -43,7 +63,7 @@
  * \param FI the name of the source file
  * \param L the line number of the log message
  */
-#define LOG_EX(C, M, FU, FI, L)                     \
+#define CLOG_EX(C, M, FU, FI, L)                    \
     ::qore::log::LoggerManager::get()->log(         \
             C,                                      \
             static_cast<std::ostringstream&>(       \
@@ -59,13 +79,13 @@
  * \param C the name of the component for filtering
  * \param M the message to log
  */
-#define LOG(C, M)           LOG_EX(C, M, __PRETTY_FUNCTION__, __FILE__, __LINE__);
+#define CLOG(C, M)          CLOG_EX(C, M, __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
 /**
  * \brief Logs the entry and exit of a function.
  * \param C the name of the component for filtering
  */
-#define LOG_FUNCTION(C)     ::qore::log::LogScope _(C, __PRETTY_FUNCTION__, __FILE__, __LINE__);
+#define CLOG_FUNCTION(C)    ::qore::log::LogScope _(C, __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
 namespace qore {
 
@@ -174,14 +194,14 @@ public:
      */
     LogScope(const char *component, const char *function, const char *file, int line)
         : component(component), function(function), file(file), line(line) {
-        LOG_EX(component, "Entering " << function, function, file, line);
+        CLOG_EX(component, "Entering " << function, function, file, line);
     }
 
     /**
      * \brief Logs the exit of the scope.
      */
     ~LogScope() {
-        LOG_EX(component, "Leaving " << function, function, file, line);
+        CLOG_EX(component, "Leaving " << function, function, file, line);
     }
 
 private:
@@ -196,9 +216,9 @@ private:
 
 #else   // QORE_LOGGING
 
-#define LOG_EX(C, M, FU, FI, L)     do {} while(0)
-#define LOG(C, M)                   do {} while(0)
-#define LOG_FUNCTION(C)             do {} while(0)
+#define CLOG_EX(C, M, FU, FI, L)    do {} while(0)
+#define CLOG(C, M)                  do {} while(0)
+#define CLOG_FUNCTION(C)            do {} while(0)
 
 #endif  // QORE_LOGGING
 

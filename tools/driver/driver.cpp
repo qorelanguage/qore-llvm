@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
-#include "qore/common/common.h"
 #include "qore/parser/parser.h"
 #include "qore/runtime/runtime.h"
 #include "dump.h"
