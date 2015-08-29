@@ -25,44 +25,38 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines an interface for abstracting sources of scripts.
+/// \brief Declares opaque source identifier type.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_SOURCE_H_
-#define INCLUDE_QORE_COMMON_SOURCE_H_
+#ifndef INCLUDE_QORE_CONTEXT_SOURCEID_H_
+#define INCLUDE_QORE_CONTEXT_SOURCEID_H_
+
+#include <cassert>
 
 namespace qore {
 
 /**
- * \brief Abstraction of a script source.
+ * \brief Identifies a script source in the source manager.
  */
-class Source {
+class SourceId {
 
 public:
-    /**
-     * \brief The value returned by Source::read() at the end of the source.
-     */
-    static constexpr int EofChar = -1;
+    const static SourceId Invalid;      //!< Represents an invalid source identifier.
 
-    virtual ~Source() = default;
+private:
+    SourceId() : id(-1) {
+    }
 
-    /**
-     * Reads the next character but does not advance the source.
-     * \return read character or \ref EofChar
-     */
-    virtual int operator*() = 0;
-
-protected:
-    Source() {
+    explicit SourceId(short id) : id(id) {
+        assert(id >= 0);
     }
 
 private:
-    Source(const Source &) = delete;
-    Source(Source &&) = delete;
-    Source &operator=(const Source &) = delete;
-    Source &operator=(Source &&) = delete;
+    short id;
+
+    friend class SourceManager;         //!< Only SourceManager can create instances.
 };
 
-} //namespace qore
+} // namespace qore
 
-#endif /* INCLUDE_QORE_COMMON_SOURCE_H_ */
+#endif // INCLUDE_QORE_CONTEXT_SOURCEID_H_

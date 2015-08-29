@@ -25,60 +25,31 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Management of sources, locations, buffers and pointers.
 ///
 //------------------------------------------------------------------------------
-#include "qore/scanner/ScannerImpl.h"
-#include <cstdlib>
-#include "qore/common/Logging.h"
+#include "qore/context/SourcePointer.h"
+#include "qore/context/SourceManager.h"
+#include <fstream>
+#include <iostream>
 
 namespace qore {
 
-ScannerImpl::ScannerImpl(SourceBuffer sourceBuffer) : sourceBuffer(std::move(sourceBuffer)), ptr(&this->sourceBuffer) {
-    LOG_FUNCTION();
-}
+const SourceId SourceId::Invalid;
 
-void ScannerImpl::read(Token *token) {
-    LOG_FUNCTION();
-    do {
-        while (isspace(*ptr)) {
-            ++ptr;
-        }
-        token->locationStart = ptr.getLocation();
-    } while ((token->type = readInternal(token)) == TokenType::None);
-    token->locationEnd = ptr.getLocation();
-}
-
-TokenType ScannerImpl::readInternal(Token *token) {
-    LOG_FUNCTION();
-    switch (*ptr++) {
-        case '\0':
-            return TokenType::EndOfFile;
-        case ';':
-            return TokenType::Semicolon;
-        case '0':   case '1':   case '2':   case '3':   case '4':
-        case '5':   case '6':   case '7':   case '8':   case '9':
-            return readInteger(token);
-        default:
-            //TODO report error
-            return TokenType::None;
+void SourcePointer::fill() {
+    std::string line;
+    std::getline(std::cin, line);
+    if (std::cin.good()) {
+        line.push_back('\n');
+        sourceBuffer->data.insert(sourceBuffer->data.end() - 1, line.begin(), line.end());
     }
 }
 
-TokenType ScannerImpl::readInteger(Token *token) {
-    const char *start = ptr - 1;
-    char *end;
-
-    while (isdigit(*ptr)) {
-        ++ptr;
-    }
-
-    errno = 0;
-    token->intValue = strtoull(start, &end, 10);
-    if (errno || end != ptr) {
-        //TODO report error + recover
-    }
-    return TokenType::Integer;
+SourceBuffer SourceManager::createFromFile(std::string fileName) {
+    std::ifstream fileStream(fileName, std::ios::binary);
+    return SourceBuffer(createId(std::move(fileName)),
+            std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>());
 }
 
-} //namespace qore
+} // namespace qore

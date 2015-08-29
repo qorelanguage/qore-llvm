@@ -25,60 +25,45 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Representation of locations in the source code.
 ///
 //------------------------------------------------------------------------------
-#include "qore/scanner/ScannerImpl.h"
-#include <cstdlib>
-#include "qore/common/Logging.h"
+#ifndef INCLUDE_QORE_CONTEXT_SOURCELOCATION_H_
+#define INCLUDE_QORE_CONTEXT_SOURCELOCATION_H_
+
+#include "qore/context/SourceId.h"
 
 namespace qore {
 
-ScannerImpl::ScannerImpl(SourceBuffer sourceBuffer) : sourceBuffer(std::move(sourceBuffer)), ptr(&this->sourceBuffer) {
-    LOG_FUNCTION();
-}
+/**
+ * \brief Represents a location in the source code.
+ */
+class SourceLocation {
 
-void ScannerImpl::read(Token *token) {
-    LOG_FUNCTION();
-    do {
-        while (isspace(*ptr)) {
-            ++ptr;
-        }
-        token->locationStart = ptr.getLocation();
-    } while ((token->type = readInternal(token)) == TokenType::None);
-    token->locationEnd = ptr.getLocation();
-}
-
-TokenType ScannerImpl::readInternal(Token *token) {
-    LOG_FUNCTION();
-    switch (*ptr++) {
-        case '\0':
-            return TokenType::EndOfFile;
-        case ';':
-            return TokenType::Semicolon;
-        case '0':   case '1':   case '2':   case '3':   case '4':
-        case '5':   case '6':   case '7':   case '8':   case '9':
-            return readInteger(token);
-        default:
-            //TODO report error
-            return TokenType::None;
-    }
-}
-
-TokenType ScannerImpl::readInteger(Token *token) {
-    const char *start = ptr - 1;
-    char *end;
-
-    while (isdigit(*ptr)) {
-        ++ptr;
+public:
+    /**
+     * \brief Constructs an empty location instance.
+     *
+     * The instance should be filled in later using copy assignment.
+     */
+    SourceLocation() : sourceId(SourceId::Invalid), column(0), line(0) {
     }
 
-    errno = 0;
-    token->intValue = strtoull(start, &end, 10);
-    if (errno || end != ptr) {
-        //TODO report error + recover
+    /**
+     * \brief Constructs a location with given parameters.
+     * \param sourceId the source id
+     * \param line the line number
+     * \param column the column number
+     */
+    SourceLocation(SourceId sourceId, int line, int column) : sourceId(sourceId), column(column), line(line) {
     }
-    return TokenType::Integer;
-}
 
-} //namespace qore
+private:
+    SourceId sourceId;
+    short column;
+    int line;
+};
+
+} // namespace qore
+
+#endif // INCLUDE_QORE_CONTEXT_SOURCELOCATION_H_

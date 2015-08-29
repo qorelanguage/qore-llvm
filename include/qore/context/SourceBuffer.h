@@ -25,60 +25,60 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Buffers for source code.
 ///
 //------------------------------------------------------------------------------
-#include "qore/scanner/ScannerImpl.h"
-#include <cstdlib>
-#include "qore/common/Logging.h"
+#ifndef INCLUDE_QORE_CONTEXT_SOURCEBUFFER_H_
+#define INCLUDE_QORE_CONTEXT_SOURCEBUFFER_H_
+
+#include <vector>
+#include "qore/context/SourceId.h"
 
 namespace qore {
 
-ScannerImpl::ScannerImpl(SourceBuffer sourceBuffer) : sourceBuffer(std::move(sourceBuffer)), ptr(&this->sourceBuffer) {
-    LOG_FUNCTION();
-}
+/**
+ * \brief Provides storage for the actual source of a script.
+ *
+ * Creating copies is forbidden, use `std::move` when necessary.
+ * \invariant `data` is nonempty
+ * \invariant last element of `data` is '\0'
+ */
+class SourceBuffer {
 
-void ScannerImpl::read(Token *token) {
-    LOG_FUNCTION();
-    do {
-        while (isspace(*ptr)) {
-            ++ptr;
-        }
-        token->locationStart = ptr.getLocation();
-    } while ((token->type = readInternal(token)) == TokenType::None);
-    token->locationEnd = ptr.getLocation();
-}
+public:
+    /**
+     * \brief Default move constructor.
+     */
+    SourceBuffer(SourceBuffer &&) noexcept = default;
 
-TokenType ScannerImpl::readInternal(Token *token) {
-    LOG_FUNCTION();
-    switch (*ptr++) {
-        case '\0':
-            return TokenType::EndOfFile;
-        case ';':
-            return TokenType::Semicolon;
-        case '0':   case '1':   case '2':   case '3':   case '4':
-        case '5':   case '6':   case '7':   case '8':   case '9':
-            return readInteger(token);
-        default:
-            //TODO report error
-            return TokenType::None;
-    }
-}
+    /**
+     * \brief Default move assignment.
+     */
+    SourceBuffer &operator=(SourceBuffer &&) noexcept = default;
 
-TokenType ScannerImpl::readInteger(Token *token) {
-    const char *start = ptr - 1;
-    char *end;
-
-    while (isdigit(*ptr)) {
-        ++ptr;
+private:
+    template<typename Iterator>
+    SourceBuffer(SourceId sourceId, Iterator begin, Iterator end) : sourceId(sourceId), data(begin, end) {
+        this->data.push_back('\0');
     }
 
-    errno = 0;
-    token->intValue = strtoull(start, &end, 10);
-    if (errno || end != ptr) {
-        //TODO report error + recover
+    explicit SourceBuffer(SourceId sourceId) : sourceId(sourceId), isStdin(true) {
+        data.push_back('\n');
+        data.push_back('\0');
     }
-    return TokenType::Integer;
-}
 
-} //namespace qore
+    SourceBuffer(const SourceBuffer &) = delete;
+    SourceBuffer &operator=(const SourceBuffer &) = delete;
+
+private:
+    const SourceId sourceId;
+    std::vector<char> data;
+    bool isStdin{false};
+
+    friend class SourceManager;         //!< Only SourceManager can create instances.
+    friend class SourcePointer;         //!< SourcePointer provides random access to the buffer.
+};
+
+} // namespace qore
+
+#endif // INCLUDE_QORE_CONTEXT_SOURCEBUFFER_H_

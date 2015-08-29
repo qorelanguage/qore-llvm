@@ -31,25 +31,56 @@
 #ifndef INCLUDE_QORE_SCANNER_TOKEN_H_
 #define INCLUDE_QORE_SCANNER_TOKEN_H_
 
+#include <ostream>
+#include <string>
+#include "qore/context/SourceLocation.h"
+
 namespace qore {
 
 /**
  * \brief Token types.
  */
 enum class TokenType {
+    None,           //!< Represents no token. Used for error recovery.
     EndOfFile,      //!< A token reported at the end of the source.
+    Integer,        //!< An integer literal.
+    Semicolon,      //!< The ';' symbol.
 };
 
 /**
  * \brief Describes a token (lexical element).
  */
 struct Token {
-
-    /**
-     * \brief The type of the token.
-     */
-    TokenType type;
+    TokenType type{TokenType::None};    //!< The type of the token.
+    SourceLocation locationStart;       //!< Location of the start of the token in the source code.
+    SourceLocation locationEnd;         //!< Location of the end of the token in the source code.
+    uint64_t intValue;                  //!< An integer value associated with the token.
 };
+
+/**
+ * \brief Converts TokenType to its textual representation.
+ * \param tokenType the token type
+ * \return name of the token type
+ */
+std::string to_string(TokenType tokenType);
+
+/**
+ * \brief Dumps the name of the token type to an output stream.
+ * \param o the output stream
+ * \param tokenType the token type
+ * \return the output stream for chaining calls
+ */
+inline std::ostream &operator<<(std::ostream &o, TokenType tokenType) {
+    return o << to_string(tokenType);
+}
+
+/**
+ * \brief Dumps information about a token to an output stream.
+ * \param o the output stream
+ * \param token the token to dump
+ * \return the output stream for chaining calls
+ */
+std::ostream &operator<<(std::ostream &o, const Token &token);
 
 } //namespace qore
 

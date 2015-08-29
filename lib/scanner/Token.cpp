@@ -25,60 +25,30 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Token functions.
 ///
 //------------------------------------------------------------------------------
-#include "qore/scanner/ScannerImpl.h"
-#include <cstdlib>
-#include "qore/common/Logging.h"
+#include "qore/common/Util.h"
+#include "qore/scanner/Token.h"
 
 namespace qore {
 
-ScannerImpl::ScannerImpl(SourceBuffer sourceBuffer) : sourceBuffer(std::move(sourceBuffer)), ptr(&this->sourceBuffer) {
-    LOG_FUNCTION();
-}
-
-void ScannerImpl::read(Token *token) {
-    LOG_FUNCTION();
-    do {
-        while (isspace(*ptr)) {
-            ++ptr;
-        }
-        token->locationStart = ptr.getLocation();
-    } while ((token->type = readInternal(token)) == TokenType::None);
-    token->locationEnd = ptr.getLocation();
-}
-
-TokenType ScannerImpl::readInternal(Token *token) {
-    LOG_FUNCTION();
-    switch (*ptr++) {
-        case '\0':
-            return TokenType::EndOfFile;
-        case ';':
-            return TokenType::Semicolon;
-        case '0':   case '1':   case '2':   case '3':   case '4':
-        case '5':   case '6':   case '7':   case '8':   case '9':
-            return readInteger(token);
-        default:
-            //TODO report error
-            return TokenType::None;
+std::string to_string(TokenType tokenType) {
+    switch (tokenType) {
+        case TokenType::None: return "None";
+        case TokenType::EndOfFile: return "EndOfFile";
+        case TokenType::Integer: return "Integer";
+        case TokenType::Semicolon: return "Semicolon";
     }
+    QORE_UNREACHABLE("unknown token type " << static_cast<int>(tokenType));
 }
 
-TokenType ScannerImpl::readInteger(Token *token) {
-    const char *start = ptr - 1;
-    char *end;
-
-    while (isdigit(*ptr)) {
-        ++ptr;
+std::ostream &operator<<(std::ostream &o, const Token &token) {
+    o << '{' << token.type;
+    if (token.type == TokenType::Integer) {
+        o << ", intValue = " << token.intValue;
     }
-
-    errno = 0;
-    token->intValue = strtoull(start, &end, 10);
-    if (errno || end != ptr) {
-        //TODO report error + recover
-    }
-    return TokenType::Integer;
+    return o << "}";
 }
 
-} //namespace qore
+} // namespace qore

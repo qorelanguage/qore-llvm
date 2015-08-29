@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
 #define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
 
-#include "qore/common/Source.h"
+#include "qore/context/SourcePointer.h"
 #include "qore/scanner/ScannerInterface.h"
 
 namespace qore {
@@ -44,14 +44,19 @@ class ScannerImpl : public Scanner {
 public:
     /**
      * \brief Constructs a scanner for given source.
-     * \param source the source of the qore script
+     * \param sourceBuffer the source buffer with a qore script
      */
-    ScannerImpl(Source &source);
+    ScannerImpl(SourceBuffer sourceBuffer);
 
     void read(Token *token) override;
 
 private:
-    Source &source;
+    TokenType readInternal(Token *token);
+    TokenType readInteger(Token *token);
+
+private:
+    SourceBuffer sourceBuffer;
+    SourcePointer ptr;
 };
 
 } //namespace qore

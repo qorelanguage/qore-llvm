@@ -1,5 +1,6 @@
 add_executable(qore-llvm
     driver.cpp
+    sandbox.cpp
 )
 
 if(QORE_USE_LLVM)
@@ -21,5 +22,6 @@ target_link_libraries(qore-llvm
     common
     parser
     runtime
+    scanner
     ${llvm_libs}
 )
