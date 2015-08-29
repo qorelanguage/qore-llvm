@@ -100,7 +100,7 @@ namespace log {
 class Logger {
 
 public:
-    Logger() {
+    Logger() : indentLevel(0) {
     }
 
     virtual ~Logger() = default;
@@ -147,6 +147,11 @@ private:
     Logger(Logger &&) = delete;
     Logger &operator=(const Logger &) = delete;
     Logger &operator=(Logger &&) = delete;
+
+private:
+    int indentLevel;
+
+    friend class LogScope;
 };
 
 /**
@@ -195,12 +200,14 @@ public:
     LogScope(const char *component, const char *function, const char *file, int line)
         : component(component), function(function), file(file), line(line) {
         CLOG_EX(component, "Entering " << function, function, file, line);
+        ++::qore::log::LoggerManager::get()->indentLevel;
     }
 
     /**
      * \brief Logs the exit of the scope.
      */
     ~LogScope() {
+        --::qore::log::LoggerManager::get()->indentLevel;
         CLOG_EX(component, "Leaving " << function, function, file, line);
     }
 

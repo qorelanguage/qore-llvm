@@ -25,48 +25,28 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Provides support for logging messages.
+/// \brief Various utility functions.
 ///
 //------------------------------------------------------------------------------
-#include "qore/common/logging.h"
+#ifndef INCLUDE_QORE_COMMON_UTIL_H_
+#define INCLUDE_QORE_COMMON_UTIL_H_
 
-#ifdef QORE_LOGGING
+#include "qore/common/Logging.h"
 
-#include <iomanip>
-#include <iostream>
+/**
+ * \brief Marks unreachable point in the code.
+ *
+ * In debug version, prints a message and aborts. In release version has undefined behavior.
+ * \param M a message to print
+ */
+#ifndef NDEBUG
+#define QORE_UNREACHABLE(M)  CLOG("", "FATAL: Unreachable executed in " << __PRETTY_FUNCTION__ << " - " << M); abort();
+#else
+#define QORE_UNREACHABLE(M) __builtin_unreachable()
+#endif
 
 namespace qore {
-namespace log {
 
-Logger LoggerManager::defaultLogger;
-Logger *LoggerManager::currentLogger = &LoggerManager::defaultLogger;
+} // namespace qore
 
-
-void Logger::log(const std::string &component, const std::string &message,
-        const char *function, const char *file, int line) {
-    if (filter(component)) {
-        std::cout
-            << std::left
-            << std::setw(getHeaderWidth())
-            << formatHeader(function, file, line)
-            << message
-            << std::endl;
-    }
-}
-
-std::string Logger::formatHeader(const char *function, const char *file, int line) {
-    std::string header(file);
-    std::string::size_type slash = header.find_last_of('/');
-
-    if (slash != std::string::npos) {
-        header = header.substr(slash + 1);
-    }
-    header.append(":");
-    header.append(std::to_string(line));
-    return header;
-}
-
-} //namespace log
-} //namespace qore
-
-#endif //QORE_LOGGING
+#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */

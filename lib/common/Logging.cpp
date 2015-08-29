@@ -25,41 +25,49 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the interface of the scanner.
+/// \brief Provides support for logging messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERINTERFACE_H_
-#define INCLUDE_QORE_SCANNER_SCANNERINTERFACE_H_
+#include "qore/common/Logging.h"
 
-#include "qore/scanner/Token.h"
+#ifdef QORE_LOGGING
+
+#include <iomanip>
+#include <iostream>
 
 namespace qore {
+namespace log {
 
-/**
- * \brief Lexical analyzer which converts a stream of source characters into a stream of tokens.
- */
-class Scanner {
+Logger LoggerManager::defaultLogger;
+Logger *LoggerManager::currentLogger = &LoggerManager::defaultLogger;
 
-public:
-    virtual ~Scanner() = default;
 
-    /**
-     * \brief Reads the next token from the source script.
-     * \param token the Token structure to be filled in
-     */
-    virtual void read(Token *token) = 0;
-
-protected:
-    Scanner() {
+void Logger::log(const std::string &component, const std::string &message,
+        const char *function, const char *file, int line) {
+    if (filter(component)) {
+        std::cout
+            << std::left
+            << std::setw(getHeaderWidth())
+            << formatHeader(function, file, line)
+            << std::setfill(' ') << std::setw(2*indentLevel) << ""
+            << message
+            << std::endl;
     }
+}
 
-private:
-    Scanner(const Scanner &) = delete;
-    Scanner(Scanner &&) = delete;
-    Scanner &operator=(const Scanner &) = delete;
-    Scanner &operator=(Scanner &&) = delete;
-};
+std::string Logger::formatHeader(const char *function, const char *file, int line) {
+    std::string header(file);
+    std::string::size_type slash = header.find_last_of('/');
 
+    if (slash != std::string::npos) {
+        header = header.substr(slash + 1);
+    }
+    header.append(":");
+    header.append(std::to_string(line));
+    return header;
+}
+
+} //namespace log
 } //namespace qore
 
-#endif /* INCLUDE_QORE_SCANNER_SCANNERINTERFACE_H_ */
+#endif //QORE_LOGGING

@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+/**
+ * \private
+ */
 class Visitor {
 public:
     using R = void*;
@@ -23,6 +26,9 @@ public:
     virtual R visit(const class Program *) = 0;
 };
 
+/**
+ * \private
+ */
 class H {
 public:
     H(char *s) : s(s) {
@@ -31,6 +37,9 @@ public:
     std::string s;
 };
 
+/**
+ * \private
+ */
 class AstNode {
 
 protected:
@@ -54,6 +63,9 @@ inline std::ostream &operator<<(std::ostream &os, const AstNode *node) {
     return node->out(os);
 }
 
+/**
+ * \private
+ */
 class Expression : public AstNode {
 
 protected:
@@ -67,6 +79,9 @@ public:
     Expression &operator=(Expression &&) = delete;
 };
 
+/**
+ * \private
+ */
 class IntegerLiteral : public Expression {
 
 public:
@@ -90,6 +105,9 @@ private:
     int value;
 };
 
+/**
+ * \private
+ */
 class StringLiteral : public Expression {
 
 public:
@@ -113,6 +131,9 @@ private:
     std::string value;
 };
 
+/**
+ * \private
+ */
 class VariableLoadExpression : public Expression {
 
 public:
@@ -136,6 +157,9 @@ private:
     std::string name;
 };
 
+/**
+ * \private
+ */
 class Assignment : public Expression {
 
 public:
@@ -164,6 +188,9 @@ private:
     std::unique_ptr<Expression> value;
 };
 
+/**
+ * \private
+ */
 class BinaryExpression : public Expression {
 
 public:
@@ -192,6 +219,9 @@ private:
     std::unique_ptr<Expression> right;
 };
 
+/**
+ * \private
+ */
 class Statement : public AstNode {
 
 protected:
@@ -205,6 +235,9 @@ public:
     Statement &operator=(Statement &&) = delete;
 };
 
+/**
+ * \private
+ */
 class EmptyStatement : public Statement {
 
 public:
@@ -221,6 +254,9 @@ protected:
     }
 };
 
+/**
+ * \private
+ */
 class ExpressionStatement : public Statement {
 
 public:
@@ -244,6 +280,9 @@ private:
     std::unique_ptr<Expression> expression;
 };
 
+/**
+ * \private
+ */
 class PrintStatement : public Statement {
 
 public:
@@ -267,6 +306,9 @@ private:
     std::unique_ptr<Expression> expression;
 };
 
+/**
+ * \private
+ */
 class Program : public AstNode {
 
 public:
@@ -301,6 +343,9 @@ private:
     std::vector<std::unique_ptr<Statement>> body;
 };
 
+/**
+ * \private
+ */
 class ProgramBuilder {
 
 public:

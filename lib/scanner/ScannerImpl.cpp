@@ -29,7 +29,8 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/scanner/ScannerImpl.h"
-#include "qore/common/logging.h"
+#include <string>
+#include <qore/common/Logging.h>
 
 namespace qore {
 
