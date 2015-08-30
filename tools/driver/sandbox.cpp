@@ -6,11 +6,12 @@
 
 
 void sandbox() {
+    qore::DiagnosticManager diagnosticManager;
     qore::SourceManager sourceManager;
-    qore::SourceBuffer srcBuffer = sourceManager.createFromString("test", "   567 123 ;");
+    qore::SourceBuffer srcBuffer = sourceManager.createFromString("test", "   567 @ 123 ;");
 //    qore::SourceBuffer srcBuffer = sourceManager.createFromStdin();
 //    qore::SourceBuffer srcBuffer = sourceManager.createFromFile("tools/sandbox/test.q");
-    qore::ScannerImpl scanner(std::move(srcBuffer));
+    qore::ScannerImpl scanner(diagnosticManager, std::move(srcBuffer));
 
     qore::Token t;
     while (t.type != qore::TokenType::EndOfFile) {

@@ -25,43 +25,69 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Provides support for generating diagnostic messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-#define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
+#ifndef INCLUDE_QORE_CONTEXT_DIAGNOSTICMANAGER_H_
+#define INCLUDE_QORE_CONTEXT_DIAGNOSTICMANAGER_H_
 
-#include "qore/context/DiagnosticManager.h"
-#include "qore/context/SourcePointer.h"
-#include "qore/scanner/ScannerInterface.h"
+#include "qore/context/SourceLocation.h"
 
 namespace qore {
 
 /**
- * \brief Implements the Scanner interface.
+ * \brief Enumeration of all diagnostic messages.
  */
-class ScannerImpl : public Scanner {
+enum class Diagnostic {
+    #define DIAG(N, L, D)       N,
+    /// \cond IGNORED_BY DOXYGEN
+    #include "qore/context/DiagnosticData.inc"
+    /// \endcond IGNORED_BY DOXYGEN
+    #undef DIAG
+    DiagnosticCount
+};
+
+/**
+ * \brief Diagnostic levels.
+ */
+enum class DiagnosticLevel {
+    Error,          //!< Error
+    Warning         //!< Warning
+};
+
+/**
+ * \brief Manages reporting of diagnostic messages.
+ */
+class DiagnosticManager {
 
 public:
     /**
-     * \brief Constructs a scanner for given source.
-     * \param diagnosticManager used for reporting diagnostic messages
-     * \param sourceBuffer the source buffer with a qore script
+     * \brief A helper class for building diagnostic messages with additional parameters.
      */
-    ScannerImpl(DiagnosticManager &diagnosticManager, SourceBuffer sourceBuffer);
+    class Builder {
+    public:
+        ~Builder();
 
-    void read(Token *token) override;
+    private:
+        Builder(DiagnosticManager *, const class DiagInfo &, SourceLocation location);
 
-private:
-    TokenType readInternal(Token *token);
-    TokenType readInteger(Token *token);
+    private:
+        DiagnosticManager *mgr;
+        const class DiagInfo &info;
+        const SourceLocation location;
+        friend class DiagnosticManager;
+    };
 
-private:
-    DiagnosticManager &diagnosticManager;
-    SourceBuffer sourceBuffer;
-    SourcePointer ptr;
+public:
+    /**
+     * \brief Reports a message.
+     * \param diagnostic the type of the diagnostic message
+     * \param location the location in the source
+     * \return a builder for providing additional info
+     */
+    Builder report(Diagnostic diagnostic, SourceLocation location);
 };
 
-} //namespace qore
+} // namespace qore
 
-#endif /* INCLUDE_QORE_SCANNER_SCANNERIMPL_H_ */
+#endif // INCLUDE_QORE_CONTEXT_DIAGNOSTICMANAGER_H_

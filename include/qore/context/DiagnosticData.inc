@@ -22,46 +22,5 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Scanner implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-#define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
 
-#include "qore/context/DiagnosticManager.h"
-#include "qore/context/SourcePointer.h"
-#include "qore/scanner/ScannerInterface.h"
-
-namespace qore {
-
-/**
- * \brief Implements the Scanner interface.
- */
-class ScannerImpl : public Scanner {
-
-public:
-    /**
-     * \brief Constructs a scanner for given source.
-     * \param diagnosticManager used for reporting diagnostic messages
-     * \param sourceBuffer the source buffer with a qore script
-     */
-    ScannerImpl(DiagnosticManager &diagnosticManager, SourceBuffer sourceBuffer);
-
-    void read(Token *token) override;
-
-private:
-    TokenType readInternal(Token *token);
-    TokenType readInteger(Token *token);
-
-private:
-    DiagnosticManager &diagnosticManager;
-    SourceBuffer sourceBuffer;
-    SourcePointer ptr;
-};
-
-} //namespace qore
-
-#endif /* INCLUDE_QORE_SCANNER_SCANNERIMPL_H_ */
+DIAG(ScannerInvalidCharacter, Error, "invalid character '%s'")

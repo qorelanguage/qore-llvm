@@ -139,7 +139,7 @@ public:
      * \return the width of the header
      */
     virtual int getHeaderWidth() {
-        return 20;
+        return 40;
     }
 
 private:

@@ -34,7 +34,8 @@
 
 namespace qore {
 
-ScannerImpl::ScannerImpl(SourceBuffer sourceBuffer) : sourceBuffer(std::move(sourceBuffer)), ptr(&this->sourceBuffer) {
+ScannerImpl::ScannerImpl(DiagnosticManager &diagnosticManager, SourceBuffer sourceBuffer)
+: diagnosticManager(diagnosticManager), sourceBuffer(std::move(sourceBuffer)), ptr(&this->sourceBuffer) {
     LOG_FUNCTION();
 }
 
@@ -60,7 +61,7 @@ TokenType ScannerImpl::readInternal(Token *token) {
         case '5':   case '6':   case '7':   case '8':   case '9':
             return readInteger(token);
         default:
-            //TODO report error
+            diagnosticManager.report(Diagnostic::ScannerInvalidCharacter, token->locationStart);
             return TokenType::None;
     }
 }

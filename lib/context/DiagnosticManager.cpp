@@ -25,43 +25,37 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Provides support for generating diagnostic messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-#define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-
 #include "qore/context/DiagnosticManager.h"
-#include "qore/context/SourcePointer.h"
-#include "qore/scanner/ScannerInterface.h"
+#include "qore/common/Logging.h"
 
 namespace qore {
 
-/**
- * \brief Implements the Scanner interface.
- */
-class ScannerImpl : public Scanner {
-
-public:
-    /**
-     * \brief Constructs a scanner for given source.
-     * \param diagnosticManager used for reporting diagnostic messages
-     * \param sourceBuffer the source buffer with a qore script
-     */
-    ScannerImpl(DiagnosticManager &diagnosticManager, SourceBuffer sourceBuffer);
-
-    void read(Token *token) override;
-
-private:
-    TokenType readInternal(Token *token);
-    TokenType readInteger(Token *token);
-
-private:
-    DiagnosticManager &diagnosticManager;
-    SourceBuffer sourceBuffer;
-    SourcePointer ptr;
+/// \cond IGNORED_BY DOXYGEN
+struct DiagInfo {
+    qore::DiagnosticLevel level;
+    const char *description;
 };
 
-} //namespace qore
+static const DiagInfo data[] = {
+    #define DIAG(N, L, D)       { qore::DiagnosticLevel::L, D },
+    #include "qore/context/DiagnosticData.inc"
+    #undef DIAG
+};
+/// \endcond IGNORED_BY DOXYGEN
 
-#endif /* INCLUDE_QORE_SCANNER_SCANNERIMPL_H_ */
+DiagnosticManager::Builder DiagnosticManager::report(Diagnostic diagnostic, SourceLocation location) {
+    return Builder(this, data[static_cast<int>(diagnostic)], location);
+}
+
+DiagnosticManager::Builder::Builder(DiagnosticManager *mgr, const DiagInfo &info, SourceLocation location)
+: mgr(mgr), info(info), location(location) {
+}
+
+DiagnosticManager::Builder::~Builder() {
+    LOG("DIAGNOSTIC: " << info.description << " here: " << location.line << ":" << location.column);
+}
+
+} // namespace qore

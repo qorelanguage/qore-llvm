@@ -1,4 +1,5 @@
 add_library(context STATIC
+    DiagnosticManager.cpp
     SourceManager.cpp
 )
 
