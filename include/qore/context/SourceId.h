@@ -76,6 +76,7 @@ private:
     friend class SourceManager;         //!< Only SourceManager can create instances.
     FRIEND_FIXTURE(SourceIdTest);
     FRIEND_FIXTURE(SourceBufferTest);
+    FRIEND_FIXTURE(SourcePointerTest);
     FRIEND_TEST(SourceIdDeathTest, CtorChecksNegative);
     FRIEND_TEST(SourceIdDeathTest, CtorChecksOutOfRange);
 };

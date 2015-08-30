@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_CONTEXT_SOURCEPOINTER_H_
 
 #include <cassert>
+#include "qore/common/Util.h"
 #include "qore/context/SourceBuffer.h"
 #include "qore/context/SourceLocation.h"
 
@@ -51,7 +52,7 @@ public:
      * \param sourceBuffer the source buffer into which this pointer points
      */
     SourcePointer(SourceBuffer *sourceBuffer) : sourceBuffer(sourceBuffer), index(0) {
-        assert(sourceBuffer != nullptr);
+        assert(sourceBuffer != nullptr && "No buffer provided");
     }
 
     /**
@@ -105,6 +106,8 @@ private:
 
     SourceBuffer *sourceBuffer;
     std::vector<char>::size_type index;
+
+    FRIEND_FIXTURE(SourcePointerTest);
 };
 
 } // namespace qore

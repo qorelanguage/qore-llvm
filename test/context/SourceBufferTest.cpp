@@ -30,6 +30,7 @@ namespace qore {
 
 struct SourceBufferTest : public ::testing::Test {
     std::string src{"test"};
+    std::vector<char> vec{'a', 'b', 'c'};
     SourceId sourceId{4};
 };
 
@@ -42,7 +43,16 @@ TEST_F(SourceBufferTest, StdinNewlineAndZero) {
     EXPECT_EQ('\0', sb.data[1]);
 }
 
-TEST_F(SourceBufferTest, CtorAddsZero) {
+TEST_F(SourceBufferTest, VectorCtorAddsZero) {
+    SourceBuffer sb(sourceId, vec);
+    EXPECT_EQ(4U, sb.data.size());
+    EXPECT_EQ('a', sb.data[0]);
+    EXPECT_EQ('b', sb.data[1]);
+    EXPECT_EQ('c', sb.data[2]);
+    EXPECT_EQ('\0', sb.data[3]);
+}
+
+TEST_F(SourceBufferTest, IteratorCtorAddsZero) {
     SourceBuffer sb(sourceId, src.begin(), src.end());
     EXPECT_EQ(5U, sb.data.size());
     EXPECT_EQ('t', sb.data[0]);

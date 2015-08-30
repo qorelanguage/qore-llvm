@@ -23,37 +23,25 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Management of sources, locations, buffers and pointers.
-///
-//------------------------------------------------------------------------------
-#include "qore/common/Util.h"
-#include "qore/context/SourcePointer.h"
-#include "qore/context/SourceManager.h"
-#include <fstream>
-#include <iostream>
+#ifndef TEST_UTILS_H_
+#define TEST_UTILS_H_
 
 namespace qore {
 
-const SourceId SourceId::Invalid;
-
-void SourcePointer::fill() {
-    std::string line;
-    std::getline(std::cin, line);
-    if (std::cin.good()) {
-        line.push_back('\n');
-        sourceBuffer->data.insert(sourceBuffer->data.end() - 1, line.begin(), line.end());
+class RedirectStdin {
+public:
+    RedirectStdin(std::string string) : stream(string), cin_backup(std::cin.rdbuf(stream.rdbuf())) {
     }
-}
 
-SourceBuffer SourceManager::createFromFile(std::string fileName) {
-    std::ifstream fileStream(fileName, std::ios::binary);
-    std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
-    if (!fileStream.good()) {
-        throw FATAL_ERROR("Error reading file " << fileName);
+    ~RedirectStdin() {
+        std::cin.rdbuf(cin_backup);
     }
-    return SourceBuffer(createId(std::move(fileName)), std::move(data));
-}
+
+private:
+    std::istringstream stream;
+    std::streambuf* cin_backup;
+};
 
 } // namespace qore
+
+#endif // TEST_UTILS_H_

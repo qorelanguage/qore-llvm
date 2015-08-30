@@ -57,7 +57,41 @@
  */
 #define FRIEND_FIXTURE(fixture_name) friend class fixture_name
 
+/**
+ * \brief Helper macro for constructing messages for FatalError exception.
+ *
+ * Example:
+ *
+ *     throw FATAL_ERROR("Error test() called with " << argument << " but " << expected << " was expected.");
+ */
+#define FATAL_ERROR(M)  FatalError(static_cast<std::ostringstream&>(std::ostringstream().flush() << M).str());
+
 namespace qore {
+
+/**
+ * \brief Exception class for reporting fatal errors.
+ */
+class FatalError : public std::exception {
+
+public:
+    /**
+     * \brief Constructs the exception.
+     * \param message the message of the exception
+     */
+    FatalError(std::string message) : message(std::move(message)) {
+    }
+
+    /**
+     * \brief Returns the exception message.
+     * \return the message of the exception
+     */
+    const char* what() const noexcept override {
+        return message.c_str();
+    }
+
+private:
+    std::string message;
+};
 
 } // namespace qore
 

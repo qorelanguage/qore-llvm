@@ -65,6 +65,11 @@ private:
         this->data.push_back('\0');
     }
 
+    SourceBuffer(SourceId sourceId, std::vector<char> data) : sourceId(sourceId), data(std::move(data)) {
+        assert(sourceId != SourceId::Invalid && "Invalid source id");
+        this->data.push_back('\0');
+    }
+
     explicit SourceBuffer(SourceId sourceId) : sourceId(sourceId), isStdin(true) {
         assert(sourceId != SourceId::Invalid && "Invalid source id");
         data.push_back('\n');
@@ -81,8 +86,11 @@ private:
 
     friend class SourceManager;         //!< Only SourceManager can create instances.
     friend class SourcePointer;         //!< SourcePointer provides random access to the buffer.
+    FRIEND_FIXTURE(SourcePointerTest);
+    FRIEND_FIXTURE(SourceManagerTest);
     FRIEND_TEST(SourceBufferTest, StdinNewlineAndZero);
-    FRIEND_TEST(SourceBufferTest, CtorAddsZero);
+    FRIEND_TEST(SourceBufferTest, VectorCtorAddsZero);
+    FRIEND_TEST(SourceBufferTest, IteratorCtorAddsZero);
     FRIEND_TEST(SourceBufferDeathTest, StdinCtorChecksSourceId);
     FRIEND_TEST(SourceBufferDeathTest, CtorChecksSourceId);
 };
