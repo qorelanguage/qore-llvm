@@ -31,7 +31,9 @@
 #ifndef INCLUDE_QORE_CONTEXT_SOURCEBUFFER_H_
 #define INCLUDE_QORE_CONTEXT_SOURCEBUFFER_H_
 
+#include <cassert>
 #include <vector>
+#include "qore/common/Util.h"
 #include "qore/context/SourceId.h"
 
 namespace qore {
@@ -59,10 +61,12 @@ public:
 private:
     template<typename Iterator>
     SourceBuffer(SourceId sourceId, Iterator begin, Iterator end) : sourceId(sourceId), data(begin, end) {
+        assert(sourceId != SourceId::Invalid && "Invalid source id");
         this->data.push_back('\0');
     }
 
     explicit SourceBuffer(SourceId sourceId) : sourceId(sourceId), isStdin(true) {
+        assert(sourceId != SourceId::Invalid && "Invalid source id");
         data.push_back('\n');
         data.push_back('\0');
     }
@@ -77,6 +81,10 @@ private:
 
     friend class SourceManager;         //!< Only SourceManager can create instances.
     friend class SourcePointer;         //!< SourcePointer provides random access to the buffer.
+    FRIEND_TEST(SourceBufferTest, StdinNewlineAndZero);
+    FRIEND_TEST(SourceBufferTest, CtorAddsZero);
+    FRIEND_TEST(SourceBufferDeathTest, StdinCtorChecksSourceId);
+    FRIEND_TEST(SourceBufferDeathTest, CtorChecksSourceId);
 };
 
 } // namespace qore

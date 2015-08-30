@@ -8,6 +8,7 @@
 
 Option name       | Default | Comment
 ------------------|:-------:|--------------------------------------------------------------------------
+`QORE_LOGGING`    |  `ON`   | Enable log messages
 `QORE_COVERAGE`   |  `ON`   | Build with `--coverage` option. Not suitable for release.
 `QORE_USE_LLVM`   |  `ON`   | Used for disabling the dependency on LLVM.
 `QORE_ENABLE_JIT` |  `ON`   | Ignored if `QORE_USE_LLVM` is `OFF`. Disabling JIT makes builds faster.

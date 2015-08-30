@@ -19,4 +19,12 @@ target_include_directories(googletest INTERFACE ${CMAKE_BINARY_DIR}/ext/src/qgte
 enable_testing()
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 
-add_subdirectory(parser)
+file(GLOB_RECURSE QORE_TEST_SOURCES "*.cpp")
+
+add_executable(unittests ${QORE_TEST_SOURCES})
+
+target_link_libraries(unittests PRIVATE googletest context parser runtime)
+
+add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
+
+add_dependencies(check unittests)

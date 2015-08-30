@@ -23,42 +23,10 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Various utility functions.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
+#include "gmock/gmock.h"
 
-#include "qore/common/Logging.h"
-
-/**
- * \brief Marks unreachable point in the code.
- *
- * In debug version, prints a message and aborts. In release version has undefined behavior.
- * \param M a message to print
- */
-#ifndef NDEBUG
-#define QORE_UNREACHABLE(M)  CLOG("", "FATAL: Unreachable executed in " << __PRETTY_FUNCTION__ << " - " << M); abort();
-#else
-#define QORE_UNREACHABLE(M) __builtin_unreachable()
-#endif
-
-/**
- * \brief Declares a unit test as a friend.
- *
- * This macro has been copied from gtest/gtest_prod.h in order to avoid dependency of production code on gtest.
- */
-#define FRIEND_TEST(test_case_name, test_name) friend class test_case_name##_##test_name##_Test
-
-/**
- * Declares a test fixture as a friend.
- */
-#define FRIEND_FIXTURE(fixture_name) friend class fixture_name
-
-namespace qore {
-
-} // namespace qore
-
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+int main(int argc, char** argv) {
+    ::testing::InitGoogleMock(&argc, argv);
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    return RUN_ALL_TESTS();
+}

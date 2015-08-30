@@ -23,42 +23,44 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Various utility functions.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include "qore/common/Logging.h"
-
-/**
- * \brief Marks unreachable point in the code.
- *
- * In debug version, prints a message and aborts. In release version has undefined behavior.
- * \param M a message to print
- */
-#ifndef NDEBUG
-#define QORE_UNREACHABLE(M)  CLOG("", "FATAL: Unreachable executed in " << __PRETTY_FUNCTION__ << " - " << M); abort();
-#else
-#define QORE_UNREACHABLE(M) __builtin_unreachable()
-#endif
-
-/**
- * \brief Declares a unit test as a friend.
- *
- * This macro has been copied from gtest/gtest_prod.h in order to avoid dependency of production code on gtest.
- */
-#define FRIEND_TEST(test_case_name, test_name) friend class test_case_name##_##test_name##_Test
-
-/**
- * Declares a test fixture as a friend.
- */
-#define FRIEND_FIXTURE(fixture_name) friend class fixture_name
+#include "gtest/gtest.h"
+#include "qore/context/SourceId.h"
 
 namespace qore {
 
-} // namespace qore
+struct SourceIdTest : public ::testing::Test {
+    SourceId srcId123{123};
+    SourceId srcId456{456};
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+    short getId(const SourceId &sourceId) {
+        return sourceId.id;
+    }
+};
+
+TEST_F(SourceIdTest, InvalidIsNegative) {
+    EXPECT_LT(getId(SourceId::Invalid), 0);
+}
+
+TEST_F(SourceIdTest, CtorSavesId) {
+    EXPECT_EQ(123, getId(srcId123));
+}
+
+TEST_F(SourceIdTest, Equals) {
+    EXPECT_TRUE(srcId123 == srcId123);
+    EXPECT_FALSE(srcId123 == srcId456);
+}
+
+TEST_F(SourceIdTest, NotEquals) {
+    EXPECT_FALSE(srcId123 != srcId123);
+    EXPECT_TRUE(srcId123 != srcId456);
+}
+
+TEST(SourceIdDeathTest, CtorChecksNegative) {
+    EXPECT_DEATH(SourceId(-123), "not be negative");
+}
+
+TEST(SourceIdDeathTest, CtorChecksOutOfRange) {
+    EXPECT_DEATH(SourceId(32768), "not be negative");
+}
+
+} // namespace qore

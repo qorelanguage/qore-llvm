@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_CONTEXT_SOURCEID_H_
 
 #include <cassert>
+#include "qore/common/Util.h"
 
 namespace qore {
 
@@ -43,18 +44,40 @@ class SourceId {
 public:
     const static SourceId Invalid;      //!< Represents an invalid source identifier.
 
+    /**
+     * \brief Compares two source identifiers for equality.
+     * \param other the SourceId `this` should be compared to
+     * \return true if `this` equals `other`
+     */
+    bool operator==(const SourceId &other) {
+        return id == other.id;
+    }
+
+    /**
+     * \brief Compares two source identifiers for inequality.
+     * \param other the SourceId `this` should be compared to
+     * \return true if `this` does not equal `other`
+     */
+    bool operator!=(const SourceId &other) {
+        return id != other.id;
+    }
+
 private:
     SourceId() : id(-1) {
     }
 
     explicit SourceId(short id) : id(id) {
-        assert(id >= 0);
+        assert(id >= 0 && "SourceId must not be negative");
     }
 
 private:
     short id;
 
     friend class SourceManager;         //!< Only SourceManager can create instances.
+    FRIEND_FIXTURE(SourceIdTest);
+    FRIEND_FIXTURE(SourceBufferTest);
+    FRIEND_TEST(SourceIdDeathTest, CtorChecksNegative);
+    FRIEND_TEST(SourceIdDeathTest, CtorChecksOutOfRange);
 };
 
 } // namespace qore

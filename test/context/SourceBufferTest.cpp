@@ -23,42 +23,41 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Various utility functions.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include "qore/common/Logging.h"
-
-/**
- * \brief Marks unreachable point in the code.
- *
- * In debug version, prints a message and aborts. In release version has undefined behavior.
- * \param M a message to print
- */
-#ifndef NDEBUG
-#define QORE_UNREACHABLE(M)  CLOG("", "FATAL: Unreachable executed in " << __PRETTY_FUNCTION__ << " - " << M); abort();
-#else
-#define QORE_UNREACHABLE(M) __builtin_unreachable()
-#endif
-
-/**
- * \brief Declares a unit test as a friend.
- *
- * This macro has been copied from gtest/gtest_prod.h in order to avoid dependency of production code on gtest.
- */
-#define FRIEND_TEST(test_case_name, test_name) friend class test_case_name##_##test_name##_Test
-
-/**
- * Declares a test fixture as a friend.
- */
-#define FRIEND_FIXTURE(fixture_name) friend class fixture_name
+#include "gtest/gtest.h"
+#include "qore/context/SourceBuffer.h"
 
 namespace qore {
 
-} // namespace qore
+struct SourceBufferTest : public ::testing::Test {
+    std::string src{"test"};
+    SourceId sourceId{4};
+};
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+typedef SourceBufferTest SourceBufferDeathTest;
+
+TEST_F(SourceBufferTest, StdinNewlineAndZero) {
+    SourceBuffer sb(sourceId);
+    EXPECT_EQ(2U, sb.data.size());
+    EXPECT_EQ('\n', sb.data[0]);
+    EXPECT_EQ('\0', sb.data[1]);
+}
+
+TEST_F(SourceBufferTest, CtorAddsZero) {
+    SourceBuffer sb(sourceId, src.begin(), src.end());
+    EXPECT_EQ(5U, sb.data.size());
+    EXPECT_EQ('t', sb.data[0]);
+    EXPECT_EQ('e', sb.data[1]);
+    EXPECT_EQ('s', sb.data[2]);
+    EXPECT_EQ('t', sb.data[3]);
+    EXPECT_EQ('\0', sb.data[4]);
+}
+
+TEST_F(SourceBufferDeathTest, StdinCtorChecksSourceId) {
+    EXPECT_DEATH(SourceBuffer(SourceId::Invalid), "Invalid source id");
+}
+
+TEST_F(SourceBufferDeathTest, CtorChecksSourceId) {
+    EXPECT_DEATH(SourceBuffer(SourceId::Invalid, src.begin(), src.end()), "Invalid source id");
+}
+
+} // namespace qore
