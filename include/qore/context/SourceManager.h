@@ -33,7 +33,6 @@
 
 #include <string>
 #include <vector>
-#include "qore/common/Util.h"
 #include "qore/context/SourceBuffer.h"
 
 namespace qore {
@@ -88,7 +87,7 @@ private:
 
     std::vector<std::string> names;
 
-    FRIEND_FIXTURE(SourceManagerTest);
+    friend class SourceManagerTestHelper;
 };
 
 } // namespace qore

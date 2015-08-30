@@ -33,7 +33,6 @@
 
 #include <cassert>
 #include <vector>
-#include "qore/common/Util.h"
 #include "qore/context/SourceId.h"
 
 namespace qore {
@@ -86,13 +85,7 @@ private:
 
     friend class SourceManager;         //!< Only SourceManager can create instances.
     friend class SourcePointer;         //!< SourcePointer provides random access to the buffer.
-    FRIEND_FIXTURE(SourcePointerTest);
-    FRIEND_FIXTURE(SourceManagerTest);
-    FRIEND_TEST(SourceBufferTest, StdinNewlineAndZero);
-    FRIEND_TEST(SourceBufferTest, VectorCtorAddsZero);
-    FRIEND_TEST(SourceBufferTest, IteratorCtorAddsZero);
-    FRIEND_TEST(SourceBufferDeathTest, StdinCtorChecksSourceId);
-    FRIEND_TEST(SourceBufferDeathTest, CtorChecksSourceId);
+    friend class SourceBufferTestHelper;
 };
 
 } // namespace qore

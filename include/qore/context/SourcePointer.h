@@ -32,7 +32,6 @@
 #define INCLUDE_QORE_CONTEXT_SOURCEPOINTER_H_
 
 #include <cassert>
-#include "qore/common/Util.h"
 #include "qore/context/SourceBuffer.h"
 #include "qore/context/SourceLocation.h"
 
@@ -51,7 +50,7 @@ public:
      * is not destroyed before the pointer.
      * \param sourceBuffer the source buffer into which this pointer points
      */
-    SourcePointer(SourceBuffer *sourceBuffer) : sourceBuffer(sourceBuffer), index(0) {
+    SourcePointer(SourceBuffer *sourceBuffer) : sourceBuffer(sourceBuffer) {
         assert(sourceBuffer != nullptr && "No buffer provided");
     }
 
@@ -72,11 +71,17 @@ public:
      * \return this after advancing the pointer
      */
     SourcePointer &operator++() {
-        if (sourceBuffer->isStdin && sourceBuffer->data[index] == '\n') {
-            fill();
+        char c = sourceBuffer->data[index];
+        if (c == '\n') {
+            if (sourceBuffer->isStdin) {
+                fill();
+            }
+            line++;
+            column = 0;
         }
-        if (sourceBuffer->data[index]) {
+        if (c) {
             ++index;
+            ++column;
         }
         return *this;
     }
@@ -98,16 +103,18 @@ public:
      * \return the location of the current character
      */
     SourceLocation getLocation() {
-        return SourceLocation(sourceBuffer->sourceId, 0, 0);
+        return SourceLocation(sourceBuffer->sourceId, line, column);
     }
 
 private:
     void fill();
 
     SourceBuffer *sourceBuffer;
-    std::vector<char>::size_type index;
+    std::vector<char>::size_type index{0};
+    int line{1};
+    int column{1};
 
-    FRIEND_FIXTURE(SourcePointerTest);
+    friend class SourcePointerTestHelper;
 };
 
 } // namespace qore

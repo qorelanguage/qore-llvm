@@ -46,18 +46,6 @@
 #endif
 
 /**
- * \brief Declares a unit test as a friend.
- *
- * This macro has been copied from gtest/gtest_prod.h in order to avoid dependency of production code on gtest.
- */
-#define FRIEND_TEST(test_case_name, test_name) friend class test_case_name##_##test_name##_Test
-
-/**
- * Declares a test fixture as a friend.
- */
-#define FRIEND_FIXTURE(fixture_name) friend class fixture_name
-
-/**
  * \brief Helper macro for constructing messages for FatalError exception.
  *
  * Example:

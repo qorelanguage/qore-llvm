@@ -23,59 +23,48 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Declares opaque source identifier type.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CONTEXT_SOURCEID_H_
-#define INCLUDE_QORE_CONTEXT_SOURCEID_H_
-
-#include <cassert>
+#include "gtest/gtest.h"
+#include "qore/context/SourceLocation.h"
+#include "Helpers.h"
 
 namespace qore {
 
-/**
- * \brief Identifies a script source in the source manager.
- */
-class SourceId {
-
-public:
-    const static SourceId Invalid;      //!< Represents an invalid source identifier.
-
-    /**
-     * \brief Compares two source identifiers for equality.
-     * \param other the SourceId `this` should be compared to
-     * \return true if `this` equals `other`
-     */
-    bool operator==(const SourceId &other) const {
-        return id == other.id;
-    }
-
-    /**
-     * \brief Compares two source identifiers for inequality.
-     * \param other the SourceId `this` should be compared to
-     * \return true if `this` does not equal `other`
-     */
-    bool operator!=(const SourceId &other) const {
-        return id != other.id;
-    }
-
-private:
-    SourceId() : id(-1) {
-    }
-
-    explicit SourceId(short id) : id(id) {
-        assert(id >= 0 && "SourceId must not be negative");
-    }
-
-private:
-    short id;
-
-    friend class SourceManager;         //!< Only SourceManager can create instances.
-    friend class SourceIdTestHelper;
+struct SourceLocationTest : public ::testing::Test, protected SourceIdTestHelper {
 };
 
-} // namespace qore
+TEST_F(SourceLocationTest, DefaultCtor) {
+    SourceLocation loc;
+    EXPECT_EQ(SourceId::Invalid, loc.sourceId);
+    EXPECT_EQ(0, loc.line);
+    EXPECT_EQ(0, loc.column);
+}
 
-#endif // INCLUDE_QORE_CONTEXT_SOURCEID_H_
+TEST_F(SourceLocationTest, Ctor) {
+    SourceLocation loc(sourceId1, 123, 456);
+    EXPECT_EQ(sourceId1, loc.sourceId);
+    EXPECT_EQ(123, loc.line);
+    EXPECT_EQ(456, loc.column);
+}
+
+TEST_F(SourceLocationTest, CopyCtor) {
+    SourceLocation loc0(sourceId1, 123, 456);
+    SourceLocation loc(loc0);
+    EXPECT_EQ(sourceId1, loc.sourceId);
+    EXPECT_EQ(123, loc.line);
+    EXPECT_EQ(456, loc.column);
+}
+
+TEST_F(SourceLocationTest, CopyAssignment) {
+    SourceLocation loc;
+    EXPECT_EQ(SourceId::Invalid, loc.sourceId);
+    EXPECT_EQ(0, loc.line);
+    EXPECT_EQ(0, loc.column);
+
+    SourceLocation loc0(sourceId1, 123, 456);
+    loc = loc0;
+    EXPECT_EQ(sourceId1, loc.sourceId);
+    EXPECT_EQ(123, loc.line);
+    EXPECT_EQ(456, loc.column);
+}
+
+} // namespace qore

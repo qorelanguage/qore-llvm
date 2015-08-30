@@ -25,49 +25,53 @@
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
 #include "qore/context/SourceBuffer.h"
+#include "Helpers.h"
 
 namespace qore {
 
-struct SourceBufferTest : public ::testing::Test {
+struct SourceBufferTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestHelper {
     std::string src{"test"};
     std::vector<char> vec{'a', 'b', 'c'};
-    SourceId sourceId{4};
 };
 
 typedef SourceBufferTest SourceBufferDeathTest;
 
 TEST_F(SourceBufferTest, StdinNewlineAndZero) {
-    SourceBuffer sb(sourceId);
-    EXPECT_EQ(2U, sb.data.size());
-    EXPECT_EQ('\n', sb.data[0]);
-    EXPECT_EQ('\0', sb.data[1]);
+    SourceBuffer sb = createSourceBuffer(sourceId1);
+    EXPECT_EQ(2U, getData(sb).size());
+    EXPECT_EQ('\n', getData(sb)[0]);
+    EXPECT_EQ('\0', getData(sb)[1]);
 }
 
 TEST_F(SourceBufferTest, VectorCtorAddsZero) {
-    SourceBuffer sb(sourceId, vec);
-    EXPECT_EQ(4U, sb.data.size());
-    EXPECT_EQ('a', sb.data[0]);
-    EXPECT_EQ('b', sb.data[1]);
-    EXPECT_EQ('c', sb.data[2]);
-    EXPECT_EQ('\0', sb.data[3]);
+    SourceBuffer sb = createSourceBuffer(sourceId1, vec);
+    EXPECT_EQ(4U, getData(sb).size());
+    EXPECT_EQ('a', getData(sb)[0]);
+    EXPECT_EQ('b', getData(sb)[1]);
+    EXPECT_EQ('c', getData(sb)[2]);
+    EXPECT_EQ('\0', getData(sb)[3]);
 }
 
 TEST_F(SourceBufferTest, IteratorCtorAddsZero) {
-    SourceBuffer sb(sourceId, src.begin(), src.end());
-    EXPECT_EQ(5U, sb.data.size());
-    EXPECT_EQ('t', sb.data[0]);
-    EXPECT_EQ('e', sb.data[1]);
-    EXPECT_EQ('s', sb.data[2]);
-    EXPECT_EQ('t', sb.data[3]);
-    EXPECT_EQ('\0', sb.data[4]);
+    SourceBuffer sb = createSourceBuffer(sourceId1, src.begin(), src.end());
+    EXPECT_EQ(5U, getData(sb).size());
+    EXPECT_EQ('t', getData(sb)[0]);
+    EXPECT_EQ('e', getData(sb)[1]);
+    EXPECT_EQ('s', getData(sb)[2]);
+    EXPECT_EQ('t', getData(sb)[3]);
+    EXPECT_EQ('\0', getData(sb)[4]);
 }
 
 TEST_F(SourceBufferDeathTest, StdinCtorChecksSourceId) {
-    EXPECT_DEATH(SourceBuffer(SourceId::Invalid), "Invalid source id");
+    EXPECT_DEATH(createSourceBuffer(SourceId::Invalid), "Invalid source id");
+}
+
+TEST_F(SourceBufferDeathTest, VectorCtorChecksSourceId) {
+    EXPECT_DEATH(createSourceBuffer(SourceId::Invalid, vec), "Invalid source id");
 }
 
 TEST_F(SourceBufferDeathTest, CtorChecksSourceId) {
-    EXPECT_DEATH(SourceBuffer(SourceId::Invalid, src.begin(), src.end()), "Invalid source id");
+    EXPECT_DEATH(createSourceBuffer(SourceId::Invalid, src.begin(), src.end()), "Invalid source id");
 }
 
 } // namespace qore

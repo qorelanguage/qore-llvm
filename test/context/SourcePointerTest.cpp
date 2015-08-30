@@ -26,48 +26,45 @@
 #include "gtest/gtest.h"
 #include "qore/context/SourcePointer.h"
 #include "../Utils.h"
+#include "Helpers.h"
 
 namespace qore {
 
-struct SourcePointerTest : public ::testing::Test {
-    std::string src{"test"};
-    SourceId sourceId{4};
-    SourceBuffer sourceBuffer{sourceId, src.begin(), src.end()};
-    SourceBuffer stdinBuffer{sourceId};
-
-    std::vector<char>::size_type getIndex(const SourcePointer &ptr) {
-        return ptr.index;
-    }
+struct SourcePointerTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestHelper, SourcePointerTestHelper {
+    std::string src{"te\nst"};
+    SourceBuffer sourceBuffer{createSourceBuffer(sourceId1, src.begin(), src.end())};
+    SourceBuffer stdinBuffer{createSourceBuffer(sourceId1)};
 };
 
 typedef SourcePointerTest SourcePointerDeathTest;
 
 TEST_F(SourcePointerTest, CastToCharPtr) {
     SourcePointer ptr(&sourceBuffer);
-    EXPECT_STREQ("test", ptr);
+    EXPECT_STREQ("te\nst", ptr);
 }
 
 TEST_F(SourcePointerTest, PreIncrement) {
     SourcePointer ptr(&sourceBuffer);
-    EXPECT_STREQ("est", ++ptr);
-    EXPECT_STREQ("est", ptr);
+    EXPECT_STREQ("e\nst", ++ptr);
+    EXPECT_STREQ("e\nst", ptr);
 }
 
 TEST_F(SourcePointerTest, PostIncrement) {
     SourcePointer ptr(&sourceBuffer);
-    EXPECT_STREQ("test", ptr++);
-    EXPECT_STREQ("est", ptr);
+    EXPECT_STREQ("te\nst", ptr++);
+    EXPECT_STREQ("e\nst", ptr);
 }
 
 TEST_F(SourcePointerTest, IncrementStopsAtEnd) {
     SourcePointer ptr(&sourceBuffer);
-    EXPECT_STREQ("est", ++ptr);
+    EXPECT_STREQ("e\nst", ++ptr);
+    EXPECT_STREQ("\nst", ++ptr);
     EXPECT_STREQ("st", ++ptr);
     EXPECT_STREQ("t", ++ptr);
     EXPECT_STREQ("", ++ptr);
-    EXPECT_EQ(4U, getIndex(ptr));
+    EXPECT_EQ(5U, getIndex(ptr));
     EXPECT_STREQ("", ++ptr);
-    EXPECT_EQ(4U, getIndex(ptr));
+    EXPECT_EQ(5U, getIndex(ptr));
 }
 
 TEST_F(SourcePointerTest, StdinFill) {
@@ -88,4 +85,24 @@ TEST_F(SourcePointerDeathTest, CtorCheckNullptr) {
     EXPECT_DEATH(SourcePointer(nullptr), "No buffer provided");
 }
 
+#define EXPECT_LOCATION(LINE, COLUMN, LOCATION)     \
+    {                                               \
+        SourceLocation loc(LOCATION);               \
+        EXPECT_EQ(sourceId1, loc.sourceId);         \
+        EXPECT_EQ(LINE, loc.line);                  \
+        EXPECT_EQ(COLUMN, loc.column);              \
+    }
+
+TEST_F(SourcePointerTest, Location) {
+    SourcePointer ptr(&sourceBuffer);
+    EXPECT_LOCATION(1, 1, ptr++.getLocation());
+    EXPECT_LOCATION(1, 2, ptr.getLocation());
+    EXPECT_LOCATION(1, 3, (++ptr).getLocation());
+    EXPECT_LOCATION(2, 1, (++ptr).getLocation());
+    EXPECT_LOCATION(2, 2, (++ptr).getLocation());
+    EXPECT_LOCATION(2, 3, (++ptr).getLocation());
+    EXPECT_LOCATION(2, 3, (++ptr).getLocation());
+}
+
+#undef EXPECT_LOCATION
 } // namespace qore

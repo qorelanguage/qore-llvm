@@ -38,9 +38,12 @@ namespace qore {
 /**
  * \brief Represents a location in the source code.
  */
-class SourceLocation {
+struct SourceLocation {
 
-public:
+    SourceId sourceId;      //!< Id of the source.
+    short column;           //!< Column number.
+    int line;               //!< Line number.
+
     /**
      * \brief Constructs an empty location instance.
      *
@@ -57,11 +60,6 @@ public:
      */
     SourceLocation(SourceId sourceId, int line, int column) : sourceId(sourceId), column(column), line(line) {
     }
-
-private:
-    SourceId sourceId;
-    short column;
-    int line;
 };
 
 } // namespace qore
