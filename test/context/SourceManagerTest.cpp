@@ -24,13 +24,14 @@
 //
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
+#include <sstream>
 #include "qore/common/Util.h"
 #include "qore/context/SourceManager.h"
 #include "Helpers.h"
 
 namespace qore {
 
-struct SourceManagerTest : ::testing::Test, SourceBufferTestHelper, SourceManagerTestHelper {
+struct SourceManagerTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestHelper, SourceManagerTestHelper {
     SourceManager mgr;
 
 };
@@ -72,6 +73,15 @@ TEST_F(SourceManagerTest, GetName) {
     EXPECT_EQ("buf1", mgr.getName(getSourceId(sb1)));
     EXPECT_EQ("<stdin>", mgr.getName(getSourceId(sb2)));
     EXPECT_EQ(fileName, mgr.getName(getSourceId(sb3)));
+}
+
+TEST_F(SourceManagerTest, FormatLocation) {
+    mgr.createFromString("buf1", "abc");
+    mgr.createFromString("buf2", "abc");
+    std::ostringstream ss;
+
+    EXPECT_EQ(ss, mgr.formatLocation(ss, {sourceId1, 12, 34}));
+    EXPECT_EQ("buf2:12:34", ss.str());
 }
 
 } // namespace qore

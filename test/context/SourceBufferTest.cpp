@@ -62,6 +62,30 @@ TEST_F(SourceBufferTest, IteratorCtorAddsZero) {
     EXPECT_EQ('\0', getData(sb)[4]);
 }
 
+TEST_F(SourceBufferTest, MoveCtor) {
+    SourceBuffer sb = createSourceBuffer(sourceId1, src.begin(), src.end());
+
+    EXPECT_EQ(5U, getData(sb).size());
+
+    SourceBuffer sb2{std::move(sb)};
+
+    EXPECT_EQ(0U, getData(sb).size());
+    EXPECT_EQ(5U, getData(sb2).size());
+}
+
+TEST_F(SourceBufferTest, MoveAssign) {
+    SourceBuffer sb = createSourceBuffer(sourceId1, src.begin(), src.end());
+    SourceBuffer sb2 = createSourceBuffer(sourceId2, vec);
+
+    EXPECT_EQ(5U, getData(sb).size());
+    EXPECT_EQ(4U, getData(sb2).size());
+
+    sb2 = std::move(sb);
+
+    EXPECT_EQ(0U, getData(sb).size());
+    EXPECT_EQ(5U, getData(sb2).size());
+}
+
 TEST_F(SourceBufferDeathTest, StdinCtorChecksSourceId) {
     EXPECT_DEATH(createSourceBuffer(SourceId::Invalid), "Invalid source id");
 }

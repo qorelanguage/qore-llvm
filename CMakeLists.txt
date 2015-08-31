@@ -45,6 +45,8 @@ add_custom_target(cppcheck-eclipse
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
+add_custom_target(clean-coverage COMMAND find . -name *gcda -o -name *gcno | xargs rm)
+
 add_subdirectory(lib)
 add_subdirectory(tools)
 add_subdirectory(test)

@@ -55,7 +55,7 @@ public:
     /**
      * \brief Default move assignment.
      */
-    SourceBuffer &operator=(SourceBuffer &&) noexcept = default;
+    SourceBuffer &operator=(SourceBuffer &&) = default;
 
 private:
     template<typename Iterator>
@@ -79,7 +79,7 @@ private:
     SourceBuffer &operator=(const SourceBuffer &) = delete;
 
 private:
-    const SourceId sourceId;
+    SourceId sourceId;
     std::vector<char> data;
     bool isStdin{false};
 
