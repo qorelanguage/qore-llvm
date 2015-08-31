@@ -23,4 +23,5 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 
-DIAG(ScannerInvalidCharacter, Error, "invalid character '%s'")
+DIAG(ScannerInvalidCharacter, Error, "invalid character '%s'"),
+DIAG(ScannerInvalidInteger, Error, "invalid integer literal '%s'"),

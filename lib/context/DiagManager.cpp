@@ -28,34 +28,54 @@
 /// \brief Provides support for generating diagnostic messages.
 ///
 //------------------------------------------------------------------------------
-#include "qore/context/DiagnosticManager.h"
+#include "qore/context/DiagManager.h"
 #include "qore/common/Logging.h"
+#include "qore/common/Util.h"
 
 namespace qore {
 
 /// \cond IGNORED_BY DOXYGEN
 struct DiagInfo {
-    qore::DiagnosticLevel level;
+    DiagId id;
+    DiagLevel level;
     const char *description;
 };
 
 static const DiagInfo data[] = {
-    #define DIAG(N, L, D)       { qore::DiagnosticLevel::L, D },
-    #include "qore/context/DiagnosticData.inc"
+    #define DIAG(N, L, D)       { DiagId::N, DiagLevel::L, D }
+    #include "qore/context/DiagData.inc"
     #undef DIAG
 };
 /// \endcond IGNORED_BY DOXYGEN
 
-DiagnosticManager::Builder DiagnosticManager::report(Diagnostic diagnostic, SourceLocation location) {
-    return Builder(this, data[static_cast<int>(diagnostic)], location);
+std::ostream &operator<<(std::ostream &o, DiagLevel level) {
+    switch (level) {
+        case DiagLevel::Error:
+            return o << "error";
+        case DiagLevel::Warning:
+            return o << "warning";
+    }
+    QORE_UNREACHABLE("Invalid value of DiagLevel: " << static_cast<int>(level));
 }
 
-DiagnosticManager::Builder::Builder(DiagnosticManager *mgr, const DiagInfo &info, SourceLocation location)
-: mgr(mgr), info(info), location(location) {
+DiagBuilder DiagManager::report(DiagId diagId, SourceLocation location) {
+    return DiagBuilder(*this, data[static_cast<int>(diagId)], location);
 }
 
-DiagnosticManager::Builder::~Builder() {
-    LOG("DIAGNOSTIC: " << info.description << " here: " << location.line << ":" << location.column);
+void DiagManager::process(DiagRecord &record) {
+    LOG("Processing diagnostic: " << record.message);
+    for (auto processor : processors) {
+        processor->process(record);
+    }
+}
+
+DiagBuilder::DiagBuilder(DiagManager &mgr, const DiagInfo &info, SourceLocation location)
+: mgr(mgr), record{info.id, info.level, info.description, location} {
+}
+
+DiagBuilder::~DiagBuilder() {
+    assert(record.message.find("%s") == std::string::npos && "Missing parameter for a diagnostic message");
+    mgr.process(record);
 }
 
 } // namespace qore

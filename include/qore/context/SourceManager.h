@@ -31,9 +31,11 @@
 #ifndef INCLUDE_QORE_CONTEXT_SOURCEMANAGER_H_
 #define INCLUDE_QORE_CONTEXT_SOURCEMANAGER_H_
 
+#include <ostream>
 #include <string>
 #include <vector>
 #include "qore/context/SourceBuffer.h"
+#include "qore/context/SourceLocation.h"
 
 namespace qore {
 
@@ -77,6 +79,16 @@ public:
      */
     const std::string &getName(SourceId id) const {
         return names.at(id.id);
+    }
+
+    /**
+     * \brief Writes a textual representation of a source location into an output stream.
+     * \param o the output stream
+     * \param location the source location
+     * \return the output stream
+     */
+    std::ostream &formatLocation(std::ostream &o, const SourceLocation &location) const {
+        return o << getName(location.sourceId) << ':' << location.line << ':' << location.column;
     }
 
 private:

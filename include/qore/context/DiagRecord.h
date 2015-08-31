@@ -25,12 +25,14 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Provides support for generating diagnostic messages.
+/// \brief Defines the structure of diagnostic messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CONTEXT_DIAGNOSTICMANAGER_H_
-#define INCLUDE_QORE_CONTEXT_DIAGNOSTICMANAGER_H_
+#ifndef INCLUDE_QORE_CONTEXT_DIAGRECORD_H_
+#define INCLUDE_QORE_CONTEXT_DIAGRECORD_H_
 
+#include <ostream>
+#include <string>
 #include "qore/context/SourceLocation.h"
 
 namespace qore {
@@ -38,56 +40,40 @@ namespace qore {
 /**
  * \brief Enumeration of all diagnostic messages.
  */
-enum class Diagnostic {
-    #define DIAG(N, L, D)       N,
+enum class DiagId {
+    #define DIAG(N, L, D)       N
     /// \cond IGNORED_BY DOXYGEN
-    #include "qore/context/DiagnosticData.inc"
+    #include "qore/context/DiagData.inc"
     /// \endcond IGNORED_BY DOXYGEN
     #undef DIAG
-    DiagnosticCount
 };
 
 /**
  * \brief Diagnostic levels.
  */
-enum class DiagnosticLevel {
+enum class DiagLevel {
     Error,          //!< Error
     Warning         //!< Warning
 };
 
 /**
- * \brief Manages reporting of diagnostic messages.
+ * \brief Writes diagnostic level to an output stream.
+ * \param o the output stream
+ * \param level the diagnostic level to write
+ * \return the output stream
  */
-class DiagnosticManager {
+std::ostream &operator<<(std::ostream &o, DiagLevel level);
 
-public:
-    /**
-     * \brief A helper class for building diagnostic messages with additional parameters.
-     */
-    class Builder {
-    public:
-        ~Builder();
-
-    private:
-        Builder(DiagnosticManager *, const class DiagInfo &, SourceLocation location);
-
-    private:
-        DiagnosticManager *mgr;
-        const class DiagInfo &info;
-        const SourceLocation location;
-        friend class DiagnosticManager;
-    };
-
-public:
-    /**
-     * \brief Reports a message.
-     * \param diagnostic the type of the diagnostic message
-     * \param location the location in the source
-     * \return a builder for providing additional info
-     */
-    Builder report(Diagnostic diagnostic, SourceLocation location);
+/**
+ * Represents a diagnostic message.
+ */
+struct DiagRecord {
+    DiagId id;                      //!< Identifier of the diagnostic.
+    DiagLevel level;                //!< Diagnostic level.
+    std::string message;            //!< Diagnostic message.
+    SourceLocation location;        //!< Location in the source.
 };
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_CONTEXT_DIAGNOSTICMANAGER_H_
+#endif // INCLUDE_QORE_CONTEXT_DIAGRECORD_H_

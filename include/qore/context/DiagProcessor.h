@@ -25,43 +25,65 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Processing of diagnostic messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-#define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
+#ifndef INCLUDE_QORE_CONTEXT_DIAGPROCESSOR_H_
+#define INCLUDE_QORE_CONTEXT_DIAGPROCESSOR_H_
 
-#include "qore/context/DiagManager.h"
-#include "qore/context/SourcePointer.h"
-#include "qore/scanner/ScannerInterface.h"
+#include <iostream>
+#include "qore/context/DiagRecord.h"
+#include "qore/context/SourceManager.h"
 
 namespace qore {
 
 /**
- * \brief Implements the Scanner interface.
+ * \brief Interface for diagnostic processors.
  */
-class ScannerImpl : public Scanner {
+class DiagProcessor {
+
+public:
+    virtual ~DiagProcessor() = default;
+
+    /**
+     * \brief Called for each diagnostic message.
+     *
+     * The processor can modify the diagnostic message or report it to the user.
+     * \param record the diagnostic message to process
+     */
+    virtual void process(DiagRecord &record) = 0;
+
+protected:
+    DiagProcessor() = default;
+
+private:
+    DiagProcessor(const DiagProcessor &) = delete;
+    DiagProcessor(DiagProcessor &&) = delete;
+    DiagProcessor &operator=(const DiagProcessor &) = delete;
+    DiagProcessor &operator=(DiagProcessor &&) = delete;
+};
+
+/**
+ * \brief Basic DiagProcessor that writes messages to the standard error stream.
+ */
+class DiagPrinter : public qore::DiagProcessor {
 
 public:
     /**
-     * \brief Constructs a scanner for given source.
-     * \param diagMgr used for reporting diagnostic messages
-     * \param sourceBuffer the source buffer with a qore script
+     * \brief Constructs the instance.
+     * \param sourceMgr source manager for formating locations
      */
-    ScannerImpl(DiagManager &diagMgr, SourceBuffer sourceBuffer);
+    DiagPrinter(const SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
+    }
 
-    void read(Token *token) override;
+    void process(qore::DiagRecord &record) override {
+        sourceMgr.formatLocation(std::cerr, record.location) << ": " << record.level << ": " << record.message << '\n';
+    }
 
 private:
-    TokenType readInternal(Token *token);
-    TokenType readInteger(Token *token);
-
-private:
-    DiagManager &diagMgr;
-    SourceBuffer sourceBuffer;
-    SourcePointer ptr;
+    const SourceManager &sourceMgr;
 };
 
-} //namespace qore
+} // namespace qore
 
-#endif /* INCLUDE_QORE_SCANNER_SCANNERIMPL_H_ */
+#endif // INCLUDE_QORE_CONTEXT_DIAGPROCESSOR_H_
