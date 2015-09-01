@@ -21,7 +21,7 @@ if(QORE_LOGGING)
 endif(QORE_LOGGING)
 
 if(QORE_COVERAGE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -DQORE_COVERAGE")
 endif(QORE_COVERAGE)
 
 find_package(Doxygen)

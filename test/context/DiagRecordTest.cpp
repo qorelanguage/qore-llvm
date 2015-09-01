@@ -26,6 +26,7 @@
 #include "gtest/gtest.h"
 #include <sstream>
 #include "qore/context/DiagRecord.h"
+#include "qore/common/Util.h"
 
 namespace qore {
 
@@ -37,6 +38,11 @@ TEST(DiagRecordTest, LevelToStream) {
     std::ostringstream ss;
     ss << "*" << DiagLevel::Error << "#" << DiagLevel::Warning << "$";
     EXPECT_EQ("*error#warning$", ss.str());
+}
+
+TEST(DiagRecordTest, LevelToStreamErr) {
+    std::ostringstream ss;
+    EXPECT_THROW(ss << static_cast<DiagLevel>(999), class Unreachable);
 }
 
 } // namespace qore

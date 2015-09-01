@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_CONTEXT_SOURCELOCATION_H_
 #define INCLUDE_QORE_CONTEXT_SOURCELOCATION_H_
 
+#include <functional>
 #include "qore/context/SourceId.h"
 
 namespace qore {
@@ -39,6 +40,11 @@ namespace qore {
  * \brief Represents a location in the source code.
  */
 struct SourceLocation {
+
+    /**
+     * \brief Type of callbacks used for formatting locations.
+     */
+    using Formatter = std::function<std::ostream &(std::ostream &, const SourceLocation &)>;
 
     SourceId sourceId;      //!< Id of the source.
     short column;           //!< Column number.
@@ -59,6 +65,24 @@ struct SourceLocation {
      * \param column the column number
      */
     SourceLocation(SourceId sourceId, int line, int column) : sourceId(sourceId), column(column), line(line) {
+    }
+
+    /**
+     * \brief Compares two source locations for equality.
+     * \param other the SourceLocation `this` should be compared to
+     * \return true if `this` equals `other`
+     */
+    bool operator==(const SourceLocation &other) const {
+        return sourceId == other.sourceId && line == other.line && column == other.column;
+    }
+
+    /**
+     * \brief Compares two source locations for inequality.
+     * \param other the SourceLocation `this` should be compared to
+     * \return true if `this` does not equal `other`
+     */
+    bool operator!=(const SourceLocation &other) const {
+        return !(*this == other);
     }
 };
 

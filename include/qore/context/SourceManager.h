@@ -37,6 +37,8 @@
 #include "qore/context/SourceBuffer.h"
 #include "qore/context/SourceLocation.h"
 
+using namespace std::placeholders;
+
 namespace qore {
 
 /**
@@ -89,6 +91,13 @@ public:
      */
     std::ostream &formatLocation(std::ostream &o, const SourceLocation &location) const {
         return o << getName(location.sourceId) << ':' << location.line << ':' << location.column;
+    }
+
+    /**
+     * \brief Converts the source manager into a location formatter.
+     */
+    operator SourceLocation::Formatter() {
+        return std::bind(&SourceManager::formatLocation, this, _1, _2);
     }
 
 private:

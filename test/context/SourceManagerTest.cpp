@@ -84,4 +84,14 @@ TEST_F(SourceManagerTest, FormatLocation) {
     EXPECT_EQ("buf2:12:34", ss.str());
 }
 
+TEST_F(SourceManagerTest, LocationFormatter) {
+    mgr.createFromString("buf1", "abc");
+    mgr.createFromString("buf2", "abc");
+    std::ostringstream ss;
+
+    SourceLocation::Formatter formatter = mgr;
+    EXPECT_EQ(ss, formatter(ss, {sourceId1, 12, 34}));
+    EXPECT_EQ("buf2:12:34", ss.str());
+}
+
 } // namespace qore

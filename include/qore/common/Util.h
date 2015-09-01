@@ -39,7 +39,10 @@
  * In debug version, prints a message and aborts. In release version has undefined behavior.
  * \param M a message to print
  */
-#ifndef NDEBUG
+#ifdef QORE_COVERAGE
+class Unreachable {};
+#define QORE_UNREACHABLE(M) throw Unreachable();
+#elif !defined(NDEBUG)
 #define QORE_UNREACHABLE(M)  CLOG("", "FATAL: Unreachable executed in " << __PRETTY_FUNCTION__ << " - " << M); abort();
 #else
 #define QORE_UNREACHABLE(M) __builtin_unreachable()

@@ -32,17 +32,18 @@
 #include "qore/common/Logging.h"
 #include "qore/common/Util.h"
 
+using namespace std::placeholders;
+
 namespace qore {
 
 /// \cond IGNORED_BY DOXYGEN
 struct DiagInfo {
-    DiagId id;
     DiagLevel level;
     const char *description;
 };
 
 static const DiagInfo data[] = {
-    #define DIAG(N, L, D)       { DiagId::N, DiagLevel::L, D }
+    #define DIAG(N, L, D)       { DiagLevel::L, D }
     #include "qore/context/DiagData.inc"
     #undef DIAG
 };
@@ -59,7 +60,8 @@ std::ostream &operator<<(std::ostream &o, DiagLevel level) {
 }
 
 DiagBuilder DiagManager::report(DiagId diagId, SourceLocation location) {
-    return DiagBuilder(*this, data[static_cast<int>(diagId)], location);
+    const DiagInfo &info = data[static_cast<int>(diagId)];
+    return DiagBuilder(std::bind(&DiagManager::process, this, _1), diagId, info.level, info.description, location);
 }
 
 void DiagManager::process(DiagRecord &record) {
@@ -69,13 +71,18 @@ void DiagManager::process(DiagRecord &record) {
     }
 }
 
-DiagBuilder::DiagBuilder(DiagManager &mgr, const DiagInfo &info, SourceLocation location)
-: mgr(mgr), record{info.id, info.level, info.description, location} {
+DiagBuilder::DiagBuilder(ProcessCallback processCallback, DiagId id, DiagLevel level, std::string message,
+        SourceLocation location)
+: processCallback(processCallback), record{id, level, message, location} {
 }
 
 DiagBuilder::~DiagBuilder() {
     assert(record.message.find("%s") == std::string::npos && "Missing parameter for a diagnostic message");
-    mgr.process(record);
+    try {
+        processCallback(record);
+    } catch (...) {
+        LOG("An exception was caught during diagnostic processing");
+    }
 }
 
 } // namespace qore

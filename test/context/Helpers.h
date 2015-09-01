@@ -27,6 +27,7 @@
 #define TEST_CONTEXT_HELPERS_H_
 
 #include <vector>
+#include "qore/context/DiagManager.h"
 #include "qore/context/SourceManager.h"
 #include "qore/context/SourcePointer.h"
 
@@ -85,6 +86,17 @@ struct SourceManagerTestHelper {
 
     const std::vector<std::string> &getNames(const SourceManager &mgr) const {
         return mgr.names;
+    }
+};
+
+struct DiagManagerTestHelper {
+
+    const DiagRecord &extractRecord(DiagBuilder &builder) {
+        return builder.record;
+    }
+
+    void callProcess(DiagManager &mgr, DiagRecord &record) {
+        mgr.process(record);
     }
 };
 

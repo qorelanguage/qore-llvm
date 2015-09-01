@@ -42,6 +42,22 @@ private:
     std::streambuf* cin_backup;
 };
 
+class RedirectStderr {
+public:
+    RedirectStderr(std::string &dest) : dest(dest), cerr_backup(std::cerr.rdbuf(stream.rdbuf())) {
+    }
+
+    ~RedirectStderr() {
+        std::cerr.rdbuf(cerr_backup);
+        dest = stream.str();
+    }
+
+private:
+    std::string &dest;
+    std::ostringstream stream;
+    std::streambuf* cerr_backup;
+};
+
 } // namespace qore
 
 #endif // TEST_UTILS_H_

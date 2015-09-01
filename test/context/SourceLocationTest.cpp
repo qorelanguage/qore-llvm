@@ -67,4 +67,30 @@ TEST_F(SourceLocationTest, CopyAssignment) {
     EXPECT_EQ(456, loc.column);
 }
 
+TEST_F(SourceLocationTest, CompareEq) {
+    SourceLocation loc1(sourceId1, 12, 34);
+    SourceLocation loc2(sourceId1, 12, 34);
+    SourceLocation loc3(sourceId2, 12, 34);
+    SourceLocation loc4(sourceId1, 13, 34);
+    SourceLocation loc5(sourceId1, 12, 35);
+
+    EXPECT_TRUE(loc1 == loc2);
+    EXPECT_FALSE(loc1 == loc3);
+    EXPECT_FALSE(loc1 == loc4);
+    EXPECT_FALSE(loc1 == loc5);
+}
+
+TEST_F(SourceLocationTest, CompareNe) {
+    SourceLocation loc1(sourceId1, 12, 34);
+    SourceLocation loc2(sourceId1, 12, 34);
+    SourceLocation loc3(sourceId2, 12, 34);
+    SourceLocation loc4(sourceId1, 13, 34);
+    SourceLocation loc5(sourceId1, 12, 35);
+
+    EXPECT_FALSE(loc1 != loc2);
+    EXPECT_TRUE(loc1 != loc3);
+    EXPECT_TRUE(loc1 != loc4);
+    EXPECT_TRUE(loc1 != loc5);
+}
+
 } // namespace qore

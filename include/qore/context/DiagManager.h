@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_CONTEXT_DIAGMANAGER_H_
 #define INCLUDE_QORE_CONTEXT_DIAGMANAGER_H_
 
+#include <functional>
 #include <vector>
 #include "qore/context/DiagProcessor.h"
 
@@ -41,7 +42,38 @@ namespace qore {
  */
 class DiagBuilder {
 
+    using ProcessCallback = std::function<void(DiagRecord&)>;
+
 public:
+    /**
+     * \brief Creates the builder.
+     * \param processCallback the function to be called for processing the message once it is built
+     * \param id the identifier of the diagnostic
+     * \param level the level of the diagnostic
+     * \param message the diagnostic message
+     * \param location the location in the source
+     */
+    DiagBuilder(ProcessCallback processCallback, DiagId id, DiagLevel level, std::string message,
+            SourceLocation location);
+
+    /**
+     * \brief Default move constructor.
+     * \param other the instance to be moved into `this`
+     */
+    DiagBuilder(DiagBuilder &&other) = default;
+
+    /**
+     * \brief Default move assignment.
+     * \param other the instance to be moved into `this`
+     * \return `this`
+     */
+    DiagBuilder &operator=(DiagBuilder &&other) = default;
+
+    /**
+     * \brief Builds the diagnostic message and passes it to the callback specified in constructor.
+     *
+     * Any exceptions throws by the callback are ignored.
+     */
     ~DiagBuilder();
 
     /**
@@ -96,13 +128,14 @@ public:
     }
 
 private:
-    DiagBuilder(class DiagManager &, const class DiagInfo &, SourceLocation);
+    DiagBuilder(const DiagBuilder &) = delete;
+    DiagBuilder &operator=(const DiagBuilder &) = delete;
 
 private:
-    class DiagManager &mgr;
+    ProcessCallback processCallback;
     DiagRecord record;
 
-    friend class DiagManager;
+    friend class DiagManagerTestHelper;
 };
 
 /**
@@ -136,7 +169,7 @@ private:
 private:
     std::vector<DiagProcessor *> processors;
 
-    friend class DiagBuilder;
+    friend class DiagManagerTestHelper;
 };
 
 } // namespace qore
