@@ -40,9 +40,11 @@ TEST(DiagRecordTest, LevelToStream) {
     EXPECT_EQ("*error#warning$", ss.str());
 }
 
+#ifdef QORE_COVERAGE
 TEST(DiagRecordTest, LevelToStreamErr) {
     std::ostringstream ss;
     EXPECT_THROW(ss << static_cast<DiagLevel>(999), class Unreachable);
 }
+#endif
 
 } // namespace qore

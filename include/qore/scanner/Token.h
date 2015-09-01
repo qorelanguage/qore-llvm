@@ -43,7 +43,10 @@ namespace qore {
 enum class TokenType {
     None,           //!< Represents no token. Used for error recovery.
     EndOfFile,      //!< A token reported at the end of the source.
+    KwPrint,        //!< The `print` keyword.
     Integer,        //!< An integer literal.
+    String,         //!< A string literal.
+    Plus,           //!< The '+' symbol.
     Semicolon,      //!< The ';' symbol.
 };
 
@@ -55,6 +58,9 @@ struct Token {
     SourceLocation locationStart;       //!< Location of the start of the token in the source code.
     SourceLocation locationEnd;         //!< Location of the end of the token in the source code.
     uint64_t intValue;                  //!< An integer value associated with the token.
+    std::string stringValue;
+
+    operator std::string() const;
 };
 
 /**

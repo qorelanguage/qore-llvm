@@ -1,9 +1,10 @@
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <unistd.h>
-#include "qore/parser/parser.h"
+#include "qore/context/SourceManager.h"
+#include "qore/parser/ParserImpl.h"
 #include "qore/runtime/runtime.h"
+#include "qore/scanner/ScannerImpl.h"
 #include "dump.h"
 #include "interpret.h"
 
@@ -29,6 +30,11 @@
 void sandbox();
 
 int main(int argc, char *argv[]) {
+    qore::SourceManager sourceMgr;
+    qore::DiagPrinter diagPrinter(sourceMgr);
+    qore::DiagManager diagMgr;
+    diagMgr.addProcessor(&diagPrinter);
+
     int opt;
     bool dumpAst = false;
     bool interpret = false;
@@ -97,12 +103,16 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
+        qore::ScannerImpl scanner{diagMgr, sourceMgr.createFromStdin()};
+        qore::ParserImpl parser{diagMgr, scanner};
+
         InterpretVisitor iv;
         while (true) {
-            std::unique_ptr<Statement> stmt = parseStatement();
-            if (stmt && !stmt->accept(iv)) {
+            std::unique_ptr<Statement> stmt = parser.parseStatement();
+            if (!stmt) {
                 return 0;
             }
+            stmt->accept(iv);
         }
     }
 
@@ -112,11 +122,9 @@ int main(int argc, char *argv[]) {
         outBase.erase(outBase.begin() + i, outBase.end());
     }
 
-    std::ifstream t(argv[optind]);
-    std::stringstream buffer;
-    buffer << t.rdbuf();
-
-    std::unique_ptr<Program> root = parse(buffer.str());
+    qore::ScannerImpl scanner(diagMgr, sourceMgr.createFromFile(argv[optind]));
+    qore::ParserImpl parser(diagMgr, scanner);
+    std::unique_ptr<Program> root = parser.parse();
 
     if (dumpAst) {
         DumpVisitor dv;

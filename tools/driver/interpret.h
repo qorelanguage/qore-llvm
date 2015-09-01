@@ -17,12 +17,6 @@ public:
         *qv = make_str(e->getValue().c_str());
         return qv;
     }
-    R visit(const class VariableLoadExpression *) override {
-        return nullptr;
-    }
-    R visit(const class Assignment *) override {
-        return nullptr;
-    }
     R visit(const class BinaryExpression *e) override {
         QoreValue *l = static_cast<QoreValue*>(e->getLeft()->accept(*this));
         QoreValue *r = static_cast<QoreValue*>(e->getRight()->accept(*this));
@@ -31,9 +25,6 @@ public:
         return result;
     }
     R visit(const class EmptyStatement *) override {
-        return nullptr;
-    }
-    R visit(const class ExpressionStatement *) override {
         return nullptr;
     }
     R visit(const class PrintStatement *s) override {

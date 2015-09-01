@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cstring>
 
-void print_qv(QoreValue qv) {
+__attribute__((visibility("default"))) void print_qv(QoreValue qv) {
     switch (qv.tag) {
         case Tag::Int:
             printf("Qore Print: %li\n", qv.intValue);
@@ -16,14 +16,14 @@ void print_qv(QoreValue qv) {
     }
 }
 
-QoreValue make_int(int64_t value) {
+__attribute__((visibility("default"))) QoreValue make_int(int64_t value) {
     QoreValue qv;
     qv.tag = Tag::Int;
     qv.intValue = value;
     return qv;
 }
 
-QoreValue make_str(const char *value) {
+__attribute__((visibility("default"))) QoreValue make_str(const char *value) {
     QoreValue qv;
     qv.tag = Tag::Str;
     qv.strValue = strdup(value);    //TODO strdup
@@ -38,7 +38,7 @@ static inline void append(std::string &dest, QoreValue v) {
     }
 }
 
-QoreValue eval_add(QoreValue l, QoreValue r) {
+__attribute__((visibility("default"))) QoreValue eval_add(QoreValue l, QoreValue r) {
     if (l.tag == Tag::Int && r.tag == Tag::Int) {
         return make_int(l.intValue + r.intValue);
     }

@@ -46,17 +46,17 @@ public:
         return builder.CreateCall(makeStrFunction, c);
     }
 
-    R visit(const class VariableLoadExpression *e) override {
-        return builder.CreateLoad(variables[e->getName()], e->getName());
-    }
+//    R visit(const class VariableLoadExpression *e) override {
+//        return builder.CreateLoad(variables[e->getName()], e->getName());
+//    }
 
-    R visit(const class Assignment *e) override {
-        llvm::Value *val = static_cast<llvm::Value*>(e->getValue()->accept(*this));
-        llvm::AllocaInst *ai = builder.CreateAlloca(llvm::Type::getInt32Ty(ctx), nullptr, e->getVarName());
-        builder.CreateStore(val, ai);
-        variables[e->getVarName()] = ai;
-        return val;
-    }
+//    R visit(const class Assignment *e) override {
+//        llvm::Value *val = static_cast<llvm::Value*>(e->getValue()->accept(*this));
+//        llvm::AllocaInst *ai = builder.CreateAlloca(llvm::Type::getInt32Ty(ctx), nullptr, e->getVarName());
+//        builder.CreateStore(val, ai);
+//        variables[e->getVarName()] = ai;
+//        return val;
+//    }
 
     R visit(const class BinaryExpression *e) override {
         llvm::Value *l = static_cast<llvm::Value*>(e->getLeft()->accept(*this));
@@ -73,9 +73,9 @@ public:
         return nullptr;
     }
 
-    R visit(const class ExpressionStatement *s) override {
-        return s->getExpression()->accept(*this);
-    }
+//    R visit(const class ExpressionStatement *s) override {
+//        return s->getExpression()->accept(*this);
+//    }
 
     R visit(const class PrintStatement *s) override {
         llvm::Value *value = static_cast<llvm::Value*>(s->getExpression()->accept(*this));

@@ -41,6 +41,8 @@ ScannerImpl::ScannerImpl(DiagManager &diagMgr, SourceBuffer sourceBuffer)
 
 void ScannerImpl::read(Token *token) {
     LOG_FUNCTION();
+
+    token->stringValue.clear();
     do {
         while (isspace(*ptr)) {
             ++ptr;
@@ -48,6 +50,7 @@ void ScannerImpl::read(Token *token) {
         token->locationStart = ptr.getLocation();
     } while ((token->type = readInternal(token)) == TokenType::None);
     token->locationEnd = ptr.getLocation();
+    LOG("Returning token " << *token);
 }
 
 TokenType ScannerImpl::readInternal(Token *token) {
@@ -55,11 +58,28 @@ TokenType ScannerImpl::readInternal(Token *token) {
     switch (char c = *ptr++) {
         case '\0':
             return TokenType::EndOfFile;
+        case '+':
+            return TokenType::Plus;
         case ';':
             return TokenType::Semicolon;
+        case '"':
+            return readString(token);
         case '0':   case '1':   case '2':   case '3':   case '4':
         case '5':   case '6':   case '7':   case '8':   case '9':
             return readInteger(token);
+        case 'a':   case 'b':   case 'c':   case 'd':   case 'e':
+        case 'f':   case 'g':   case 'h':   case 'i':   case 'j':
+        case 'k':   case 'l':   case 'm':   case 'n':   case 'o':
+        case 'p':   case 'q':   case 'r':   case 's':   case 't':
+        case 'u':   case 'v':   case 'w':   case 'x':   case 'y':
+        case 'z':
+        case 'A':   case 'B':   case 'C':   case 'D':   case 'E':
+        case 'F':   case 'G':   case 'H':   case 'I':   case 'J':
+        case 'K':   case 'L':   case 'M':   case 'N':   case 'O':
+        case 'P':   case 'Q':   case 'R':   case 'S':   case 'T':
+        case 'U':   case 'V':   case 'W':   case 'X':   case 'Y':
+        case 'Z':
+            return readIdentifier(token);
         default:
             diagMgr.report(DiagId::ScannerInvalidCharacter, token->locationStart) << c;
             return TokenType::None;
@@ -81,6 +101,33 @@ TokenType ScannerImpl::readInteger(Token *token) {
         token->intValue = 0;
     }
     return TokenType::Integer;
+}
+
+TokenType ScannerImpl::readIdentifier(Token *token) {
+    const char *start = ptr - 1;
+    while (isalnum(*ptr)) {
+        ++ptr;
+    }
+    const char *end = ptr;
+
+    if (std::string{start, end} == "print") {
+        return TokenType::KwPrint;
+    }
+
+    diagMgr.report(DiagId::ScannerInvalidKeyword, token->locationStart).arg(start, end);
+    return TokenType::None;
+}
+
+TokenType ScannerImpl::readString(Token *token) {
+    char c;
+    while ((c = *ptr++) != '"') {
+        if (*ptr == '\0' || *ptr == '\n') {
+            diagMgr.report(DiagId::ScannerUnendedStringLiteral, token->locationStart);
+            break;
+        }
+        token->stringValue.push_back(c);
+    }
+    return TokenType::String;
 }
 
 } //namespace qore

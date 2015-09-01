@@ -28,8 +28,8 @@
 /// \brief Defines the interface of the scanner.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERINTERFACE_H_
-#define INCLUDE_QORE_SCANNER_SCANNERINTERFACE_H_
+#ifndef INCLUDE_QORE_SCANNER_SCANNER_H_
+#define INCLUDE_QORE_SCANNER_SCANNER_H_
 
 #include "qore/scanner/Token.h"
 
@@ -62,4 +62,4 @@ private:
 
 } //namespace qore
 
-#endif /* INCLUDE_QORE_SCANNER_SCANNERINTERFACE_H_ */
+#endif /* INCLUDE_QORE_SCANNER_SCANNER_H_ */

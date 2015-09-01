@@ -28,16 +28,26 @@
 /// \brief Token functions.
 ///
 //------------------------------------------------------------------------------
-#include "qore/common/Util.h"
 #include "qore/scanner/Token.h"
+#include <sstream>
+#include "qore/common/Util.h"
 
 namespace qore {
+
+Token::operator std::string() const {
+    std::ostringstream stream;
+    stream << *this;
+    return stream.str();
+}
 
 std::string to_string(TokenType tokenType) {
     switch (tokenType) {
         case TokenType::None: return "None";
         case TokenType::EndOfFile: return "EndOfFile";
+        case TokenType::KwPrint: return "KwPrint";
         case TokenType::Integer: return "Integer";
+        case TokenType::String: return "String";
+        case TokenType::Plus: return "Plus";
         case TokenType::Semicolon: return "Semicolon";
     }
     QORE_UNREACHABLE("unknown token type " << static_cast<int>(tokenType));
@@ -47,6 +57,9 @@ std::ostream &operator<<(std::ostream &o, const Token &token) {
     o << '{' << token.type;
     if (token.type == TokenType::Integer) {
         o << ", intValue = " << token.intValue;
+    }
+    if (token.type == TokenType::String) {
+        o << ", stringValue = " << token.stringValue;
     }
     return o << "}";
 }

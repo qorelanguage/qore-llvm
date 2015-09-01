@@ -42,7 +42,7 @@ namespace qore {
  */
 class DiagBuilder {
 
-    using ProcessCallback = std::function<void(DiagRecord&)>;
+    using ProcessCallback = std::function<void(DiagRecord &)>;
 
 public:
     /**

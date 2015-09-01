@@ -25,45 +25,35 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Scanner implementation.
+/// \brief Parser interface.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-#define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
 
-#include "qore/context/DiagManager.h"
-#include "qore/context/SourcePointer.h"
-#include "qore/scanner/Scanner.h"
+#ifndef INCLUDE_QORE_PARSER_PARSER_H_
+#define INCLUDE_QORE_PARSER_PARSER_H_
+
+#include <memory>
+#include "qore/ast/ast.h"
 
 namespace qore {
 
-/**
- * \brief Implements the Scanner interface.
- */
-class ScannerImpl : public Scanner {
+class Parser {
 
 public:
-    /**
-     * \brief Constructs a scanner for given source.
-     * \param diagMgr used for reporting diagnostic messages
-     * \param sourceBuffer the source buffer with a qore script
-     */
-    ScannerImpl(DiagManager &diagMgr, SourceBuffer sourceBuffer);
+    virtual ~Parser() = default;
+    virtual std::unique_ptr<Program> parse() = 0;
+    virtual std::unique_ptr<Statement> parseStatement() = 0;
 
-    void read(Token *token) override;
+protected:
+    Parser() = default;
 
 private:
-    TokenType readInternal(Token *token);
-    TokenType readInteger(Token *token);
-    TokenType readIdentifier(Token *token);
-    TokenType readString(Token *token);
-
-private:
-    DiagManager &diagMgr;
-    SourceBuffer sourceBuffer;
-    SourcePointer ptr;          //TODO stateless scanner?
+    Parser(const Parser &) = delete;
+    Parser(Parser &&) = delete;
+    Parser &operator=(const Parser &) = delete;
+    Parser &operator=(Parser &&) = delete;
 };
 
-} //namespace qore
+} // namespace qore
 
-#endif /* INCLUDE_QORE_SCANNER_SCANNERIMPL_H_ */
+#endif // INCLUDE_QORE_PARSER_PARSER_H_
