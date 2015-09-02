@@ -30,6 +30,7 @@
 #include "qore/context/DiagManager.h"
 #include "qore/context/SourceManager.h"
 #include "qore/context/SourcePointer.h"
+#include "../context/Mocks.h"
 
 namespace qore {
 
@@ -61,7 +62,6 @@ struct SourceBufferTestHelper {
         return SourceBuffer(sourceId, begin, end);
     }
 
-
     SourceId getSourceId(const SourceBuffer &sb) const {
         return sb.sourceId;
     }
@@ -70,7 +70,7 @@ struct SourceBufferTestHelper {
         return sb.isStdin;
     }
 
-    const std::vector<char> &getData(const SourceBuffer &sb) const {
+    std::vector<char> &getData(SourceBuffer &sb) const {
         return sb.data;
     }
 };
@@ -99,6 +99,21 @@ struct DiagManagerTestHelper {
         mgr.process(record);
     }
 };
+
+struct DiagTestHelper {
+    DiagTestHelper() {
+        diagMgr.addProcessor(&mockDiagProcessor);
+    }
+    DiagManager diagMgr;
+    MockDiagProcessor mockDiagProcessor;
+};
+
+#define DIAG_NONE()   EXPECT_CALL(mockDiagProcessor, process(::testing::_)).Times(0)
+
+#define DIAG_EXPECT_AND_CAPTURE(dest, id, line, column)                                     \
+    DiagRecord dest;                                                                        \
+    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordIdAndLocation(id, line, column))) \
+        .WillOnce(::testing::SaveArg<0>(&dest))
 
 } // namespace qore
 

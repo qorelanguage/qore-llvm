@@ -50,8 +50,7 @@ public:
      * is not destroyed before the pointer.
      * \param sourceBuffer the source buffer into which this pointer points
      */
-    SourcePointer(SourceBuffer *sourceBuffer) : sourceBuffer(sourceBuffer) {
-        assert(sourceBuffer != nullptr && "No buffer provided");
+    SourcePointer(SourceBuffer &sourceBuffer) : sourceBuffer(sourceBuffer) {
     }
 
     /**
@@ -61,7 +60,7 @@ public:
      * may become invalid when a newline character is consumed by either operator++().
      */
     operator const char *() {
-        return &sourceBuffer->data[index];
+        return &sourceBuffer.data[index];
     }
 
     /**
@@ -71,9 +70,9 @@ public:
      * \return this after advancing the pointer
      */
     SourcePointer &operator++() {
-        char c = sourceBuffer->data[index];
+        char c = sourceBuffer.data[index];
         if (c == '\n') {
-            if (sourceBuffer->isStdin) {
+            if (sourceBuffer.isStdin) {
                 fill();
             }
             line++;
@@ -103,13 +102,13 @@ public:
      * \return the location of the current character
      */
     SourceLocation getLocation() {
-        return SourceLocation(sourceBuffer->sourceId, line, column);
+        return SourceLocation(sourceBuffer.sourceId, line, column);
     }
 
 private:
     void fill();
 
-    SourceBuffer *sourceBuffer;
+    SourceBuffer &sourceBuffer;
     std::vector<char>::size_type index{0};
     int line{1};
     int column{1};

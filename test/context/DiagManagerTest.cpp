@@ -24,23 +24,10 @@
 //
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 #include "qore/context/DiagManager.h"
 #include "Helpers.h"
+#include "Mocks.h"
 #include "../Utils.h"
-
-namespace {
-
-class MockDiagProcessor : public qore::DiagProcessor {
-public:
-    MOCK_METHOD1(process, void(qore::DiagRecord &));
-};
-
-MATCHER_P(MatchDiagRecord, r, "") {
-    return arg.id == r.id && arg.level == r.level && arg.message == r.message && arg.location == r.location;
-}
-
-}
 
 namespace qore {
 

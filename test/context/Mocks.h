@@ -23,48 +23,27 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_UTILS_H_
-#define TEST_UTILS_H_
+#ifndef TEST_CONTEXT_MOCKS_H_
+#define TEST_CONTEXT_MOCKS_H_
 
-#include <iostream>
-#include <string>
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 namespace qore {
 
-class RedirectStdin {
+class MockDiagProcessor : public qore::DiagProcessor {
 public:
-    RedirectStdin(std::string string) : stream(string), cin_backup(std::cin.rdbuf(stream.rdbuf())) {
-    }
-
-    ~RedirectStdin() {
-        std::cin.rdbuf(cin_backup);
-    }
-
-private:
-    std::istringstream stream;
-    std::streambuf* cin_backup;
+    MOCK_METHOD1(process, void(qore::DiagRecord &));
 };
 
-class RedirectStderr {
-public:
-    RedirectStderr(std::string &dest) : dest(dest), cerr_backup(std::cerr.rdbuf(stream.rdbuf())) {
-    }
+MATCHER_P(MatchDiagRecord, r, "") {
+    return arg.id == r.id && arg.level == r.level && arg.message == r.message && arg.location == r.location;
+}
 
-    ~RedirectStderr() {
-        std::cerr.rdbuf(cerr_backup);
-        dest = stream.str();
-    }
-
-private:
-    std::string &dest;
-    std::ostringstream stream;
-    std::streambuf* cerr_backup;
-};
-
-inline bool contains(const std::string &hayStack, const std::string &needle) {
-    return hayStack.find(needle) != std::string::npos;
+MATCHER_P3(MatchDiagRecordIdAndLocation, expectedDiagId, expectedLine, expectedColumn, "") {
+    return arg.id == expectedDiagId && arg.location.line == expectedLine && arg.location.column == expectedColumn;
 }
 
 } // namespace qore
 
-#endif // TEST_UTILS_H_
+#endif // TEST_CONTEXT_MOCKS_H_

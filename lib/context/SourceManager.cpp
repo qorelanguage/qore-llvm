@@ -43,7 +43,7 @@ void SourcePointer::fill() {
     std::getline(std::cin, line);
     if (std::cin.good()) {
         line.push_back('\n');
-        sourceBuffer->data.insert(sourceBuffer->data.end() - 1, line.begin(), line.end());
+        sourceBuffer.data.insert(sourceBuffer.data.end() - 1, line.begin(), line.end());
     }
 }
 

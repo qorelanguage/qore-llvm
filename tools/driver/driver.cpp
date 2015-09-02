@@ -103,7 +103,8 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        qore::ScannerImpl scanner{diagMgr, sourceMgr.createFromStdin()};
+        qore::SourceBuffer sourceBuffer = sourceMgr.createFromStdin();
+        qore::ScannerImpl scanner{diagMgr, sourceBuffer};
         qore::ParserImpl parser{diagMgr, scanner};
 
         InterpretVisitor iv;
@@ -122,7 +123,8 @@ int main(int argc, char *argv[]) {
         outBase.erase(outBase.begin() + i, outBase.end());
     }
 
-    qore::ScannerImpl scanner(diagMgr, sourceMgr.createFromFile(argv[optind]));
+    qore::SourceBuffer sourceBuffer = sourceMgr.createFromFile(argv[optind]);
+    qore::ScannerImpl scanner(diagMgr, sourceBuffer);
     qore::ParserImpl parser(diagMgr, scanner);
     std::unique_ptr<Program> root = parser.parse();
 

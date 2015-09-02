@@ -14,7 +14,7 @@ void sandbox() {
     diagMgr.addProcessor(&diagPrinter);
 
     qore::SourceBuffer srcBuffer = sourceMgr.createFromString("test", "  print 567 + 4 +5 print 56; wtf gr ; print 6");
-    qore::ScannerImpl scanner(diagMgr, std::move(srcBuffer));
+    qore::ScannerImpl scanner(diagMgr, srcBuffer);
 
     qore::ParserImpl parser(diagMgr, scanner);
     std::unique_ptr<Program> program(parser.parse());

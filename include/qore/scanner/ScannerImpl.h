@@ -46,9 +46,9 @@ public:
     /**
      * \brief Constructs a scanner for given source.
      * \param diagMgr used for reporting diagnostic messages
-     * \param sourceBuffer the source buffer with a qore script
+     * \param sourcePointer a pointer to the source script
      */
-    ScannerImpl(DiagManager &diagMgr, SourceBuffer sourceBuffer);
+    ScannerImpl(DiagManager &diagMgr, SourcePointer sourcePointer);
 
     void read(Token *token) override;
 
@@ -60,7 +60,6 @@ private:
 
 private:
     DiagManager &diagMgr;
-    SourceBuffer sourceBuffer;
     SourcePointer ptr;          //TODO stateless scanner?
 };
 

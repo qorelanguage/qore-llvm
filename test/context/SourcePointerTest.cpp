@@ -39,24 +39,24 @@ struct SourcePointerTest : ::testing::Test, SourceIdTestHelper, SourceBufferTest
 typedef SourcePointerTest SourcePointerDeathTest;
 
 TEST_F(SourcePointerTest, CastToCharPtr) {
-    SourcePointer ptr(&sourceBuffer);
+    SourcePointer ptr(sourceBuffer);
     EXPECT_STREQ("te\nst", ptr);
 }
 
 TEST_F(SourcePointerTest, PreIncrement) {
-    SourcePointer ptr(&sourceBuffer);
+    SourcePointer ptr(sourceBuffer);
     EXPECT_STREQ("e\nst", ++ptr);
     EXPECT_STREQ("e\nst", ptr);
 }
 
 TEST_F(SourcePointerTest, PostIncrement) {
-    SourcePointer ptr(&sourceBuffer);
+    SourcePointer ptr(sourceBuffer);
     EXPECT_STREQ("te\nst", ptr++);
     EXPECT_STREQ("e\nst", ptr);
 }
 
 TEST_F(SourcePointerTest, IncrementStopsAtEnd) {
-    SourcePointer ptr(&sourceBuffer);
+    SourcePointer ptr(sourceBuffer);
     EXPECT_STREQ("e\nst", ++ptr);
     EXPECT_STREQ("\nst", ++ptr);
     EXPECT_STREQ("st", ++ptr);
@@ -69,20 +69,16 @@ TEST_F(SourcePointerTest, IncrementStopsAtEnd) {
 
 TEST_F(SourcePointerTest, StdinFill) {
     RedirectStdin redirect("x\n");
-    SourcePointer ptr(&stdinBuffer);
+    SourcePointer ptr(stdinBuffer);
     EXPECT_STREQ("\n", ptr);
     EXPECT_STREQ("x\n", ++ptr);
 }
 
 TEST_F(SourcePointerTest, StdinFillEof) {
     RedirectStdin redirect("");
-    SourcePointer ptr(&stdinBuffer);
+    SourcePointer ptr(stdinBuffer);
     EXPECT_STREQ("\n", ptr);
     EXPECT_STREQ("", ++ptr);
-}
-
-TEST_F(SourcePointerDeathTest, CtorCheckNullptr) {
-    EXPECT_DEATH(SourcePointer(nullptr), "No buffer provided");
 }
 
 #define EXPECT_LOCATION(LINE, COLUMN, LOCATION)     \
@@ -94,7 +90,7 @@ TEST_F(SourcePointerDeathTest, CtorCheckNullptr) {
     }
 
 TEST_F(SourcePointerTest, Location) {
-    SourcePointer ptr(&sourceBuffer);
+    SourcePointer ptr(sourceBuffer);
     EXPECT_LOCATION(1, 1, ptr++.getLocation());
     EXPECT_LOCATION(1, 2, ptr.getLocation());
     EXPECT_LOCATION(1, 3, (++ptr).getLocation());

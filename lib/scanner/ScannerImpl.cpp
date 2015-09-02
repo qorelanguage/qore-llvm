@@ -34,8 +34,8 @@
 
 namespace qore {
 
-ScannerImpl::ScannerImpl(DiagManager &diagMgr, SourceBuffer sourceBuffer)
-: diagMgr(diagMgr), sourceBuffer(std::move(sourceBuffer)), ptr(&this->sourceBuffer) {
+ScannerImpl::ScannerImpl(DiagManager &diagMgr, SourcePointer sourcePointer)
+: diagMgr(diagMgr), ptr(std::move(sourcePointer)) {
     LOG_FUNCTION();
 }
 
@@ -121,7 +121,7 @@ TokenType ScannerImpl::readIdentifier(Token *token) {
 TokenType ScannerImpl::readString(Token *token) {
     char c;
     while ((c = *ptr++) != '"') {
-        if (*ptr == '\0' || *ptr == '\n') {
+        if (c == '\0' || c == '\n') {
             diagMgr.report(DiagId::ScannerUnendedStringLiteral, token->locationStart);
             break;
         }
