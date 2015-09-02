@@ -53,6 +53,8 @@ void ParserImpl::recoverConsumeToken() {
 
 void ParserImpl::recoverStatementEnd() {
     //TODO right curly brace & other tokens
+    DisableDiag dd(diagMgr);
+
     while (tokenType() != TokenType::Semicolon && tokenType() != TokenType::EndOfFile) {
         consume();
     }
@@ -106,7 +108,7 @@ Statement *ParserImpl::statement() {
 PrintStatement *ParserImpl::printStatement() {
     match(TokenType::KwPrint);
     Expression *expr = expression();
-    match(TokenType::Semicolon, &ParserImpl::recoverDoNothing);
+    match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd);
     return new PrintStatement(expr);
 }
 

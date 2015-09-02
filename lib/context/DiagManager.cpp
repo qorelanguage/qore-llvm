@@ -65,7 +65,10 @@ DiagBuilder DiagManager::report(DiagId diagId, SourceLocation location) {
 }
 
 void DiagManager::process(DiagRecord &record) {
-    LOG("Processing diagnostic: " << record.message);
+    LOG("Processing diagnostic (disabledCounter = " << disabledCounter << "): " << record.message);
+    if (disabledCounter) {
+        return;
+    }
     for (auto processor : processors) {
         processor->process(record);
     }

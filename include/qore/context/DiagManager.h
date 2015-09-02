@@ -153,6 +153,23 @@ public:
     DiagBuilder report(DiagId diagId, SourceLocation location);
 
     /**
+     * \brief Temporarily disables reporting of all diagnostic messages.
+     */
+    void disable() {
+        disabledCounter++;
+    }
+
+    /**
+     * \brief Re-enables reporting of all diagnostic messages disabled by disable().
+     *
+     * Must be called as many times as disable().
+     */
+    void enable() {
+        assert(disabledCounter && "Diagnostic are already enabled");
+        disabledCounter--;
+    }
+
+    /**
      * \brief Adds a diagnostic processor which will be called for each diagnostic.
      *
      * Diagnostic manager does not take ownership of the pointer, it is the responsibility of the caller
@@ -168,8 +185,34 @@ private:
 
 private:
     std::vector<DiagProcessor *> processors;
+    int disabledCounter{0};
 
     friend class DiagManagerTestHelper;
+};
+
+/**
+ * \brief A helper class for disabling diagnostics an enabling them at the end of scope.
+ */
+class DisableDiag {
+public:
+
+    /**
+     * \brief Disables diagnostic messages until the end of the scope.
+     * \param diagMgr the diagnostic manager
+     */
+    DisableDiag(DiagManager &diagMgr) : diagMgr(diagMgr) {
+        diagMgr.disable();
+    }
+
+    /**
+     * \brief Re-enables diagnostics disabled by the constructor.
+     */
+    ~DisableDiag() {
+        diagMgr.enable();
+    }
+
+private:
+    DiagManager &diagMgr;
 };
 
 } // namespace qore

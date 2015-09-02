@@ -102,6 +102,11 @@ TEST_F(DiagManagerDeathTest, BuilderExtraArg) {
             DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text", location) << "a";
     , "Unexpected parameter");
 }
+
+TEST_F(DiagManagerDeathTest, EnableEnabled) {
+    DiagManager mgr;
+    EXPECT_DEATH(mgr.enable(), "already enabled");
+}
 #endif
 
 TEST_F(DiagManagerTest, ReportCreatesBuilder) {
@@ -125,6 +130,21 @@ TEST_F(DiagManagerTest, ProcessCallsProcessor) {
     callProcess(mgr, record);
 }
 
+TEST_F(DiagManagerTest, DisableEnable) {
+    MockDiagProcessor processor;
+    DiagManager mgr;
+    mgr.addProcessor(&processor);
+
+    DiagRecord record1{DiagId::ScannerInvalidCharacter, DiagLevel::Error, "message1", location};
+    DiagRecord record2{DiagId::ScannerInvalidInteger, DiagLevel::Warning, "message2", location};
+    EXPECT_CALL(processor, process(MatchDiagRecord(record1))).Times(0);
+    EXPECT_CALL(processor, process(MatchDiagRecord(record2))).Times(1);
+    mgr.disable();
+    callProcess(mgr, record1);
+    mgr.enable();
+    callProcess(mgr, record2);
+}
+
 TEST_F(DiagManagerTest, DiagPrinter) {
     DiagRecord record{DiagId::ScannerInvalidCharacter, DiagLevel::Error, "message", location};
     DiagPrinter printer([&](std::ostream &o, const qore::SourceLocation &l) -> std::ostream & {
@@ -138,6 +158,16 @@ TEST_F(DiagManagerTest, DiagPrinter) {
         printer.process(record);
     }
     EXPECT_EQ("location_ok: error: message\n", capturedStderr);
+}
+
+TEST_F(DiagManagerTest, DisableDiagHelper) {
+    DiagManager diagMgr;
+    {
+        EXPECT_EQ(0U, getDisabledCounter(diagMgr));
+        DisableDiag dd(diagMgr);
+        EXPECT_EQ(1U, getDisabledCounter(diagMgr));
+    }
+    EXPECT_EQ(0U, getDisabledCounter(diagMgr));
 }
 
 } // namespace qore

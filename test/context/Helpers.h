@@ -98,6 +98,10 @@ struct DiagManagerTestHelper {
     void callProcess(DiagManager &mgr, DiagRecord &record) {
         mgr.process(record);
     }
+
+    int getDisabledCounter(const DiagManager &mgr) {
+        return mgr.disabledCounter;
+    }
 };
 
 struct DiagTestHelper {
