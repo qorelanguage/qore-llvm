@@ -36,7 +36,7 @@ using namespace std::placeholders;
 
 namespace qore {
 
-/// \cond IGNORED_BY DOXYGEN
+/// \cond IGNORED_BY_DOXYGEN
 struct DiagInfo {
     DiagLevel level;
     const char *description;
@@ -47,7 +47,7 @@ static const DiagInfo data[] = {
     #include "qore/context/DiagData.inc"
     #undef DIAG
 };
-/// \endcond IGNORED_BY DOXYGEN
+/// \endcond
 
 std::ostream &operator<<(std::ostream &o, DiagLevel level) {
     switch (level) {

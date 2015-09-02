@@ -43,12 +43,11 @@ Token::operator std::string() const {
 std::string to_string(TokenType tokenType) {
     switch (tokenType) {
         case TokenType::None: return "None";
-        case TokenType::EndOfFile: return "EndOfFile";
-        case TokenType::KwPrint: return "KwPrint";
-        case TokenType::Integer: return "Integer";
-        case TokenType::String: return "String";
-        case TokenType::Plus: return "Plus";
-        case TokenType::Semicolon: return "Semicolon";
+        #define TOK(N)       case TokenType::N: return #N;
+        /// \cond IGNORED_BY_DOXYGEN
+        #include "qore/scanner/TokenData.inc"
+        /// \endcond
+        #undef TOK
     }
     QORE_UNREACHABLE("unknown token type " << static_cast<int>(tokenType));
 }

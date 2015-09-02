@@ -39,27 +39,31 @@ namespace qore {
 
 /**
  * \brief Token types.
+ *
+ * \ref TokenData.inc
  */
 enum class TokenType {
     None,           //!< Represents no token. Used for error recovery.
-    EndOfFile,      //!< A token reported at the end of the source.
-    KwPrint,        //!< The `print` keyword.
-    Integer,        //!< An integer literal.
-    String,         //!< A string literal.
-    Plus,           //!< The '+' symbol.
-    Semicolon,      //!< The ';' symbol.
+    #define TOK(N)       N,
+    /// \cond IGNORED_BY_DOXYGEN
+    #include "qore/scanner/TokenData.inc"
+    /// \endcond
+    #undef TOK
 };
 
 /**
  * \brief Describes a token (lexical element).
  */
 struct Token {
-    TokenType type{TokenType::None};    //!< The type of the token.
+    TokenType type = TokenType::None;   //!< The type of the token.
     SourceLocation locationStart;       //!< Location of the start of the token in the source code.
     SourceLocation locationEnd;         //!< Location of the end of the token in the source code.
     uint64_t intValue;                  //!< An integer value associated with the token.
-    std::string stringValue;
+    std::string stringValue;            //!< A string value associated with the token.
 
+    /**
+     * \brief Converts the token to a string for debugging purposes.
+     */
     operator std::string() const;
 };
 

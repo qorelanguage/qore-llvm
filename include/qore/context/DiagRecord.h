@@ -39,12 +39,14 @@ namespace qore {
 
 /**
  * \brief Enumeration of all diagnostic messages.
+ *
+ * \ref DiagData.inc
  */
 enum class DiagId {
     #define DIAG(N, L, D)       N
-    /// \cond IGNORED_BY DOXYGEN
+    /// \cond IGNORED_BY_DOXYGEN
     #include "qore/context/DiagData.inc"
-    /// \endcond IGNORED_BY DOXYGEN
+    /// \endcond
     #undef DIAG
 };
 
@@ -65,7 +67,7 @@ enum class DiagLevel {
 std::ostream &operator<<(std::ostream &o, DiagLevel level);
 
 /**
- * Represents a diagnostic message.
+ * \brief Represents a diagnostic message.
  */
 struct DiagRecord {
     DiagId id;                      //!< Identifier of the diagnostic.

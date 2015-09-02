@@ -54,6 +54,7 @@ public:
 
     /**
      * \brief Default move assignment.
+     * \return `this`
      */
     SourceBuffer &operator=(SourceBuffer &&) = default;
 
