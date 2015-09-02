@@ -90,6 +90,7 @@ TEST_F(DiagManagerTest, BuilderDtorNothrow) {
     );
 }
 
+#ifndef NDEBUG
 TEST_F(DiagManagerDeathTest, BuilderDtorChecksMissingArgs) {
     EXPECT_DEATH(
             DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text '%s' text", location);
@@ -101,6 +102,7 @@ TEST_F(DiagManagerDeathTest, BuilderExtraArg) {
             DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text", location) << "a";
     , "Unexpected parameter");
 }
+#endif
 
 TEST_F(DiagManagerTest, ReportCreatesBuilder) {
     DiagManager mgr;

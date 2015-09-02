@@ -31,6 +31,9 @@
 #ifndef INCLUDE_QORE_COMMON_UTIL_H_
 #define INCLUDE_QORE_COMMON_UTIL_H_
 
+#include <exception>
+#include <string>
+#include <sstream>
 #include "qore/common/Logging.h"
 
 /**

@@ -86,6 +86,7 @@ TEST_F(SourceBufferTest, MoveAssign) {
     EXPECT_EQ(5U, getData(sb2).size());
 }
 
+#ifndef NDEBUG
 TEST_F(SourceBufferDeathTest, StdinCtorChecksSourceId) {
     EXPECT_DEATH(createSourceBuffer(SourceId::Invalid), "Invalid source id");
 }
@@ -97,5 +98,6 @@ TEST_F(SourceBufferDeathTest, VectorCtorChecksSourceId) {
 TEST_F(SourceBufferDeathTest, CtorChecksSourceId) {
     EXPECT_DEATH(createSourceBuffer(SourceId::Invalid, src.begin(), src.end()), "Invalid source id");
 }
+#endif
 
 } // namespace qore

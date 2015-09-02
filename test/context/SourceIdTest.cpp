@@ -52,6 +52,7 @@ TEST_F(SourceIdTest, NotEquals) {
     EXPECT_TRUE(sourceId1 != sourceId2);
 }
 
+#ifndef NDEBUG
 TEST_F(SourceIdDeathTest, CtorChecksNegative) {
     EXPECT_DEATH(createSourceId(-123), "not be negative");
 }
@@ -59,5 +60,6 @@ TEST_F(SourceIdDeathTest, CtorChecksNegative) {
 TEST_F(SourceIdDeathTest, CtorChecksOutOfRange) {
     EXPECT_DEATH(createSourceId(32768), "not be negative");
 }
+#endif
 
 } // namespace qore
