@@ -23,48 +23,52 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Parser interface.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSER_H_
-#define INCLUDE_QORE_PARSER_PARSER_H_
+#ifndef TEST_AST_MOCKS_H_
+#define TEST_AST_MOCKS_H_
 
-#include "qore/ast/Program.h"
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
+#include <memory>
+#include "qore/ast/Expression.h"
+#include "qore/ast/Statement.h"
+#include "qore/ast/Visitor.h"
 
 namespace qore {
+namespace ast {
 
-/**
- * \brief Qore parser interface.
- */
-class Parser {
-
+class MockExpression : public Expression {
 public:
-    virtual ~Parser() = default;
+    using Ptr = std::unique_ptr<MockExpression>;
 
-    /**
-     * \brief Parses the whole script.
-     * \return the root of the AST
-     */
-    virtual ast::Program::Ptr parse() = 0;
+    MOCK_CONST_METHOD1(accept, void*(Visitor &));
 
-    /**
-     * \brief Parses a single statement.
-     * \return the parsed statement or `nullptr` if the end of input has been reached
-     */
-    virtual ast::Statement::Ptr parseStatement() = 0;
+    static Ptr create() {
+        return Ptr(new MockExpression());
+    }
+};
 
-protected:
-    Parser() = default;
+class MockStatement : public Statement {
+public:
+    using Ptr = std::unique_ptr<MockStatement>;
 
-private:
-    Parser(const Parser &) = delete;
-    Parser(Parser &&) = delete;
-    Parser &operator=(const Parser &) = delete;
-    Parser &operator=(Parser &&) = delete;
+    MOCK_CONST_METHOD1(accept, void*(Visitor &));
+
+    static Ptr create() {
+        return Ptr(new MockStatement());
+    }
+};
+
+class MockVisitor : public Visitor {
+public:
+    MOCK_METHOD1(visit, void*(const class IntegerLiteral *));
+    MOCK_METHOD1(visit, void*(const class StringLiteral *));
+    MOCK_METHOD1(visit, void*(const class BinaryExpression *));
+    MOCK_METHOD1(visit, void*(const class EmptyStatement *));
+    MOCK_METHOD1(visit, void*(const class PrintStatement *));
+    MOCK_METHOD1(visit, void*(const class Program *));
 };
 
 } // namespace qore
+} // namespace ast
 
-#endif // INCLUDE_QORE_PARSER_PARSER_H_
+#endif // TEST_AST_MOCKS_H_

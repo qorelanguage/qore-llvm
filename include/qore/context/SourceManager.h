@@ -53,6 +53,8 @@ public:
      * \param string the source of the script
      * \return a SourceBuffer representing given script
      */
+    //TODO add an optional starting line param
+    //TODO join multiple sources together (?)
     SourceBuffer createFromString(std::string name, std::string string) {
         return SourceBuffer(createId(std::move(name)), string.begin(), string.end());
     }
@@ -70,7 +72,7 @@ public:
     /**
      * \brief Creates a SourceBuffer by reading the contents of a file.
      * \param fileName the name of the file
-     * \return a SourceBuffer representing the script rad from the file
+     * \return a SourceBuffer representing the script read from the file
      */
     SourceBuffer createFromFile(std::string fileName);
 

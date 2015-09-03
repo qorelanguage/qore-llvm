@@ -23,19 +23,28 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Qore namespace.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#include "Mocks.h"
+#include "qore/ast/Statement.h"
 
-/**
- * \brief The main namespace used by qore.
- */
 namespace qore {
+namespace ast {
 
+struct StatementTest : ::testing::Test {
+    void *retVal{this};
+    ::testing::StrictMock<MockVisitor> mockVisitor;
+};
+
+TEST_F(StatementTest, EmptyStatement) {
+    EmptyStatement::Ptr node = EmptyStatement::create();
+    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
+    EXPECT_EQ(retVal, node->accept(mockVisitor));
 }
 
-#endif /* INCLUDE_QORE_H_ */
+TEST_F(StatementTest, PrintStatement) {
+    PrintStatement::Ptr node = PrintStatement::create(MockExpression::create());
+    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
+    EXPECT_EQ(retVal, node->accept(mockVisitor));
+}
+
+} // namespace ast
+} // namespace qore

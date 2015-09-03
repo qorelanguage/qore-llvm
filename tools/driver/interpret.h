@@ -2,38 +2,45 @@
 #define TOOLS_DRIVER_INTERPRET_H_
 
 #include <cstdlib>
-#include "qore/ast/ast.h"
+#include "qore/ast/Program.h"
 #include "qore/runtime/runtime.h"
 
-class InterpretVisitor : public Visitor {
+/**
+ * \private
+ */
+class InterpretVisitor : public qore::ast::Visitor {
 public:
-    R visit(const class IntegerLiteral *e) override {
+    using R = void*;
+
+    R visit(const qore::ast::IntegerLiteral *e) override {
         QoreValue *qv = new QoreValue();
-        *qv = make_int(e->getValue());
+        *qv = make_int(e->value);
         return qv;
     }
-    R visit(const class StringLiteral *e) override {
+    R visit(const qore::ast::StringLiteral *e) override {
         QoreValue *qv = new QoreValue();
-        *qv = make_str(e->getValue().c_str());
+        *qv = make_str(e->value.c_str());
         return qv;
     }
-    R visit(const class BinaryExpression *e) override {
-        QoreValue *l = static_cast<QoreValue*>(e->getLeft()->accept(*this));
-        QoreValue *r = static_cast<QoreValue*>(e->getRight()->accept(*this));
+    R visit(const qore::ast::BinaryExpression *e) override {
+        QoreValue *l = static_cast<QoreValue*>(e->left->accept(*this));
+        QoreValue *r = static_cast<QoreValue*>(e->right->accept(*this));
         QoreValue *result = new QoreValue();
         *result = eval_add(*l, *r);
         return result;
     }
-    R visit(const class EmptyStatement *) override {
+    R visit(const qore::ast::EmptyStatement *) override {
         return nullptr;
     }
-    R visit(const class PrintStatement *s) override {
-        QoreValue *qv = static_cast<QoreValue*>(s->getExpression()->accept(*this));
+    R visit(const qore::ast::PrintStatement *s) override {
+        QoreValue *qv = static_cast<QoreValue*>(s->expression->accept(*this));
         print_qv(*qv);
         return qv;
     }
-    R visit(const class Program *p) override {
-        p->forEachStatement([this](const Statement *s){s->accept(*this);});
+    R visit(const qore::ast::Program *program) override {
+        for (const auto &statement : program->body) {
+            statement->accept(*this);
+        }
         return nullptr;
     }
 };

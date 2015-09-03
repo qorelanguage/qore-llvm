@@ -28,12 +28,13 @@
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "qore/context/DiagProcessor.h"
 
 namespace qore {
 
-class MockDiagProcessor : public qore::DiagProcessor {
+class MockDiagProcessor : public DiagProcessor {
 public:
-    MOCK_METHOD1(process, void(qore::DiagRecord &));
+    MOCK_METHOD1(process, void(DiagRecord &));
 };
 
 MATCHER_P(MatchDiagRecord, r, "") {

@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
 
         InterpretVisitor iv;
         while (true) {
-            std::unique_ptr<Statement> stmt = parser.parseStatement();
+            qore::ast::Statement::Ptr stmt = parser.parseStatement();
             if (!stmt) {
                 return 0;
             }
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
     qore::SourceBuffer sourceBuffer = sourceMgr.createFromFile(argv[optind]);
     qore::ScannerImpl scanner(diagMgr, sourceBuffer);
     qore::ParserImpl parser(diagMgr, scanner);
-    std::unique_ptr<Program> root = parser.parse();
+    qore::ast::Program::Ptr root = parser.parse();
 
     if (dumpAst) {
         DumpVisitor dv;

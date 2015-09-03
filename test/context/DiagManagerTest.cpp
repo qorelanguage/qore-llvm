@@ -163,11 +163,11 @@ TEST_F(DiagManagerTest, DiagPrinter) {
 TEST_F(DiagManagerTest, DisableDiagHelper) {
     DiagManager diagMgr;
     {
-        EXPECT_EQ(0U, getDisabledCounter(diagMgr));
+        EXPECT_EQ(0, getDisabledCounter(diagMgr));
         DisableDiag dd(diagMgr);
-        EXPECT_EQ(1U, getDisabledCounter(diagMgr));
+        EXPECT_EQ(1, getDisabledCounter(diagMgr));
     }
-    EXPECT_EQ(0U, getDisabledCounter(diagMgr));
+    EXPECT_EQ(0, getDisabledCounter(diagMgr));
 }
 
 } // namespace qore

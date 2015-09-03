@@ -25,46 +25,24 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Parser interface.
+/// \brief Qore namespace.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSER_H_
-#define INCLUDE_QORE_PARSER_PARSER_H_
+#ifndef INCLUDE_QORE_H_
+#define INCLUDE_QORE_H_
 
-#include "qore/ast/Program.h"
+#include <cstdint>
 
+/**
+ * \brief The main namespace used by qore.
+ */
 namespace qore {
 
 /**
- * \brief Qore parser interface.
+ * \brief Qore integer.
  */
-class Parser {
+typedef uint64_t qint;
 
-public:
-    virtual ~Parser() = default;
+}
 
-    /**
-     * \brief Parses the whole script.
-     * \return the root of the AST
-     */
-    virtual ast::Program::Ptr parse() = 0;
-
-    /**
-     * \brief Parses a single statement.
-     * \return the parsed statement or `nullptr` if the end of input has been reached
-     */
-    virtual ast::Statement::Ptr parseStatement() = 0;
-
-protected:
-    Parser() = default;
-
-private:
-    Parser(const Parser &) = delete;
-    Parser(Parser &&) = delete;
-    Parser &operator=(const Parser &) = delete;
-    Parser &operator=(Parser &&) = delete;
-};
-
-} // namespace qore
-
-#endif // INCLUDE_QORE_PARSER_PARSER_H_
+#endif /* INCLUDE_QORE_H_ */

@@ -23,48 +23,34 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Parser interface.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSER_H_
-#define INCLUDE_QORE_PARSER_PARSER_H_
-
-#include "qore/ast/Program.h"
+#include "Mocks.h"
+#include "qore/ast/Expression.h"
 
 namespace qore {
+namespace ast {
 
-/**
- * \brief Qore parser interface.
- */
-class Parser {
-
-public:
-    virtual ~Parser() = default;
-
-    /**
-     * \brief Parses the whole script.
-     * \return the root of the AST
-     */
-    virtual ast::Program::Ptr parse() = 0;
-
-    /**
-     * \brief Parses a single statement.
-     * \return the parsed statement or `nullptr` if the end of input has been reached
-     */
-    virtual ast::Statement::Ptr parseStatement() = 0;
-
-protected:
-    Parser() = default;
-
-private:
-    Parser(const Parser &) = delete;
-    Parser(Parser &&) = delete;
-    Parser &operator=(const Parser &) = delete;
-    Parser &operator=(Parser &&) = delete;
+struct ExpressionTest : ::testing::Test {
+    void *retVal{this};
+    ::testing::StrictMock<MockVisitor> mockVisitor;
 };
 
-} // namespace qore
+TEST_F(ExpressionTest, IntegerLiteral) {
+    IntegerLiteral::Ptr node = IntegerLiteral::create(1234);
+    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
+    EXPECT_EQ(retVal, node->accept(mockVisitor));
+}
 
-#endif // INCLUDE_QORE_PARSER_PARSER_H_
+TEST_F(ExpressionTest, StringLiteral) {
+    StringLiteral::Ptr node = StringLiteral::create("test");
+    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
+    EXPECT_EQ(retVal, node->accept(mockVisitor));
+}
+
+TEST_F(ExpressionTest, BinaryExpression) {
+    BinaryExpression::Ptr node = BinaryExpression::create(MockExpression::create(), MockExpression::create());
+    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
+    EXPECT_EQ(retVal, node->accept(mockVisitor));
+}
+
+} // namespace ast
+} // namespace qore

@@ -17,7 +17,7 @@ void sandbox() {
     qore::ScannerImpl scanner(diagMgr, srcBuffer);
 
     qore::ParserImpl parser(diagMgr, scanner);
-    std::unique_ptr<Program> program(parser.parse());
+    qore::ast::Program::Ptr program = parser.parse();
 
     DumpVisitor dv;
     program->accept(dv);

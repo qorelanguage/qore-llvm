@@ -60,61 +60,61 @@ void ParserImpl::recoverStatementEnd() {
     }
 }
 
-std::unique_ptr<Program> ParserImpl::parse() {
+ast::Program::Ptr ParserImpl::parse() {
     return program();
 }
 
-std::unique_ptr<Statement> ParserImpl::parseStatement() {
+ast::Statement::Ptr ParserImpl::parseStatement() {
     if (tokenType() == TokenType::EndOfFile) {
         return nullptr;
     }
-    return std::unique_ptr<Statement>(statement());
+    return statement();
 }
 
 //program ::= statements
-std::unique_ptr<Program> ParserImpl::program() {
-    return std::unique_ptr<Program>(statements());
+ast::Program::Ptr ParserImpl::program() {
+    return ast::Program::create(statements());
 }
 
 //statements
 //    ::= *lambda*
 //    ::= statements statement
-Program *ParserImpl::statements() {
-    ProgramBuilder builder;
+ast::Statements ParserImpl::statements() {
+    ast::Statements body;
     while (tokenType() != TokenType::EndOfFile) {
-        builder.addStatement(statement());
+        body.push_back(statement());
     }
-    return builder.build();
+    return body;
 }
 
 //statement
 //    ::= ';'
 //    ::= printStatement
-Statement *ParserImpl::statement() {
+ast::Statement::Ptr ParserImpl::statement() {
     switch (tokenType()) {
         case TokenType::Semicolon:
             consume();
-            return new EmptyStatement();
+            return ast::EmptyStatement::create();
         case TokenType::KwPrint:
             return printStatement();
         default:
             report(DiagId::ParserStatementExpected) << tkn;
             recoverStatementEnd();
-            return new EmptyStatement();
+            return ast::EmptyStatement::create();
     }
 }
 
 //printStatement ::= KW_PRINT expression ';'
-PrintStatement *ParserImpl::printStatement() {
+ast::PrintStatement::Ptr ParserImpl::printStatement() {
     match(TokenType::KwPrint);
-    Expression *expr = expression();
+    ast::Expression::Ptr expr = expression();
     match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd);
-    return new PrintStatement(expr);
+    return ast::PrintStatement::create(std::move(expr));
 }
 
 //expression
 //    ::= additiveExpression
-Expression *ParserImpl::expression() {
+ast::Expression::Ptr ParserImpl::expression() {
     return additiveExpression();
 }
 
@@ -128,11 +128,11 @@ Expression *ParserImpl::expression() {
 //additiveExpressionRest
 //    ::= *lambda*
 //    ::= '+' primaryExpression additiveExpressionRest
-Expression *ParserImpl::additiveExpression() {
-    Expression *expr = primaryExpression();
+ast::Expression::Ptr ParserImpl::additiveExpression() {
+    std::unique_ptr<ast::Expression> expr = primaryExpression();
     while (tokenType() == TokenType::Plus) {
         consume();
-        expr = new BinaryExpression(expr, primaryExpression());
+        expr = ast::BinaryExpression::create(std::move(expr), primaryExpression());
     }
     return expr;
 }
@@ -140,22 +140,21 @@ Expression *ParserImpl::additiveExpression() {
 //primaryExpression
 //    | NUMBER                        { $$ = new IntegerLiteral($1); }
 //    | STRING                        { $$ = new StringLiteral($1); }
-Expression *ParserImpl::primaryExpression() {
+ast::Expression::Ptr ParserImpl::primaryExpression() {
     switch (tokenType()) {
         case TokenType::Integer: {
-            return new IntegerLiteral(consumeIntValue());
+            return ast::IntegerLiteral::create(consumeIntValue());
         }
         case TokenType::String: {
-            return new StringLiteral(consumeStringValue());
+            return ast::StringLiteral::create(consumeStringValue());
         }
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << tkn;
             recoverConsumeToken();
-            return new IntegerLiteral(0);       //TODO return special error node which will prevent further errors
+            return ast::IntegerLiteral::create(0);       //TODO return special error node which will prevent further errors
     }
 }
 
-//TODO unique_ptr!!!
 //TODO logging!!!
 
 } // namespace qore

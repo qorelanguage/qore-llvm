@@ -25,46 +25,53 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Parser interface.
+/// \brief Abstract base for all AST nodes.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSER_H_
-#define INCLUDE_QORE_PARSER_PARSER_H_
+#ifndef INCLUDE_QORE_AST_NODE_H_
+#define INCLUDE_QORE_AST_NODE_H_
 
-#include "qore/ast/Program.h"
+#include "qore/ast/Visitor.h"
 
 namespace qore {
 
 /**
- * \brief Qore parser interface.
+ * \brief Abstract Syntax Tree namespace.
  */
-class Parser {
+namespace ast {
+
+/**
+ * \brief Base class for all nodes in the Abstract Syntax Tree.
+ */
+class Node {
 
 public:
-    virtual ~Parser() = default;
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<Node>;
+
+public:
+    virtual ~Node() = default;
 
     /**
-     * \brief Parses the whole script.
-     * \return the root of the AST
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
+     * \param visitor the visitor to call
+     * \return the value returned by the visitor
      */
-    virtual ast::Program::Ptr parse() = 0;
-
-    /**
-     * \brief Parses a single statement.
-     * \return the parsed statement or `nullptr` if the end of input has been reached
-     */
-    virtual ast::Statement::Ptr parseStatement() = 0;
+    virtual void *accept(Visitor &visitor) const = 0;
 
 protected:
-    Parser() = default;
+    Node() = default;
 
 private:
-    Parser(const Parser &) = delete;
-    Parser(Parser &&) = delete;
-    Parser &operator=(const Parser &) = delete;
-    Parser &operator=(Parser &&) = delete;
+    Node(const Node &) = delete;
+    Node(Node &&) = delete;
+    Node &operator=(const Node &) = delete;
+    Node &operator=(Node &&) = delete;
 };
 
+} // namespace ast
 } // namespace qore
 
-#endif // INCLUDE_QORE_PARSER_PARSER_H_
+#endif // INCLUDE_QORE_AST_ASTNODE_H_

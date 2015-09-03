@@ -1,7 +1,7 @@
 #ifndef TOOLS_DRIVER_GEN_H_
 #define TOOLS_DRIVER_GEN_H_
 
-#include "qore/ast/ast.h"
+#include "qore/ast/Program.h"
 
 #include "llvm/ADT/APSInt.h"
 #include "llvm/IR/DataLayout.h"
@@ -11,9 +11,14 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
 
-class CodeGenVisitor : public Visitor {
+/**
+ * \private
+ */
+class CodeGenVisitor : public qore::ast::Visitor {
 
 public:
+    using R = void*;
+
     CodeGenVisitor() {
         llvm::Type* a[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
         qvStruct = llvm::StructType::get(ctx, a, false);
@@ -33,24 +38,24 @@ public:
         module->getFunctionList().push_back(evalAddFunction);
     }
 
-    R visit(const class IntegerLiteral *e) override {
-        auto c = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx), e->getValue(), true);
+    R visit(const qore::ast::IntegerLiteral *e) override {
+        auto c = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx), e->value, true);
         return builder.CreateCall(makeIntFunction, c);
     }
 
-    R visit(const class StringLiteral *e) override {
-        llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->getValue(), true);
+    R visit(const qore::ast::StringLiteral *e) override {
+        llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->value, true);
         llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
         gv->setUnnamedAddr(true);
         auto c = builder.CreateConstGEP2_32(gv, 0, 0);
         return builder.CreateCall(makeStrFunction, c);
     }
 
-//    R visit(const class VariableLoadExpression *e) override {
+//    R visit(const qore::ast::VariableLoadExpression *e) override {
 //        return builder.CreateLoad(variables[e->getName()], e->getName());
 //    }
 
-//    R visit(const class Assignment *e) override {
+//    R visit(const qore::ast::Assignment *e) override {
 //        llvm::Value *val = static_cast<llvm::Value*>(e->getValue()->accept(*this));
 //        llvm::AllocaInst *ai = builder.CreateAlloca(llvm::Type::getInt32Ty(ctx), nullptr, e->getVarName());
 //        builder.CreateStore(val, ai);
@@ -58,9 +63,9 @@ public:
 //        return val;
 //    }
 
-    R visit(const class BinaryExpression *e) override {
-        llvm::Value *l = static_cast<llvm::Value*>(e->getLeft()->accept(*this));
-        llvm::Value *r = static_cast<llvm::Value*>(e->getRight()->accept(*this));
+    R visit(const qore::ast::BinaryExpression *e) override {
+        llvm::Value *l = static_cast<llvm::Value*>(e->left->accept(*this));
+        llvm::Value *r = static_cast<llvm::Value*>(e->right->accept(*this));
         auto tagL = builder.CreateExtractValue(l, {0}, "l.tag");
         auto valL = builder.CreateExtractValue(l, {1}, "l.val");
         auto tagR = builder.CreateExtractValue(r, {0}, "r.tag");
@@ -69,16 +74,16 @@ public:
         return builder.CreateCall(evalAddFunction, args);
     }
 
-    R visit(const class EmptyStatement *) override {
+    R visit(const qore::ast::EmptyStatement *) override {
         return nullptr;
     }
 
-//    R visit(const class ExpressionStatement *s) override {
+//    R visit(const qore::ast::ExpressionStatement *s) override {
 //        return s->getExpression()->accept(*this);
 //    }
 
-    R visit(const class PrintStatement *s) override {
-        llvm::Value *value = static_cast<llvm::Value*>(s->getExpression()->accept(*this));
+    R visit(const qore::ast::PrintStatement *s) override {
+        llvm::Value *value = static_cast<llvm::Value*>(s->expression->accept(*this));
         auto tag = builder.CreateExtractValue(value, {0}, "qv.tag");
         auto val = builder.CreateExtractValue(value, {1}, "qv.val");
         llvm::Value* args[] = {tag, val};
@@ -86,12 +91,14 @@ public:
         return nullptr;
     }
 
-    R visit(const class Program *p) override {
+    R visit(const qore::ast::Program *p) override {
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
         llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
         builder.SetInsertPoint(bb);
-        p->forEachStatement([this](const Statement *s){s->accept(*this);});
+        for (const auto &statement : p->body) {
+            statement->accept(*this);
+        }
         builder.CreateRetVoid();
         llvm::verifyFunction(*f);
         return module;

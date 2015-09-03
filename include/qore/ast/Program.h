@@ -25,46 +25,51 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Parser interface.
+/// \brief Program AST node.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSER_H_
-#define INCLUDE_QORE_PARSER_PARSER_H_
+#ifndef INCLUDE_QORE_AST_PROGRAM_H_
+#define INCLUDE_QORE_AST_PROGRAM_H_
 
-#include "qore/ast/Program.h"
+#include "qore/ast/Statement.h"
 
 namespace qore {
+namespace ast {
 
 /**
- * \brief Qore parser interface.
+ * \brief Represents the whole script.
  */
-class Parser {
+class Program : public Node {
 
 public:
-    virtual ~Parser() = default;
-
     /**
-     * \brief Parses the whole script.
-     * \return the root of the AST
+     * \brief Pointer type.
      */
-    virtual ast::Program::Ptr parse() = 0;
+    using Ptr = std::unique_ptr<Program>;
 
+public:
+    Statements body;        //!< The statements of the script.
+
+public:
     /**
-     * \brief Parses a single statement.
-     * \return the parsed statement or `nullptr` if the end of input has been reached
+     * \brief Allocates a new node.
+     * \param body the statements of the script
+     * \return a unique pointer to the allocated node
      */
-    virtual ast::Statement::Ptr parseStatement() = 0;
+    static Ptr create(Statements body) {
+        return Ptr(new Program(std::move(body)));
+    }
 
-protected:
-    Parser() = default;
+    void *accept(Visitor &v) const override {
+        return v.visit(this);
+    }
 
 private:
-    Parser(const Parser &) = delete;
-    Parser(Parser &&) = delete;
-    Parser &operator=(const Parser &) = delete;
-    Parser &operator=(Parser &&) = delete;
+    Program(Statements body) : body(std::move(body)) {
+    }
 };
 
+} // namespace ast
 } // namespace qore
 
-#endif // INCLUDE_QORE_PARSER_PARSER_H_
+#endif // INCLUDE_QORE_AST_PROGRAM_H_

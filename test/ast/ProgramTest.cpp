@@ -23,48 +23,24 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Parser interface.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSER_H_
-#define INCLUDE_QORE_PARSER_PARSER_H_
-
+#include "Mocks.h"
 #include "qore/ast/Program.h"
 
 namespace qore {
+namespace ast {
 
-/**
- * \brief Qore parser interface.
- */
-class Parser {
-
-public:
-    virtual ~Parser() = default;
-
-    /**
-     * \brief Parses the whole script.
-     * \return the root of the AST
-     */
-    virtual ast::Program::Ptr parse() = 0;
-
-    /**
-     * \brief Parses a single statement.
-     * \return the parsed statement or `nullptr` if the end of input has been reached
-     */
-    virtual ast::Statement::Ptr parseStatement() = 0;
-
-protected:
-    Parser() = default;
-
-private:
-    Parser(const Parser &) = delete;
-    Parser(Parser &&) = delete;
-    Parser &operator=(const Parser &) = delete;
-    Parser &operator=(Parser &&) = delete;
+struct ProgramTest : ::testing::Test {
+    void *retVal{this};
+    ::testing::StrictMock<MockVisitor> mockVisitor;
 };
 
-} // namespace qore
+TEST_F(ProgramTest, Program) {
+    Statements body;
+    body.push_back(MockStatement::create());
+    Program::Ptr node = Program::create(std::move(body));
+    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
+    EXPECT_EQ(retVal, node->accept(mockVisitor));
+}
 
-#endif // INCLUDE_QORE_PARSER_PARSER_H_
+} // namespace ast
+} // namespace qore

@@ -45,10 +45,10 @@ public:
      * \brief Constructs the parser for given scanner.
      * \param scanner the input stream representing the source to tokenize
      */
-    explicit ParserImpl(DiagManager &diagMgr, Scanner &scanner);
+    ParserImpl(DiagManager &diagMgr, Scanner &scanner);
 
-    std::unique_ptr<Program> parse() override;
-    std::unique_ptr<Statement> parseStatement() override;
+    ast::Program::Ptr parse() override;
+    ast::Statement::Ptr parseStatement() override;
 
 private:
     void match(TokenType expected, void (ParserImpl::*recoverStrategy)() = &ParserImpl::recoverConsumeToken);
@@ -57,13 +57,13 @@ private:
     void recoverConsumeToken();
     void recoverStatementEnd();
 
-    std::unique_ptr<Program> program();
-    Program *statements();
-    Statement *statement();
-    PrintStatement *printStatement();
-    Expression *expression();
-    Expression *additiveExpression();
-    Expression *primaryExpression();
+    ast::Program::Ptr program();
+    ast::Statements statements();
+    ast::Statement::Ptr statement();
+    ast::PrintStatement::Ptr printStatement();
+    ast::Expression::Ptr expression();
+    ast::Expression::Ptr additiveExpression();
+    ast::Expression::Ptr primaryExpression();
 
 private:
     DiagManager &diagMgr;
