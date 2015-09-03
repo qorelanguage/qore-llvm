@@ -23,46 +23,19 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Parser implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSERIMPL_H_
-#define INCLUDE_QORE_PARSER_PARSERIMPL_H_
-
-#include "qore/parser/Parser.h"
-#include "qore/parser/ParserCore.h"
+#include "gtest/gtest.h"
+#include "../context/Helpers.h"
+#include "../scanner/Mocks.h"
+#include "qore/parser/ParserImpl.h"
 
 namespace qore {
 
-/**
- * \brief Parser implementation.
- */
-class ParserImpl : public Parser, private ParserCore {
-
-public:
-    /**
-     * \brief Constructs the parser for given scanner.
-     * \param diagMgr used for reporting diagnostic messages
-     * \param scanner the source of tokens
-     */
-    ParserImpl(DiagManager &diagMgr, Scanner &scanner) : ParserCore(diagMgr, scanner) {
-    }
-
-    ast::Program::Ptr parse() override;
-    ast::Statement::Ptr parseStatement() override;
-
-private:
-    ast::Program::Ptr program();
-    ast::Statements statements();
-    ast::Statement::Ptr statement();
-    ast::PrintStatement::Ptr printStatement();
-    ast::Expression::Ptr expression();
-    ast::Expression::Ptr additiveExpression();
-    ast::Expression::Ptr primaryExpression();
+struct ParserImplTest : ::testing::Test, DiagTestHelper {
+    MockScanner scanner;
 };
 
-} // namespace qore
+TEST_F(ParserImplTest, A) {
+    ParserImpl parser(diagMgr, scanner);
+}
 
-#endif // INCLUDE_QORE_PARSER_PARSERIMPL_H_
+} // namespace qore

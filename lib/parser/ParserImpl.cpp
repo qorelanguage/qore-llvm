@@ -32,34 +32,6 @@
 
 namespace qore {
 
-ParserImpl::ParserImpl(DiagManager &diagMgr, Scanner &scanner) : diagMgr(diagMgr), scanner(scanner) {
-}
-
-void ParserImpl::match(TokenType expected, void (ParserImpl::*recoverStrategy)()) {
-    if (tokenType() == expected) {
-        consume();
-    } else {
-        report(DiagId::ParserUnexpectedToken) << to_string(expected) << tkn;
-        (this->*recoverStrategy)();
-    }
-}
-
-void ParserImpl::recoverDoNothing() {
-}
-
-void ParserImpl::recoverConsumeToken() {
-    empty = true;
-}
-
-void ParserImpl::recoverStatementEnd() {
-    //TODO right curly brace & other tokens
-    DisableDiag dd(diagMgr);
-
-    while (tokenType() != TokenType::Semicolon && tokenType() != TokenType::EndOfFile) {
-        consume();
-    }
-}
-
 ast::Program::Ptr ParserImpl::parse() {
     return program();
 }
@@ -98,7 +70,7 @@ ast::Statement::Ptr ParserImpl::statement() {
         case TokenType::KwPrint:
             return printStatement();
         default:
-            report(DiagId::ParserStatementExpected) << tkn;
+            report(DiagId::ParserStatementExpected) << token;
             recoverStatementEnd();
             return ast::EmptyStatement::create();
     }
@@ -142,14 +114,12 @@ ast::Expression::Ptr ParserImpl::additiveExpression() {
 //    | STRING                        { $$ = new StringLiteral($1); }
 ast::Expression::Ptr ParserImpl::primaryExpression() {
     switch (tokenType()) {
-        case TokenType::Integer: {
+        case TokenType::Integer:
             return ast::IntegerLiteral::create(consumeIntValue());
-        }
-        case TokenType::String: {
+        case TokenType::String:
             return ast::StringLiteral::create(consumeStringValue());
-        }
         default:
-            report(DiagId::ParserExpectedPrimaryExpression) << tkn;
+            report(DiagId::ParserExpectedPrimaryExpression) << token;
             recoverConsumeToken();
             return ast::IntegerLiteral::create(0);       //TODO return special error node which will prevent further errors
     }

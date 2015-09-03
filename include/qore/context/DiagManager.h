@@ -144,6 +144,8 @@ private:
 class DiagManager {
 
 public:
+    DiagManager() = default;
+
     /**
      * \brief Reports a message.
      * \param diagId the identifier of the diagnostic message

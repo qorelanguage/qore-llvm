@@ -23,46 +23,20 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Parser implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_PARSER_PARSERIMPL_H_
-#define INCLUDE_QORE_PARSER_PARSERIMPL_H_
+#ifndef TEST_SCANNER_MOCKS_H_
+#define TEST_SCANNER_MOCKS_H_
 
-#include "qore/parser/Parser.h"
-#include "qore/parser/ParserCore.h"
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
+#include "qore/scanner/Scanner.h"
 
 namespace qore {
 
-/**
- * \brief Parser implementation.
- */
-class ParserImpl : public Parser, private ParserCore {
-
+class MockScanner : public Scanner {
 public:
-    /**
-     * \brief Constructs the parser for given scanner.
-     * \param diagMgr used for reporting diagnostic messages
-     * \param scanner the source of tokens
-     */
-    ParserImpl(DiagManager &diagMgr, Scanner &scanner) : ParserCore(diagMgr, scanner) {
-    }
-
-    ast::Program::Ptr parse() override;
-    ast::Statement::Ptr parseStatement() override;
-
-private:
-    ast::Program::Ptr program();
-    ast::Statements statements();
-    ast::Statement::Ptr statement();
-    ast::PrintStatement::Ptr printStatement();
-    ast::Expression::Ptr expression();
-    ast::Expression::Ptr additiveExpression();
-    ast::Expression::Ptr primaryExpression();
+    MOCK_METHOD1(read, void(Token *));
 };
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_PARSER_PARSERIMPL_H_
+#endif // TEST_SCANNER_MOCKS_H_
