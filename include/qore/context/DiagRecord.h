@@ -61,7 +61,7 @@ enum class DiagLevel {
 /**
  * \brief Writes diagnostic id to an output stream.
  * \param o the output stream
- * \param level the diagnostic id to write
+ * \param id the diagnostic id to write
  * \return the output stream
  */
 std::ostream &operator<<(std::ostream &o, DiagId id);
