@@ -5,7 +5,9 @@
 
 #include "llvm/ADT/APSInt.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/DIBuilder.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -36,6 +38,7 @@ public:
         module->getFunctionList().push_back(makeIntFunction);
         module->getFunctionList().push_back(makeStrFunction);
         module->getFunctionList().push_back(evalAddFunction);
+        scope = nullptr;
     }
 
     R visit(const qore::ast::IntegerLiteral *e) override {
@@ -87,7 +90,9 @@ public:
         auto tag = builder.CreateExtractValue(value, {0}, "qv.tag");
         auto val = builder.CreateExtractValue(value, {1}, "qv.val");
         llvm::Value* args[] = {tag, val};
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, currentLine++, 2, scope));
         builder.CreateCall(printQvFunction, args);
+        builder.SetCurrentDebugLocation(nullptr);
         return nullptr;
     }
 
@@ -96,11 +101,54 @@ public:
         llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
         builder.SetInsertPoint(bb);
+
+        llvm::DIBuilder dib(*module);
+
+        //        !llvm.dbg.cu = !{!0}
+        //        !0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "qore-llvm 1.0.0", isOptimized: false, runtimeVersion: 0, emissionKind: 1, enums: !2, subprograms: !3)
+        //        !1 = !DIFile(filename: "/home/otethal/prj/qore-llvm/tools/sandbox/test.q", directory: "/home/otethal/prj/qore-llvm/tools/sandbox")
+        //        !2 = !{}
+        llvm::DICompileUnit *diCU = dib.createCompileUnit(llvm::dwarf::DW_LANG_C,
+                "/home/otethal/prj/qore-llvm/tools/sandbox/test.q", "/home/otethal/prj/qore-llvm/tools/sandbox",
+                "qore-llvm 1.0.0",
+                false,  //isOpt
+                "",     //flags
+                0);     //runtime version
+
+        llvm::DIFile *diFile = diCU->getFile();
+
+        //        !5 = !DISubroutineType(types: !6)
+        //        !6 = !{null}
+        llvm::DISubroutineType *diSubType = dib.createSubroutineType(diFile, dib.getOrCreateTypeArray({nullptr}));
+
+        //        !3 = !{!4}
+        //        !4 = !DISubprogram(name: "q", scope: !1, file: !1, line: 1, type: !5, isLocal: false, isDefinition: true, scopeLine: 1, isOptimized: false, function: void ()* @q, variables: !2)
+        //TODO flags: DIFlagPrototyped ?
+        llvm::DISubprogram *diSub = dib.createFunction(diFile, "q", "", diFile, 1, diSubType, false, true, 1);
+        diSub->replaceFunction(f);
+
+        scope = diSub;
+
+        //        llvm.module.flags = !{!7, !8}
+        //        !7 = !{i32 2, !"Dwarf Version", i32 4}
+        //        !8 = !{i32 2, !"Debug Info Version", i32 3}
+        module->addModuleFlag(llvm::Module::Warning, "Dwarf Version", llvm::dwarf::DWARF_VERSION);
+        module->addModuleFlag(llvm::Module::Warning, "Debug Info Version", llvm::DEBUG_METADATA_VERSION);
+
+        //        !llvm.ident = !{!9}
+        //        !9 = !{!"qore-llvm 1.0.0"}
+        llvm::Metadata *ident = llvm::MDString::get(ctx, "qore-llvm 1.0.0");
+        module->getOrInsertNamedMetadata("llvm.ident")->addOperand(llvm::MDNode::get(ctx, {ident}));
+
         for (const auto &statement : p->body) {
             statement->accept(*this);
         }
         builder.CreateRetVoid();
         llvm::verifyFunction(*f);
+
+        dib.finalize();
+
+        module->dump();
         return module;
     }
 
@@ -115,6 +163,9 @@ private:
     llvm::Function *makeIntFunction;
     llvm::Function *makeStrFunction;
     llvm::Function *evalAddFunction;
+
+    llvm::DISubprogram *scope;
+    int currentLine{1};
 };
 
 #endif /* TOOLS_DRIVER_GEN_H_ */

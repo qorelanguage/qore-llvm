@@ -11,7 +11,7 @@ add_custom_target(sandbox
         COMMAND
             llvm-as -o rt.bc rt.ll
         COMMAND
-            llvm-lto --exported-symbol=main -o joined.o main.bc rt.bc test.bc
+            llvm-lto --disable-inlining --exported-symbol=main -o joined.o main.bc rt.bc test.bc
         COMMAND
             g++ -o ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/sandbox -g joined.o
         DEPENDS qore-llvm
