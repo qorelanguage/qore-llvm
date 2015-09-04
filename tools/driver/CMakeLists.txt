@@ -16,6 +16,7 @@ if(QORE_USE_LLVM)
         llvm_map_components_to_libnames(llvm_libs core bitwriter)
     endif(QORE_ENABLE_JIT)
 
+    target_compile_options(qore-llvm PRIVATE -fno-rtti)
 endif(QORE_USE_LLVM)
 
 target_link_libraries(qore-llvm

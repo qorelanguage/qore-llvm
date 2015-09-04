@@ -6,6 +6,7 @@ lib/parser/lexer.cpp
 lib/parser/parser.cpp
 lib/parser/parser.hpp
 tools/sandbox/*.bc
+tools/sandbox/*.ll
 tools/sandbox/*.o
 tools/sandbox/sandbox
 

@@ -47,7 +47,7 @@ public:
         llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->value, true);
         llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
         gv->setUnnamedAddr(true);
-        auto c = builder.CreateConstGEP2_32(gv, 0, 0);
+        auto c = builder.CreateConstGEP2_32(nullptr, gv, 0, 0);
         return builder.CreateCall(makeStrFunction, c);
     }
 
