@@ -34,6 +34,12 @@ TEST(DiagRecordTest, Ctor) {
     DiagRecord dr{DiagId::ScannerInvalidCharacter, DiagLevel::Warning, "", {SourceId::Invalid, 1, 2}};
 }
 
+TEST(DiagRecordTest, IdToString) {
+#define DIAG(N, L, D)  EXPECT_EQ(#N, static_cast<std::ostringstream&>(std::ostringstream().flush() << DiagId::N).str());
+#include "qore/context/DiagData.inc"
+#undef DIAG
+}
+
 TEST(DiagRecordTest, LevelToStream) {
     std::ostringstream ss;
     ss << "*" << DiagLevel::Error << "#" << DiagLevel::Warning << "$";
@@ -41,6 +47,11 @@ TEST(DiagRecordTest, LevelToStream) {
 }
 
 #ifdef QORE_COVERAGE
+TEST(DiagRecordTest, IdToStreamErr) {
+    std::ostringstream ss;
+    EXPECT_THROW(ss << static_cast<DiagId>(999), class Unreachable);
+}
+
 TEST(DiagRecordTest, LevelToStreamErr) {
     std::ostringstream ss;
     EXPECT_THROW(ss << static_cast<DiagLevel>(999), class Unreachable);

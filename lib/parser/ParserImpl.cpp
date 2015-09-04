@@ -29,22 +29,23 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/parser/ParserImpl.h"
+#include "qore/common/Logging.h"
 
 namespace qore {
 
 ast::Program::Ptr ParserImpl::parse() {
+    LOG_FUNCTION();
     return program();
 }
 
 ast::Statement::Ptr ParserImpl::parseStatement() {
-    if (tokenType() == TokenType::EndOfFile) {
-        return nullptr;
-    }
-    return statement();
+    LOG_FUNCTION();
+    return tokenType() == TokenType::EndOfFile ? nullptr : statement();
 }
 
 //program ::= statements
 ast::Program::Ptr ParserImpl::program() {
+    LOG_FUNCTION();
     return ast::Program::create(statements());
 }
 
@@ -52,6 +53,7 @@ ast::Program::Ptr ParserImpl::program() {
 //    ::= *lambda*
 //    ::= statements statement
 ast::Statements ParserImpl::statements() {
+    LOG_FUNCTION();
     ast::Statements body;
     while (tokenType() != TokenType::EndOfFile) {
         body.push_back(statement());
@@ -63,6 +65,7 @@ ast::Statements ParserImpl::statements() {
 //    ::= ';'
 //    ::= printStatement
 ast::Statement::Ptr ParserImpl::statement() {
+    LOG_FUNCTION();
     switch (tokenType()) {
         case TokenType::Semicolon:
             consume();
@@ -76,31 +79,27 @@ ast::Statement::Ptr ParserImpl::statement() {
     }
 }
 
-//printStatement ::= KW_PRINT expression ';'
+//printStatement ::= KwPrint expression ';'
 ast::PrintStatement::Ptr ParserImpl::printStatement() {
+    LOG_FUNCTION();
     match(TokenType::KwPrint);
     ast::Expression::Ptr expr = expression();
     match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd);
     return ast::PrintStatement::create(std::move(expr));
 }
 
-//expression
-//    ::= additiveExpression
+//expression ::= additiveExpression
 ast::Expression::Ptr ParserImpl::expression() {
+    LOG_FUNCTION();
     return additiveExpression();
 }
 
-//additiveExpression
-//    ::= primaryExpression
-//    ::= additiveExpression '+' primaryExpression
-//
-//without left recursion:
-//
 //additiveExpression ::= primaryExpression additiveExpressionRest
 //additiveExpressionRest
 //    ::= *lambda*
 //    ::= '+' primaryExpression additiveExpressionRest
 ast::Expression::Ptr ParserImpl::additiveExpression() {
+    LOG_FUNCTION();
     std::unique_ptr<ast::Expression> expr = primaryExpression();
     while (tokenType() == TokenType::Plus) {
         consume();
@@ -110,9 +109,10 @@ ast::Expression::Ptr ParserImpl::additiveExpression() {
 }
 
 //primaryExpression
-//    | NUMBER                        { $$ = new IntegerLiteral($1); }
-//    | STRING                        { $$ = new StringLiteral($1); }
+//    ::= Number
+//    ::= String
 ast::Expression::Ptr ParserImpl::primaryExpression() {
+    LOG_FUNCTION();
     switch (tokenType()) {
         case TokenType::Integer:
             return ast::IntegerLiteral::create(consumeIntValue());
@@ -121,10 +121,9 @@ ast::Expression::Ptr ParserImpl::primaryExpression() {
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << token;
             recoverConsumeToken();
-            return ast::IntegerLiteral::create(0);       //TODO return special error node which will prevent further errors
+            //TODO return special error node which will prevent further errors
+            return ast::IntegerLiteral::create(0);
     }
 }
-
-//TODO logging!!!
 
 } // namespace qore

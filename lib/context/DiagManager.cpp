@@ -43,7 +43,7 @@ struct DiagInfo {
 };
 
 static const DiagInfo data[] = {
-    #define DIAG(N, L, D)       { DiagLevel::L, D }
+    #define DIAG(N, L, D)       { DiagLevel::L, D },
     #include "qore/context/DiagData.inc"
     #undef DIAG
 };
@@ -57,6 +57,17 @@ std::ostream &operator<<(std::ostream &o, DiagLevel level) {
             return o << "warning";
     }
     QORE_UNREACHABLE("Invalid value of DiagLevel: " << static_cast<int>(level));
+}
+
+std::ostream &operator<<(std::ostream &o, DiagId id) {
+    switch (id) {
+        #define DIAG(N, L, D)       case DiagId::N: return o << #N;
+        /// \cond IGNORED_BY_DOXYGEN
+        #include "qore/context/DiagData.inc"
+        /// \endcond
+        #undef DIAG
+    }
+    QORE_UNREACHABLE("Invalid value of DiagId: " << static_cast<int>(id));
 }
 
 DiagBuilder DiagManager::report(DiagId diagId, SourceLocation location) {

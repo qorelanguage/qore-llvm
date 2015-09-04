@@ -43,7 +43,7 @@ namespace qore {
  * \ref DiagData.inc
  */
 enum class DiagId {
-    #define DIAG(N, L, D)       N
+    #define DIAG(N, L, D)       N,
     /// \cond IGNORED_BY_DOXYGEN
     #include "qore/context/DiagData.inc"
     /// \endcond
@@ -57,6 +57,14 @@ enum class DiagLevel {
     Error,          //!< Error
     Warning         //!< Warning
 };
+
+/**
+ * \brief Writes diagnostic id to an output stream.
+ * \param o the output stream
+ * \param level the diagnostic id to write
+ * \return the output stream
+ */
+std::ostream &operator<<(std::ostream &o, DiagId id);
 
 /**
  * \brief Writes diagnostic level to an output stream.

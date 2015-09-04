@@ -64,8 +64,17 @@ protected:
     void recoverStatementEnd() {
         //TODO right curly brace & other tokens
         DisableDiag dd(diagMgr);
-        while (tokenType() != TokenType::Semicolon && tokenType() != TokenType::EndOfFile) {
-            consume();
+        while (true) {
+            switch (tokenType()) {
+                case TokenType::EndOfFile:
+                    return;
+                case TokenType::Semicolon:
+                    consume();
+                    return;
+                default:
+                    consume();
+                    break;
+            }
         }
     }
 
@@ -84,6 +93,7 @@ protected:
     void consume() {
         assert(hasToken);
         hasToken = false;
+        CLOG("PARSER", "Consuming" << token);
     }
 
     uint64_t consumeIntValue() {

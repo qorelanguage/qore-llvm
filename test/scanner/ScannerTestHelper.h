@@ -51,8 +51,8 @@ public:
         t.stringValue = stringValue;
         tokens.push(t);
         EXPECT_CALL(scanner, read(::testing::_))
-            .Times(tokens.size())
-            .WillRepeatedly(::testing::Invoke(this, &ScannerTestHelper::pop));
+            .WillOnce(::testing::Invoke(this, &ScannerTestHelper::pop))
+            .RetiresOnSaturation();
     }
 
     void addToken(TokenType tokenType,

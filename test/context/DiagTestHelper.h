@@ -32,6 +32,10 @@
 
 #define DIAG_NONE()   EXPECT_CALL(mockDiagProcessor, process(::testing::_)).Times(0)
 
+#define DIAG_EXPECT(id, line, column)                                                       \
+    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordIdAndLocation(id, line, column))) \
+        .Times(1)
+
 #define DIAG_EXPECT_AND_CAPTURE(dest, id, line, column)                                     \
     DiagRecord dest;                                                                        \
     EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordIdAndLocation(id, line, column))) \
@@ -46,6 +50,10 @@ MATCHER_P3(MatchDiagRecordIdAndLocation, expectedDiagId, expectedLine, expectedC
 }
 
 namespace qore {
+
+inline std::ostream &operator<<(std::ostream &os, const DiagRecord &record) {
+    return os << record.id << " @ " << record.location.line << ":" << record.location.column;
+}
 
 class MockDiagProcessor : public DiagProcessor {
 public:

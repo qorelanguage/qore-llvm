@@ -33,7 +33,7 @@
 #include "qore/ast/Visitor.h"
 
 template<typename D, typename B>
-typename D::Ptr ast_cast(std::unique_ptr<B> bPtr, const char *file, int line, const char *valueS, const char *typeS) {
+typename D::Ptr ast_cast(std::unique_ptr<B> &&bPtr, const char *file, int line, const char *valueS, const char *typeS) {
     D *d = dynamic_cast<D *>(bPtr.get());
     if (d == nullptr) {
         ADD_FAILURE_AT(file, line) << valueS << " was expected to return "
@@ -44,8 +44,18 @@ typename D::Ptr ast_cast(std::unique_ptr<B> bPtr, const char *file, int line, co
     return typename D::Ptr(d);
 }
 
+template<typename D, typename B>
+D *ast_cast(const std::unique_ptr<B> &bPtr, const char *file, int line, const char *valueS, const char *typeS) {
+    D *d = dynamic_cast<D *>(bPtr.get());
+    if (d == nullptr) {
+        ADD_FAILURE_AT(file, line) << valueS << " was expected to return "
+                << typeS << ", but returned " << typeid(*bPtr.get()).name() << " instead";
+    }
+    return d;
+}
+
 #define AST_CAST(Type, Name, Value) \
-    Type::Ptr Name = ast_cast<Type>(Value, __FILE__, __LINE__, #Value, #Type); \
+    auto Name = ast_cast<Type>(Value, __FILE__, __LINE__, #Value, #Type); \
     if (!Name) return;
 
 namespace qore {

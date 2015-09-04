@@ -33,6 +33,7 @@
 
 #include <functional>
 #include <vector>
+#include "qore/common/Logging.h"
 #include "qore/context/DiagProcessor.h"
 
 namespace qore {
@@ -159,6 +160,7 @@ public:
      */
     void disable() {
         disabledCounter++;
+        CLOG("DIAG","Disabling diagnostics, counter = " << disabledCounter);
     }
 
     /**
@@ -169,6 +171,7 @@ public:
     void enable() {
         assert(disabledCounter && "Diagnostic are already enabled");
         disabledCounter--;
+        CLOG("DIAG","Enabling diagnostics, counter = " << disabledCounter);
     }
 
     /**
