@@ -23,8 +23,8 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "Mocks.h"
 #include "qore/ast/Statement.h"
+#include "AstTestHelper.h"
 
 namespace qore {
 namespace ast {

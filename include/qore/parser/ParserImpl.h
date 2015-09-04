@@ -61,6 +61,8 @@ private:
     ast::Expression::Ptr expression();
     ast::Expression::Ptr additiveExpression();
     ast::Expression::Ptr primaryExpression();
+
+    friend class ParserImplTest;
 };
 
 } // namespace qore

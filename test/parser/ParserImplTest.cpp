@@ -24,18 +24,29 @@
 //
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
-#include "../context/Helpers.h"
-#include "../scanner/Mocks.h"
 #include "qore/parser/ParserImpl.h"
+#include "../ast/AstTestHelper.h"
+#include "../context/DiagTestHelper.h"
+#include "../scanner/ScannerTestHelper.h"
 
 namespace qore {
 
-struct ParserImplTest : ::testing::Test, DiagTestHelper {
-    MockScanner scanner;
+struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
+    ParserImpl parser{diagMgr, scanner};
+
+    ast::Program::Ptr program() { return parser.program(); }
+    ast::Statements statements() { return parser.statements(); }
+    ast::Statement::Ptr statement() { return parser.statement(); }
+    ast::PrintStatement::Ptr printStatement() { return parser.printStatement(); }
+    ast::Expression::Ptr expression() { return parser.expression(); }
+    ast::Expression::Ptr additiveExpression() { return parser.additiveExpression(); }
+    ast::Expression::Ptr primaryExpression() { return parser.primaryExpression(); }
 };
 
-TEST_F(ParserImplTest, A) {
-    ParserImpl parser(diagMgr, scanner);
+TEST_F(ParserImplTest, PrimaryInteger) {
+    addToken(TokenType::Integer, 1234);
+    AST_CAST(ast::IntegerLiteral, expr, primaryExpression());
+    EXPECT_EQ(1234U, expr->value);
 }
 
 } // namespace qore

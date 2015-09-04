@@ -23,15 +23,30 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_AST_MOCKS_H_
-#define TEST_AST_MOCKS_H_
+#ifndef TEST_AST_ASTTESTHELPER_H_
+#define TEST_AST_ASTTESTHELPER_H_
 
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
 #include <memory>
+#include "gmock/gmock.h"
 #include "qore/ast/Expression.h"
 #include "qore/ast/Statement.h"
 #include "qore/ast/Visitor.h"
+
+template<typename D, typename B>
+typename D::Ptr ast_cast(std::unique_ptr<B> bPtr, const char *file, int line, const char *valueS, const char *typeS) {
+    D *d = dynamic_cast<D *>(bPtr.get());
+    if (d == nullptr) {
+        ADD_FAILURE_AT(file, line) << valueS << " was expected to return "
+                << typeS << ", but returned " << typeid(*bPtr.get()).name() << " instead";
+    } else {
+        bPtr.release();
+    }
+    return typename D::Ptr(d);
+}
+
+#define AST_CAST(Type, Name, Value) \
+    Type::Ptr Name = ast_cast<Type>(Value, __FILE__, __LINE__, #Value, #Type); \
+    if (!Name) return;
 
 namespace qore {
 namespace ast {
@@ -68,7 +83,7 @@ public:
     MOCK_METHOD1(visit, void*(const class Program *));
 };
 
-} // namespace qore
 } // namespace ast
+} // namespace qore
 
-#endif // TEST_AST_MOCKS_H_
+#endif // TEST_AST_ASTTESTHELPER_H_
