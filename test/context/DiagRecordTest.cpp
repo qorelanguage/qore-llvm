@@ -23,10 +23,10 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "gtest/gtest.h"
 #include <sstream>
-#include "qore/context/DiagRecord.h"
+#include "gtest/gtest.h"
 #include "qore/common/Util.h"
+#include "qore/context/DiagRecord.h"
 
 namespace qore {
 

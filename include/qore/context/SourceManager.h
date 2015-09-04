@@ -110,7 +110,7 @@ private:
 
     std::vector<std::string> names;
 
-    friend class SourceManagerTestHelper;
+    friend class SourceTestHelper;
 };
 
 } // namespace qore

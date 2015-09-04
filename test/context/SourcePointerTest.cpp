@@ -26,14 +26,14 @@
 #include "gtest/gtest.h"
 #include "qore/context/SourcePointer.h"
 #include "../Utils.h"
-#include "Helpers.h"
+#include "SourceTestHelper.h"
 
 namespace qore {
 
-struct SourcePointerTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestHelper, SourcePointerTestHelper {
+struct SourcePointerTest : ::testing::Test, SourceTestHelper {
     std::string src{"te\nst"};
-    SourceBuffer sourceBuffer{createSourceBuffer(sourceId1, src.begin(), src.end())};
-    SourceBuffer stdinBuffer{createSourceBuffer(sourceId1)};
+    SourceBuffer sourceBuffer{createBuffer(src.begin(), src.end(), createId(123))};
+    SourceBuffer stdinBuffer{createBuffer()};
 };
 
 typedef SourcePointerTest SourcePointerDeathTest;
@@ -84,7 +84,7 @@ TEST_F(SourcePointerTest, StdinFillEof) {
 #define EXPECT_LOCATION(LINE, COLUMN, LOCATION)     \
     {                                               \
         SourceLocation loc(LOCATION);               \
-        EXPECT_EQ(sourceId1, loc.sourceId);         \
+        EXPECT_EQ(createId(123), loc.sourceId);     \
         EXPECT_EQ(LINE, loc.line);                  \
         EXPECT_EQ(COLUMN, loc.column);              \
     }

@@ -23,17 +23,16 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "gtest/gtest.h"
 #include <sstream>
+#include "gtest/gtest.h"
 #include "qore/common/Util.h"
 #include "qore/context/SourceManager.h"
-#include "Helpers.h"
+#include "SourceTestHelper.h"
 
 namespace qore {
 
-struct SourceManagerTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestHelper, SourceManagerTestHelper {
+struct SourceManagerTest : ::testing::Test, SourceTestHelper {
     SourceManager mgr;
-
 };
 
 TEST_F(SourceManagerTest, FromString) {
@@ -80,7 +79,7 @@ TEST_F(SourceManagerTest, FormatLocation) {
     mgr.createFromString("buf2", "abc");
     std::ostringstream ss;
 
-    EXPECT_EQ(ss, mgr.formatLocation(ss, {sourceId1, 12, 34}));
+    EXPECT_EQ(ss, mgr.formatLocation(ss, createLocation(1, 12, 34)));
     EXPECT_EQ("buf2:12:34", ss.str());
 }
 
@@ -90,7 +89,7 @@ TEST_F(SourceManagerTest, LocationFormatter) {
     std::ostringstream ss;
 
     SourceLocation::Formatter formatter = mgr;
-    EXPECT_EQ(ss, formatter(ss, {sourceId1, 12, 34}));
+    EXPECT_EQ(ss, formatter(ss, createLocation(1, 12, 34)));
     EXPECT_EQ("buf2:12:34", ss.str());
 }
 

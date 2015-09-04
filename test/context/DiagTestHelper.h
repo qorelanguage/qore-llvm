@@ -23,19 +23,19 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_CONTEXT_MOCKS_H_
-#define TEST_CONTEXT_MOCKS_H_
+#ifndef TEST_CONTEXT_DIAGTESTHELPER_H_
+#define TEST_CONTEXT_DIAGTESTHELPER_H_
 
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "qore/context/DiagManager.h"
 #include "qore/context/DiagProcessor.h"
 
-namespace qore {
+#define DIAG_NONE()   EXPECT_CALL(mockDiagProcessor, process(::testing::_)).Times(0)
 
-class MockDiagProcessor : public DiagProcessor {
-public:
-    MOCK_METHOD1(process, void(DiagRecord &));
-};
+#define DIAG_EXPECT_AND_CAPTURE(dest, id, line, column)                                     \
+    DiagRecord dest;                                                                        \
+    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordIdAndLocation(id, line, column))) \
+        .WillOnce(::testing::SaveArg<0>(&dest))
 
 MATCHER_P(MatchDiagRecord, r, "") {
     return arg.id == r.id && arg.level == r.level && arg.message == r.message && arg.location == r.location;
@@ -45,6 +45,24 @@ MATCHER_P3(MatchDiagRecordIdAndLocation, expectedDiagId, expectedLine, expectedC
     return arg.id == expectedDiagId && arg.location.line == expectedLine && arg.location.column == expectedColumn;
 }
 
+namespace qore {
+
+class MockDiagProcessor : public DiagProcessor {
+public:
+    MOCK_METHOD1(process, void(DiagRecord &));
+};
+
+class DiagTestHelper {
+
+public:
+    DiagTestHelper() {
+        diagMgr.addProcessor(&mockDiagProcessor);
+    }
+
+    DiagManager diagMgr;
+    MockDiagProcessor mockDiagProcessor;
+};
+
 } // namespace qore
 
-#endif // TEST_CONTEXT_MOCKS_H_
+#endif // TEST_CONTEXT_DIAGTESTHELPER_H_

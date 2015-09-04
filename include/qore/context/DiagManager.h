@@ -135,7 +135,7 @@ private:
     ProcessCallback processCallback;
     DiagRecord record;
 
-    friend class DiagManagerTestHelper;
+    friend class DiagManagerTest;
 };
 
 /**
@@ -189,7 +189,7 @@ private:
     std::vector<DiagProcessor *> processors;
     int disabledCounter{0};
 
-    friend class DiagManagerTestHelper;
+    friend class DiagManagerTest;
 };
 
 /**

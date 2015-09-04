@@ -25,11 +25,11 @@
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
 #include "qore/context/SourceBuffer.h"
-#include "Helpers.h"
+#include "SourceTestHelper.h"
 
 namespace qore {
 
-struct SourceBufferTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestHelper {
+struct SourceBufferTest : ::testing::Test, SourceTestHelper {
     std::string src{"test"};
     std::vector<char> vec{'a', 'b', 'c'};
 };
@@ -37,14 +37,14 @@ struct SourceBufferTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestH
 typedef SourceBufferTest SourceBufferDeathTest;
 
 TEST_F(SourceBufferTest, StdinNewlineAndZero) {
-    SourceBuffer sb = createSourceBuffer(sourceId1);
+    SourceBuffer sb = createBuffer();
     EXPECT_EQ(2U, getData(sb).size());
     EXPECT_EQ('\n', getData(sb)[0]);
     EXPECT_EQ('\0', getData(sb)[1]);
 }
 
 TEST_F(SourceBufferTest, VectorCtorAddsZero) {
-    SourceBuffer sb = createSourceBuffer(sourceId1, vec);
+    SourceBuffer sb = createBuffer(vec);
     EXPECT_EQ(4U, getData(sb).size());
     EXPECT_EQ('a', getData(sb)[0]);
     EXPECT_EQ('b', getData(sb)[1]);
@@ -53,7 +53,7 @@ TEST_F(SourceBufferTest, VectorCtorAddsZero) {
 }
 
 TEST_F(SourceBufferTest, IteratorCtorAddsZero) {
-    SourceBuffer sb = createSourceBuffer(sourceId1, src.begin(), src.end());
+    SourceBuffer sb = createBuffer(src.begin(), src.end());
     EXPECT_EQ(5U, getData(sb).size());
     EXPECT_EQ('t', getData(sb)[0]);
     EXPECT_EQ('e', getData(sb)[1]);
@@ -63,7 +63,7 @@ TEST_F(SourceBufferTest, IteratorCtorAddsZero) {
 }
 
 TEST_F(SourceBufferTest, MoveCtor) {
-    SourceBuffer sb = createSourceBuffer(sourceId1, src.begin(), src.end());
+    SourceBuffer sb = createBuffer(src.begin(), src.end());
 
     EXPECT_EQ(5U, getData(sb).size());
 
@@ -74,8 +74,8 @@ TEST_F(SourceBufferTest, MoveCtor) {
 }
 
 TEST_F(SourceBufferTest, MoveAssign) {
-    SourceBuffer sb = createSourceBuffer(sourceId1, src.begin(), src.end());
-    SourceBuffer sb2 = createSourceBuffer(sourceId2, vec);
+    SourceBuffer sb = createBuffer(src.begin(), src.end());
+    SourceBuffer sb2 = createBuffer(vec);
 
     EXPECT_EQ(5U, getData(sb).size());
     EXPECT_EQ(4U, getData(sb2).size());
@@ -88,15 +88,15 @@ TEST_F(SourceBufferTest, MoveAssign) {
 
 #ifndef NDEBUG
 TEST_F(SourceBufferDeathTest, StdinCtorChecksSourceId) {
-    EXPECT_DEATH(createSourceBuffer(SourceId::Invalid), "Invalid source id");
+    EXPECT_DEATH(createBuffer(SourceId::Invalid), "Invalid source id");
 }
 
 TEST_F(SourceBufferDeathTest, VectorCtorChecksSourceId) {
-    EXPECT_DEATH(createSourceBuffer(SourceId::Invalid, vec), "Invalid source id");
+    EXPECT_DEATH(createBuffer(vec, SourceId::Invalid), "Invalid source id");
 }
 
 TEST_F(SourceBufferDeathTest, CtorChecksSourceId) {
-    EXPECT_DEATH(createSourceBuffer(SourceId::Invalid, src.begin(), src.end()), "Invalid source id");
+    EXPECT_DEATH(createBuffer(src.begin(), src.end(), SourceId::Invalid), "Invalid source id");
 }
 #endif
 

@@ -86,7 +86,7 @@ private:
 
     friend class SourceManager;         //!< Only SourceManager can create instances.
     friend class SourcePointer;         //!< SourcePointer provides random access to the buffer.
-    friend class SourceBufferTestHelper;
+    friend class SourceTestHelper;
 };
 
 } // namespace qore

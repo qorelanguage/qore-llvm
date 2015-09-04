@@ -25,16 +25,17 @@
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
 #include "qore/scanner/ScannerImpl.h"
-#include "../context/Helpers.h"
 #include "../Utils.h"
+#include "../context/DiagTestHelper.h"
+#include "../context/SourceTestHelper.h"
 
 namespace qore {
 
-struct ScannerImplTest : ::testing::Test, SourceIdTestHelper, SourceBufferTestHelper, DiagTestHelper {
+struct ScannerImplTest : ::testing::Test, DiagTestHelper {
 };
 
 #define SCANNER(str)    std::string inputString = str; \
-                SourceBuffer sourceBuffer = createSourceBuffer(sourceId1, inputString.begin(), inputString.end());  \
+                SourceBuffer sourceBuffer = SourceTestHelper::createBuffer(inputString.begin(), inputString.end());  \
                 ScannerImpl scanner(diagMgr, sourceBuffer);
 
 TEST_F(ScannerImplTest, Eof) {

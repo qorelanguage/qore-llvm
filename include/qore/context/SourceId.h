@@ -73,7 +73,7 @@ private:
     short id;
 
     friend class SourceManager;         //!< Only SourceManager can create instances.
-    friend class SourceIdTestHelper;
+    friend class SourceTestHelper;
 };
 
 } // namespace qore

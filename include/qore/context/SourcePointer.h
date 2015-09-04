@@ -113,7 +113,7 @@ private:
     int line{1};
     int column{1};
 
-    friend class SourcePointerTestHelper;
+    friend class SourceTestHelper;
 };
 
 } // namespace qore

@@ -25,11 +25,11 @@
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
 #include "qore/context/SourceId.h"
-#include "Helpers.h"
+#include "SourceTestHelper.h"
 
 namespace qore {
 
-struct SourceIdTest : ::testing::Test, SourceIdTestHelper {
+struct SourceIdTest : ::testing::Test, SourceTestHelper {
 };
 
 typedef SourceIdTest SourceIdDeathTest;
@@ -39,26 +39,27 @@ TEST_F(SourceIdTest, InvalidIsNegative) {
 }
 
 TEST_F(SourceIdTest, CtorSavesId) {
-    EXPECT_EQ(1, getId(sourceId1));
+    SourceId sourceId = createId(123);
+    EXPECT_EQ(123, getId(sourceId));
 }
 
 TEST_F(SourceIdTest, Equals) {
-    EXPECT_TRUE(sourceId1 == sourceId1);
-    EXPECT_FALSE(sourceId1 == sourceId2);
+    EXPECT_TRUE(createId(1) == createId(1));
+    EXPECT_FALSE(createId(1) == createId(2));
 }
 
 TEST_F(SourceIdTest, NotEquals) {
-    EXPECT_FALSE(sourceId1 != sourceId1);
-    EXPECT_TRUE(sourceId1 != sourceId2);
+    EXPECT_FALSE(createId(1) != createId(1));
+    EXPECT_TRUE(createId(1) != createId(2));
 }
 
 #ifndef NDEBUG
 TEST_F(SourceIdDeathTest, CtorChecksNegative) {
-    EXPECT_DEATH(createSourceId(-123), "not be negative");
+    EXPECT_DEATH(createId(-123), "not be negative");
 }
 
 TEST_F(SourceIdDeathTest, CtorChecksOutOfRange) {
-    EXPECT_DEATH(createSourceId(32768), "not be negative");
+    EXPECT_DEATH(createId(32768), "not be negative");
 }
 #endif
 

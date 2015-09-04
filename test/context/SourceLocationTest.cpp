@@ -25,11 +25,11 @@
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
 #include "qore/context/SourceLocation.h"
-#include "Helpers.h"
+#include "SourceTestHelper.h"
 
 namespace qore {
 
-struct SourceLocationTest : public ::testing::Test, protected SourceIdTestHelper {
+struct SourceLocationTest : ::testing::Test, SourceTestHelper {
 };
 
 TEST_F(SourceLocationTest, DefaultCtor) {
@@ -40,16 +40,16 @@ TEST_F(SourceLocationTest, DefaultCtor) {
 }
 
 TEST_F(SourceLocationTest, Ctor) {
-    SourceLocation loc(sourceId1, 123, 456);
-    EXPECT_EQ(sourceId1, loc.sourceId);
+    SourceLocation loc(createId(1), 123, 456);
+    EXPECT_EQ(createId(1), loc.sourceId);
     EXPECT_EQ(123, loc.line);
     EXPECT_EQ(456, loc.column);
 }
 
 TEST_F(SourceLocationTest, CopyCtor) {
-    SourceLocation loc0(sourceId1, 123, 456);
+    SourceLocation loc0(createId(1), 123, 456);
     SourceLocation loc(loc0);
-    EXPECT_EQ(sourceId1, loc.sourceId);
+    EXPECT_EQ(createId(1), loc.sourceId);
     EXPECT_EQ(123, loc.line);
     EXPECT_EQ(456, loc.column);
 }
@@ -60,19 +60,19 @@ TEST_F(SourceLocationTest, CopyAssignment) {
     EXPECT_EQ(0, loc.line);
     EXPECT_EQ(0, loc.column);
 
-    SourceLocation loc0(sourceId1, 123, 456);
+    SourceLocation loc0(createId(1), 123, 456);
     loc = loc0;
-    EXPECT_EQ(sourceId1, loc.sourceId);
+    EXPECT_EQ(createId(1), loc.sourceId);
     EXPECT_EQ(123, loc.line);
     EXPECT_EQ(456, loc.column);
 }
 
 TEST_F(SourceLocationTest, CompareEq) {
-    SourceLocation loc1(sourceId1, 12, 34);
-    SourceLocation loc2(sourceId1, 12, 34);
-    SourceLocation loc3(sourceId2, 12, 34);
-    SourceLocation loc4(sourceId1, 13, 34);
-    SourceLocation loc5(sourceId1, 12, 35);
+    SourceLocation loc1(createId(1), 12, 34);
+    SourceLocation loc2(createId(1), 12, 34);
+    SourceLocation loc3(createId(2), 12, 34);
+    SourceLocation loc4(createId(1), 13, 34);
+    SourceLocation loc5(createId(1), 12, 35);
 
     EXPECT_TRUE(loc1 == loc2);
     EXPECT_FALSE(loc1 == loc3);
@@ -81,11 +81,11 @@ TEST_F(SourceLocationTest, CompareEq) {
 }
 
 TEST_F(SourceLocationTest, CompareNe) {
-    SourceLocation loc1(sourceId1, 12, 34);
-    SourceLocation loc2(sourceId1, 12, 34);
-    SourceLocation loc3(sourceId2, 12, 34);
-    SourceLocation loc4(sourceId1, 13, 34);
-    SourceLocation loc5(sourceId1, 12, 35);
+    SourceLocation loc1(createId(1), 12, 34);
+    SourceLocation loc2(createId(1), 12, 34);
+    SourceLocation loc3(createId(2), 12, 34);
+    SourceLocation loc4(createId(1), 13, 34);
+    SourceLocation loc5(createId(1), 12, 35);
 
     EXPECT_FALSE(loc1 != loc2);
     EXPECT_TRUE(loc1 != loc3);

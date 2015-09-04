@@ -25,17 +25,30 @@
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
 #include "qore/context/DiagManager.h"
-#include "Helpers.h"
-#include "Mocks.h"
 #include "../Utils.h"
+#include "DiagTestHelper.h"
+#include "SourceTestHelper.h"
 
 namespace qore {
 
-struct DiagManagerTest : ::testing::Test, SourceIdTestHelper, DiagManagerTestHelper {
+struct DiagManagerTest : ::testing::Test {
+
+    const DiagRecord &extractRecord(DiagBuilder &builder) {
+        return builder.record;
+    }
+
+    void callProcess(DiagManager &mgr, DiagRecord &record) {
+        mgr.process(record);
+    }
+
+    int getDisabledCounter(const DiagManager &mgr) {
+        return mgr.disabledCounter;
+    }
+
     std::function<void(DiagRecord&)> messageCaptor = [this](DiagRecord &r){
         capturedMessage = r.message;
     };
-    SourceLocation location{sourceId1, 12, 34};
+    SourceLocation location{SourceTestHelper::createLocation(12, 34)};
     std::string capturedMessage;
 };
 
