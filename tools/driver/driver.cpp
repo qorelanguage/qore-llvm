@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef QORE_USE_LLVM
     if (compileLl || compileBc || jit) {
-        CodeGenVisitor cgv;
+        CodeGenVisitor cgv(sourceMgr);
         std::unique_ptr<llvm::Module> module(static_cast<llvm::Module*>(root->accept(cgv)));
 
         if (compileLl) {

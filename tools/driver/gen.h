@@ -21,7 +21,7 @@ class CodeGenVisitor : public qore::ast::Visitor {
 public:
     using R = void*;
 
-    CodeGenVisitor() {
+    CodeGenVisitor(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
         llvm::Type* a[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
         qvStruct = llvm::StructType::get(ctx, a, false);
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), a, false);
@@ -42,6 +42,7 @@ public:
     }
 
     R visit(const qore::ast::IntegerLiteral *e) override {
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
         auto c = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx), e->value, true);
         return builder.CreateCall(makeIntFunction, c);
     }
@@ -50,6 +51,7 @@ public:
         llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->value, true);
         llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
         gv->setUnnamedAddr(true);
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
         auto c = builder.CreateConstGEP2_32(nullptr, gv, 0, 0);
         return builder.CreateCall(makeStrFunction, c);
     }
@@ -69,6 +71,7 @@ public:
     R visit(const qore::ast::BinaryExpression *e) override {
         llvm::Value *l = static_cast<llvm::Value*>(e->left->accept(*this));
         llvm::Value *r = static_cast<llvm::Value*>(e->right->accept(*this));
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->operatorRange.start.line, e->operatorRange.start.column, scope));
         auto tagL = builder.CreateExtractValue(l, {0}, "l.tag");
         auto valL = builder.CreateExtractValue(l, {1}, "l.val");
         auto tagR = builder.CreateExtractValue(r, {0}, "r.tag");
@@ -87,12 +90,11 @@ public:
 
     R visit(const qore::ast::PrintStatement *s) override {
         llvm::Value *value = static_cast<llvm::Value*>(s->expression->accept(*this));
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, s->getRange().start.line, s->getRange().start.column, scope));
         auto tag = builder.CreateExtractValue(value, {0}, "qv.tag");
         auto val = builder.CreateExtractValue(value, {1}, "qv.val");
         llvm::Value* args[] = {tag, val};
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, currentLine++, 2, scope));
         builder.CreateCall(printQvFunction, args);
-        builder.SetCurrentDebugLocation(nullptr);
         return nullptr;
     }
 
@@ -108,8 +110,16 @@ public:
         //        !0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "qore-llvm 1.0.0", isOptimized: false, runtimeVersion: 0, emissionKind: 1, enums: !2, subprograms: !3)
         //        !1 = !DIFile(filename: "/home/otethal/prj/qore-llvm/tools/sandbox/test.q", directory: "/home/otethal/prj/qore-llvm/tools/sandbox")
         //        !2 = !{}
+        char *c_path = realpath(sourceMgr.getName(p->getRange().start.sourceId).c_str(), nullptr);
+        std::string fileName(c_path);
+        free(c_path);   //TODO exception safety
+        std::string path(fileName);
+        auto i = path.rfind('/');
+        if (i != std::string::npos) {
+            path.resize(i);
+        }
         llvm::DICompileUnit *diCU = dib.createCompileUnit(llvm::dwarf::DW_LANG_C,
-                "/home/otethal/prj/qore-llvm/tools/sandbox/test.q", "/home/otethal/prj/qore-llvm/tools/sandbox",
+                fileName, path,
                 "qore-llvm 1.0.0",
                 false,  //isOpt
                 "",     //flags
@@ -143,6 +153,8 @@ public:
         for (const auto &statement : p->body) {
             statement->accept(*this);
         }
+
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, p->getRange().end.line, p->getRange().end.column, scope));
         builder.CreateRetVoid();
         llvm::verifyFunction(*f);
 
@@ -165,7 +177,8 @@ private:
     llvm::Function *evalAddFunction;
 
     llvm::DISubprogram *scope;
-    int currentLine{1};
+
+    qore::SourceManager &sourceMgr;
 };
 
 #endif /* TOOLS_DRIVER_GEN_H_ */
