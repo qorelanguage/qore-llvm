@@ -8,15 +8,12 @@ $script = <<SCRIPT
 add-apt-repository ppa:george-edison55/cmake-3.x
 add-apt-repository ppa:ubuntu-toolchain-r/test
 
-if [ $(grep -c llvm /etc/apt/sources.list) -eq 0 ]
-then
-  echo -e "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.6 main\ndeb-src http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.6 main" >> /etc/apt/sources.list
-fi
-wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | apt-key add -
-
 apt-get update
-apt-get install -y cmake git build-essential llvm-3.6 clang-3.6 bison flex g++-4.9 libzip-dev libedit-dev
-apt-get remove g++-4.8
+apt-get install -y cmake git build-essential g++-4.9
+
+wget http://llvm.org/releases/3.7.0/clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+tar xf clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+cp -R clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/* /usr/local
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
