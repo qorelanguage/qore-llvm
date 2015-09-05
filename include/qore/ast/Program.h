@@ -54,19 +54,30 @@ public:
     /**
      * \brief Allocates a new node.
      * \param body the statements of the script
+     * \param eofRange the location of the end of the source code
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Statements body) {
-        return Ptr(new Program(std::move(body)));
+    static Ptr create(Statements body, SourceRange eofRange) {
+        return Ptr(new Program(std::move(body), eofRange));
     }
 
     void *accept(Visitor &v) const override {
         return v.visit(this);
     }
 
-private:
-    Program(Statements body) : body(std::move(body)) {
+    SourceRange getRange() const override {
+        if (body.empty()) {
+            return eofRange;
+        }
+        return SourceRange(body[0]->getRange().start, body[body.size() - 1]->getRange().end);
     }
+
+private:
+    Program(Statements body, SourceRange eofRange) : body(std::move(body)), eofRange(eofRange) {
+    }
+
+private:
+    SourceRange eofRange;
 };
 
 } // namespace ast

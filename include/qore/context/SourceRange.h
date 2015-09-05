@@ -25,60 +25,53 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Abstract base for all AST nodes.
+/// \brief Describes a range of locations in the source code.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_AST_NODE_H_
-#define INCLUDE_QORE_AST_NODE_H_
+#ifndef INCLUDE_QORE_CONTEXT_SOURCERANGE_H_
+#define INCLUDE_QORE_CONTEXT_SOURCERANGE_H_
 
-#include "qore/ast/Visitor.h"
-#include "qore/context/SourceRange.h"
+#include "qore/context/SourceLocation.h"
 
 namespace qore {
 
 /**
- * \brief Abstract Syntax Tree namespace.
+ * \brief A range of locations in the source code.
  */
-namespace ast {
+struct SourceRange {
 
-/**
- * \brief Base class for all nodes in the Abstract Syntax Tree.
- */
-class Node {
+    SourceLocation start;           //!< The start of the range.
+    SourceLocation end;             //!< The end of the range.
 
-public:
-    /**
-     * \brief Pointer type.
-     */
-    using Ptr = std::unique_ptr<Node>;
-
-public:
-    virtual ~Node() = default;
+    SourceRange() = default;
 
     /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
-     * \param visitor the visitor to call
-     * \return the value returned by the visitor
+     * \brief Creates a range.
+     * \param start the start of the range
+     * \param end the end of the range
      */
-    virtual void *accept(Visitor &visitor) const = 0;
+    SourceRange(SourceLocation start, SourceLocation end) : start(start), end(end) {
+    }
 
     /**
-     * \brief Returns the range of locations in the source code of this node.
-     * \return the range of locaitons
+     * \brief Compares two source ranges for equality.
+     * \param other the SourceRange `this` should be compared to
+     * \return true if `this` equals `other`
      */
-    virtual SourceRange getRange() const = 0;
+    bool operator==(const SourceRange &other) const {
+        return start == other.start && end == other.end;
+    }
 
-protected:
-    Node() = default;
-
-private:
-    Node(const Node &) = delete;
-    Node(Node &&) = delete;
-    Node &operator=(const Node &) = delete;
-    Node &operator=(Node &&) = delete;
+    /**
+     * \brief Compares two source range for inequality.
+     * \param other the SourceRange `this` should be compared to
+     * \return true if `this` does not equal `other`
+     */
+    bool operator!=(const SourceRange &other) const {
+        return !(*this == other);
+    }
 };
 
-} // namespace ast
 } // namespace qore
 
-#endif // INCLUDE_QORE_AST_ASTNODE_H_
+#endif // INCLUDE_QORE_CONTEXT_SOURCERANGE_H_

@@ -61,25 +61,42 @@ D *ast_cast(const std::unique_ptr<B> &bPtr, const char *file, int line, const ch
 namespace qore {
 namespace ast {
 
+template<typename Base>
+class NodeAdapter : public Base {
+
+public:
+    NodeAdapter(Base &node) : node(node) {
+    }
+
+    void *accept(Visitor &visitor) const override {
+        return node.accept(visitor);
+    }
+
+    SourceRange getRange() const override {
+        return node.getRange();
+    }
+
+private:
+    Base &node;
+};
+
 class MockExpression : public Expression {
 public:
-    using Ptr = std::unique_ptr<MockExpression>;
-
     MOCK_CONST_METHOD1(accept, void*(Visitor &));
+    MOCK_CONST_METHOD0(getRange, SourceRange());
 
-    static Ptr create() {
-        return Ptr(new MockExpression());
+    operator Ptr() {
+        return Ptr(new NodeAdapter<Expression>(*this));
     }
 };
 
 class MockStatement : public Statement {
 public:
-    using Ptr = std::unique_ptr<MockStatement>;
-
     MOCK_CONST_METHOD1(accept, void*(Visitor &));
+    MOCK_CONST_METHOD0(getRange, SourceRange());
 
-    static Ptr create() {
-        return Ptr(new MockStatement());
+    operator Ptr() {
+        return Ptr(new NodeAdapter<Statement>(*this));
     }
 };
 

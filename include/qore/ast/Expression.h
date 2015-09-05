@@ -68,19 +68,27 @@ public:
     /**
      * \brief Allocates a new node.
      * \param value the value of the integer literal
+     * \param range the location of the literal
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(int value) {
-        return Ptr(new IntegerLiteral(value));
+    static Ptr create(int value, SourceRange range) {
+        return Ptr(new IntegerLiteral(value, range));
     }
 
     void *accept(Visitor &v) const override {
         return v.visit(this);
     }
 
-private:
-    IntegerLiteral(int value) : value(value) {
+    SourceRange getRange() const override {
+        return range;
     }
+
+private:
+    IntegerLiteral(int value, SourceRange range) : value(value), range(range) {
+    }
+
+private:
+    SourceRange range;
 };
 
 /**
@@ -101,19 +109,27 @@ public:
     /**
      * \brief Allocates a new node.
      * \param value the value of the string literal
+     * \param range the location of the literal
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(std::string value) {
-        return Ptr(new StringLiteral(value));
+    static Ptr create(std::string value, SourceRange range) {
+        return Ptr(new StringLiteral(value, range));
     }
 
     void *accept(Visitor &v) const override {
         return v.visit(this);
     }
 
-private:
-    StringLiteral(std::string value) : value(value) {
+    SourceRange getRange() const override {
+        return range;
     }
+
+private:
+    StringLiteral(std::string value, SourceRange range) : value(value), range(range) {
+    }
+
+private:
+    SourceRange range;
 };
 
 /**
@@ -123,6 +139,7 @@ class BinaryExpression : public Expression {
 
 public:
     Expression::Ptr left;           //!< The operand on the left side.
+    SourceRange operatorRange;      //!< Location of the binary operator in the source.
     Expression::Ptr right;          //!< The operand on the right side.
 
 public:
@@ -135,19 +152,25 @@ public:
     /**
      * \brief Allocates a new node.
      * \param left the operand on the left side
+     * \param operatorRange the location of the operator
      * \param right the operand on the right side
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Expression::Ptr left, Expression::Ptr right) {
-        return Ptr(new BinaryExpression(std::move(left), std::move(right)));
+    static Ptr create(Expression::Ptr left, SourceRange operatorRange, Expression::Ptr right) {
+        return Ptr(new BinaryExpression(std::move(left), operatorRange, std::move(right)));
     }
 
     void *accept(Visitor &v) const override {
         return v.visit(this);
     }
 
+    SourceRange getRange() const override {
+        return SourceRange(left->getRange().start, right->getRange().end);
+    }
+
 private:
-    BinaryExpression(Expression::Ptr left, Expression::Ptr right) : left(std::move(left)), right(std::move(right)) {
+    BinaryExpression(Expression::Ptr left, SourceRange operatorRange, Expression::Ptr right)
+        : left(std::move(left)), operatorRange(operatorRange), right(std::move(right)) {
     }
 };
 

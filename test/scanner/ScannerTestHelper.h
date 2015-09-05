@@ -38,15 +38,13 @@ public:
     MOCK_METHOD1(read, void(Token *));
 };
 
-class ScannerTestHelper {
+class ScannerTestHelper : public SourceTestHelper {
 
 public:
-    void addToken(TokenType tokenType, SourceLocation locationStart, SourceLocation locationEnd,
-            uint64_t intValue, std::string stringValue) {
+    void addToken(TokenType tokenType, SourceRange range, uint64_t intValue, std::string stringValue) {
         Token t;
         t.type = tokenType;
-        t.locationStart = locationStart;
-        t.locationEnd = locationEnd;
+        t.range = range;
         t.intValue = intValue;
         t.stringValue = stringValue;
         tokens.push(t);
@@ -55,22 +53,16 @@ public:
             .RetiresOnSaturation();
     }
 
-    void addToken(TokenType tokenType,
-            SourceLocation start = SourceTestHelper::createLocation(12, 34),
-            SourceLocation end = SourceTestHelper::createLocation(56, 78)) {
-        addToken(tokenType, start, end, 0, "");
+    void addToken(TokenType tokenType, SourceRange range = createRange(0, 0, 0)) {
+        addToken(tokenType, range, 0, "");
     }
 
-    void addToken(TokenType tokenType, uint64_t value,
-            SourceLocation start = SourceTestHelper::createLocation(12, 34),
-            SourceLocation end = SourceTestHelper::createLocation(56, 78)) {
-        addToken(tokenType, start, end, value, "");
+    void addToken(TokenType tokenType, uint64_t value, SourceRange range = createRange(0, 0, 0)) {
+        addToken(tokenType, range, value, "");
     }
 
-    void addToken(TokenType tokenType, std::string value,
-            SourceLocation start = SourceTestHelper::createLocation(12, 34),
-            SourceLocation end = SourceTestHelper::createLocation(56, 78)) {
-        addToken(tokenType, start, end, 0, value);
+    void addToken(TokenType tokenType, std::string value, SourceRange range = createRange(0, 0, 0)) {
+        addToken(tokenType, range, 0, value);
     }
 
 public:

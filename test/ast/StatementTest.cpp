@@ -24,6 +24,7 @@
 //
 //------------------------------------------------------------------------------
 #include "qore/ast/Statement.h"
+#include "../context/SourceTestHelper.h"
 #include "AstTestHelper.h"
 
 namespace qore {
@@ -32,18 +33,22 @@ namespace ast {
 struct StatementTest : ::testing::Test {
     void *retVal{this};
     ::testing::StrictMock<MockVisitor> mockVisitor;
+    SourceRange range = SourceTestHelper::createRange(11, 22, 33);
 };
 
 TEST_F(StatementTest, EmptyStatement) {
-    EmptyStatement::Ptr node = EmptyStatement::create();
+    EmptyStatement::Ptr node = EmptyStatement::create(range);
     EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
     EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_EQ(range, node->getRange());
 }
 
 TEST_F(StatementTest, PrintStatement) {
-    PrintStatement::Ptr node = PrintStatement::create(MockExpression::create());
+    MockExpression expr;
+    PrintStatement::Ptr node = PrintStatement::create(range, expr);
     EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
     EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_EQ(range, node->getRange());
 }
 
 } // namespace ast

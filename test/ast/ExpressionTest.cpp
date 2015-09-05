@@ -24,6 +24,7 @@
 //
 //------------------------------------------------------------------------------
 #include "qore/ast/Expression.h"
+#include "../context/SourceTestHelper.h"
 #include "AstTestHelper.h"
 
 namespace qore {
@@ -32,24 +33,41 @@ namespace ast {
 struct ExpressionTest : ::testing::Test {
     void *retVal{this};
     ::testing::StrictMock<MockVisitor> mockVisitor;
+    SourceRange range = SourceTestHelper::createRange(11, 22, 33);
 };
 
 TEST_F(ExpressionTest, IntegerLiteral) {
-    IntegerLiteral::Ptr node = IntegerLiteral::create(1234);
+    IntegerLiteral::Ptr node = IntegerLiteral::create(1234, range);
     EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
     EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_EQ(1234U, node->value);
+    EXPECT_EQ(range, node->getRange());
 }
 
 TEST_F(ExpressionTest, StringLiteral) {
-    StringLiteral::Ptr node = StringLiteral::create("test");
+    StringLiteral::Ptr node = StringLiteral::create("test", range);
     EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
     EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_EQ("test", node->value);
+    EXPECT_EQ(range, node->getRange());
 }
 
 TEST_F(ExpressionTest, BinaryExpression) {
-    BinaryExpression::Ptr node = BinaryExpression::create(MockExpression::create(), MockExpression::create());
+    MockExpression left;
+    MockExpression right;
+
+    BinaryExpression::Ptr node = BinaryExpression::create(left, range, right);
     EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
     EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_EQ(range, node->operatorRange);
+
+    EXPECT_CALL(left, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(1, 2, 3)));
+    EXPECT_CALL(right, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(4, 5, 6)));
+    SourceRange r = node->getRange();
+    EXPECT_EQ(1, r.start.line);
+    EXPECT_EQ(2, r.start.column);
+    EXPECT_EQ(4, r.end.line);
+    EXPECT_EQ(6, r.end.column);
 }
 
 } // namespace ast

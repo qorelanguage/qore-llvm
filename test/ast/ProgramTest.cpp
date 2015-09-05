@@ -24,6 +24,7 @@
 //
 //------------------------------------------------------------------------------
 #include "qore/ast/Program.h"
+#include "../context/SourceTestHelper.h"
 #include "AstTestHelper.h"
 
 namespace qore {
@@ -32,14 +33,32 @@ namespace ast {
 struct ProgramTest : ::testing::Test {
     void *retVal{this};
     ::testing::StrictMock<MockVisitor> mockVisitor;
+    SourceRange range = SourceTestHelper::createRange(11, 22, 33);
 };
 
-TEST_F(ProgramTest, Program) {
+TEST_F(ProgramTest, ProgramEmpty) {
     Statements body;
-    body.push_back(MockStatement::create());
-    Program::Ptr node = Program::create(std::move(body));
+    Program::Ptr node = Program::create(std::move(body), range);
     EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
     EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_EQ(range, node->getRange());
+}
+
+TEST_F(ProgramTest, Program) {
+    MockStatement stmt1;
+    MockStatement stmt2;
+    Statements body;
+    body.push_back(stmt1);
+    body.push_back(stmt2);
+    Program::Ptr node = Program::create(std::move(body), range);
+
+    EXPECT_CALL(stmt1, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(1, 2, 3)));
+    EXPECT_CALL(stmt2, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(4, 5, 6)));
+    SourceRange r = node->getRange();
+    EXPECT_EQ(1, r.start.line);
+    EXPECT_EQ(2, r.start.column);
+    EXPECT_EQ(4, r.end.line);
+    EXPECT_EQ(6, r.end.column);
 }
 
 } // namespace ast

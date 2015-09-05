@@ -46,7 +46,7 @@ ast::Statement::Ptr ParserImpl::parseStatement() {
 //program ::= statements
 ast::Program::Ptr ParserImpl::program() {
     LOG_FUNCTION();
-    return ast::Program::create(statements());
+    return ast::Program::create(statements(), token.range);
 }
 
 //statements
@@ -68,24 +68,24 @@ ast::Statement::Ptr ParserImpl::statement() {
     LOG_FUNCTION();
     switch (tokenType()) {
         case TokenType::Semicolon:
-            consume();
-            return ast::EmptyStatement::create();
+            return ast::EmptyStatement::create(consume().range);
         case TokenType::KwPrint:
             return printStatement();
         default:
+            SourceLocation start = token.range.start;
             report(DiagId::ParserStatementExpected) << token;
             recoverStatementEnd();
-            return ast::EmptyStatement::create();
+            return ast::EmptyStatement::create(SourceRange(start, token.range.end));
     }
 }
 
 //printStatement ::= KwPrint expression ';'
 ast::PrintStatement::Ptr ParserImpl::printStatement() {
     LOG_FUNCTION();
-    match(TokenType::KwPrint);
+    SourceLocation start = match(TokenType::KwPrint).start;
     ast::Expression::Ptr expr = expression();
-    match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd);
-    return ast::PrintStatement::create(std::move(expr));
+    SourceLocation end = match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd).end;
+    return ast::PrintStatement::create(SourceRange(start, end), std::move(expr));
 }
 
 //expression ::= additiveExpression
@@ -102,8 +102,8 @@ ast::Expression::Ptr ParserImpl::additiveExpression() {
     LOG_FUNCTION();
     std::unique_ptr<ast::Expression> expr = primaryExpression();
     while (tokenType() == TokenType::Plus) {
-        consume();
-        expr = ast::BinaryExpression::create(std::move(expr), primaryExpression());
+        SourceRange r = consume().range;
+        expr = ast::BinaryExpression::create(std::move(expr), r, primaryExpression());
     }
     return expr;
 }
@@ -113,16 +113,17 @@ ast::Expression::Ptr ParserImpl::additiveExpression() {
 //    ::= String
 ast::Expression::Ptr ParserImpl::primaryExpression() {
     LOG_FUNCTION();
+    SourceRange r = range();
     switch (tokenType()) {
         case TokenType::Integer:
-            return ast::IntegerLiteral::create(consumeIntValue());
+            return ast::IntegerLiteral::create(consume().intValue, r);
         case TokenType::String:
-            return ast::StringLiteral::create(consumeStringValue());
+            return ast::StringLiteral::create(consume().stringValue, r);
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << token;
             recoverConsumeToken();
             //TODO return special error node which will prevent further errors
-            return ast::IntegerLiteral::create(0);
+            return ast::IntegerLiteral::create(0, r);
     }
 }
 

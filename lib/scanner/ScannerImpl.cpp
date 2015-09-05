@@ -47,9 +47,9 @@ void ScannerImpl::read(Token *token) {
         while (isspace(*ptr)) {
             ++ptr;
         }
-        token->locationStart = ptr.getLocation();
+        token->range.start = ptr.getLocation();
     } while ((token->type = readInternal(token)) == TokenType::None);
-    token->locationEnd = ptr.getLocation();
+    token->range.end = ptr.getLocation();
     LOG("Returning token " << *token);
 }
 
@@ -81,7 +81,7 @@ TokenType ScannerImpl::readInternal(Token *token) {
         case 'Z':
             return readIdentifier(token);
         default:
-            diagMgr.report(DiagId::ScannerInvalidCharacter, token->locationStart) << c;
+            diagMgr.report(DiagId::ScannerInvalidCharacter, token->range.start) << c;
             return TokenType::None;
     }
 }
@@ -97,7 +97,7 @@ TokenType ScannerImpl::readInteger(Token *token) {
     errno = 0;
     token->intValue = strtoull(start, &end, 10);
     if (errno || end != ptr) {
-        diagMgr.report(DiagId::ScannerInvalidInteger, token->locationStart).arg(start, ptr);
+        diagMgr.report(DiagId::ScannerInvalidInteger, token->range.start).arg(start, ptr);
         token->intValue = 0;
     }
     return TokenType::Integer;
@@ -114,7 +114,7 @@ TokenType ScannerImpl::readIdentifier(Token *token) {
         return TokenType::KwPrint;
     }
 
-    diagMgr.report(DiagId::ScannerInvalidKeyword, token->locationStart).arg(start, end);
+    diagMgr.report(DiagId::ScannerInvalidKeyword, token->range.start).arg(start, end);
     return TokenType::None;
 }
 
@@ -122,7 +122,7 @@ TokenType ScannerImpl::readString(Token *token) {
     char c;
     while ((c = *ptr++) != '"') {
         if (c == '\0' || c == '\n') {
-            diagMgr.report(DiagId::ScannerUnendedStringLiteral, token->locationStart);
+            diagMgr.report(DiagId::ScannerUnendedStringLiteral, token->range.start);
             break;
         }
         token->stringValue.push_back(c);

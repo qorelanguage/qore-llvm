@@ -48,13 +48,13 @@ protected:
     ParserCore(DiagManager &diagMgr, Scanner &scanner) : diagMgr(diagMgr), scanner(scanner), token(), hasToken(false) {
     }
 
-    void match(TokenType expected, RecoverStrategy recoverStrategy = &ParserCore::recoverConsumeToken) {
+    SourceRange match(TokenType expected, RecoverStrategy recoverStrategy = &ParserCore::recoverConsumeToken) {
         if (tokenType() == expected) {
-            consume();
-        } else {
-            report(DiagId::ParserUnexpectedToken) << to_string(expected) << token;
-            (this->*recoverStrategy)();
+            return consume().range;
         }
+        report(DiagId::ParserUnexpectedToken) << to_string(expected) << token;
+        (this->*recoverStrategy)();
+        return token.range;
     }
 
     void recoverConsumeToken() {
@@ -90,27 +90,21 @@ protected:
         return token.type;
     }
 
-    void consume() {
+    SourceRange range() {
+        ensureToken();
+        return token.range;
+    }
+
+    Token consume() {
         assert(hasToken);
         hasToken = false;
         CLOG("PARSER", "Consuming" << token);
-    }
-
-    uint64_t consumeIntValue() {
-        assert(hasToken);
-        hasToken = false;
-        return token.intValue;
-    }
-
-    std::string consumeStringValue() {
-        assert(hasToken);
-        hasToken = false;
-        return std::move(token.stringValue);
+        return token;
     }
 
     DiagBuilder report(DiagId id) {
         assert(hasToken);
-        return diagMgr.report(id, token.locationStart);
+        return diagMgr.report(id, token.range.start);
     }
 
 protected:

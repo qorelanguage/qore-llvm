@@ -45,10 +45,10 @@ TEST_F(ScannerImplTest, Eof) {
     DIAG_NONE();
     scanner.read(&t);
     EXPECT_EQ(TokenType::EndOfFile, t.type);
-    EXPECT_EQ(1, t.locationStart.line);
-    EXPECT_EQ(1, t.locationStart.column);
-    EXPECT_EQ(1, t.locationEnd.line);
-    EXPECT_EQ(1, t.locationEnd.column);
+    EXPECT_EQ(1, t.range.start.line);
+    EXPECT_EQ(1, t.range.start.column);
+    EXPECT_EQ(1, t.range.end.line);
+    EXPECT_EQ(1, t.range.end.column);
 }
 
 TEST_F(ScannerImplTest, EofSkipSpaces) {
@@ -58,10 +58,10 @@ TEST_F(ScannerImplTest, EofSkipSpaces) {
     DIAG_NONE();
     scanner.read(&t);
     EXPECT_EQ(TokenType::EndOfFile, t.type);
-    EXPECT_EQ(2, t.locationStart.line);
-    EXPECT_EQ(3, t.locationStart.column);
-    EXPECT_EQ(2, t.locationEnd.line);
-    EXPECT_EQ(3, t.locationEnd.column);
+    EXPECT_EQ(2, t.range.start.line);
+    EXPECT_EQ(3, t.range.start.column);
+    EXPECT_EQ(2, t.range.end.line);
+    EXPECT_EQ(3, t.range.end.column);
 }
 
 TEST_F(ScannerImplTest, Symbols) {
@@ -83,10 +83,10 @@ TEST_F(ScannerImplTest, InvalidCharDiagAndRecover) {
 
     scanner.read(&t);
     EXPECT_EQ(TokenType::Plus, t.type);
-    EXPECT_EQ(3, t.locationStart.line);
-    EXPECT_EQ(1, t.locationStart.column);
-    EXPECT_EQ(3, t.locationEnd.line);
-    EXPECT_EQ(2, t.locationEnd.column);
+    EXPECT_EQ(3, t.range.start.line);
+    EXPECT_EQ(1, t.range.start.column);
+    EXPECT_EQ(3, t.range.end.line);
+    EXPECT_EQ(2, t.range.end.column);
 
     EXPECT_PRED2(contains, r.message, "@");
 }
@@ -141,10 +141,10 @@ TEST_F(ScannerImplTest, KwPrint) {
 
     scanner.read(&t);
     EXPECT_EQ(TokenType::KwPrint, t.type);
-    EXPECT_EQ(2, t.locationStart.line);
-    EXPECT_EQ(3, t.locationStart.column);
-    EXPECT_EQ(2, t.locationEnd.line);
-    EXPECT_EQ(8, t.locationEnd.column);
+    EXPECT_EQ(2, t.range.start.line);
+    EXPECT_EQ(3, t.range.start.column);
+    EXPECT_EQ(2, t.range.end.line);
+    EXPECT_EQ(8, t.range.end.column);
 }
 
 TEST_F(ScannerImplTest, InvalidIdDiagAndRecover) {
@@ -155,8 +155,8 @@ TEST_F(ScannerImplTest, InvalidIdDiagAndRecover) {
 
     scanner.read(&t);
     EXPECT_EQ(TokenType::KwPrint, t.type);
-    EXPECT_EQ(2, t.locationStart.line);
-    EXPECT_EQ(5, t.locationStart.column);
+    EXPECT_EQ(2, t.range.start.line);
+    EXPECT_EQ(5, t.range.start.column);
 
     EXPECT_PRED2(contains, r.message, "prn");
 }
@@ -170,10 +170,10 @@ TEST_F(ScannerImplTest, String) {
     scanner.read(&t);
     EXPECT_EQ(TokenType::String, t.type);
     EXPECT_EQ("xyz", t.stringValue);
-    EXPECT_EQ(1, t.locationStart.line);
-    EXPECT_EQ(2, t.locationStart.column);
-    EXPECT_EQ(1, t.locationEnd.line);
-    EXPECT_EQ(7, t.locationEnd.column);
+    EXPECT_EQ(1, t.range.start.line);
+    EXPECT_EQ(2, t.range.start.column);
+    EXPECT_EQ(1, t.range.end.line);
+    EXPECT_EQ(7, t.range.end.column);
 }
 
 TEST_F(ScannerImplTest, StringUnendedNewline) {

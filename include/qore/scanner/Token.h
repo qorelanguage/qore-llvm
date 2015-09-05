@@ -33,7 +33,7 @@
 
 #include <ostream>
 #include <string>
-#include "qore/context/SourceLocation.h"
+#include "qore/context/SourceRange.h"
 
 namespace qore {
 
@@ -56,8 +56,7 @@ enum class TokenType {
  */
 struct Token {
     TokenType type = TokenType::None;   //!< The type of the token.
-    SourceLocation locationStart;       //!< Location of the start of the token in the source code.
-    SourceLocation locationEnd;         //!< Location of the end of the token in the source code.
+    SourceRange range;                  //!< Location of the token in the source code.
     uint64_t intValue;                  //!< An integer value associated with the token.
     std::string stringValue;            //!< A string value associated with the token.
 

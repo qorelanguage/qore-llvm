@@ -33,6 +33,7 @@
 #include "qore/context/SourceLocation.h"
 #include "qore/context/SourceManager.h"
 #include "qore/context/SourcePointer.h"
+#include "qore/context/SourceRange.h"
 
 namespace qore {
 
@@ -53,6 +54,10 @@ public:
 
     static SourceLocation createLocation(int line, int column, SourceId srcId = createId(1)) {
         return SourceLocation(srcId, line, column);
+    }
+
+    static SourceRange createRange(int line, int column1, int column2, SourceId srcId = createId(1)) {
+        return SourceRange(createLocation(line, column1, srcId), createLocation(line, column2, srcId));
     }
 
     static SourceBuffer createBuffer(SourceId sourceId = createId(1)) {

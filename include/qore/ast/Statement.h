@@ -69,19 +69,27 @@ public:
 public:
     /**
      * \brief Allocates a new node.
+     * \param range the location in the source code
      * \return a unique pointer to the allocated node
      */
-    static Ptr create() {
-        return Ptr(new EmptyStatement());
+    static Ptr create(SourceRange range) {
+        return Ptr(new EmptyStatement(range));
     }
 
     void *accept(Visitor &v) const override {
         return v.visit(this);
     }
 
-private:
-    EmptyStatement() {
+    SourceRange getRange() const override {
+        return range;
     }
+
+private:
+    EmptyStatement(SourceRange range) : range(range) {
+    }
+
+private:
+    SourceRange range;
 };
 
 /**
@@ -101,20 +109,28 @@ public:
 public:
     /**
      * \brief Allocates a new node.
+     * \param range the location in the source code
      * \param expression the expression to print
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Expression::Ptr expression) {
-        return Ptr(new PrintStatement(std::move(expression)));
+    static Ptr create(SourceRange range, Expression::Ptr expression) {
+        return Ptr(new PrintStatement(range, std::move(expression)));
     }
 
     void *accept(Visitor &v) const override {
         return v.visit(this);
     }
 
-private:
-    PrintStatement(Expression::Ptr expression) : expression(std::move(expression)) {
+    SourceRange getRange() const override {
+        return range;
     }
+
+private:
+    PrintStatement(SourceRange range, Expression::Ptr expression) : expression(std::move(expression)), range(range) {
+    }
+
+private:
+    SourceRange range;
 };
 
 } // namespace ast
