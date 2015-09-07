@@ -1,11 +1,27 @@
 #Out-of-source build
-/build
+/build-*
+
+#In-source build - generated
+lib/parser/lexer.cpp
+lib/parser/parser.cpp
+lib/parser/parser.hpp
+tools/sandbox/*.bc
+tools/sandbox/*.ll
+tools/sandbox/*.o
+tools/sandbox/sandbox
+
+#In-source build - doxygen
+/doc
+Doxyfile
 
 #In-source build - cmake
 /bin
 /CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
+
+#In-source build - cppcheck
+cppcheck.xml
 
 #In-source build - ninja
 /.ninja*
@@ -14,7 +30,14 @@ rules.ninja
 
 #In-source build - make
 Makefile
+ext/
+test/Testing
+CTestTestfile.*
 
 #Eclipse
 /.project
 /.cproject
+/.settings/
+
+#Vagrant
+.vagrant/

@@ -1,0 +1,65 @@
+//--------------------------------------------------------------------*- C++ -*-
+//
+//  Qore Programming Language
+//
+//  Copyright (C) 2015 Qore Technologies
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+//------------------------------------------------------------------------------
+#include "qore/ast/Program.h"
+#include "../context/SourceTestHelper.h"
+#include "AstTestHelper.h"
+
+namespace qore {
+namespace ast {
+
+struct ProgramTest : ::testing::Test {
+    void *retVal{this};
+    ::testing::StrictMock<MockVisitor> mockVisitor;
+    SourceRange range = SourceTestHelper::createRange(11, 22, 33);
+};
+
+TEST_F(ProgramTest, ProgramEmpty) {
+    Statements body;
+    Program::Ptr node = Program::create(std::move(body), range);
+    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
+    EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_EQ(range, node->getRange());
+}
+
+TEST_F(ProgramTest, Program) {
+    MockStatement stmt1;
+    MockStatement stmt2;
+    Statements body;
+    body.push_back(stmt1);
+    body.push_back(stmt2);
+    Program::Ptr node = Program::create(std::move(body), range);
+
+    EXPECT_CALL(stmt1, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(1, 2, 3)));
+    EXPECT_CALL(stmt2, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(4, 5, 6)));
+    SourceRange r = node->getRange();
+    EXPECT_EQ(1, r.start.line);
+    EXPECT_EQ(2, r.start.column);
+    EXPECT_EQ(4, r.end.line);
+    EXPECT_EQ(6, r.end.column);
+}
+
+} // namespace ast
+} // namespace qore
