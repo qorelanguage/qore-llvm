@@ -23,6 +23,7 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
+#include <sstream>
 #include "gtest/gtest.h"
 #include "qore/context/SourceRange.h"
 #include "SourceTestHelper.h"
@@ -110,6 +111,16 @@ TEST_F(SourceRangeTest, CompareNe) {
     EXPECT_FALSE(r1 != r2);
     EXPECT_TRUE(r1 != r3);
     EXPECT_TRUE(r1 != r4);
+}
+
+TEST_F(SourceRangeTest, toStream) {
+    std::ostringstream ss;
+    SourceLocation loc1 = createLocation(1, 2, 3);
+    SourceLocation loc2 = createLocation(4, 5, 6);
+    SourceRange r1 = SourceRange(loc1, loc2);
+
+    ss << r1;
+    EXPECT_EQ("2:3-5:6", ss.str());
 }
 
 } // namespace qore

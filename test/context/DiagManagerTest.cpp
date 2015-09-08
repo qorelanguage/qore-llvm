@@ -48,7 +48,7 @@ struct DiagManagerTest : ::testing::Test {
     std::function<void(DiagRecord&)> messageCaptor = [this](DiagRecord &r){
         capturedMessage = r.message;
     };
-    SourceLocation location{SourceTestHelper::createLocation(12, 34)};
+    SourceLocation location{SourceTestHelper::createLocation(1, 12, 34)};
     std::string capturedMessage;
 };
 
@@ -159,18 +159,18 @@ TEST_F(DiagManagerTest, DisableEnable) {
 }
 
 TEST_F(DiagManagerTest, DiagPrinter) {
+    SourceManager sourceMgr;
+    DiagPrinter printer(sourceMgr);
     DiagRecord record{DiagId::ScannerInvalidCharacter, DiagLevel::Error, "message", location};
-    DiagPrinter printer([&](std::ostream &o, const qore::SourceLocation &l) -> std::ostream & {
-        EXPECT_EQ(location, l);
-        return o << "location_ok";
-    });
+    sourceMgr.createFromString("name0", "src0");
+    sourceMgr.createFromString("name1", "src1");
 
     std::string capturedStderr;
     {
         RedirectStderr _(capturedStderr);
         printer.process(record);
     }
-    EXPECT_EQ("location_ok: error: message\n", capturedStderr);
+    EXPECT_EQ("name1:12:34: error: message\n", capturedStderr);
 }
 
 TEST_F(DiagManagerTest, DisableDiagHelper) {

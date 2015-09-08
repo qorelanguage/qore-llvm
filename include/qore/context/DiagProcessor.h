@@ -33,6 +33,7 @@
 
 #include <iostream>
 #include "qore/context/DiagRecord.h"
+#include "qore/context/SourceManager.h"
 
 namespace qore {
 
@@ -70,17 +71,18 @@ class DiagPrinter : public qore::DiagProcessor {
 public:
     /**
      * \brief Constructs the instance.
-     * \param locationFormatter used for formating locations
+     * \param sourceMgr used for getting source names
      */
-    DiagPrinter(SourceLocation::Formatter locationFormatter) : locationFormatter(locationFormatter) {
+    DiagPrinter(const SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
     }
 
     void process(qore::DiagRecord &record) override {
-        locationFormatter(std::cerr, record.location) << ": " << record.level << ": " << record.message << '\n';
+        std::cerr << sourceMgr.getName(record.location.sourceId) << ':' << record.location
+                << ": " << record.level << ": " << record.message << '\n';
     }
 
 private:
-    SourceLocation::Formatter locationFormatter;
+    const SourceManager &sourceMgr;
 };
 
 } // namespace qore

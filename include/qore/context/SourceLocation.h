@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_CONTEXT_SOURCELOCATION_H_
 
 #include <functional>
+#include <ostream>
 #include "qore/context/SourceId.h"
 
 namespace qore {
@@ -40,11 +41,6 @@ namespace qore {
  * \brief Represents a location in the source code.
  */
 struct SourceLocation {
-
-    /**
-     * \brief Type of callbacks used for formatting locations.
-     */
-    using Formatter = std::function<std::ostream &(std::ostream &, const SourceLocation &)>;
 
     SourceId sourceId;      //!< Id of the source.
     short column;           //!< Column number.
@@ -85,6 +81,16 @@ struct SourceLocation {
         return !(*this == other);
     }
 };
+
+/**
+ * \brief Writes location (without the source name) to an output stream.
+ * \param os the output stream
+ * \param location the location to write
+ * \return the output stream
+ */
+inline std::ostream &operator<<(std::ostream &os, const SourceLocation &location) {
+    return os << location.line << ':' << location.column;
+}
 
 } // namespace qore
 

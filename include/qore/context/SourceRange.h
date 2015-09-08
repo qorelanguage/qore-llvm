@@ -72,6 +72,16 @@ struct SourceRange {
     }
 };
 
+/**
+ * \brief Writes location range (without the source name) to an output stream.
+ * \param os the output stream
+ * \param range the source range to write
+ * \return the output stream
+ */
+inline std::ostream &operator<<(std::ostream &os, const SourceRange &range) {
+    return os << range.start << '-' << range.end;
+}
+
 } // namespace qore
 
 #endif // INCLUDE_QORE_CONTEXT_SOURCERANGE_H_

@@ -74,23 +74,4 @@ TEST_F(SourceManagerTest, GetName) {
     EXPECT_EQ(fileName, mgr.getName(getSourceId(sb3)));
 }
 
-TEST_F(SourceManagerTest, FormatLocation) {
-    mgr.createFromString("buf1", "abc");
-    mgr.createFromString("buf2", "abc");
-    std::ostringstream ss;
-
-    EXPECT_EQ(ss, mgr.formatLocation(ss, createLocation(1, 12, 34)));
-    EXPECT_EQ("buf2:12:34", ss.str());
-}
-
-TEST_F(SourceManagerTest, LocationFormatter) {
-    mgr.createFromString("buf1", "abc");
-    mgr.createFromString("buf2", "abc");
-    std::ostringstream ss;
-
-    SourceLocation::Formatter formatter = mgr;
-    EXPECT_EQ(ss, formatter(ss, createLocation(1, 12, 34)));
-    EXPECT_EQ("buf2:12:34", ss.str());
-}
-
 } // namespace qore

@@ -23,6 +23,7 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
+#include <sstream>
 #include "gtest/gtest.h"
 #include "qore/context/SourceLocation.h"
 #include "SourceTestHelper.h"
@@ -91,6 +92,14 @@ TEST_F(SourceLocationTest, CompareNe) {
     EXPECT_TRUE(loc1 != loc3);
     EXPECT_TRUE(loc1 != loc4);
     EXPECT_TRUE(loc1 != loc5);
+}
+
+TEST_F(SourceLocationTest, toStream) {
+    std::ostringstream ss;
+    SourceLocation loc1(createId(1), 12, 34);
+
+    ss << loc1;
+    EXPECT_EQ("12:34", ss.str());
 }
 
 } // namespace qore
