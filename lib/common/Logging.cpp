@@ -49,7 +49,7 @@ void Logger::log(const std::string &component, const std::string &message,
             << std::left
             << std::setw(getHeaderWidth())
             << formatHeader(function, file, line)
-            << std::setfill(' ') << std::setw(2*indentLevel) << ""
+            << indent
             << message
             << std::endl;
     }

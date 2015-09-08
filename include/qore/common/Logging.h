@@ -31,6 +31,8 @@
 #ifndef INCLUDE_QORE_COMMON_LOGGING_H_
 #define INCLUDE_QORE_COMMON_LOGGING_H_
 
+#include "qore/common/Indent.h"
+
 /**
  * \brief Logs a message with custom location using QORE_LOG_COMPONENT as the component name.
  * \param M the message to log
@@ -100,7 +102,7 @@ namespace log {
 class Logger {
 
 public:
-    Logger() : indentLevel(0) {
+    Logger() {
     }
 
     virtual ~Logger() = default;
@@ -149,7 +151,7 @@ private:
     Logger &operator=(Logger &&) = delete;
 
 private:
-    int indentLevel;
+    Indent indent;
 
     friend class LogScope;
 };
@@ -200,14 +202,14 @@ public:
     LogScope(const char *component, const char *function, const char *file, int line)
         : component(component), function(function), file(file), line(line) {
         CLOG_EX(component, "Entering " << function, function, file, line);
-        ++::qore::log::LoggerManager::get()->indentLevel;
+        ++::qore::log::LoggerManager::get()->indent;
     }
 
     /**
      * \brief Logs the exit of the scope.
      */
     ~LogScope() {
-        --::qore::log::LoggerManager::get()->indentLevel;
+        --::qore::log::LoggerManager::get()->indent;
         CLOG_EX(component, "Leaving " << function, function, file, line);
     }
 
