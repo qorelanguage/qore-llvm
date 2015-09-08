@@ -5,8 +5,12 @@
 #include "qore/parser/ParserImpl.h"
 #include "qore/runtime/runtime.h"
 #include "qore/scanner/ScannerImpl.h"
-#include "dump.h"
 #include "interpret.h"
+#include "qore/ast/dump/DumpVisitor.h"
+#include "qore/ast/dump/XmlFormat.h"
+#include "qore/ast/dump/JsonFormat.h"
+#include "qore/ast/dump/YamlFormat.h"
+#include "qore/ast/dump/CompactFormat.h"
 
 #ifdef QORE_USE_LLVM
 #include "gen.h"
@@ -129,8 +133,14 @@ int main(int argc, char *argv[]) {
     qore::ast::Program::Ptr root = parser.parse();
 
     if (dumpAst) {
-        DumpVisitor dv;
-        root->accept(dv);
+        qore::ast::dump::DumpVisitorNew<qore::ast::dump::XmlFormat> dxv;
+        qore::ast::dump::DumpVisitorNew<qore::ast::dump::JsonFormat> djv;
+        qore::ast::dump::DumpVisitorNew<qore::ast::dump::YamlFormat> dyv;
+        qore::ast::dump::DumpVisitorNew<qore::ast::dump::CompactFormat> dcv;
+        root->accept(dxv);
+        root->accept(djv);
+        root->accept(dyv);
+        root->accept(dcv);
     }
 
     if (interpret) {
