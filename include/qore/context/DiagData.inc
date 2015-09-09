@@ -26,7 +26,6 @@
 
 DIAG(ScannerInvalidCharacter, Error, "invalid character '%s'")
 DIAG(ScannerInvalidInteger, Error, "invalid integer literal '%s'")
-DIAG(ScannerInvalidKeyword, Error, "invalid keyword '%s'")
 DIAG(ScannerUnendedStringLiteral, Error, "Unended string literal")
 
 DIAG(ParserStatementExpected, Error, "expected statement, got %s instead")

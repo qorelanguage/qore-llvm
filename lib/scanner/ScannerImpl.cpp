@@ -62,6 +62,12 @@ TokenType ScannerImpl::readInternal(Token *token) {
             return TokenType::Plus;
         case ';':
             return TokenType::Semicolon;
+        case '{':
+            return TokenType::CurlyLeft;
+        case '}':
+            return TokenType::CurlyRight;
+        case '=':
+            return TokenType::Assign;
         case '"':
             return readString(token);
         case '0':   case '1':   case '2':   case '3':   case '4':
@@ -110,12 +116,18 @@ TokenType ScannerImpl::readIdentifier(Token *token) {
     }
     const char *end = ptr;
 
-    if (std::string{start, end} == "print") {
+    std::string s{start, end};
+    //FIXME use something better
+    if (s == "my") {
+        return TokenType::KwMy;
+    } else if (s == "print") {
         return TokenType::KwPrint;
+    } else if (s == "trim") {
+        return TokenType::KwTrim;
     }
 
-    diagMgr.report(DiagId::ScannerInvalidKeyword, token->range.start).arg(start, end);
-    return TokenType::None;
+    token->stringValue = std::move(s);
+    return TokenType::Identifier;
 }
 
 TokenType ScannerImpl::readString(Token *token) {
