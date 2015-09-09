@@ -8,6 +8,8 @@
 #include "qore/ast/dump/JsonFormat.h"
 #include "qore/ast/dump/YamlFormat.h"
 #include "qore/ast/dump/CompactFormat.h"
+#include "gen.h"
+#include "interpret.h"
 
 #define QORE_LOG_COMPONENT "MAIN"
 
@@ -17,7 +19,7 @@ void sandbox() {
     qore::DiagManager diagMgr;
     diagMgr.addProcessor(&diagPrinter);
 
-    qore::SourceBuffer srcBuffer = sourceMgr.createFromString("test", " ; print 567 + \"ab\" +5; print 6;");
+    qore::SourceBuffer srcBuffer = sourceMgr.createFromString("test", " ; print 567 + trim \"    ab\" +5; print 6;");
     qore::ScannerImpl scanner(diagMgr, srcBuffer);
 
     qore::ParserImpl parser(diagMgr, scanner);
@@ -35,4 +37,10 @@ void sandbox() {
     qore::ast::dump::DumpVisitor<qore::ast::dump::CompactFormat> dcv;
     program->accept(dcv);
     std::cout << std::endl;
+
+    InterpretVisitor iv;
+    program->accept(iv);
+
+    CodeGenVisitor cgv(sourceMgr);
+    program->accept(cgv);
 }

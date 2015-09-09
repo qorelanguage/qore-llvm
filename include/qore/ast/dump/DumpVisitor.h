@@ -87,6 +87,18 @@ public:
         return nullptr;
     }
 
+    void* visit(const UnaryExpression *node) override {
+        formatter << BeginNode("unaryExpression")
+            << Range(node->getRange())
+            << EndNodeHeader()
+            << Child("operator") << BeginNode()
+                << Last() << Range(node->operatorRange)
+                << EndNode()
+            << Last() << Child("operand"), visitNode(node->operand)
+            << EndNode();
+        return nullptr;
+    }
+
     void* visit(const EmptyStatement *node) override {
         formatter << BeginNode("emptyStatement")
             << Last() << Range(node->getRange())

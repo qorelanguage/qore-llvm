@@ -60,6 +60,7 @@ private:
     ast::PrintStatement::Ptr printStatement();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr additiveExpression();
+    ast::Expression::Ptr prefixExpression();
     ast::Expression::Ptr primaryExpression();
 
     friend class ParserImplTest;

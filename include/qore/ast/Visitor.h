@@ -37,6 +37,7 @@ namespace ast {
 class IntegerLiteral;
 class StringLiteral;
 class BinaryExpression;
+class UnaryExpression;
 class EmptyStatement;
 class PrintStatement;
 class Program;
@@ -69,6 +70,13 @@ public:
      * \return defined by the implementation
      */
     virtual void* visit(const BinaryExpression *node) = 0;
+
+    /**
+     * \brief Called by a UnaryExpression AST node.
+     * \param node the node being visited
+     * \return defined by the implementation
+     */
+    virtual void* visit(const UnaryExpression *node) = 0;
 
     /**
      * \brief Called by a EmptyStatement AST node.

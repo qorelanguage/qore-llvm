@@ -174,6 +174,46 @@ private:
     }
 };
 
+/**
+ * \brief Represents a unary expression.
+ */
+class UnaryExpression : public Expression {
+
+public:
+    SourceRange operatorRange;      //!< Location of the operator in the source.
+    Expression::Ptr operand;        //!< The operand.
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<UnaryExpression>;
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param operatorRange the location of the operator
+     * \param operand the operand
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceRange operatorRange, Expression::Ptr operand) {
+        return Ptr(new UnaryExpression(operatorRange, std::move(operand)));
+    }
+
+    void *accept(Visitor &v) const override {
+        return v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return SourceRange(operatorRange.start, operand->getRange().end);
+    }
+
+private:
+    UnaryExpression(SourceRange operatorRange, Expression::Ptr operand)
+        : operatorRange(operatorRange), operand(std::move(operand)) {
+    }
+};
+
 } // namespace ast
 } // namespace qore
 

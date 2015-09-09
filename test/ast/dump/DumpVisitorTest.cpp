@@ -40,30 +40,37 @@ namespace ast {
 namespace dump {
 
 struct DumpVisitorTest : ::testing::Test {
-    SourceManager sourceMgr;
-    DiagManager diagMgr;
-    SourceBuffer srcBuffer = sourceMgr.createFromString("test", ";print 567 + \"ab\" +5;");
-    ScannerImpl scanner{diagMgr, srcBuffer};
-    ParserImpl parser{diagMgr, scanner};
-    Program::Ptr program = parser.parse();
+    Program::Ptr program = parse(";print 567 + \"ab\" +5;");
+
+    Program::Ptr parse(const std::string &src) {
+        SourceManager sourceMgr;
+        DiagManager diagMgr;
+        SourceBuffer srcBuffer = sourceMgr.createFromString("test", src);
+        ScannerImpl scanner{diagMgr, srcBuffer};
+        ParserImpl parser{diagMgr, scanner};
+        return parser.parse();
+    }
 };
 
 TEST_F(DumpVisitorTest, xml) {
     std::ostringstream ss;
     DumpVisitor<XmlFormat> dv{XmlFormat(ss)};
-    program->accept(dv);
-    EXPECT_EQ(R"(<program range="1:1-1:22">
+    parse(";print 567 + trim \"ab\" +5;")->accept(dv);
+    EXPECT_EQ(R"(<program range="1:1-1:27">
   <body>
     <emptyStatement range="1:1-1:2" />
-    <printStatement range="1:2-1:22">
-      <binaryExpression range="1:8-1:21">
-        <binaryExpression range="1:8-1:18">
+    <printStatement range="1:2-1:27">
+      <binaryExpression range="1:8-1:26">
+        <binaryExpression range="1:8-1:23">
           <integerLiteral range="1:8-1:11" value="567" />
           <operator range="1:12-1:13" />
-          <stringLiteral range="1:14-1:18" value="ab" />
+          <unaryExpression range="1:14-1:23">
+            <operator range="1:14-1:18" />
+            <stringLiteral range="1:19-1:23" value="ab" />
+          </unaryExpression>
         </binaryExpression>
-        <operator range="1:19-1:20" />
-        <integerLiteral range="1:20-1:21" value="5" />
+        <operator range="1:24-1:25" />
+        <integerLiteral range="1:25-1:26" value="5" />
       </binaryExpression>
     </printStatement>
   </body>

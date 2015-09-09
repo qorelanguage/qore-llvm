@@ -40,6 +40,7 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     ast::PrintStatement::Ptr printStatement() { return parser.printStatement(); }
     ast::Expression::Ptr expression() { return parser.expression(); }
     ast::Expression::Ptr additiveExpression() { return parser.additiveExpression(); }
+    ast::Expression::Ptr prefixExpression() { return parser.prefixExpression(); }
     ast::Expression::Ptr primaryExpression() { return parser.primaryExpression(); }
 
     void EXPECT_CONSUMED() { EXPECT_FALSE(parser.hasToken); }
@@ -253,6 +254,17 @@ TEST_F(ParserImplTest, additiveTriple) {
     EXPECT_EQ(SourceRange(range1.start, range3.end), left->getRange());
     EXPECT_EQ(SourceRange(range1.start, range5.end), expr->getRange());
     EXPECT_NOT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, trim) {
+    addToken(TokenType::KwTrim, 1234, range1);
+    addToken(TokenType::Integer, 1111, range2);
+    DIAG_NONE();
+    AST_CAST(ast::UnaryExpression, expr, prefixExpression());
+    EXPECT_EQ(range1, expr->operatorRange);
+    AST_CAST(ast::IntegerLiteral, operand, expr->operand);
+    EXPECT_EQ(SourceRange(range1.start, range2.end), expr->getRange());
+    EXPECT_CONSUMED();
 }
 
 TEST_F(ParserImplTest, primaryInteger) {

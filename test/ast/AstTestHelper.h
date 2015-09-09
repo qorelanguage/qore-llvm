@@ -105,6 +105,7 @@ public:
     MOCK_METHOD1(visit, void*(const class IntegerLiteral *));
     MOCK_METHOD1(visit, void*(const class StringLiteral *));
     MOCK_METHOD1(visit, void*(const class BinaryExpression *));
+    MOCK_METHOD1(visit, void*(const class UnaryExpression *));
     MOCK_METHOD1(visit, void*(const class EmptyStatement *));
     MOCK_METHOD1(visit, void*(const class PrintStatement *));
     MOCK_METHOD1(visit, void*(const class Program *));

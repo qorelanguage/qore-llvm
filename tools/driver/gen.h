@@ -34,10 +34,14 @@ public:
         ft = llvm::FunctionType::get(qvStruct, qv2, false);
         evalAddFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "eval_add", nullptr);
 
+        ft = llvm::FunctionType::get(qvStruct->getPointerTo(0), qvStruct->getPointerTo(0), false);
+        evalTrimFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "eval_trim", nullptr);
+
         module->getFunctionList().push_back(printQvFunction);
         module->getFunctionList().push_back(makeIntFunction);
         module->getFunctionList().push_back(makeStrFunction);
         module->getFunctionList().push_back(evalAddFunction);
+        module->getFunctionList().push_back(evalTrimFunction);
         scope = nullptr;
     }
 
@@ -79,6 +83,16 @@ public:
         llvm::Value* args[] = {tagL, valL, tagR, valR};
         return builder.CreateCall(evalAddFunction, args);
     }
+
+    R visit(const qore::ast::UnaryExpression *e) override {
+        return e->operand->accept(*this);
+    }
+
+//    %aa = alloca { i64, i64 }
+//    store { i64, i64 } %4, { i64, i64 }* %aa
+//    %5 = call { i64, i64 }* @eval_trim({ i64, i64 }* %aa), !dbg !16
+//    %bb = load { i64, i64 }, { i64, i64 }* %aa
+
 
     R visit(const qore::ast::EmptyStatement *) override {
         return nullptr;
@@ -175,6 +189,7 @@ private:
     llvm::Function *makeIntFunction;
     llvm::Function *makeStrFunction;
     llvm::Function *evalAddFunction;
+    llvm::Function *evalTrimFunction;
 
     llvm::DISubprogram *scope;
 

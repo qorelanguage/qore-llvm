@@ -20,5 +20,6 @@ extern "C" void print_qv(QoreValue qv);
 extern "C" QoreValue make_int(int64_t value);
 extern "C" QoreValue make_str(const char *value);
 extern "C" QoreValue eval_add(QoreValue l, QoreValue r);
+extern "C" QoreValue &eval_trim(QoreValue &o);
 
 #endif /* INCLUDE_QORE_RUNTIME_RUNTIME_H_ */

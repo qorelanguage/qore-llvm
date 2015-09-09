@@ -94,18 +94,31 @@ ast::Expression::Ptr ParserImpl::expression() {
     return additiveExpression();
 }
 
-//additiveExpression ::= primaryExpression additiveExpressionRest
+//additiveExpression ::= prefixExpression additiveExpressionRest
 //additiveExpressionRest
 //    ::= *lambda*
-//    ::= '+' primaryExpression additiveExpressionRest
+//    ::= '+' prefixExpression additiveExpressionRest
 ast::Expression::Ptr ParserImpl::additiveExpression() {
     LOG_FUNCTION();
-    std::unique_ptr<ast::Expression> expr = primaryExpression();
+    std::unique_ptr<ast::Expression> expr = prefixExpression();
     while (tokenType() == TokenType::Plus) {
         SourceRange r = consume().range;
-        expr = ast::BinaryExpression::create(std::move(expr), r, primaryExpression());
+        expr = ast::BinaryExpression::create(std::move(expr), r, prefixExpression());
     }
     return expr;
+}
+
+//prefixExpression
+//    ::= primaryExpression
+//    ::= KwTrim prefixExpression
+ast::Expression::Ptr ParserImpl::prefixExpression() {
+    LOG_FUNCTION();
+    if (tokenType() == TokenType::KwTrim) {
+        SourceRange r = consume().range;
+        return ast::UnaryExpression::create(r, prefixExpression());
+    } else {
+        return primaryExpression();
+    }
 }
 
 //primaryExpression

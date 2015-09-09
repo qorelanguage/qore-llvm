@@ -5,6 +5,14 @@
 #include "qore/ast/Program.h"
 #include "qore/runtime/runtime.h"
 
+inline std::ostream &operator<<(std::ostream &os, const QoreValue &qv) {
+    if (qv.tag == Tag::Int) {
+        return os << "intValue(" << qv.intValue << ")";
+    } else {
+        return os << "strValue(" << qv.strValue << ")";
+    }
+}
+
 /**
  * \private
  */
@@ -26,8 +34,17 @@ public:
         QoreValue *l = static_cast<QoreValue*>(e->left->accept(*this));
         QoreValue *r = static_cast<QoreValue*>(e->right->accept(*this));
         QoreValue *result = new QoreValue();
+
+        CLOG("I", "binary: " << *l << ", " << *r);
+
         *result = eval_add(*l, *r);
         return result;
+    }
+    R visit(const qore::ast::UnaryExpression *e) override {
+        QoreValue *o = static_cast<QoreValue*>(e->operand->accept(*this));
+        eval_trim(*o);
+        CLOG("I", "unary: " << *o);
+        return o;
     }
     R visit(const qore::ast::EmptyStatement *) override {
         return nullptr;
