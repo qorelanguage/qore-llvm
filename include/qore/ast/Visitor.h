@@ -34,6 +34,13 @@
 namespace qore {
 namespace ast {
 
+class IntegerLiteral;
+class StringLiteral;
+class BinaryExpression;
+class EmptyStatement;
+class PrintStatement;
+class Program;
+
 /**
  * \brief Interface for implementations of the visitor pattern for the AST.
  */
@@ -47,42 +54,42 @@ public:
      * \param node the node being visited
      * \return defined by the implementation
      */
-    virtual void* visit(const class IntegerLiteral *node) = 0;
+    virtual void* visit(const IntegerLiteral *node) = 0;
 
     /**
      * \brief Called by a StringLiteral AST node.
      * \param node the node being visited
      * \return defined by the implementation
      */
-    virtual void* visit(const class StringLiteral *node) = 0;
+    virtual void* visit(const StringLiteral *node) = 0;
 
     /**
      * \brief Called by a BinaryExpression AST node.
      * \param node the node being visited
      * \return defined by the implementation
      */
-    virtual void* visit(const class BinaryExpression *node) = 0;
+    virtual void* visit(const BinaryExpression *node) = 0;
 
     /**
      * \brief Called by a EmptyStatement AST node.
      * \param node the node being visited
      * \return defined by the implementation
      */
-    virtual void* visit(const class EmptyStatement *node) = 0;
+    virtual void* visit(const EmptyStatement *node) = 0;
 
     /**
      * \brief Called by a PrintStatement AST node.
      * \param node the node being visited
      * \return defined by the implementation
      */
-    virtual void* visit(const class PrintStatement *node) = 0;
+    virtual void* visit(const PrintStatement *node) = 0;
 
     /**
      * \brief Called by a Program AST node.
      * \param node the node being visited
      * \return defined by the implementation
      */
-    virtual void* visit(const class Program *node) = 0;
+    virtual void* visit(const Program *node) = 0;
 
 protected:
     Visitor() = default;

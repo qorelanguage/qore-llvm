@@ -37,19 +37,25 @@
 
 namespace qore {
 namespace ast {
+
+/**
+ * \brief Contains classes for visualising the Abstract Syntax Tree.
+ */
 namespace dump {
 
 /**
  * \brief A visitor for dumping the AST.
+ * \tparam F the type of the formatter, see XmlFormat, JsonFormat, YamlFormat and CompactFormat
  */
 template<typename F>
-class DumpVisitorNew : public Visitor {
+class DumpVisitor : public Visitor {
 
 public:
-    DumpVisitorNew() : DumpVisitorNew(F()) {
-    }
-
-    DumpVisitorNew(F formatter) : formatter(formatter) {
+    /**
+     * \brief Creates the visitor with given formatter.
+     * \param formatter the formatter for producing the output
+     */
+    DumpVisitor(F formatter = F()) : formatter(formatter) {
     }
 
     void* visit(const IntegerLiteral *node) override {

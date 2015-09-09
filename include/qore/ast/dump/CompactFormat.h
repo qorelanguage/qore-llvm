@@ -25,12 +25,13 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief Formatter for producing compact dumps of the AST.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_AST_DUMP_COMPACTFORMAT_H_
 #define INCLUDE_QORE_AST_DUMP_COMPACTFORMAT_H_
 
+#include <array>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -40,67 +41,49 @@ namespace qore {
 namespace ast {
 namespace dump {
 
-struct IndentEx {
-    IndentEx &operator++() {
-        stack.push_back(2);
-        return *this;
-    }
-
-    IndentEx &operator--() {
-        stack.pop_back();
-        return *this;
-    }
-
-    std::vector<int> stack;
-};
-
-
-inline std::ostream &operator<<(std::ostream &os, IndentEx &indent) {
-    for (auto &s : indent.stack) {
-        switch (s) {
-            case 1:
-                os << "\u2502 ";
-                break;
-            case 2:
-                os << "\u251c\u2500";
-                s = 1;
-                break;
-            case 3:
-                os << "\u2514\u2500";
-                s = 4;
-                break;
-            case 4:
-                os << "  ";
-                break;
-        }
-    }
-    return os;
-}
-
+/**
+ * \brief Formatter for producing compact dumps of the AST.
+ */
 class CompactFormat {
 
 public:
-    CompactFormat &operator<<(Last) {
-        last = true;
-        return *this;
+    /**
+     * Constructor.
+     * \param os the destination output stream
+     * \param useUnicode whether Unicode border drawing characters should be used instead of ASCII
+     */
+    CompactFormat(std::ostream &os = std::cout, bool useUnicode = true) : os(os), inHeader(false),
+            last(false), savedChildName(nullptr), symbols{"  ", "| ", "+-", "+-"} {
+        if (useUnicode) {
+            symbols = {"  ", "\u2502 ", "\u251c\u2500", "\u2514\u2500"};
+        }
     }
 
-    CompactFormat &operator<<(BeginNode type) {
-        std::cout << indent << (type || savedChildName);
+private:
+    enum class IndentItem {
+        Empty = 0,
+        Cont = 1,
+        Node = 2,
+        LastNode = 3
+    };
+
+private:
+    CompactFormat &operator<<(BeginNode beginNode) {
+        indent() << (beginNode.type ? beginNode.type : savedChildName);
         inHeader = true;
         return *this;
     }
 
     template<typename T>
     CompactFormat &operator<<(Attribute<T> attr) {
-        std::cout << " " << attr.name << ": ";
+        os << " " << attr.name << ": ";
         qoute(attr.value);
         last = false;
         return *this;
     }
 
     CompactFormat &operator<<(Range attr) {
-        std::cout << " @";
+        os << " @";
         qoute(attr.value);
         last = false;
         return *this;
@@ -108,58 +91,77 @@ public:
 
     CompactFormat &operator<<(EndNodeHeader) {
         inHeader = false;
-        std::cout << "\n";
-        ++indent;
+        os << "\n";
+        indentStack.push_back(IndentItem::Node);
         return *this;
     }
     CompactFormat &operator<<(EndNode) {
         if (inHeader) {
-            std::cout << "\n";
+            os << "\n";
             inHeader = false;
         } else {
-            --indent;
+            indentStack.pop_back();
         }
         return *this;
     }
 
-    CompactFormat &operator<<(Child name) {
-        if (last) {
-            indent.stack.back() = 3;
-            last = false;
-        } else {
-            indent.stack.back() = 2;
-        }
-        savedChildName = name;
-        return *this;
-    }
-
-    //these two can do nothing if the array is the only child of a node
     CompactFormat &operator<<(BeginArray) {
-        std::cout << indent << savedChildName << "\n";
-        ++indent;
-        return *this;
-    }
-    CompactFormat &operator<<(EndArray) {
-        --indent;
+        indent() << savedChildName << "\n";
+        indentStack.push_back(IndentItem::Node);
         return *this;
     }
 
-private:
-    bool inHeader;
-    IndentEx indent;        //TODO merge into this class
-    const char *savedChildName;
-    bool last{false};
+    CompactFormat &operator<<(EndArray) {
+        indentStack.pop_back();
+        return *this;
+    }
+
+    CompactFormat &operator<<(Child child) {
+        indentStack.back() = last ? IndentItem::LastNode : IndentItem::Node;
+        last = false;
+        savedChildName = child.name;
+        return *this;
+    }
+
+    CompactFormat &operator<<(Last) {
+        last = true;
+        return *this;
+    }
 
     template<typename T>
     void qoute(T value) {
-        std::cout << value;
+        os << value;
     }
+
+    std::ostream &indent() {
+        for (auto &s : indentStack) {
+            os << symbols[static_cast<int>(s)];
+            if (s == IndentItem::Node) {
+                s = IndentItem::Cont;
+            } else if (s == IndentItem::LastNode) {
+                s = IndentItem::Empty;
+            }
+        }
+        return os;
+    }
+
+private:
+    std::ostream &os;
+    std::vector<IndentItem> indentStack;
+    bool inHeader;
+    bool last;
+    const char *savedChildName;
+    std::array<const char *, 4> symbols;
+
+    friend class DumpVisitor<CompactFormat>;
 };
 
+/**
+ * \private
+ */
 template<>
 inline void CompactFormat::qoute(std::string value) {
-    //FIXME escape string
-    std::cout << "\"" << value << "\"";
+    os << "\"" << value << "\"";
 }
 
 } // namespace dump

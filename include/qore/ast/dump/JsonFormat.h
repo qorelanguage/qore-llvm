@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief Formatter for producing JSON dumps of the AST.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_AST_DUMP_JSONFORMAT_H_
@@ -40,30 +40,37 @@ namespace qore {
 namespace ast {
 namespace dump {
 
+/**
+ * \brief Formatter for producing JSON dumps of the AST.
+ * \todo escape strings
+ */
 class JsonFormat {
 
 public:
-    JsonFormat &operator<<(Last) {
-        last = true;
-        return *this;
+    /**
+     * Constructor.
+     * \param os the destination output stream
+     */
+    JsonFormat(std::ostream &os = std::cout) : os(os), last(true) {
     }
 
-    JsonFormat &operator<<(BeginNode type) {
+private:
+    JsonFormat &operator<<(BeginNode beginNode) {
         stack.push_back(last);
         last = false;
-        std::cout << "{" << "\n";
+        os << "{" << "\n";
         ++indent;
-        if (type) {
-            *this << Attribute<const char *>("node", type);
+        if (beginNode.type) {
+            *this << Attribute<const char *>("node", beginNode.type);
         }
         return *this;
     }
 
     template<typename T>
     JsonFormat &operator<<(Attribute<T> attr) {
-        std::cout << indent << "\"" << attr.name << "\": ";
+        os << indent << "\"" << attr.name << "\": ";
         qoute(attr.value);
-        std::cout << (last ? "" : ",") << "\n";
+        os << (last ? "" : ",") << "\n";
         last = false;
         return *this;
     }
@@ -73,48 +80,58 @@ public:
     }
 
     JsonFormat &operator<<(EndNode) {
-        std::cout << --indent << "}" << (stack.back() ? "" : ",") << "\n";
+        os << --indent << "}" << (stack.back() ? "" : ",") << "\n";
         stack.pop_back();
-        return *this;
-    }
-
-    JsonFormat &operator<<(Child name) {
-        std::cout << indent;
-        if (name) {
-            std::cout << "\"" << name << "\": ";
-        }
         return *this;
     }
 
     JsonFormat &operator<<(BeginArray) {
         stack.push_back(last);
         last = false;
-        std::cout << "[\n";
+        os << "[\n";
         ++indent;
         return *this;
     }
 
     JsonFormat &operator<<(EndArray) {
-        std::cout << --indent << "]" << (stack.back() ? "" : ",") << "\n";
+        os << --indent << "]" << (stack.back() ? "" : ",") << "\n";
         stack.pop_back();
         return *this;
     }
 
-private:
-    Indent indent;
-    std::vector<bool> stack;
-    bool last{true};
+    JsonFormat &operator<<(Child child) {
+        os << indent;
+        if (child.name) {
+            os << "\"" << child.name << "\": ";
+        }
+        return *this;
+    }
+
+    JsonFormat &operator<<(Last) {
+        last = true;
+        return *this;
+    }
 
     template<typename T>
     void qoute(T value) {
-        //FIXME escape string
-        std::cout << "\"" << value << "\"";
+        os << "\"" << value << "\"";
     }
+
+private:
+    std::ostream &os;
+    std::vector<bool> stack;
+    Indent indent;
+    bool last;
+
+    friend class DumpVisitor<JsonFormat>;
 };
 
+/**
+ * \private
+ */
 template<>
 inline void JsonFormat::qoute(uint64_t value) {
-    std::cout << value;
+    os << value;
 }
 
 } // namespace dump

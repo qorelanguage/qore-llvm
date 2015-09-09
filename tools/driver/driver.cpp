@@ -29,8 +29,6 @@
 
 #endif
 
-//TODO namespaces
-
 void sandbox();
 
 int main(int argc, char *argv[]) {
@@ -133,10 +131,10 @@ int main(int argc, char *argv[]) {
     qore::ast::Program::Ptr root = parser.parse();
 
     if (dumpAst) {
-        qore::ast::dump::DumpVisitorNew<qore::ast::dump::XmlFormat> dxv;
-        qore::ast::dump::DumpVisitorNew<qore::ast::dump::JsonFormat> djv;
-        qore::ast::dump::DumpVisitorNew<qore::ast::dump::YamlFormat> dyv;
-        qore::ast::dump::DumpVisitorNew<qore::ast::dump::CompactFormat> dcv;
+        qore::ast::dump::DumpVisitor<qore::ast::dump::XmlFormat> dxv;
+        qore::ast::dump::DumpVisitor<qore::ast::dump::JsonFormat> djv;
+        qore::ast::dump::DumpVisitor<qore::ast::dump::YamlFormat> dyv;
+        qore::ast::dump::DumpVisitor<qore::ast::dump::CompactFormat> dcv;
         root->accept(dxv);
         root->accept(djv);
         root->accept(dyv);

@@ -23,16 +23,16 @@ void sandbox() {
     qore::ParserImpl parser(diagMgr, scanner);
     qore::ast::Program::Ptr program = parser.parse();
 
-    qore::ast::dump::DumpVisitorNew<qore::ast::dump::XmlFormat> dxv;
+    qore::ast::dump::DumpVisitor<qore::ast::dump::XmlFormat> dxv;
     program->accept(dxv);
     std::cout << std::endl;
-    qore::ast::dump::DumpVisitorNew<qore::ast::dump::JsonFormat> djv;
+    qore::ast::dump::DumpVisitor<qore::ast::dump::JsonFormat> djv;
     program->accept(djv);
     std::cout << std::endl;
-    qore::ast::dump::DumpVisitorNew<qore::ast::dump::YamlFormat> dyv;
+    qore::ast::dump::DumpVisitor<qore::ast::dump::YamlFormat> dyv;
     program->accept(dyv);
     std::cout << std::endl;
-    qore::ast::dump::DumpVisitorNew<qore::ast::dump::CompactFormat> dcv;
+    qore::ast::dump::DumpVisitor<qore::ast::dump::CompactFormat> dcv;
     program->accept(dcv);
     std::cout << std::endl;
 }

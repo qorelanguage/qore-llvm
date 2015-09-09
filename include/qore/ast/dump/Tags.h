@@ -27,6 +27,8 @@
 /// \file
 /// \brief Defines tags used by DumpVisitor for formatting the output.
 ///
+/// These structures are used to distinguish between the overloads of the `<<` operator
+/// implemented by formatters.
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_AST_DUMP_TAGS_H_
 #define INCLUDE_QORE_AST_DUMP_TAGS_H_
@@ -35,51 +37,93 @@ namespace qore {
 namespace ast {
 namespace dump {
 
+/**
+ * \brief Indicates the start of an AST node.
+ */
+struct BeginNode {
+    /**
+     * \brief The type of the node.
+     *
+     * `nullptr` is used for virtual nodes such as the `operator` of a BinaryExpression.
+     */
+    const char *type;
+
+    /**
+     * \brief Constructor.
+     * \param type the type of the node
+     */
+    BeginNode(const char *type = nullptr) : type(type) {
+    }
+};
+
+/**
+ * \brief An attribute of an AST node.
+ * \tparam T the type of the attribute value
+ */
 template<typename T>
 struct Attribute {
-    const char *name;
-    const T value;
+    const char *name;       //!< The name of the attribute.
+    const T value;          //!< The value of the attribute.
 
+    /**
+     * \brief Constructor.
+     * \param name the name of the attribute
+     * \param value the value of the attribute
+     */
     Attribute(const char *name, const T value) : name(name), value(value) {
     }
 };
 
+/**
+ * \brief A source range attribute.
+ */
 struct Range : public Attribute<const SourceRange &> {
+    /**
+     * \brief Constructor.
+     * \param value the value of the attribute
+     */
     Range(const SourceRange &value) : Attribute("range", value) {
     }
 };
 
-struct Last {};
-struct EndNode {};
+/**
+ * \brief Indicates the end of an AST node header, i.e. the end of node attributes.
+ */
 struct EndNodeHeader {};
+
+/**
+ * \brief Indicates the end of an AST node.
+ */
+struct EndNode {};
+
+/**
+ * \brief Indicates the start of an array of nodes.
+ */
 struct BeginArray {};
+
+/**
+ * \brief Indicates the end of an array of nodes.
+ */
 struct EndArray {};
 
-struct BeginNode {
-    const char *type;
-
-    BeginNode(const char *type = nullptr) : type(type) {
-    }
-
-    const char *operator||(const char *str) const {
-        return type ? type : str;
-    }
-
-    operator const char *() const {
-        return type;
-    }
-};
-
+/**
+ * \brief Used immediately before BeginArray or BeginNode to give give a name to the child element.
+ */
 struct Child {
-    const char *name;
+    const char *name;           //!< The name of the child element, `nullptr` is used before an element of an array.
 
+    /**
+     * \brief Constructor.
+     * \param name the name of the child element
+     */
     Child(const char *name = nullptr) : name(name) {
     }
-
-    operator const char *() const {
-        return name;
-    }
 };
+
+/**
+ * \brief Used immediately before Child or Attribute to indicate that the end of the node will follow.
+ */
+struct Last {};
 
 } // namespace dump
 } // namespace ast

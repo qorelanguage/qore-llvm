@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief Formatter for producing XML dumps of the AST.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_AST_DUMP_XMLFORMAT_H_
@@ -41,16 +41,24 @@ namespace qore {
 namespace ast {
 namespace dump {
 
+/**
+ * \brief Formatter for producing XML dumps of the AST.
+ * \todo escape strings
+ */
 class XmlFormat {
 
 public:
-    XmlFormat &operator<<(Last) {
-        return *this;
+    /**
+     * Constructor.
+     * \param os the destination output stream
+     */
+    XmlFormat(std::ostream &os = std::cout) : os(os), inHeader(false), savedChildName(nullptr) {
     }
 
-    XmlFormat &operator<<(BeginNode type) {
-        const char *tag = type || savedChildName;
-        std::cout << indent << "<" << tag;
+private:
+    XmlFormat &operator<<(BeginNode beginNode) {
+        const char *tag = beginNode.type ? beginNode.type : savedChildName;
+        os << indent << "<" << tag;
         stack.push(tag);
         inHeader = true;
         return *this;
@@ -58,54 +66,59 @@ public:
 
     template<typename T>
     XmlFormat &operator<<(Attribute<T> attr) {
-        std::cout << " " << attr.name << "=\"" << attr.value << "\"";
+        os << " " << attr.name << "=\"" << attr.value << "\"";
         return *this;
     }
 
     XmlFormat &operator<<(EndNodeHeader) {
         inHeader = false;
-        std::cout << ">\n";
+        os << ">\n";
         ++indent;
         return *this;
     }
 
     XmlFormat &operator<<(EndNode) {
         if (inHeader) {
-            std::cout << " />\n";
+            os << " />\n";
             inHeader = false;
         } else {
-            std::cout << --indent << "</" << stack.top() << ">\n";
+            os << --indent << "</" << stack.top() << ">\n";
         }
         stack.pop();
         return *this;
     }
 
-    XmlFormat &operator<<(Child name) {
-        savedChildName = name;
-        return *this;
-    }
-
-    //these two can do nothing if the array is the only child of a node
     XmlFormat &operator<<(BeginArray) {
-        std::cout << indent++ << "<" << savedChildName << ">\n";
+        os << indent++ << "<" << savedChildName << ">\n";
         stack.push(savedChildName);
         return *this;
     }
 
     XmlFormat &operator<<(EndArray) {
-        std::cout << --indent << "</" << stack.top() << ">\n";
+        os << --indent << "</" << stack.top() << ">\n";
         stack.pop();
         return *this;
     }
 
+    XmlFormat &operator<<(Child child) {
+        savedChildName = child.name;
+        return *this;
+    }
+
+    XmlFormat &operator<<(Last) {
+        return *this;
+    }
+
 private:
-    bool inHeader;
-    Indent indent;
-    const char *savedChildName;
+    std::ostream &os;
     std::stack<std::string> stack;
+    Indent indent;
+    bool inHeader;
+    const char *savedChildName;
+
+    friend class DumpVisitor<XmlFormat>;
 };
-//FIXME escape strings
-//TODO std::cout -> ostream
+
 } // namespace dump
 } // namespace ast
 } // namespace qore

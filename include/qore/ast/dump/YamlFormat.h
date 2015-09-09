@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief Formatter for producing YAML dumps of the AST.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_AST_DUMP_YAMLFORMAT_H_
@@ -40,48 +40,64 @@ namespace qore {
 namespace ast {
 namespace dump {
 
-//FIXME escape strings
+/**
+ * \private
+ */
+struct YamlIndent : public Indent {
 
-struct I : public Indent {
-
-    I() : Indent(-1) {
+    YamlIndent() : Indent(-1) {
     }
 
     std::string get() {
         std::string s = Indent::get();
-        if (spec) {
-            spec = false;
+        if (arrayMemberNext) {
+            arrayMemberNext = false;
             s[s.size() - Multiplier] = '-';
         }
         return s;
     }
 
-    bool spec{false};
+    bool arrayMemberNext{false};
 };
 
-inline std::ostream &operator<<(std::ostream &os, I &indent) {
+/**
+ * \private
+ */
+inline std::ostream &operator<<(std::ostream &os, YamlIndent &indent) {
     return os << indent.get();
 }
 
+/**
+ * \brief Formatter for producing YAML dumps of the AST.
+ * \todo escape strings
+ */
 class YamlFormat {
 
 public:
+    /**
+     * Constructor.
+     * \param os the destination output stream
+     */
+    YamlFormat(std::ostream &os = std::cout) : os(os) {
+    }
+
+private:
     template<typename T>
-    YamlFormat &operator<<(T) {
+    YamlFormat &operator<<(T) {         //this handles BeginArray, EndArray EndNodeHeader and Last
         return *this;
     }
 
-    YamlFormat &operator<<(BeginNode type) {
+    YamlFormat &operator<<(BeginNode beginNode) {
         ++indent;
-        if (type) {
-            *this << Attribute<const char *>("node", type);
+        if (beginNode.type) {
+            *this << Attribute<const char *>("node", beginNode.type);
         }
         return *this;
     }
 
     template<typename T>
     YamlFormat &operator<<(Attribute<T> attr) {
-        std::cout << indent << attr.name << ": " << attr.value << "\n";
+        os << indent << attr.name << ": " << attr.value << "\n";
         return *this;
     }
 
@@ -90,17 +106,20 @@ public:
         return *this;
     }
 
-    YamlFormat &operator<<(Child name) {
-        if (name) {
-            std::cout << indent << name << ":\n";
+    YamlFormat &operator<<(Child child) {
+        if (child.name) {
+            os << indent << child.name << ":\n";
         } else {
-            indent.spec = true;
+            indent.arrayMemberNext = true;
         }
         return *this;
     }
 
 private:
-    I indent;
+    std::ostream &os;
+    YamlIndent indent;
+
+    friend class DumpVisitor<YamlFormat>;
 };
 
 } // namespace dump
