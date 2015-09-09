@@ -16,10 +16,10 @@ struct QoreValue {
     };
 };
 
-extern "C" void print_qv(QoreValue qv);
-extern "C" QoreValue make_int(int64_t value);
-extern "C" QoreValue make_str(const char *value);
-extern "C" QoreValue eval_add(QoreValue l, QoreValue r);
-extern "C" QoreValue &eval_trim(QoreValue &o);
+extern "C" void print_qv(QoreValue *qv);
+extern "C" void make_int(QoreValue *qv, int64_t value);
+extern "C" void make_str(QoreValue *qv, const char *value);
+extern "C" void eval_add(QoreValue *qv, QoreValue *l, QoreValue *r);
+extern "C" void eval_trim(QoreValue *qv);
 
 #endif /* INCLUDE_QORE_RUNTIME_RUNTIME_H_ */

@@ -3,50 +3,47 @@
 #include <iostream>
 #include <cstring>
 
-__attribute__((visibility("default"))) void print_qv(QoreValue qv) {
-    switch (qv.tag) {
+__attribute__((visibility("default"))) void print_qv(QoreValue *qv) {
+    switch (qv->tag) {
         case Tag::Int:
-            printf("Qore Print: %li\n", qv.intValue);
+            printf("Qore Print: %li\n", qv->intValue);
 //XXX using std::cout prevents LTO from inlining this function
 //            std::cout << "Qore Print: " << qv.intValue << std::endl;
             break;
         case Tag::Str:
-            printf("Qore Print: %s\n", qv.strValue);
+            printf("Qore Print: %s\n", qv->strValue);
 //            std::cout << "Qore Print: " << qv.strValue << std::endl;
             break;
     }
 }
 
-__attribute__((visibility("default"))) QoreValue make_int(int64_t value) {
-    QoreValue qv;
-    qv.tag = Tag::Int;
-    qv.intValue = value;
-    return qv;
+__attribute__((visibility("default"))) void make_int(QoreValue *qv, int64_t value) {
+    qv->tag = Tag::Int;
+    qv->intValue = value;
 }
 
-__attribute__((visibility("default"))) QoreValue make_str(const char *value) {
-    QoreValue qv;
-    qv.tag = Tag::Str;
-    qv.strValue = strdup(value);    //TODO strdup
-    return qv;
+__attribute__((visibility("default"))) void make_str(QoreValue *qv, const char *value) {
+    qv->tag = Tag::Str;
+    qv->strValue = strdup(value);    //TODO strdup
 }
 
-static inline void append(std::string &dest, QoreValue v) {
-    if (v.tag == Tag::Int) {
-        dest += std::to_string(v.intValue);
+static inline void append(std::string &dest, QoreValue *v) {
+    if (v->tag == Tag::Int) {
+        dest += std::to_string(v->intValue);
     } else {
-        dest += v.strValue;
+        dest += v->strValue;
     }
 }
 
-__attribute__((visibility("default"))) QoreValue eval_add(QoreValue l, QoreValue r) {
-    if (l.tag == Tag::Int && r.tag == Tag::Int) {
-        return make_int(l.intValue + r.intValue);
+__attribute__((visibility("default"))) void eval_add(QoreValue *qv, QoreValue *l, QoreValue *r) {
+    if (l->tag == Tag::Int && r->tag == Tag::Int) {
+        make_int(qv, l->intValue + r->intValue);
+        return;
     }
     std::string str;
     append(str, l);
     append(str, r);
-    return make_str(str.c_str());
+    make_str(qv, str.c_str());
 }
 
 static inline std::string trim(const std::string &s)
@@ -56,10 +53,9 @@ static inline std::string trim(const std::string &s)
    return (wsback <= wsfront ? std::string() : std::string(wsfront, wsback));
 }
 
-__attribute__((visibility("default"))) QoreValue &eval_trim(QoreValue &o) {
-    if (o.tag == Tag::Str) {
-        std::string str = trim(o.strValue);
-        o.strValue = strdup(str.c_str());
+__attribute__((visibility("default"))) void eval_trim(QoreValue *qv) {
+    if (qv->tag == Tag::Str) {
+        std::string str = trim(qv->strValue);
+        qv->strValue = strdup(str.c_str());
     }
-    return o;
 }

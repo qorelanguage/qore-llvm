@@ -12,6 +12,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Support/raw_os_ostream.h"
 
 /**
  * \private
@@ -22,93 +23,93 @@ public:
     using R = void*;
 
     CodeGenVisitor(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
-        llvm::Type* a[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
-        qvStruct = llvm::StructType::get(ctx, a, false);
-        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), a, false);
-        printQvFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print_qv", nullptr);
-        ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt64Ty(ctx)}, false);
-        makeIntFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_int", nullptr);
-        ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt8PtrTy(ctx)}, false);
-        makeStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_str", nullptr);
-        llvm::Type* qv2[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
-        ft = llvm::FunctionType::get(qvStruct, qv2, false);
-        evalAddFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "eval_add", nullptr);
+        ltVoid = llvm::Type::getVoidTy(ctx);
+        ltInt64 = llvm::Type::getInt64Ty(ctx);
+        ltCharPtr = llvm::Type::getInt8PtrTy(ctx);
+        ltQoreValue = llvm::StructType::get(ltInt64, ltInt64, nullptr);
+        ltQoreValuePtr = ltQoreValue->getPointerTo();
 
-        ft = llvm::FunctionType::get(qvStruct->getPointerTo(0), qvStruct->getPointerTo(0), false);
-        evalTrimFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "eval_trim", nullptr);
-
-        module->getFunctionList().push_back(printQvFunction);
-        module->getFunctionList().push_back(makeIntFunction);
-        module->getFunctionList().push_back(makeStrFunction);
-        module->getFunctionList().push_back(evalAddFunction);
-        module->getFunctionList().push_back(evalTrimFunction);
+        fnPrintQv = f(ltVoid, "print_qv", ltQoreValuePtr, nullptr);
+        fnMakeInt = f(ltVoid, "make_int", ltQoreValuePtr, ltInt64, nullptr);
+        fnMakeStr = f(ltVoid, "make_str", ltQoreValuePtr, ltCharPtr, nullptr);
+        fnEvalAdd = f(ltVoid, "eval_add", ltQoreValuePtr, ltQoreValuePtr, ltQoreValuePtr, nullptr);
+        fnEvalTrim = f(ltVoid, "eval_trim", ltQoreValuePtr, nullptr);
         scope = nullptr;
     }
 
+//    // this creates the int constant in the rodata section
+//    R visit(const qore::ast::IntegerLiteral *e) override {
+//        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
+//        llvm::Constant *v = llvm::ConstantStruct::get(ltQoreValue, llvm::ConstantInt::get(ltInt64, 1), llvm::ConstantInt::get(ltInt64, e->value), nullptr);
+//        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v, "intLiteral");
+//        gv->setUnnamedAddr(true);
+//        currentValue = gv;
+//        return nullptr;
+//    }
+
+    void location(const qore::SourceLocation &l) {
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, l.line, l.column, scope));
+    }
+
+    void location(const qore::SourceRange &r) {
+        location(r.start);
+    }
+
+    void location(const qore::ast::Node *node) {
+        location(node->getRange());
+    }
+
     R visit(const qore::ast::IntegerLiteral *e) override {
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
-        auto c = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx), e->value, true);
-        return builder.CreateCall(makeIntFunction, c);
+        location(e);
+        currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "intLiteral");        //TODO these are not reused
+        llvm::Value* args[] = {currentValue, llvm::ConstantInt::get(ltInt64, e->value, true)};
+        builder.CreateCall(fnMakeInt, args);
+        return nullptr;
     }
 
     R visit(const qore::ast::StringLiteral *e) override {
         llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->value, true);
-        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
+        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v, "strLiteralValue");
         gv->setUnnamedAddr(true);
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
-        auto c = builder.CreateConstGEP2_32(nullptr, gv, 0, 0);
-        return builder.CreateCall(makeStrFunction, c);
+
+        location(e);
+        currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "strLiteral");
+        llvm::Value* args[] = {currentValue, builder.CreateConstGEP2_32(nullptr, gv, 0, 0)};
+        builder.CreateCall(fnMakeStr, args);
+        return nullptr;
     }
 
-//    R visit(const qore::ast::VariableLoadExpression *e) override {
-//        return builder.CreateLoad(variables[e->getName()], e->getName());
-//    }
-
-//    R visit(const qore::ast::Assignment *e) override {
-//        llvm::Value *val = static_cast<llvm::Value*>(e->getValue()->accept(*this));
-//        llvm::AllocaInst *ai = builder.CreateAlloca(llvm::Type::getInt32Ty(ctx), nullptr, e->getVarName());
-//        builder.CreateStore(val, ai);
-//        variables[e->getVarName()] = ai;
-//        return val;
-//    }
-
     R visit(const qore::ast::BinaryExpression *e) override {
-        llvm::Value *l = static_cast<llvm::Value*>(e->left->accept(*this));
-        llvm::Value *r = static_cast<llvm::Value*>(e->right->accept(*this));
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->operatorRange.start.line, e->operatorRange.start.column, scope));
-        auto tagL = builder.CreateExtractValue(l, {0}, "l.tag");
-        auto valL = builder.CreateExtractValue(l, {1}, "l.val");
-        auto tagR = builder.CreateExtractValue(r, {0}, "r.tag");
-        auto valR = builder.CreateExtractValue(r, {1}, "r.val");
-        llvm::Value* args[] = {tagL, valL, tagR, valR};
-        return builder.CreateCall(evalAddFunction, args);
+        e->left->accept(*this);
+        llvm::Value *l = currentValue;
+        e->right->accept(*this);
+        llvm::Value *r = currentValue;
+
+        location(e->operatorRange);
+        currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "sum");
+        llvm::Value* args[] = {currentValue, l, r};
+        builder.CreateCall(fnEvalAdd, args);
+        return nullptr;
     }
 
     R visit(const qore::ast::UnaryExpression *e) override {
-        return e->operand->accept(*this);
+        location(e->operatorRange);
+        e->operand->accept(*this);
+        llvm::Value* args[] = {currentValue};
+        builder.CreateCall(fnEvalTrim, args);
+        return nullptr;
     }
-
-//    %aa = alloca { i64, i64 }
-//    store { i64, i64 } %4, { i64, i64 }* %aa
-//    %5 = call { i64, i64 }* @eval_trim({ i64, i64 }* %aa), !dbg !16
-//    %bb = load { i64, i64 }, { i64, i64 }* %aa
 
 
     R visit(const qore::ast::EmptyStatement *) override {
         return nullptr;
     }
 
-//    R visit(const qore::ast::ExpressionStatement *s) override {
-//        return s->getExpression()->accept(*this);
-//    }
-
     R visit(const qore::ast::PrintStatement *s) override {
-        llvm::Value *value = static_cast<llvm::Value*>(s->expression->accept(*this));
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, s->getRange().start.line, s->getRange().start.column, scope));
-        auto tag = builder.CreateExtractValue(value, {0}, "qv.tag");
-        auto val = builder.CreateExtractValue(value, {1}, "qv.val");
-        llvm::Value* args[] = {tag, val};
-        builder.CreateCall(printQvFunction, args);
+        location(s);
+        s->expression->accept(*this);
+        llvm::Value* args[] = {currentValue};
+        builder.CreateCall(fnPrintQv, args);
         return nullptr;
     }
 
@@ -174,22 +175,60 @@ public:
 
         dib.finalize();
 
-        module->dump();
+        llvm::raw_os_ostream sss(std::cout);
+        if (!llvm::verifyModule(*module, &sss)) {
+            module->dump();
+        }
         return module;
+    }
+
+private:
+    llvm::FunctionType *x(llvm::Type *returnType, va_list v) {
+        std::vector<llvm::Type *> args;
+        while (true) {
+            llvm::Type *arg = va_arg(v, llvm::Type*);
+            if (arg == nullptr) {
+                break;
+            }
+            args.push_back(arg);
+        }
+        return llvm::FunctionType::get(returnType, args, false);
+    }
+
+    llvm::FunctionType *x(llvm::Type *returnType, ...) {
+        va_list v;
+        va_start(v, returnType);
+        llvm::FunctionType *ft = x(returnType, v);
+        va_end(v);
+        return ft;
+    }
+
+    llvm::Function *f(llvm::Type *returnType, const std::string &name, ...) {
+        va_list v;
+        va_start(v, name);
+        llvm::FunctionType *ft = x(returnType, v);
+        va_end(v);
+        return llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, module);
     }
 
 private:
     llvm::LLVMContext &ctx{llvm::getGlobalContext()};
     llvm::Module *module{new llvm::Module("Q", ctx)};
     llvm::IRBuilder<> builder{ctx};
-    std::map<std::string, llvm::AllocaInst*> variables;
+//    std::map<std::string, llvm::AllocaInst*> variables;
 
-    llvm::StructType *qvStruct;
-    llvm::Function *printQvFunction;
-    llvm::Function *makeIntFunction;
-    llvm::Function *makeStrFunction;
-    llvm::Function *evalAddFunction;
-    llvm::Function *evalTrimFunction;
+    llvm::Value *currentValue;
+
+    llvm::Type *ltVoid;
+    llvm::Type *ltInt64;
+    llvm::Type *ltCharPtr;
+    llvm::StructType *ltQoreValue;
+    llvm::Type *ltQoreValuePtr;
+    llvm::Function *fnPrintQv;
+    llvm::Function *fnMakeInt;
+    llvm::Function *fnMakeStr;
+    llvm::Function *fnEvalAdd;
+    llvm::Function *fnEvalTrim;
 
     llvm::DISubprogram *scope;
 

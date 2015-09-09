@@ -19,40 +19,43 @@ inline std::ostream &operator<<(std::ostream &os, const QoreValue &qv) {
 class InterpretVisitor : public qore::ast::Visitor {
 public:
     using R = void*;
+    QoreValue *currentValue;
 
     R visit(const qore::ast::IntegerLiteral *e) override {
-        QoreValue *qv = new QoreValue();
-        *qv = make_int(e->value);
-        return qv;
+        currentValue = new QoreValue();
+        make_int(currentValue, e->value);
+        return nullptr;
     }
     R visit(const qore::ast::StringLiteral *e) override {
-        QoreValue *qv = new QoreValue();
-        *qv = make_str(e->value.c_str());
-        return qv;
+        currentValue = new QoreValue();
+        make_str(currentValue, e->value.c_str());
+        return nullptr;
     }
     R visit(const qore::ast::BinaryExpression *e) override {
-        QoreValue *l = static_cast<QoreValue*>(e->left->accept(*this));
-        QoreValue *r = static_cast<QoreValue*>(e->right->accept(*this));
-        QoreValue *result = new QoreValue();
+        e->left->accept(*this);
+        QoreValue *l = currentValue;
+        e->right->accept(*this);
+        QoreValue *r = currentValue;
+        currentValue = new QoreValue();
 
         CLOG("I", "binary: " << *l << ", " << *r);
 
-        *result = eval_add(*l, *r);
-        return result;
+        eval_add(currentValue, l, r);
+        return nullptr;
     }
     R visit(const qore::ast::UnaryExpression *e) override {
-        QoreValue *o = static_cast<QoreValue*>(e->operand->accept(*this));
-        eval_trim(*o);
-        CLOG("I", "unary: " << *o);
-        return o;
+        e->operand->accept(*this);
+        eval_trim(currentValue);
+        CLOG("I", "unary: " << *currentValue);
+        return nullptr;
     }
     R visit(const qore::ast::EmptyStatement *) override {
         return nullptr;
     }
     R visit(const qore::ast::PrintStatement *s) override {
-        QoreValue *qv = static_cast<QoreValue*>(s->expression->accept(*this));
-        print_qv(*qv);
-        return qv;
+        s->expression->accept(*this);
+        print_qv(currentValue);
+        return nullptr;
     }
     R visit(const qore::ast::Program *program) override {
         for (const auto &statement : program->body) {
