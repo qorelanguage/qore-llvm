@@ -58,6 +58,7 @@ private:
     ast::Statements statements();
     ast::Statement::Ptr statement();
     ast::PrintStatement::Ptr printStatement();
+    ast::ExpressionStatement::Ptr expressionStatement();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr additiveExpression();
     ast::Expression::Ptr prefixExpression();

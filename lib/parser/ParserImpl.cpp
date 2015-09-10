@@ -72,10 +72,7 @@ ast::Statement::Ptr ParserImpl::statement() {
         case TokenType::KwPrint:
             return printStatement();
         default:
-            SourceLocation start = token.range.start;
-            report(DiagId::ParserStatementExpected) << token;
-            recoverStatementEnd();
-            return ast::EmptyStatement::create(SourceRange(start, token.range.end));
+            return expressionStatement();
     }
 }
 
@@ -86,6 +83,15 @@ ast::PrintStatement::Ptr ParserImpl::printStatement() {
     ast::Expression::Ptr expr = expression();
     SourceLocation end = match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd).end;
     return ast::PrintStatement::create(SourceRange(start, end), std::move(expr));
+}
+
+//expressionStatement ::= expression ';'
+ast::ExpressionStatement::Ptr ParserImpl::expressionStatement() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr expr = expression();
+    SourceLocation start = expr->getRange().start;
+    SourceLocation end = match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd).end;
+    return ast::ExpressionStatement::create(SourceRange(start, end), std::move(expr));
 }
 
 //expression ::= additiveExpression

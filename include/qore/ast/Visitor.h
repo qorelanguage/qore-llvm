@@ -40,6 +40,7 @@ class BinaryExpression;
 class UnaryExpression;
 class EmptyStatement;
 class PrintStatement;
+class ExpressionStatement;
 class Program;
 
 /**
@@ -91,6 +92,13 @@ public:
      * \return defined by the implementation
      */
     virtual void* visit(const PrintStatement *node) = 0;
+
+    /**
+     * \brief Called by an ExpressionStatement AST node.
+     * \param node the node being visited
+     * \return defined by the implementation
+     */
+    virtual void* visit(const ExpressionStatement *node) = 0;
 
     /**
      * \brief Called by a Program AST node.

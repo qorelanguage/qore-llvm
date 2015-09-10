@@ -41,6 +41,8 @@ public:
         CLOG("I", "binary: " << *l << ", " << *r);
 
         eval_add(currentValue, l, r);
+        delete l;
+        delete r;
         return nullptr;
     }
     R visit(const qore::ast::UnaryExpression *e) override {
@@ -55,6 +57,12 @@ public:
     R visit(const qore::ast::PrintStatement *s) override {
         s->expression->accept(*this);
         print_qv(currentValue);
+        delete currentValue;
+        return nullptr;
+    }
+    R visit(const qore::ast::ExpressionStatement *s) override {
+        s->expression->accept(*this);
+        delete currentValue;
         return nullptr;
     }
     R visit(const qore::ast::Program *program) override {

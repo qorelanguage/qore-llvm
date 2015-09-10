@@ -38,6 +38,7 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     ast::Statements statements() { return parser.statements(); }
     ast::Statement::Ptr statement() { return parser.statement(); }
     ast::PrintStatement::Ptr printStatement() { return parser.printStatement(); }
+    ast::ExpressionStatement::Ptr expressionStatement() { return parser.expressionStatement(); }
     ast::Expression::Ptr expression() { return parser.expression(); }
     ast::Expression::Ptr additiveExpression() { return parser.additiveExpression(); }
     ast::Expression::Ptr prefixExpression() { return parser.prefixExpression(); }
@@ -142,12 +143,12 @@ TEST_F(ParserImplTest, statementPrint) {
     EXPECT_CONSUMED();
 }
 
-TEST_F(ParserImplTest, statementErr) {
+TEST_F(ParserImplTest, statementExpr) {
     addToken(TokenType::String, "abc", range1);
-    addToken(TokenType::Integer, 1234, range2);
     addToken(TokenType::Semicolon, range3);
-    DIAG_EXPECT(DiagId::ParserStatementExpected, 11, 12);
-    AST_CAST(ast::EmptyStatement, stmt, statement());
+    DIAG_NONE();
+    AST_CAST(ast::ExpressionStatement, stmt, statement());
+    AST_CAST(ast::StringLiteral, expr, stmt->expression);
     EXPECT_EQ(SourceRange(range1.start, range3.end), stmt->getRange());
     EXPECT_CONSUMED();
 }
@@ -189,6 +190,16 @@ TEST_F(ParserImplTest, printStatementErr) {
     AST_CAST(ast::IntegerLiteral, expr, stmt->expression);
     EXPECT_EQ(1234U, expr->value);
     EXPECT_EQ(SourceRange(range1.start, range5.end), stmt->getRange());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, expressionStatement) {
+    addToken(TokenType::String, "abc", range1);
+    addToken(TokenType::Semicolon, range3);
+    DIAG_NONE();
+    ast::ExpressionStatement::Ptr stmt = expressionStatement();
+    AST_CAST(ast::StringLiteral, expr, stmt->expression);
+    EXPECT_EQ(SourceRange(range1.start, range3.end), stmt->getRange());
     EXPECT_CONSUMED();
 }
 

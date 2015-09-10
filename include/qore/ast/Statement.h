@@ -133,6 +133,48 @@ private:
     SourceRange range;
 };
 
+/**
+ * \brief Represents an expression statement.
+ */
+class ExpressionStatement : public Statement {
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<ExpressionStatement>;
+
+public:
+    Expression::Ptr expression;         //!< The expression.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location in the source code
+     * \param expression the expression
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceRange range, Expression::Ptr expression) {
+        return Ptr(new ExpressionStatement(range, std::move(expression)));
+    }
+
+    void *accept(Visitor &v) const override {
+        return v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    ExpressionStatement(SourceRange range, Expression::Ptr expression)
+        : expression(std::move(expression)), range(range) {
+    }
+
+private:
+    SourceRange range;
+};
+
 } // namespace ast
 } // namespace qore
 

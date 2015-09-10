@@ -184,6 +184,17 @@ TEST_F(DumpVisitorTest, compactUnicode) {
 "\u2514\u2500stringLiteral @1:14-1:18 value: \"ab\"\n", ss.str());
 }
 
+TEST_F(DumpVisitorTest, exprStmt) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("567;")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:5
++-body
+  +-expressionStatement @1:1-1:5
+    +-integerLiteral @1:1-1:4 value: 567
+)", ss.str());
+}
+
 } // namespace dump
 } // namespace ast
 } // namespace qore

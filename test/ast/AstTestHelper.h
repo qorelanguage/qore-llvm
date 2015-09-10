@@ -108,6 +108,7 @@ public:
     MOCK_METHOD1(visit, void*(const class UnaryExpression *));
     MOCK_METHOD1(visit, void*(const class EmptyStatement *));
     MOCK_METHOD1(visit, void*(const class PrintStatement *));
+    MOCK_METHOD1(visit, void*(const class ExpressionStatement *));
     MOCK_METHOD1(visit, void*(const class Program *));
 };
 

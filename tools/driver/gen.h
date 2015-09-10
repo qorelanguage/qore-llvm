@@ -93,8 +93,8 @@ public:
     }
 
     R visit(const qore::ast::UnaryExpression *e) override {
-        location(e->operatorRange);
         e->operand->accept(*this);
+        location(e->operatorRange);
         llvm::Value* args[] = {currentValue};
         builder.CreateCall(fnEvalTrim, args);
         return nullptr;
@@ -106,10 +106,15 @@ public:
     }
 
     R visit(const qore::ast::PrintStatement *s) override {
-        location(s);
         s->expression->accept(*this);
+        location(s);
         llvm::Value* args[] = {currentValue};
         builder.CreateCall(fnPrintQv, args);
+        return nullptr;
+    }
+
+    R visit(const qore::ast::ExpressionStatement *s) override {
+        s->expression->accept(*this);
         return nullptr;
     }
 

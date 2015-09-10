@@ -115,6 +115,15 @@ public:
         return nullptr;
     }
 
+    void* visit(const ExpressionStatement *node) override {
+        formatter << BeginNode("expressionStatement")
+            << Range(node->getRange())
+            << EndNodeHeader()
+            << Last() << Child("expression"), visitNode(node->expression)
+            << EndNode();
+        return nullptr;
+    }
+
     void* visit(const Program *node) override {
         formatter << BeginNode("program")
             << Range(node->getRange())
