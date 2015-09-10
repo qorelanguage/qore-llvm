@@ -94,10 +94,21 @@ ast::ExpressionStatement::Ptr ParserImpl::expressionStatement() {
     return ast::ExpressionStatement::create(SourceRange(start, end), std::move(expr));
 }
 
-//expression ::= additiveExpression
+//expression ::= assignment
 ast::Expression::Ptr ParserImpl::expression() {
     LOG_FUNCTION();
-    return additiveExpression();
+    return assignment();
+}
+
+//assignment ::= additiveExpression '=' assignment
+ast::Expression::Ptr ParserImpl::assignment() {
+    LOG_FUNCTION();
+    std::unique_ptr<ast::Expression> expr = additiveExpression();
+    if (tokenType() == TokenType::Assign) {
+        SourceRange r = consume().range;
+        expr = ast::Assignment::create(std::move(expr), r, assignment());
+    }
+    return expr;
 }
 
 //additiveExpression ::= prefixExpression additiveExpressionRest
@@ -130,6 +141,7 @@ ast::Expression::Ptr ParserImpl::prefixExpression() {
 //primaryExpression
 //    ::= Number
 //    ::= String
+//    ::= varDecl
 ast::Expression::Ptr ParserImpl::primaryExpression() {
     LOG_FUNCTION();
     SourceRange r = range();
@@ -138,12 +150,27 @@ ast::Expression::Ptr ParserImpl::primaryExpression() {
             return ast::IntegerLiteral::create(consume().intValue, r);
         case TokenType::String:
             return ast::StringLiteral::create(consume().stringValue, r);
+        case TokenType::KwMy:
+            return varDecl();
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << token;
             recoverConsumeToken();
             //TODO return special error node which will prevent further errors
             return ast::IntegerLiteral::create(0, r);
     }
+}
+
+//varDec ::= KwMy Identifier
+ast::VarDecl::Ptr ParserImpl::varDecl() {
+    LOG_FUNCTION();
+    SourceRange r = match(TokenType::KwMy);
+    if (tokenType() != TokenType::Identifier) {
+        report(DiagId::ParserExpectedVariableName) << token;
+        //TODO return special error node which will prevent further errors
+        return ast::VarDecl::create(r, "-error-");
+    }
+    r.end = range().end;
+    return ast::VarDecl::create(r, consume().stringValue);
 }
 
 } // namespace qore

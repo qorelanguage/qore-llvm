@@ -43,6 +43,7 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     ast::Expression::Ptr additiveExpression() { return parser.additiveExpression(); }
     ast::Expression::Ptr prefixExpression() { return parser.prefixExpression(); }
     ast::Expression::Ptr primaryExpression() { return parser.primaryExpression(); }
+    ast::VarDecl::Ptr varDecl() { return parser.varDecl(); }
 
     void EXPECT_CONSUMED() { EXPECT_FALSE(parser.hasToken); }
     void EXPECT_NOT_CONSUMED() { EXPECT_TRUE(parser.hasToken); }
@@ -52,6 +53,8 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     SourceRange range3 = createRange(31, 32, 33);
     SourceRange range4 = createRange(41, 42, 43);
     SourceRange range5 = createRange(51, 52, 53);
+    SourceRange range6 = createRange(61, 62, 63);
+    SourceRange range7 = createRange(71, 72, 73);
 };
 
 TEST_F(ParserImplTest, parse) {
@@ -218,6 +221,43 @@ TEST_F(ParserImplTest, expression) {
     EXPECT_NOT_CONSUMED();
 }
 
+//a = b + c = d
+//assign
+//+-a
+//+-assign
+//  +-binary
+//    +-b
+//    +-c
+//  +-d
+TEST_F(ParserImplTest, assignment) {
+    addToken(TokenType::String, "a", range1);
+    addToken(TokenType::Assign, range2);
+    addToken(TokenType::String, "b", range3);
+    addToken(TokenType::Plus, range4);
+    addToken(TokenType::String, "c", range5);
+    addToken(TokenType::Assign, range6);
+    addToken(TokenType::String, "d", range7);
+    addToken(TokenType::CurlyLeft);
+    DIAG_NONE();
+    AST_CAST(ast::Assignment, assign1, expression());
+    AST_CAST(ast::StringLiteral, var1, assign1->left);
+    AST_CAST(ast::Assignment, assign2, assign1->right);
+    AST_CAST(ast::BinaryExpression, bin, assign2->left);
+    AST_CAST(ast::StringLiteral, var4, assign2->right);
+    AST_CAST(ast::StringLiteral, var2, bin->left);
+    AST_CAST(ast::StringLiteral, var3, bin->right);
+
+    EXPECT_EQ("a", var1->value);
+    EXPECT_EQ("b", var2->value);
+    EXPECT_EQ("c", var3->value);
+    EXPECT_EQ("d", var4->value);
+    EXPECT_EQ(SourceRange(range1.start, range7.end), assign1->getRange());
+    EXPECT_EQ(range2, assign1->operatorRange);
+    EXPECT_EQ(SourceRange(range3.start, range7.end), assign2->getRange());
+    EXPECT_EQ(range6, assign2->operatorRange);
+    EXPECT_NOT_CONSUMED();
+}
+
 TEST_F(ParserImplTest, additiveSingle) {
     addToken(TokenType::Integer, 1234, range1);
     addToken(TokenType::Integer, 1111, range2);
@@ -284,6 +324,7 @@ TEST_F(ParserImplTest, primaryInteger) {
     AST_CAST(ast::IntegerLiteral, expr, primaryExpression());
     EXPECT_EQ(1234U, expr->value);
     EXPECT_EQ(range1, expr->getRange());
+    EXPECT_CONSUMED();
 }
 
 TEST_F(ParserImplTest, primaryString) {
@@ -292,6 +333,17 @@ TEST_F(ParserImplTest, primaryString) {
     AST_CAST(ast::StringLiteral, expr, primaryExpression());
     EXPECT_EQ("abc", expr->value);
     EXPECT_EQ(range1, expr->getRange());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, primaryVarDecl) {
+    addToken(TokenType::KwMy, range1);
+    addToken(TokenType::Identifier, "abc", range2);
+    DIAG_NONE();
+    AST_CAST(ast::VarDecl, var, primaryExpression());
+    EXPECT_EQ("abc", var->name);
+    EXPECT_EQ(SourceRange(range1.start, range2.end), var->getRange());
+    EXPECT_CONSUMED();
 }
 
 TEST_F(ParserImplTest, primaryFail) {
@@ -301,6 +353,16 @@ TEST_F(ParserImplTest, primaryFail) {
     EXPECT_EQ(0U, expr->value);
     EXPECT_EQ(range1, expr->getRange());
     EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, varDeclNoId) {
+    addToken(TokenType::KwMy, range1);
+    addToken(TokenType::String, "abc", range2);
+    DIAG_EXPECT(DiagId::ParserExpectedVariableName, 21, 22);
+    ast::VarDecl::Ptr var = varDecl();
+    EXPECT_EQ("-error-", var->name);
+    EXPECT_EQ(range1, var->getRange());
+    EXPECT_NOT_CONSUMED();
 }
 
 } // namespace qore

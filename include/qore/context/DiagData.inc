@@ -30,3 +30,4 @@ DIAG(ScannerUnendedStringLiteral, Error, "Unended string literal")
 
 DIAG(ParserUnexpectedToken, Error, "expected %s, got %s instead")
 DIAG(ParserExpectedPrimaryExpression, Error, "expected primary expression, got %s instead")
+DIAG(ParserExpectedVariableName, Error, "expected variable name, got %s instead")
