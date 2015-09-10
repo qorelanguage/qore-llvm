@@ -149,7 +149,8 @@ int main(int argc, char *argv[]) {
 #ifdef QORE_USE_LLVM
     if (compileLl || compileBc || jit) {
         CodeGenVisitor cgv(sourceMgr);
-        std::unique_ptr<llvm::Module> module(static_cast<llvm::Module*>(root->accept(cgv)));
+        root->accept(cgv);
+        std::unique_ptr<llvm::Module> module(cgv.getModule());
 
         if (compileLl) {
             std::error_code ec;

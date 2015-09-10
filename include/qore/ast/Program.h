@@ -61,8 +61,8 @@ public:
         return Ptr(new Program(std::move(body), eofRange));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {

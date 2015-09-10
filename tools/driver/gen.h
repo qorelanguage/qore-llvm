@@ -20,8 +20,6 @@
 class CodeGenVisitor : public qore::ast::Visitor {
 
 public:
-    using R = void*;
-
     CodeGenVisitor(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
         ltVoid = llvm::Type::getVoidTy(ctx);
         ltInt64 = llvm::Type::getInt64Ty(ctx);
@@ -37,6 +35,9 @@ public:
         scope = nullptr;
     }
 
+    llvm::Module *getModule() {
+        return module;
+    }
 //    // this creates the int constant in the rodata section
 //    R visit(const qore::ast::IntegerLiteral *e) override {
 //        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
@@ -59,15 +60,14 @@ public:
         location(node->getRange());
     }
 
-    R visit(const qore::ast::IntegerLiteral *e) override {
+    void visit(const qore::ast::IntegerLiteral *e) override {
         location(e);
         currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "intLiteral");        //TODO these are not reused
         llvm::Value* args[] = {currentValue, llvm::ConstantInt::get(ltInt64, e->value, true)};
         builder.CreateCall(fnMakeInt, args);
-        return nullptr;
     }
 
-    R visit(const qore::ast::StringLiteral *e) override {
+    void visit(const qore::ast::StringLiteral *e) override {
         llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->value, true);
         llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v, "strLiteralValue");
         gv->setUnnamedAddr(true);
@@ -76,10 +76,9 @@ public:
         currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "strLiteral");
         llvm::Value* args[] = {currentValue, builder.CreateConstGEP2_32(nullptr, gv, 0, 0)};
         builder.CreateCall(fnMakeStr, args);
-        return nullptr;
     }
 
-    R visit(const qore::ast::BinaryExpression *e) override {
+    void visit(const qore::ast::BinaryExpression *e) override {
         e->left->accept(*this);
         llvm::Value *l = currentValue;
         e->right->accept(*this);
@@ -89,36 +88,30 @@ public:
         currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "sum");
         llvm::Value* args[] = {currentValue, l, r};
         builder.CreateCall(fnEvalAdd, args);
-        return nullptr;
     }
 
-    R visit(const qore::ast::UnaryExpression *e) override {
+    void visit(const qore::ast::UnaryExpression *e) override {
         e->operand->accept(*this);
         location(e->operatorRange);
         llvm::Value* args[] = {currentValue};
         builder.CreateCall(fnEvalTrim, args);
-        return nullptr;
     }
 
-
-    R visit(const qore::ast::EmptyStatement *) override {
-        return nullptr;
+    void visit(const qore::ast::EmptyStatement *) override {
     }
 
-    R visit(const qore::ast::PrintStatement *s) override {
+    void visit(const qore::ast::PrintStatement *s) override {
         s->expression->accept(*this);
         location(s);
         llvm::Value* args[] = {currentValue};
         builder.CreateCall(fnPrintQv, args);
-        return nullptr;
     }
 
-    R visit(const qore::ast::ExpressionStatement *s) override {
+    void visit(const qore::ast::ExpressionStatement *s) override {
         s->expression->accept(*this);
-        return nullptr;
     }
 
-    R visit(const qore::ast::Program *p) override {
+    void visit(const qore::ast::Program *p) override {
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
         llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
@@ -184,7 +177,6 @@ public:
         if (!llvm::verifyModule(*module, &sss)) {
             module->dump();
         }
-        return module;
     }
 
 private:

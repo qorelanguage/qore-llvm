@@ -38,6 +38,8 @@ class IntegerLiteral;
 class StringLiteral;
 class BinaryExpression;
 class UnaryExpression;
+class Assignment;
+class VarDecl;
 class EmptyStatement;
 class PrintStatement;
 class ExpressionStatement;
@@ -54,58 +56,62 @@ public:
     /**
      * \brief Called by an IntegerLiteral AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const IntegerLiteral *node) = 0;
+    virtual void visit(const IntegerLiteral *node) = 0;
 
     /**
      * \brief Called by a StringLiteral AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const StringLiteral *node) = 0;
+    virtual void visit(const StringLiteral *node) = 0;
 
     /**
      * \brief Called by a BinaryExpression AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const BinaryExpression *node) = 0;
+    virtual void visit(const BinaryExpression *node) = 0;
 
     /**
      * \brief Called by a UnaryExpression AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const UnaryExpression *node) = 0;
+    virtual void visit(const UnaryExpression *node) = 0;
 
     /**
-     * \brief Called by a EmptyStatement AST node.
+     * \brief Called by an Assignment AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const EmptyStatement *node) = 0;
+    virtual void visit(const Assignment *node) {};//= 0;
+
+    /**
+     * \brief Called by a VarDecl AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(const VarDecl *node) {};//= 0;
+
+    /**
+     * \brief Called by an EmptyStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(const EmptyStatement *node) = 0;
 
     /**
      * \brief Called by a PrintStatement AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const PrintStatement *node) = 0;
+    virtual void visit(const PrintStatement *node) = 0;
 
     /**
      * \brief Called by an ExpressionStatement AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const ExpressionStatement *node) = 0;
+    virtual void visit(const ExpressionStatement *node) = 0;
 
     /**
      * \brief Called by a Program AST node.
      * \param node the node being visited
-     * \return defined by the implementation
      */
-    virtual void* visit(const Program *node) = 0;
+    virtual void visit(const Program *node) = 0;
 
 protected:
     Visitor() = default;

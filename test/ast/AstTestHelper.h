@@ -68,8 +68,8 @@ public:
     NodeAdapter(Base &node) : node(node) {
     }
 
-    void *accept(Visitor &visitor) const override {
-        return node.accept(visitor);
+    void accept(Visitor &visitor) const override {
+        node.accept(visitor);
     }
 
     SourceRange getRange() const override {
@@ -82,7 +82,7 @@ private:
 
 class MockExpression : public Expression {
 public:
-    MOCK_CONST_METHOD1(accept, void*(Visitor &));
+    MOCK_CONST_METHOD1(accept, void(Visitor &));
     MOCK_CONST_METHOD0(getRange, SourceRange());
 
     operator Ptr() {
@@ -92,7 +92,7 @@ public:
 
 class MockStatement : public Statement {
 public:
-    MOCK_CONST_METHOD1(accept, void*(Visitor &));
+    MOCK_CONST_METHOD1(accept, void(Visitor &));
     MOCK_CONST_METHOD0(getRange, SourceRange());
 
     operator Ptr() {
@@ -102,14 +102,16 @@ public:
 
 class MockVisitor : public Visitor {
 public:
-    MOCK_METHOD1(visit, void*(const class IntegerLiteral *));
-    MOCK_METHOD1(visit, void*(const class StringLiteral *));
-    MOCK_METHOD1(visit, void*(const class BinaryExpression *));
-    MOCK_METHOD1(visit, void*(const class UnaryExpression *));
-    MOCK_METHOD1(visit, void*(const class EmptyStatement *));
-    MOCK_METHOD1(visit, void*(const class PrintStatement *));
-    MOCK_METHOD1(visit, void*(const class ExpressionStatement *));
-    MOCK_METHOD1(visit, void*(const class Program *));
+    MOCK_METHOD1(visit, void(const class IntegerLiteral *));
+    MOCK_METHOD1(visit, void(const class StringLiteral *));
+    MOCK_METHOD1(visit, void(const class BinaryExpression *));
+    MOCK_METHOD1(visit, void(const class UnaryExpression *));
+    MOCK_METHOD1(visit, void(const class Assignment *));
+    MOCK_METHOD1(visit, void(const class VarDecl *));
+    MOCK_METHOD1(visit, void(const class EmptyStatement *));
+    MOCK_METHOD1(visit, void(const class PrintStatement *));
+    MOCK_METHOD1(visit, void(const class ExpressionStatement *));
+    MOCK_METHOD1(visit, void(const class Program *));
 };
 
 } // namespace ast

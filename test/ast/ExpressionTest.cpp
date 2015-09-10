@@ -31,23 +31,22 @@ namespace qore {
 namespace ast {
 
 struct ExpressionTest : ::testing::Test {
-    void *retVal{this};
     ::testing::StrictMock<MockVisitor> mockVisitor;
     SourceRange range = SourceTestHelper::createRange(11, 22, 33);
 };
 
 TEST_F(ExpressionTest, IntegerLiteral) {
     IntegerLiteral::Ptr node = IntegerLiteral::create(1234, range);
-    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
-    EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
     EXPECT_EQ(1234U, node->value);
     EXPECT_EQ(range, node->getRange());
 }
 
 TEST_F(ExpressionTest, StringLiteral) {
     StringLiteral::Ptr node = StringLiteral::create("test", range);
-    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
-    EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
     EXPECT_EQ("test", node->value);
     EXPECT_EQ(range, node->getRange());
 }
@@ -57,8 +56,8 @@ TEST_F(ExpressionTest, BinaryExpression) {
     MockExpression right;
 
     BinaryExpression::Ptr node = BinaryExpression::create(left, range, right);
-    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
-    EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
     EXPECT_EQ(range, node->operatorRange);
 
     EXPECT_CALL(left, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(1, 2, 3)));
@@ -68,6 +67,48 @@ TEST_F(ExpressionTest, BinaryExpression) {
     EXPECT_EQ(2, r.start.column);
     EXPECT_EQ(4, r.end.line);
     EXPECT_EQ(6, r.end.column);
+}
+
+TEST_F(ExpressionTest, UnaryExpression) {
+    MockExpression operand;
+
+    UnaryExpression::Ptr node = UnaryExpression::create(range, operand);
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
+    EXPECT_EQ(range, node->operatorRange);
+
+    EXPECT_CALL(operand, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(1, 2, 3)));
+    SourceRange r = node->getRange();
+    EXPECT_EQ(11, r.start.line);
+    EXPECT_EQ(22, r.start.column);
+    EXPECT_EQ(1, r.end.line);
+    EXPECT_EQ(3, r.end.column);
+}
+
+TEST_F(ExpressionTest, Assignment) {
+    MockExpression left;
+    MockExpression right;
+
+    Assignment::Ptr node = Assignment::create(left, range, right);
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
+    EXPECT_EQ(range, node->operatorRange);
+
+    EXPECT_CALL(left, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(1, 2, 3)));
+    EXPECT_CALL(right, getRange()).WillOnce(::testing::Return(SourceTestHelper::createRange(4, 5, 6)));
+    SourceRange r = node->getRange();
+    EXPECT_EQ(1, r.start.line);
+    EXPECT_EQ(2, r.start.column);
+    EXPECT_EQ(4, r.end.line);
+    EXPECT_EQ(6, r.end.column);
+}
+
+TEST_F(ExpressionTest, VarDecl) {
+    VarDecl::Ptr node = VarDecl::create(range, "varName");
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
+    EXPECT_EQ("varName", node->name);
+    EXPECT_EQ(range, node->getRange());
 }
 
 } // namespace ast

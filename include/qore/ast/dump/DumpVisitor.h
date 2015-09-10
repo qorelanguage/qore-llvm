@@ -58,23 +58,21 @@ public:
     DumpVisitor(F formatter = F()) : formatter(formatter) {
     }
 
-    void* visit(const IntegerLiteral *node) override {
+    void visit(const IntegerLiteral *node) override {
         formatter << BeginNode("integerLiteral")
             << Range(node->getRange())
             << Last() << attribute("value", node->value)
             << EndNode();
-        return nullptr;
     }
 
-    void* visit(const StringLiteral *node) override {
+    void visit(const StringLiteral *node) override {
         formatter << BeginNode("stringLiteral")
             << Range(node->getRange())
             << Last() << attribute("value", node->value)
             << EndNode();
-        return nullptr;
     }
 
-    void* visit(const BinaryExpression *node) override {
+    void visit(const BinaryExpression *node) override {
         formatter << BeginNode("binaryExpression")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -84,10 +82,9 @@ public:
                 << EndNode()
             << Last() << Child("right"), visitNode(node->right)
             << EndNode();
-        return nullptr;
     }
 
-    void* visit(const UnaryExpression *node) override {
+    void visit(const UnaryExpression *node) override {
         formatter << BeginNode("unaryExpression")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -96,41 +93,36 @@ public:
                 << EndNode()
             << Last() << Child("operand"), visitNode(node->operand)
             << EndNode();
-        return nullptr;
     }
 
-    void* visit(const EmptyStatement *node) override {
+    void visit(const EmptyStatement *node) override {
         formatter << BeginNode("emptyStatement")
             << Last() << Range(node->getRange())
             << EndNode();
-        return nullptr;
     }
 
-    void* visit(const PrintStatement *node) override {
+    void visit(const PrintStatement *node) override {
         formatter << BeginNode("printStatement")
             << Range(node->getRange())
             << EndNodeHeader()
             << Last() << Child("expression"), visitNode(node->expression)
             << EndNode();
-        return nullptr;
     }
 
-    void* visit(const ExpressionStatement *node) override {
+    void visit(const ExpressionStatement *node) override {
         formatter << BeginNode("expressionStatement")
             << Range(node->getRange())
             << EndNodeHeader()
             << Last() << Child("expression"), visitNode(node->expression)
             << EndNode();
-        return nullptr;
     }
 
-    void* visit(const Program *node) override {
+    void visit(const Program *node) override {
         formatter << BeginNode("program")
             << Range(node->getRange())
             << EndNodeHeader()
             << Last() << Child("body"), visitNodes(node->body)
             << EndNode();
-        return nullptr;
     }
 
 private:

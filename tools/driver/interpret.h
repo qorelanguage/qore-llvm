@@ -18,20 +18,17 @@ inline std::ostream &operator<<(std::ostream &os, const QoreValue &qv) {
  */
 class InterpretVisitor : public qore::ast::Visitor {
 public:
-    using R = void*;
     QoreValue *currentValue;
 
-    R visit(const qore::ast::IntegerLiteral *e) override {
+    void visit(const qore::ast::IntegerLiteral *e) override {
         currentValue = new QoreValue();
         make_int(currentValue, e->value);
-        return nullptr;
     }
-    R visit(const qore::ast::StringLiteral *e) override {
+    void visit(const qore::ast::StringLiteral *e) override {
         currentValue = new QoreValue();
         make_str(currentValue, e->value.c_str());
-        return nullptr;
     }
-    R visit(const qore::ast::BinaryExpression *e) override {
+    void visit(const qore::ast::BinaryExpression *e) override {
         e->left->accept(*this);
         QoreValue *l = currentValue;
         e->right->accept(*this);
@@ -43,33 +40,27 @@ public:
         eval_add(currentValue, l, r);
         delete l;
         delete r;
-        return nullptr;
     }
-    R visit(const qore::ast::UnaryExpression *e) override {
+    void visit(const qore::ast::UnaryExpression *e) override {
         e->operand->accept(*this);
         eval_trim(currentValue);
         CLOG("I", "unary: " << *currentValue);
-        return nullptr;
     }
-    R visit(const qore::ast::EmptyStatement *) override {
-        return nullptr;
+    void visit(const qore::ast::EmptyStatement *) override {
     }
-    R visit(const qore::ast::PrintStatement *s) override {
+    void visit(const qore::ast::PrintStatement *s) override {
         s->expression->accept(*this);
         print_qv(currentValue);
         delete currentValue;
-        return nullptr;
     }
-    R visit(const qore::ast::ExpressionStatement *s) override {
+    void visit(const qore::ast::ExpressionStatement *s) override {
         s->expression->accept(*this);
         delete currentValue;
-        return nullptr;
     }
-    R visit(const qore::ast::Program *program) override {
+    void visit(const qore::ast::Program *program) override {
         for (const auto &statement : program->body) {
             statement->accept(*this);
         }
-        return nullptr;
     }
 };
 

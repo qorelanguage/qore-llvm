@@ -75,8 +75,8 @@ public:
         return Ptr(new IntegerLiteral(value, range));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {
@@ -116,8 +116,8 @@ public:
         return Ptr(new StringLiteral(value, range));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {
@@ -160,8 +160,8 @@ public:
         return Ptr(new BinaryExpression(std::move(left), operatorRange, std::move(right)));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {
@@ -200,8 +200,8 @@ public:
         return Ptr(new UnaryExpression(operatorRange, std::move(operand)));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {
@@ -212,6 +212,90 @@ private:
     UnaryExpression(SourceRange operatorRange, Expression::Ptr operand)
         : operatorRange(operatorRange), operand(std::move(operand)) {
     }
+};
+
+/**
+ * \brief Represents an assignment.
+ */
+class Assignment : public Expression {
+
+public:
+    Expression::Ptr left;           //!< The operand on the left side.
+    SourceRange operatorRange;      //!< Location of the assignment operator in the source.
+    Expression::Ptr right;          //!< The operand on the right side.
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<Assignment>;
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param left the operand on the left side
+     * \param operatorRange the location of the operator
+     * \param right the operand on the right side
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr left, SourceRange operatorRange, Expression::Ptr right) {
+        return Ptr(new Assignment(std::move(left), operatorRange, std::move(right)));
+    }
+
+    void accept(Visitor &v) const override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return SourceRange(left->getRange().start, right->getRange().end);
+    }
+
+private:
+    Assignment(Expression::Ptr left, SourceRange operatorRange, Expression::Ptr right)
+        : left(std::move(left)), operatorRange(operatorRange), right(std::move(right)) {
+    }
+};
+
+/**
+ * \brief Represents a variable declaration.
+ */
+class VarDecl : public Expression {
+
+public:
+    std::string name;               //!< The name of the variable.
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<VarDecl>;
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location of the literal
+     * \param name the name of the variable
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceRange range, std::string name) {
+        return Ptr(new VarDecl(range, std::move(name)));
+    }
+
+    void accept(Visitor &v) const override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    VarDecl(SourceRange range, std::string name)
+        : name(std::move(name)), range(range) {
+    }
+
+private:
+    SourceRange range;
 };
 
 } // namespace ast

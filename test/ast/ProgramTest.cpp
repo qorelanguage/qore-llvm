@@ -31,7 +31,6 @@ namespace qore {
 namespace ast {
 
 struct ProgramTest : ::testing::Test {
-    void *retVal{this};
     ::testing::StrictMock<MockVisitor> mockVisitor;
     SourceRange range = SourceTestHelper::createRange(11, 22, 33);
 };
@@ -39,8 +38,8 @@ struct ProgramTest : ::testing::Test {
 TEST_F(ProgramTest, ProgramEmpty) {
     Statements body;
     Program::Ptr node = Program::create(std::move(body), range);
-    EXPECT_CALL(mockVisitor, visit(node.get())).WillOnce(::testing::Return(retVal));
-    EXPECT_EQ(retVal, node->accept(mockVisitor));
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
     EXPECT_EQ(range, node->getRange());
 }
 

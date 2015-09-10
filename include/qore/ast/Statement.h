@@ -76,8 +76,8 @@ public:
         return Ptr(new EmptyStatement(range));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {
@@ -117,8 +117,8 @@ public:
         return Ptr(new PrintStatement(range, std::move(expression)));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {
@@ -158,8 +158,8 @@ public:
         return Ptr(new ExpressionStatement(range, std::move(expression)));
     }
 
-    void *accept(Visitor &v) const override {
-        return v.visit(this);
+    void accept(Visitor &v) const override {
+        v.visit(this);
     }
 
     SourceRange getRange() const override {
