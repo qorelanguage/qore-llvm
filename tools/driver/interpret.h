@@ -2,11 +2,15 @@
 #define TOOLS_DRIVER_INTERPRET_H_
 
 #include <cstdlib>
+#include <map>
+#include <string>
 #include "qore/ast/Program.h"
 #include "qore/runtime/runtime.h"
 
 inline std::ostream &operator<<(std::ostream &os, const QoreValue &qv) {
-    if (qv.tag == Tag::Int) {
+    if (qv.tag == Tag::Nothing) {
+        return os << "nothing()";
+    } else if (qv.tag == Tag::Int) {
         return os << "intValue(" << qv.intValue << ")";
     } else {
         return os << "strValue(" << qv.strValue << ")";
@@ -38,30 +42,44 @@ public:
         CLOG("I", "binary: " << *l << ", " << *r);
 
         eval_add(currentValue, l, r);
-        delete l;
-        delete r;
     }
     void visit(const qore::ast::UnaryExpression *e) override {
         e->operand->accept(*this);
         eval_trim(currentValue);
         CLOG("I", "unary: " << *currentValue);
     }
+    void visit(const qore::ast::Assignment *node) override {
+        node->left->accept(*this);
+        QoreValue *l = currentValue;
+        node->right->accept(*this);
+        QoreValue *r = currentValue;
+        eval_assign(l, r);
+    }
+    void visit(const qore::ast::VarDecl *node) override {
+        currentValue = new QoreValue();
+        make_nothing(currentValue);
+        variables[node->name] = currentValue;
+    }
+    void visit(const qore::ast::Identifier *node) override {
+        currentValue = variables[node->name];
+    }
     void visit(const qore::ast::EmptyStatement *) override {
     }
     void visit(const qore::ast::PrintStatement *s) override {
         s->expression->accept(*this);
         print_qv(currentValue);
-        delete currentValue;
     }
     void visit(const qore::ast::ExpressionStatement *s) override {
         s->expression->accept(*this);
-        delete currentValue;
     }
     void visit(const qore::ast::Program *program) override {
         for (const auto &statement : program->body) {
             statement->accept(*this);
         }
     }
+
+private:
+    std::map<std::string, QoreValue *> variables;
 };
 
 #endif /* TOOLS_DRIVER_INTERPRET_H_ */

@@ -1,6 +1,8 @@
 #ifndef TOOLS_DRIVER_GEN_H_
 #define TOOLS_DRIVER_GEN_H_
 
+#include <map>
+#include <string>
 #include "qore/ast/Program.h"
 
 #include "llvm/ADT/APSInt.h"
@@ -28,10 +30,12 @@ public:
         ltQoreValuePtr = ltQoreValue->getPointerTo();
 
         fnPrintQv = f(ltVoid, "print_qv", ltQoreValuePtr, nullptr);
+        fnMakeNothing = f(ltVoid, "make_nothing", ltQoreValuePtr, nullptr);
         fnMakeInt = f(ltVoid, "make_int", ltQoreValuePtr, ltInt64, nullptr);
         fnMakeStr = f(ltVoid, "make_str", ltQoreValuePtr, ltCharPtr, nullptr);
         fnEvalAdd = f(ltVoid, "eval_add", ltQoreValuePtr, ltQoreValuePtr, ltQoreValuePtr, nullptr);
         fnEvalTrim = f(ltVoid, "eval_trim", ltQoreValuePtr, nullptr);
+        fnEvalAssign = f(ltVoid, "eval_assign", ltQoreValuePtr, ltQoreValuePtr, nullptr);
         scope = nullptr;
     }
 
@@ -95,6 +99,29 @@ public:
         location(e->operatorRange);
         llvm::Value* args[] = {currentValue};
         builder.CreateCall(fnEvalTrim, args);
+    }
+
+    void visit(const qore::ast::Assignment *e) override {
+        e->left->accept(*this);
+        llvm::Value *l = currentValue;
+        e->right->accept(*this);
+        llvm::Value *r = currentValue;
+
+        location(e->operatorRange);
+        llvm::Value* args[] = {l, r};
+        builder.CreateCall(fnEvalAssign, args);
+    }
+
+    void visit(const qore::ast::VarDecl *e) override {
+        location(e);
+        currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "var_" + e->name);
+        llvm::Value* args[] = {currentValue};
+        builder.CreateCall(fnMakeNothing, args);
+        variables[e->name] = currentValue;
+    }
+
+    void visit(const qore::ast::Identifier *e) override {
+        currentValue = variables[e->name];
     }
 
     void visit(const qore::ast::EmptyStatement *) override {
@@ -173,10 +200,9 @@ public:
 
         dib.finalize();
 
+        module->dump();
         llvm::raw_os_ostream sss(std::cout);
-        if (!llvm::verifyModule(*module, &sss)) {
-            module->dump();
-        }
+        llvm::verifyModule(*module, &sss);
     }
 
 private:
@@ -212,7 +238,7 @@ private:
     llvm::LLVMContext &ctx{llvm::getGlobalContext()};
     llvm::Module *module{new llvm::Module("Q", ctx)};
     llvm::IRBuilder<> builder{ctx};
-//    std::map<std::string, llvm::AllocaInst*> variables;
+    std::map<std::string, llvm::Value*> variables;
 
     llvm::Value *currentValue;
 
@@ -222,10 +248,12 @@ private:
     llvm::StructType *ltQoreValue;
     llvm::Type *ltQoreValuePtr;
     llvm::Function *fnPrintQv;
+    llvm::Function *fnMakeNothing;
     llvm::Function *fnMakeInt;
     llvm::Function *fnMakeStr;
     llvm::Function *fnEvalAdd;
     llvm::Function *fnEvalTrim;
+    llvm::Function *fnEvalAssign;
 
     llvm::DISubprogram *scope;
 

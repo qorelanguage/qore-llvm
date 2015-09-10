@@ -5,6 +5,9 @@
 
 __attribute__((visibility("default"))) void print_qv(QoreValue *qv) {
     switch (qv->tag) {
+        case Tag::Nothing:
+            printf("Qore Print: <Nothing>\n");
+            break;
         case Tag::Int:
             printf("Qore Print: %li\n", qv->intValue);
 //XXX using std::cout prevents LTO from inlining this function
@@ -15,6 +18,10 @@ __attribute__((visibility("default"))) void print_qv(QoreValue *qv) {
 //            std::cout << "Qore Print: " << qv.strValue << std::endl;
             break;
     }
+}
+
+__attribute__((visibility("default"))) void make_nothing(QoreValue *qv) {
+    qv->tag = Tag::Nothing;
 }
 
 __attribute__((visibility("default"))) void make_int(QoreValue *qv, int64_t value) {
@@ -28,7 +35,9 @@ __attribute__((visibility("default"))) void make_str(QoreValue *qv, const char *
 }
 
 static inline void append(std::string &dest, QoreValue *v) {
-    if (v->tag == Tag::Int) {
+    if (v->tag == Tag::Nothing) {
+        dest += "<Nothing>";
+    } else if (v->tag == Tag::Int) {
         dest += std::to_string(v->intValue);
     } else {
         dest += v->strValue;
@@ -58,4 +67,8 @@ __attribute__((visibility("default"))) void eval_trim(QoreValue *qv) {
         std::string str = trim(qv->strValue);
         qv->strValue = strdup(str.c_str());
     }
+}
+
+__attribute__((visibility("default"))) void eval_assign(QoreValue *l, QoreValue *r) {
+    *l = *r;
 }

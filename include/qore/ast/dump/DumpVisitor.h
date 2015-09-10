@@ -95,6 +95,32 @@ public:
             << EndNode();
     }
 
+    void visit(const Assignment *node) override {
+        formatter << BeginNode("assignment")
+            << Range(node->getRange())
+            << EndNodeHeader()
+            << Child("left"), visitNode(node->left)
+            << Child("operator") << BeginNode()
+                << Last() << Range(node->operatorRange)
+                << EndNode()
+            << Last() << Child("right"), visitNode(node->right)
+            << EndNode();
+    }
+
+    void visit(const VarDecl *node) override {
+        formatter << BeginNode("varDecl")
+            << Range(node->getRange())
+            << Last() << attribute("name", node->name)
+            << EndNode();
+    }
+
+    void visit(const Identifier *node) override {
+        formatter << BeginNode("identifier")
+            << Range(node->getRange())
+            << Last() << attribute("name", node->name)
+            << EndNode();
+    }
+
     void visit(const EmptyStatement *node) override {
         formatter << BeginNode("emptyStatement")
             << Last() << Range(node->getRange())

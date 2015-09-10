@@ -29,8 +29,6 @@
 
 #endif
 
-void sandbox();
-
 int main(int argc, char *argv[]) {
     qore::SourceManager sourceMgr;
     qore::DiagPrinter diagPrinter(sourceMgr);
@@ -45,11 +43,8 @@ int main(int argc, char *argv[]) {
     bool jit = false;
     std::string outName;
 
-    while ((opt = getopt(argc, argv, "sdilbjo:")) != -1) {
+    while ((opt = getopt(argc, argv, "dilbjo:")) != -1) {
         switch (opt) {
-            case 's':
-                sandbox();
-                return 0;
             case 'd':
                 dumpAst = true;
                 break;

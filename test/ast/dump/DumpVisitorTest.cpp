@@ -195,6 +195,20 @@ TEST_F(DumpVisitorTest, exprStmt) {
 )", ss.str());
 }
 
+TEST_F(DumpVisitorTest, assignVarDecl) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("my a = b;")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:10
++-body
+  +-expressionStatement @1:1-1:10
+    +-assignment @1:1-1:9
+      +-varDecl @1:1-1:5 name: "a"
+      +-operator @1:6-1:7
+      +-identifier @1:8-1:9 name: "b"
+)", ss.str());
+}
+
 } // namespace dump
 } // namespace ast
 } // namespace qore

@@ -82,19 +82,19 @@ public:
      * \brief Called by an Assignment AST node.
      * \param node the node being visited
      */
-    virtual void visit(const Assignment *node) {};//= 0;
+    virtual void visit(const Assignment *node) = 0;
 
     /**
      * \brief Called by a VarDecl AST node.
      * \param node the node being visited
      */
-    virtual void visit(const VarDecl *node) {};//= 0;
+    virtual void visit(const VarDecl *node) = 0;
 
     /**
      * \brief Called by an Identifier AST node.
      * \param node the node being visited
      */
-    virtual void visit(const Identifier *node) {};//= 0;
+    virtual void visit(const Identifier *node) = 0;
 
     /**
      * \brief Called by an EmptyStatement AST node.

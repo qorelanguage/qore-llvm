@@ -1,6 +1,5 @@
 add_executable(qore-llvm
     driver.cpp
-    sandbox.cpp
 )
 
 if(QORE_USE_LLVM)
