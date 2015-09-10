@@ -67,11 +67,11 @@ public:
 public:
     /**
      * \brief Allocates a new node.
-     * \param value the value of the integer literal
      * \param range the location of the literal
+     * \param value the value of the integer literal
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(int value, SourceRange range) {
+    static Ptr create(SourceRange range, int value) {
         return Ptr(new IntegerLiteral(value, range));
     }
 
@@ -108,11 +108,11 @@ public:
 public:
     /**
      * \brief Allocates a new node.
-     * \param value the value of the string literal
      * \param range the location of the literal
+     * \param value the value of the string literal
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(std::string value, SourceRange range) {
+    static Ptr create(SourceRange range, std::string value) {
         return Ptr(new StringLiteral(value, range));
     }
 
@@ -273,7 +273,7 @@ public:
 public:
     /**
      * \brief Allocates a new node.
-     * \param range the location of the literal
+     * \param range the location of the declaration
      * \param name the name of the variable
      * \return a unique pointer to the allocated node
      */
@@ -291,6 +291,48 @@ public:
 
 private:
     VarDecl(SourceRange range, std::string name)
+        : name(std::move(name)), range(range) {
+    }
+
+private:
+    SourceRange range;
+};
+
+/**
+ * \brief Represents an identifier.
+ */
+class Identifier : public Expression {
+
+public:
+    std::string name;               //!< The name of the identifier.
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<Identifier>;
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location of the identifier
+     * \param name the name of the identifier
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceRange range, std::string name) {
+        return Ptr(new Identifier(range, std::move(name)));
+    }
+
+    void accept(Visitor &v) const override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    Identifier(SourceRange range, std::string name)
         : name(std::move(name)), range(range) {
     }
 

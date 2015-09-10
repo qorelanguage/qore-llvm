@@ -230,26 +230,26 @@ TEST_F(ParserImplTest, expression) {
 //    +-c
 //  +-d
 TEST_F(ParserImplTest, assignment) {
-    addToken(TokenType::String, "a", range1);
+    addToken(TokenType::Identifier, "a", range1);
     addToken(TokenType::Assign, range2);
     addToken(TokenType::String, "b", range3);
     addToken(TokenType::Plus, range4);
-    addToken(TokenType::String, "c", range5);
+    addToken(TokenType::Identifier, "c", range5);
     addToken(TokenType::Assign, range6);
     addToken(TokenType::String, "d", range7);
     addToken(TokenType::CurlyLeft);
     DIAG_NONE();
     AST_CAST(ast::Assignment, assign1, expression());
-    AST_CAST(ast::StringLiteral, var1, assign1->left);
+    AST_CAST(ast::Identifier, var1, assign1->left);
     AST_CAST(ast::Assignment, assign2, assign1->right);
     AST_CAST(ast::BinaryExpression, bin, assign2->left);
     AST_CAST(ast::StringLiteral, var4, assign2->right);
     AST_CAST(ast::StringLiteral, var2, bin->left);
-    AST_CAST(ast::StringLiteral, var3, bin->right);
+    AST_CAST(ast::Identifier, var3, bin->right);
 
-    EXPECT_EQ("a", var1->value);
+    EXPECT_EQ("a", var1->name);
     EXPECT_EQ("b", var2->value);
-    EXPECT_EQ("c", var3->value);
+    EXPECT_EQ("c", var3->name);
     EXPECT_EQ("d", var4->value);
     EXPECT_EQ(SourceRange(range1.start, range7.end), assign1->getRange());
     EXPECT_EQ(range2, assign1->operatorRange);
@@ -333,6 +333,15 @@ TEST_F(ParserImplTest, primaryString) {
     AST_CAST(ast::StringLiteral, expr, primaryExpression());
     EXPECT_EQ("abc", expr->value);
     EXPECT_EQ(range1, expr->getRange());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, primaryIdentifier) {
+    addToken(TokenType::Identifier, "abc", range1);
+    DIAG_NONE();
+    AST_CAST(ast::Identifier, id, primaryExpression());
+    EXPECT_EQ("abc", id->name);
+    EXPECT_EQ(range1, id->getRange());
     EXPECT_CONSUMED();
 }
 

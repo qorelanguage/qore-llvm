@@ -147,16 +147,18 @@ ast::Expression::Ptr ParserImpl::primaryExpression() {
     SourceRange r = range();
     switch (tokenType()) {
         case TokenType::Integer:
-            return ast::IntegerLiteral::create(consume().intValue, r);
+            return ast::IntegerLiteral::create(r, consume().intValue);
         case TokenType::String:
-            return ast::StringLiteral::create(consume().stringValue, r);
+            return ast::StringLiteral::create(r, consume().stringValue);
+        case TokenType::Identifier:
+            return ast::Identifier::create(r, consume().stringValue);
         case TokenType::KwMy:
             return varDecl();
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << token;
             recoverConsumeToken();
             //TODO return special error node which will prevent further errors
-            return ast::IntegerLiteral::create(0, r);
+            return ast::IntegerLiteral::create(r, 0);
     }
 }
 

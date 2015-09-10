@@ -102,16 +102,17 @@ public:
 
 class MockVisitor : public Visitor {
 public:
-    MOCK_METHOD1(visit, void(const class IntegerLiteral *));
-    MOCK_METHOD1(visit, void(const class StringLiteral *));
-    MOCK_METHOD1(visit, void(const class BinaryExpression *));
-    MOCK_METHOD1(visit, void(const class UnaryExpression *));
-    MOCK_METHOD1(visit, void(const class Assignment *));
-    MOCK_METHOD1(visit, void(const class VarDecl *));
-    MOCK_METHOD1(visit, void(const class EmptyStatement *));
-    MOCK_METHOD1(visit, void(const class PrintStatement *));
-    MOCK_METHOD1(visit, void(const class ExpressionStatement *));
-    MOCK_METHOD1(visit, void(const class Program *));
+    MOCK_METHOD1(visit, void(const IntegerLiteral *));
+    MOCK_METHOD1(visit, void(const StringLiteral *));
+    MOCK_METHOD1(visit, void(const BinaryExpression *));
+    MOCK_METHOD1(visit, void(const UnaryExpression *));
+    MOCK_METHOD1(visit, void(const Assignment *));
+    MOCK_METHOD1(visit, void(const VarDecl *));
+    MOCK_METHOD1(visit, void(const Identifier *));
+    MOCK_METHOD1(visit, void(const EmptyStatement *));
+    MOCK_METHOD1(visit, void(const PrintStatement *));
+    MOCK_METHOD1(visit, void(const ExpressionStatement *));
+    MOCK_METHOD1(visit, void(const Program *));
 };
 
 } // namespace ast
