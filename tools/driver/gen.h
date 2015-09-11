@@ -115,6 +115,22 @@ public:
     void visit(const qore::ast::VarDecl *e) override {
         location(e);
         currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "var_" + e->name);
+
+        location(e);
+        llvm::DIExpression *diExpr = dib.createExpression();
+        llvm::DILocalVariable *diLocVar = dib.createLocalVariable(
+                llvm::dwarf::DW_TAG_auto_variable,
+                scope,
+                e->name,
+                diFile,
+                e->getRange().start.line,
+                ditQoreValue
+        );
+
+        dib.insertDeclare(currentValue, diLocVar, diExpr,
+                llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope),
+                builder.GetInsertBlock());
+
         llvm::Value* args[] = {currentValue};
         builder.CreateCall(fnMakeNothing, args);
         variables[e->name] = currentValue;
@@ -144,8 +160,6 @@ public:
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
         builder.SetInsertPoint(bb);
 
-        llvm::DIBuilder dib(*module);
-
         //        !llvm.dbg.cu = !{!0}
         //        !0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "qore-llvm 1.0.0", isOptimized: false, runtimeVersion: 0, emissionKind: 1, enums: !2, subprograms: !3)
         //        !1 = !DIFile(filename: "/home/otethal/prj/qore-llvm/tools/sandbox/test.q", directory: "/home/otethal/prj/qore-llvm/tools/sandbox")
@@ -165,7 +179,7 @@ public:
                 "",     //flags
                 0);     //runtime version
 
-        llvm::DIFile *diFile = diCU->getFile();
+        diFile = diCU->getFile();
 
         //        !5 = !DISubroutineType(types: !6)
         //        !6 = !{null}
@@ -190,6 +204,71 @@ public:
         llvm::Metadata *ident = llvm::MDString::get(ctx, "qore-llvm 1.0.0");
         module->getOrInsertNamedMetadata("llvm.ident")->addOperand(llvm::MDNode::get(ctx, {ident}));
 
+        //Standard types
+        auto ditUint64 = dib.createBasicType("uint64_t", 64, 64, llvm::dwarf::DW_ATE_unsigned);
+        auto ditChar = dib.createBasicType("char", 8, 8, llvm::dwarf::DW_ATE_signed_char);
+        auto ditConstChar = dib.createQualifiedType(llvm::dwarf::DW_TAG_const_type, ditChar);
+        auto ditConstCharPtr = dib.createPointerType(ditConstChar, 64, 64); //name
+
+        //QoreValue Tag
+        llvm::Metadata * elements[]{
+                    dib.createEnumerator("Nothing", 0),
+                    dib.createEnumerator("Int", 1),
+                    dib.createEnumerator("Str", 2)
+                };
+        auto ditQoreValueTag = dib.createEnumerationType(
+                diFile,             // Scope
+                "Tag",
+                diFile,
+                1000,               // LineNumber
+                64,                 // SizeInBits
+                64,                 // AlignInBits
+                dib.getOrCreateArray(elements),
+                ditUint64, "QORE_RUNTIME_TAG"
+        );
+
+        //QoreValue
+        ditQoreValue = dib.createStructType(
+                diFile,             // Scope
+                "QoreValue",
+                diFile,
+                1000,               // LineNumber
+                128,                // SizeInBits
+                64,                 // AlignInBits
+                0,                  // Flags
+                nullptr,            // DerivedFrom
+                llvm::DINodeArray(),
+                0,                  // RuntimeLang
+                nullptr,            // VTableHolder
+                "QORE_RUNTIME_QORE_VALUE"
+        );
+        llvm::Metadata * elements2[]{
+                dib.createMemberType(
+                        ditQoreValue,               //DIScope *Scope,
+                        "tag",                      //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        0,                          //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditQoreValueTag
+                ),
+                dib.createMemberType(
+                        ditQoreValue,               //DIScope *Scope,
+                        "strVal",                   //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        64,                         //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditConstCharPtr
+                )
+        };
+        dib.replaceArrays(ditQoreValue, dib.getOrCreateArray(elements2));
+
+        //Compile code
         for (const auto &statement : p->body) {
             statement->accept(*this);
         }
@@ -237,6 +316,7 @@ private:
 private:
     llvm::LLVMContext &ctx{llvm::getGlobalContext()};
     llvm::Module *module{new llvm::Module("Q", ctx)};
+    llvm::DIBuilder dib{*module};
     llvm::IRBuilder<> builder{ctx};
     std::map<std::string, llvm::Value*> variables;
 
@@ -258,6 +338,9 @@ private:
     llvm::DISubprogram *scope;
 
     qore::SourceManager &sourceMgr;
+
+    llvm::DIFile *diFile;
+    llvm::DICompositeType *ditQoreValue;
 };
 
 #endif /* TOOLS_DRIVER_GEN_H_ */
