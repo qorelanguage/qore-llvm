@@ -206,6 +206,7 @@ public:
 
         //Standard types
         auto ditUint64 = dib.createBasicType("uint64_t", 64, 64, llvm::dwarf::DW_ATE_unsigned);
+        auto ditInt64 = dib.createBasicType("int64_t", 64, 64, llvm::dwarf::DW_ATE_signed);
         auto ditChar = dib.createBasicType("char", 8, 8, llvm::dwarf::DW_ATE_signed_char);
         auto ditConstChar = dib.createQualifiedType(llvm::dwarf::DW_TAG_const_type, ditChar);
         auto ditConstCharPtr = dib.createPointerType(ditConstChar, 64, 64); //name
@@ -242,7 +243,48 @@ public:
                 nullptr,            // VTableHolder
                 "QORE_RUNTIME_QORE_VALUE"
         );
-        llvm::Metadata * elements2[]{
+
+        //QoreValue union
+        auto ditQoreValueUnion = dib.createUnionType(
+                ditQoreValue,       // Scope
+                "QoreValueUnion",
+                diFile,
+                1000,               // LineNumber
+                64,                 // SizeInBits
+                64,                 // AlignInBits
+                0,                  // Flags
+                llvm::DINodeArray(),
+                0,                  // RuntimeLang
+                "QORE_RUNTIME_QORE_VALUE_UNION"
+        );
+
+        llvm::Metadata * unionElements[]{
+                dib.createMemberType(
+                        ditQoreValueUnion,          //DIScope *Scope,
+                        "intValue",                 //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        0,                          //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditInt64
+                ),
+                dib.createMemberType(
+                        ditQoreValueUnion,          //DIScope *Scope,
+                        "strValue",                 //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        0,                          //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditConstCharPtr
+                )
+        };
+        dib.replaceArrays(ditQoreValueUnion, dib.getOrCreateArray(unionElements));
+
+        llvm::Metadata * structElements[]{
                 dib.createMemberType(
                         ditQoreValue,               //DIScope *Scope,
                         "tag",                      //StringRef Name,
@@ -256,17 +298,17 @@ public:
                 ),
                 dib.createMemberType(
                         ditQoreValue,               //DIScope *Scope,
-                        "strVal",                   //StringRef Name,
+                        "value",                    //StringRef Name,
                         diFile,                     //DIFile *File,
                         1000,                       //unsigned LineNo,
                         64,                         //uint64_t SizeInBits,
                         64,                         //uint64_t AlignInBits,
                         64,                         //uint64_t OffsetInBits,
                         llvm::DINode::FlagPublic,   //unsigned Flags,
-                        ditConstCharPtr
+                        ditQoreValueUnion
                 )
         };
-        dib.replaceArrays(ditQoreValue, dib.getOrCreateArray(elements2));
+        dib.replaceArrays(ditQoreValue, dib.getOrCreateArray(structElements));
 
         //Compile code
         for (const auto &statement : p->body) {
