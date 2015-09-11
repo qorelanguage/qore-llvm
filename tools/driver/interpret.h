@@ -7,74 +7,69 @@
 #include "qore/ast/Program.h"
 #include "qore/runtime/runtime.h"
 
-inline std::ostream &operator<<(std::ostream &os, const QoreValue &qv) {
-    if (qv.tag == Tag::Nothing) {
-        return os << "nothing()";
-    } else if (qv.tag == Tag::Int) {
-        return os << "intValue(" << qv.intValue << ")";
-    } else {
-        return os << "strValue(" << qv.strValue << ")";
-    }
-}
+#define QORE_LOG_COMPONENT "INTERPRET"
 
 /**
  * \private
  */
 class InterpretVisitor : public qore::ast::Visitor {
 public:
-    QoreValue *currentValue;
+    QoreValue currentValue;
 
     void visit(const qore::ast::IntegerLiteral *e) override {
-        currentValue = new QoreValue();
-        make_int(currentValue, e->value);
+        make_int(&currentValue, e->value);
     }
     void visit(const qore::ast::StringLiteral *e) override {
-        currentValue = new QoreValue();
-        make_str(currentValue, e->value.c_str());
+        make_str(&currentValue, e->value.c_str());
     }
     void visit(const qore::ast::BinaryExpression *e) override {
         e->left->accept(*this);
-        QoreValue *l = currentValue;
+        QoreValue l = currentValue;
         e->right->accept(*this);
-        QoreValue *r = currentValue;
-        currentValue = new QoreValue();
-
-        CLOG("I", "binary: " << *l << ", " << *r);
-
-        eval_add(currentValue, l, r);
+        QoreValue r = currentValue;
+        eval_add(&currentValue, &l, &r);
     }
     void visit(const qore::ast::UnaryExpression *e) override {
         e->operand->accept(*this);
-        eval_trim(currentValue);
-        CLOG("I", "unary: " << *currentValue);
+        eval_trim(&currentValue);
     }
     void visit(const qore::ast::Assignment *node) override {
         node->left->accept(*this);
-        QoreValue *l = currentValue;
+        QoreValue l = currentValue;
         node->right->accept(*this);
-        QoreValue *r = currentValue;
-        eval_assign(l, r);
+        eval_assign(&l, &currentValue);     //will be dereferenced at the end of the expression / statement
     }
     void visit(const qore::ast::VarDecl *node) override {
-        currentValue = new QoreValue();
-        make_nothing(currentValue);
-        variables[node->name] = currentValue;
+        auto v = new QoreValue();
+        make_nothing(v);
+        variables[node->name] = v;
+        make_lvalue(&currentValue, v);
     }
     void visit(const qore::ast::Identifier *node) override {
-        currentValue = variables[node->name];
+        LOG_FUNCTION();
+        make_lvalue(&currentValue, variables[node->name]);
     }
     void visit(const qore::ast::EmptyStatement *) override {
     }
     void visit(const qore::ast::PrintStatement *s) override {
         s->expression->accept(*this);
-        print_qv(currentValue);
+        print_qv(&currentValue);
+        deref(&currentValue);
     }
     void visit(const qore::ast::ExpressionStatement *s) override {
+        LOG_FUNCTION();
         s->expression->accept(*this);
+        deref(&currentValue);
     }
     void visit(const qore::ast::Program *program) override {
+        LOG_FUNCTION();
         for (const auto &statement : program->body) {
             statement->accept(*this);
+        }
+        for (auto &p : variables) {
+            QoreValue *qv = p.second;
+            deref(qv);
+            delete qv;
         }
     }
 
