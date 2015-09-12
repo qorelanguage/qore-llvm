@@ -13,6 +13,9 @@ enum class Tag : uint64_t {
 
 class QoreString;
 
+/**
+ * \private
+ */
 struct QoreValue {
     Tag tag;
     union {

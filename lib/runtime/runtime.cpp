@@ -7,6 +7,9 @@
 
 #define QORE_LOG_COMPONENT "RUNTIME"
 
+/**
+ * \private
+ */
 class QoreString {
 public:
     int refCount;

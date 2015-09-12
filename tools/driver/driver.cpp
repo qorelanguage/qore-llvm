@@ -6,6 +6,7 @@
 #include "qore/runtime/runtime.h"
 #include "qore/scanner/ScannerImpl.h"
 #include "interpret.h"
+#include "analysis.h"
 #include "qore/ast/dump/DumpVisitor.h"
 #include "qore/ast/dump/XmlFormat.h"
 #include "qore/ast/dump/JsonFormat.h"
@@ -135,6 +136,9 @@ int main(int argc, char *argv[]) {
         root->accept(dyv);
         root->accept(dcv);
     }
+
+    qore::AnalysisVisitor av;
+    root->accept(av);
 
     if (interpret) {
         InterpretVisitor iv;
