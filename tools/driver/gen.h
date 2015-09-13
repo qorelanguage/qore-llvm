@@ -30,14 +30,11 @@ public:
         ltQoreValuePtr = ltQoreValue->getPointerTo();
 
         fnPrintQv = f(ltVoid, "print_qv", ltQoreValuePtr, nullptr);
-        fnMakeNothing = f(ltVoid, "make_nothing", ltQoreValuePtr, nullptr);
         fnMakeInt = f(ltVoid, "make_int", ltQoreValuePtr, ltInt64, nullptr);
         fnMakeStr = f(ltVoid, "make_str", ltQoreValuePtr, ltCharPtr, nullptr);
-        fnMakeLValue = f(ltVoid, "make_lvalue", ltQoreValuePtr, ltQoreValuePtr, nullptr);
         fnEvalAdd = f(ltVoid, "eval_add", ltQoreValuePtr, ltQoreValuePtr, ltQoreValuePtr, nullptr);
         fnEvalTrim = f(ltVoid, "eval_trim", ltQoreValuePtr, nullptr);
         fnEvalAssign = f(ltVoid, "eval_assign", ltQoreValuePtr, ltQoreValuePtr, nullptr);
-        fnDeref = f(ltVoid, "deref", ltQoreValuePtr, nullptr);
         scope = nullptr;
     }
 
@@ -133,19 +130,19 @@ public:
                 llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope),
                 builder.GetInsertBlock());
 
-        llvm::Value* args[] = {v};
-        builder.CreateCall(fnMakeNothing, args);
+//        llvm::Value* args[] = {v};
+//        builder.CreateCall(fnMakeNothing, args);
         variables[e->name] = v;
 
         currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "ptr_var_" + e->name);
-        llvm::Value* args2[] = {currentValue, v};
-        builder.CreateCall(fnMakeLValue, args2);
+        //llvm::Value* args2[] = {currentValue, v};
+        //builder.CreateCall(fnMakeLValue, args2);
     }
 
     void visit(const qore::ast::Identifier *e) override {
         currentValue = builder.CreateAlloca(ltQoreValue, nullptr, "ptr_var_" + e->name);
-        llvm::Value* args2[] = {currentValue, variables[e->name]};
-        builder.CreateCall(fnMakeLValue, args2);
+        //llvm::Value* args2[] = {currentValue, variables[e->name]};
+        //builder.CreateCall(fnMakeLValue, args2);
     }
 
     void visit(const qore::ast::EmptyStatement *) override {
@@ -156,14 +153,14 @@ public:
         location(s);
         llvm::Value* args[] = {currentValue};
         builder.CreateCall(fnPrintQv, args);
-        builder.CreateCall(fnDeref, args);
+//        builder.CreateCall(fnDeref, args);
     }
 
     void visit(const qore::ast::ExpressionStatement *s) override {
         s->expression->accept(*this);
         location(s);
-        llvm::Value* args[] = {currentValue};
-        builder.CreateCall(fnDeref, args);
+//        llvm::Value* args[] = {currentValue};
+//        builder.CreateCall(fnDeref, args);
     }
 
     void visit(const qore::ast::Program *p) override {
@@ -327,10 +324,10 @@ public:
             statement->accept(*this);
         }
 
-        for (const auto &v : variables) {
-            llvm::Value* args[] = {v.second};
-            builder.CreateCall(fnDeref, args);
-        }
+//        for (const auto &v : variables) {
+//            llvm::Value* args[] = {v.second};
+//            builder.CreateCall(fnDeref, args);
+//        }
 
         builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, p->getRange().end.line, p->getRange().end.column, scope));
         builder.CreateRetVoid();
@@ -387,14 +384,11 @@ private:
     llvm::StructType *ltQoreValue;
     llvm::Type *ltQoreValuePtr;
     llvm::Function *fnPrintQv;
-    llvm::Function *fnMakeNothing;
     llvm::Function *fnMakeInt;
     llvm::Function *fnMakeStr;
-    llvm::Function *fnMakeLValue;
     llvm::Function *fnEvalAdd;
     llvm::Function *fnEvalTrim;
     llvm::Function *fnEvalAssign;
-    llvm::Function *fnDeref;
 
     llvm::DISubprogram *scope;
 

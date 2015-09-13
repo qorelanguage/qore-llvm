@@ -38,7 +38,18 @@ std::ostream &operator<<(std::ostream &os, const std::shared_ptr<Printable> &p) 
  * \private
  */
 class Storage : public Printable {
+
+public:
+    using Ref = std::shared_ptr<Storage>;
+
 };
+
+/**
+ * \private
+ */
+std::ostream &operator<<(std::ostream &os, const Storage::Ref &s) {
+    return os << s.get() << " [" << s.use_count() << "]";
+}
 
 /**
  * \private
@@ -164,25 +175,13 @@ public:
     Value() {
     }
 
-    ~Value() {
-        if (ptr) {
-            LOG("~Value of " << ptr);
-        }
-    }
-
     Value(const Value &) = default;
     Value(Value &&) = default;
     Value &operator=(const Value &) = default;
     Value &operator=(Value &&) = default;
 
 private:
-    Value(Constant::Ref t) : ptr(t) {
-    }
-
-    Value(TemporaryVariable::Ref t) : ptr(t) {
-    }
-
-    Value(LocalVariable::Ref t) : ptr(t) {
+    Value(Storage::Ref t) : ptr(t) {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Value &value) {
@@ -192,7 +191,7 @@ private:
     friend class FunctionBuilder;
 
 private:
-    std::shared_ptr<Storage> ptr;
+    Storage::Ref ptr;
 };
 
 /**
@@ -204,22 +203,21 @@ public:
     LValue() {
     }
 
-    ~LValue() {
-        if (ptr) {
-            LOG("~LValue of " << ptr);
-        }
-    }
-
     LValue(const LValue &) = default;
     LValue(LValue &&src) = default;
     LValue &operator=(const LValue &) = default;
     LValue &operator=(LValue &&) = default;
 
-private:
-    LValue(TemporaryVariable::Ref t) : ptr(t) {
+    operator bool() const {
+        return ptr != nullptr;
     }
 
-    LValue(LocalVariable::Ref t) : ptr(t) {
+    bool operator!() const {
+        return ptr == nullptr;
+    }
+
+private:
+    LValue(Storage *t) : ptr(t) {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const LValue &lvalue) {
@@ -229,7 +227,7 @@ private:
     friend class FunctionBuilder;
 
 private:
-    std::shared_ptr<Storage> ptr;
+    Storage::Ref ptr;
 };
 
 /**
@@ -238,83 +236,63 @@ private:
 class FunctionBuilder {
 
 public:
-    ~FunctionBuilder() {
+    void finalize() {
         scope.clear();
-        for (auto &var : temps) {
-            assert(var.use_count() == 1);
-        }
-        for (auto &var : constants) {
-            assert(var.use_count() == 1);
-        }
-        for (auto &var : variables) {
-            assert(var.use_count() == 1);
-        }
     }
 
     LValue createLocalVariable(const std::string &name) {
-        return createLocalVariable0(name);
+        //TODO exception safety, duplicates etc.
+        LValue var(new LocalVariable(name));
+        scope[name] = var;
+        LOG("Declare and init " << var);
+        return var;
     }
 
     LValue resolveLocalVariable(const std::string &name) {
-        return resolveLocalVariable0(name);
-    }
-
-    Value loadLocalVariable(const std::string &name) {
-        LocalVariable::Ref v = resolveLocalVariable0(name);
-        LOG("Load value of " << v)
-        return v;
-    }
-
-    Value loadConstant(const std::string &value) {
-        Constant::Ref c = createConstant0(value);
-        LOG("Load value of " << c);
-        return c;
-    }
-
-    void storeAndDiscard(LValue l, Value r) {
-        LOG("Store " << r << " into " << l << " (discard)");
-    }
-
-//    Value store(LValue l, Value r) {
-//        LOG("Store " << r << " into " << l << " (keep)");
-//        return r;           //TODO implicit conversions : int z; short x; int y = 65536; z = x = y; => z is one?
-//    }
-
-    void trimAndDiscard(LValue l) {
-        LOG("Trim " << l << " (discard)");
-    }
-
-    Value add(Value l, Value r) {
-        TemporaryVariable::Ref t = temp();
-        assert(t.use_count() == 2);
-        LOG("Add " << l << " and " << r << " into " << t);
-        return Value(t);
-    }
-
-    void print(Value v) {
-        LOG("Print " << v);
-    }
-
-private:
-    LocalVariable::Ref createLocalVariable0(const std::string &name) {
-        //TODO exception safety, duplicates etc.
-        LocalVariable *v = new LocalVariable(name);
-        variables.emplace_back(v);
-        scope[name] = variables.back();
-        return variables.back();
-    }
-
-    LocalVariable::Ref resolveLocalVariable0(const std::string &name) {
         auto &x = scope[name];
         if (!x) {
             std::cout << "ERROR: undeclared\n";
-            return createLocalVariable0(name);
+            return createLocalVariable(name);
         } else {
             return x;
         }
     }
 
-    Constant::Ref createConstant0(const std::string &value) {
+    Value loadConstant(const std::string &value) {
+        Constant::Ref ref = createConstant(value);
+        LOG("Load value of " << ref);
+        return Value(ref);
+    }
+
+    Value load(LValue &&lvalue) {
+        LOG("Load value of " << lvalue.ptr);
+        return Value(lvalue.ptr);
+    }
+
+    Value assign(LValue &&l, Value &&r) {
+        LOG("Assign " << r << " into " << l);
+        return load(std::move(l));
+    }
+
+    Value trim(LValue &&l) {
+        LOG("Trim " << l);
+        return load(std::move(l));
+    }
+
+    Value add(LValue &&dest, Value &&l, Value &&r) {
+        if (!dest) {
+            dest = createTemporary();
+        }
+        LOG("Add " << l << " and " << r << " into " << dest);
+        return load(std::move(dest));
+    }
+
+    void print(Value &&v) {
+        LOG("Print " << v);
+    }
+
+private:
+    Constant::Ref createConstant(const std::string &value) {
         for (const auto &c : constants) {
             if (c->getValue() == value) {
                 return c;
@@ -327,49 +305,46 @@ private:
     //TODO: temps reuse stack space -> but this will be needed for locals as well, consider:
     //          if (...) { int a; ... } else { double b; ... }
     // In fact - what is the difference between a local variable an a temp? Temps just go out of scope immediately.
-    TemporaryVariable::Ref temp() {
-        for (const auto &t : temps) {
-            if (t.unique()) {
-                return t;
-            }
-        }
-        temps.emplace_back(new TemporaryVariable(temps.size()));
-        return temps.back();
+    //use llvm.lifetime.start ?
+    LValue createTemporary() {
+        LValue temp(new TemporaryVariable(tempCount++));
+        LOG("(Declare and) init " << temp);
+        return temp;
     }
 
 private:
-    std::vector<LocalVariable::Ref> variables;
     std::vector<Constant::Ref> constants;
-    std::vector<TemporaryVariable::Ref> temps;
-    std::map<std::string, LocalVariable::Ref> scope;
+    std::map<std::string, LValue> scope;
+    int tempCount{0};
 };
+
+LValue evalLValue(FunctionBuilder &builder, const ast::Expression::Ptr &node);
+Value evalValue(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest = LValue());
+void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest = LValue());
 
 /**
  * \private
  */
 class LValueExpressionEvaluator : public ast::BaseVisitor {
 
-public:
+private:
     LValueExpressionEvaluator(FunctionBuilder &builder) : BaseVisitor("LValueExpressionEvaluator"), builder(builder) {
     }
 
+public:
     void visit(const ast::VarDecl *node) override {
-        LOG_FUNCTION();
         result = builder.createLocalVariable(node->name);
     }
 
     void visit(const ast::Identifier *node) override {
-        LOG_FUNCTION();
         result = builder.resolveLocalVariable(node->name);
-    }
-
-    operator LValue() {
-        return std::move(result);
     }
 
 private:
     FunctionBuilder &builder;
     LValue result;
+
+    friend LValue evalLValue(FunctionBuilder &builder, const ast::Expression::Ptr &node);
 };
 
 /**
@@ -377,79 +352,76 @@ private:
  */
 class ValueExpressionEvaluator : public ast::BaseVisitor {
 
+protected:
+    ValueExpressionEvaluator(FunctionBuilder &builder, bool needsValue, LValue dest) : BaseVisitor("ValueExpressionEvaluator"), builder(builder), needsValue(needsValue), dest(std::move(dest)) {
+    }
+
 public:
-    ValueExpressionEvaluator(FunctionBuilder &builder) : BaseVisitor("ValueExpressionEvaluator"), builder(builder) {
-    }
-
     void visit(const ast::StringLiteral *node) override {
-        LOG_FUNCTION();
-        result = builder.loadConstant(node->value);
-    }
-
-    void visit(const ast::Identifier *node) override {
-        LOG_FUNCTION();
-        result = builder.loadLocalVariable(node->name);
+        assign(builder.loadConstant(node->value));
+        checkNoEffect();
     }
 
     void visit(const ast::BinaryExpression *node) override {
-        LOG_FUNCTION();
-
-        ValueExpressionEvaluator l(builder);
-        node->left->accept(l);
-
-        ValueExpressionEvaluator r(builder);
-        node->right->accept(r);
-
-        result = builder.add(l, r);
-    }
-
-    operator Value() {
-        return std::move(result);
-    }
-
-private:
-    FunctionBuilder &builder;
-    Value result;
-};
-
-/**
- * \private
- */
-class NoValueExpressionEvaluator : public ast::BaseVisitor {
-
-public:
-    NoValueExpressionEvaluator(FunctionBuilder &builder) : BaseVisitor("NoValueExpressionEvaluator"), builder(builder) {
-    }
-
-    void visit(const ast::VarDecl *node) override {
-        LOG_FUNCTION();
-        builder.createLocalVariable(node->name);
-    }
-
-    void visit(const ast::Assignment *node) override {
-        LOG_FUNCTION();
-
-        LValueExpressionEvaluator l(builder);
-        node->left->accept(l);
-
-        ValueExpressionEvaluator r(builder);
-        node->right->accept(r);
-
-        builder.storeAndDiscard(l, r);
+        Value l = evalValue(builder, node->left);
+        result = builder.add(std::move(dest), std::move(l), evalValue(builder, node->right));
+        checkNoEffect();
     }
 
     void visit(const ast::UnaryExpression *node) override {
-        LOG_FUNCTION();
+        assign(builder.trim(evalLValue(builder, node->operand)));
+    }
 
-        LValueExpressionEvaluator val(builder);
-        node->operand->accept(val);
+    void visit(const ast::Assignment *node) override {
+        assign(evalValue(builder, node->right, evalLValue(builder, node->left)));
+    }
 
-        builder.trimAndDiscard(val);
+    void visit(const ast::VarDecl *node) override {
+        assign(builder.load(builder.createLocalVariable(node->name)));
+    }
+
+    void visit(const ast::Identifier *node) override {
+        assign(builder.load(builder.resolveLocalVariable(node->name)));
+        checkNoEffect();
+    }
+
+private:
+    void assign(Value &&value) {
+        result = !dest ? std::move(value) : builder.assign(std::move(dest), std::move(value));
+    }
+
+    void checkNoEffect() {
+        if (!dest && !needsValue) {
+            //error statement has no effect
+        }
     }
 
 private:
     FunctionBuilder &builder;
+    bool needsValue;
+    LValue dest;
+    Value result;
+
+    friend Value evalValue(FunctionBuilder &, const ast::Expression::Ptr &, LValue &&);
+    friend void eval(FunctionBuilder &, const ast::Expression::Ptr &, LValue &&);
 };
+
+inline LValue evalLValue(FunctionBuilder &builder, const ast::Expression::Ptr &node) {
+    LValueExpressionEvaluator r(builder);
+    node->accept(r);
+    return std::move(r.result);
+}
+
+inline Value evalValue(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest) {
+    ValueExpressionEvaluator r(builder, true, std::move(dest));
+    node->accept(r);
+    return std::move(r.result);
+}
+
+inline void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest) {
+    ValueExpressionEvaluator r(builder, false, std::move(dest));
+    node->accept(r);
+}
 
 /**
  * \private
@@ -462,16 +434,12 @@ public:
 
     void visit(const ast::ExpressionStatement *node) override {
         LOG_FUNCTION();
-        NoValueExpressionEvaluator e(builder);
-        node->expression->accept(e);
+        eval(builder, node->expression);
     }
 
     void visit(const ast::PrintStatement *node) override {
         LOG_FUNCTION();
-        ValueExpressionEvaluator e(builder);
-        node->expression->accept(e);
-
-        builder.print(e);
+        builder.print(evalValue(builder, node->expression));
     }
 
     void visit(const ast::Program *node) override {
@@ -479,6 +447,7 @@ public:
         for (const auto &stmt : node->body) {
             stmt->accept(*this);
         }
+        builder.finalize();
     }
 
 private:

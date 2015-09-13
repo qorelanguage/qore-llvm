@@ -14,52 +14,70 @@
  */
 class InterpretVisitor : public qore::ast::Visitor {
 public:
-    QoreValue currentValue;
+    QoreValue *current;
+    std::vector<QoreValue*> temps;
 
     void visit(const qore::ast::IntegerLiteral *e) override {
-        make_int(&currentValue, e->value);
+        LOG_FUNCTION();
+        current = new QoreValue();
+        temps.push_back(current);
+        make_int(current, e->value);
     }
     void visit(const qore::ast::StringLiteral *e) override {
-        make_str(&currentValue, e->value.c_str());
+        LOG_FUNCTION();
+        current = new QoreValue();
+        temps.push_back(current);
+        make_str(current, e->value.c_str());
     }
     void visit(const qore::ast::BinaryExpression *e) override {
+        LOG_FUNCTION();
         e->left->accept(*this);
-        QoreValue l = currentValue;
+        QoreValue *l = current;
         e->right->accept(*this);
-        QoreValue r = currentValue;
-        eval_add(&currentValue, &l, &r);
+        QoreValue *r = current;
+
+        current = new QoreValue();
+        eval_add(current, *l, *r);
+        freeTemps();
+        temps.push_back(current);
     }
     void visit(const qore::ast::UnaryExpression *e) override {
+        LOG_FUNCTION();
         e->operand->accept(*this);
-        eval_trim(&currentValue);
+        eval_trim(current);
+        freeTemps();
     }
     void visit(const qore::ast::Assignment *node) override {
-        node->left->accept(*this);
-        QoreValue l = currentValue;
+        LOG_FUNCTION();
+
         node->right->accept(*this);
-        eval_assign(&l, &currentValue);     //will be dereferenced at the end of the expression / statement
+        QoreValue *value = current;
+
+        node->left->accept(*this);
+        eval_assign(current, *value);
+        freeTemps();
     }
     void visit(const qore::ast::VarDecl *node) override {
-        auto v = new QoreValue();
-        make_nothing(v);
-        variables[node->name] = v;
-        make_lvalue(&currentValue, v);
+        LOG_FUNCTION();
+        current = new QoreValue();
+        variables[node->name] = current;
     }
     void visit(const qore::ast::Identifier *node) override {
         LOG_FUNCTION();
-        make_lvalue(&currentValue, variables[node->name]);
+        current = variables[node->name];
     }
     void visit(const qore::ast::EmptyStatement *) override {
     }
     void visit(const qore::ast::PrintStatement *s) override {
+        LOG_FUNCTION();
         s->expression->accept(*this);
-        print_qv(&currentValue);
-        deref(&currentValue);
+        print_qv(*current);
+        freeTemps();
     }
     void visit(const qore::ast::ExpressionStatement *s) override {
         LOG_FUNCTION();
         s->expression->accept(*this);
-        deref(&currentValue);
+        freeTemps();
     }
     void visit(const qore::ast::Program *program) override {
         LOG_FUNCTION();
@@ -67,14 +85,20 @@ public:
             statement->accept(*this);
         }
         for (auto &p : variables) {
-            QoreValue *qv = p.second;
-            deref(qv);
-            delete qv;
+            delete p.second;
         }
     }
 
 private:
     std::map<std::string, QoreValue *> variables;
+
+private:
+    void freeTemps() {
+        for (auto &p : temps) {
+            delete p;
+        }
+        temps.clear();
+    }
 };
 
 #endif /* TOOLS_DRIVER_INTERPRET_H_ */

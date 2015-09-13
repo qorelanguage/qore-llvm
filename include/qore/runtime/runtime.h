@@ -8,7 +8,6 @@ enum class Tag : uint64_t {
     Nothing = 0,
     Int = 1,
     Str = 2,
-    LValue = 3,
 };
 
 class QoreString;
@@ -21,20 +20,25 @@ struct QoreValue {
     union {
         int64_t intValue;
         QoreString *strValue;
-        QoreValue *qv;
     };
+
+    QoreValue() noexcept : tag(Tag::Nothing), intValue(0) {
+    }
+
+    ~QoreValue() noexcept;
 };
 
-extern "C" void print_qv(QoreValue *qv);
-extern "C" void make_nothing(QoreValue *qv);
-extern "C" void make_int(QoreValue *qv, int64_t value);
-extern "C" void make_str(QoreValue *qv, const char *value);
-extern "C" void make_lvalue(QoreValue *qv, QoreValue *value);
-extern "C" void eval_add(QoreValue *qv, QoreValue *l, QoreValue *r);
-extern "C" void eval_trim(QoreValue *qv);
-extern "C" void eval_assign(QoreValue *l, QoreValue *r);
-extern "C" void deref(QoreValue *qv);
-extern "C" void ref(QoreValue *qv);
+//TODO shouldn't QoreValue be opaque?
+//TODO references are C++, keep API strictly C?
+typedef QoreValue *LValue;
+typedef const QoreValue &Value;
+
+extern "C" void print_qv(Value qv) noexcept;
+extern "C" void make_int(LValue qv, int64_t value) noexcept;
+extern "C" void make_str(LValue qv, const char *value) noexcept;
+extern "C" void eval_add(LValue qv, Value l, Value r) noexcept;
+extern "C" void eval_trim(LValue qv) noexcept;
+extern "C" void eval_assign(LValue l, Value r) noexcept;
 
 std::ostream &operator<<(std::ostream &os, const QoreValue &qv);
 std::ostream &operator<<(std::ostream &os, const QoreValue *qv);
