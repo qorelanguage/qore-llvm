@@ -137,8 +137,7 @@ int main(int argc, char *argv[]) {
         root->accept(dcv);
     }
 
-    qore::AnalysisVisitor av;
-    root->accept(av);
+    qore::analyze(root.get())->dump();
 
     if (interpret) {
         InterpretVisitor iv;

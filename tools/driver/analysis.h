@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include "qore/ast/Visitor.h"
+#include "qore/common/Util.h"
 
 namespace qore {
 
@@ -133,6 +134,10 @@ public:
     Value &operator=(const Value &) = default;
     Value &operator=(Value &&) = default;
 
+    operator Storage*() {
+        return ptr.get();
+    }
+
 private:
     Value(Storage::Ref t) : ptr(t) {
     }
@@ -169,6 +174,10 @@ public:
         return ptr == nullptr;
     }
 
+    operator Storage*() {
+        return ptr.get();
+    }
+
 private:
     LValue(Storage::Ref t) : ptr(t) {
     }
@@ -183,15 +192,86 @@ private:
     Storage::Ref ptr;
 };
 
+class Action {
+public:
+    enum Type {
+        Add,
+        Assign,
+        LifetimeStart,
+        LifetimeEnd,
+        LoadValue,              //is it needed?
+        Print,
+        Return,
+        Trim,
+    };
+
+    Action(Type type, const Storage *s1 = nullptr, const Storage *s2 = nullptr, const Storage *s3 = nullptr) : type(type), s1(s1), s2(s2), s3(s3) {
+        LOG("Creating action " << *this);
+    }
+
+    //COPY/MOVE
+private:
+    Type type;
+    const Storage *s1;
+    const Storage *s2;
+    const Storage *s3;
+
+    friend std::ostream &operator<<(std::ostream &, const Action &);
+};
+
+std::ostream &operator<<(std::ostream &os, const Action &action) {
+    switch (action.type) {
+        case Action::Add:
+            return os << "Add: " << action.s2 << " and " << action.s3 << " into " << action.s1;
+        case Action::Assign:
+            return os << "Assign: " << action.s2 << " into " << action.s1;
+        case Action::LifetimeStart:
+            return os << "LifetimeStart: " << action.s1;
+        case Action::LifetimeEnd:
+            return os << "LifetimeEnd: " << action.s1;
+        case Action::LoadValue:
+            return os << "LoadValue: " << action.s1;
+        case Action::Print:
+            return os << "Print: " << action.s1;
+        case Action::Return:
+            return os << "Return";
+        case Action::Trim:
+            return os << "Trim: " << action.s1;
+    }
+    QORE_UNREACHABLE("Invalid action");
+}
+
+class Function {
+
+public:
+    void dump() const {
+        LOG_FUNCTION();
+        for (const Action &a : actions) {
+            LOG(a);
+        }
+    }
+
+    //COPY/MOVE
+private:
+    std::vector<std::unique_ptr<Storage>> objects;
+    std::vector<Action> actions;
+
+    friend class FunctionBuilder;
+};
+
 /**
  * \private
  */
 class FunctionBuilder {
 
 public:
-    void finalize() {
+    FunctionBuilder() : f(new Function()) {
+    }
+
+    std::unique_ptr<Function> build() {
         scope.clear();
-        LOG("End of function");
+        f->actions.emplace_back(Action::Return);
+        return std::move(f);
     }
 
     LValue createLocalVariable(const std::string &name) {
@@ -213,22 +293,22 @@ public:
 
     Value loadConstant(const std::string &value) {
         Value c(createObject(new Constant(value)));
-        LOG("Load " << c);
+        f->actions.emplace_back(Action::LoadValue, c);
         return c;
     }
 
     Value load(LValue &&lvalue) {
-        LOG("Load value of " << lvalue.ptr);
+        f->actions.emplace_back(Action::LoadValue, lvalue);
         return Value(lvalue.ptr);
     }
 
     Value assign(LValue &&l, Value &&r) {
-        LOG("Assign " << r << " into " << l);
+        f->actions.emplace_back(Action::Assign, l, r);
         return load(std::move(l));
     }
 
     Value trim(LValue &&l) {
-        LOG("Trim " << l);
+        f->actions.emplace_back(Action::Trim, l);
         return load(std::move(l));
     }
 
@@ -236,25 +316,25 @@ public:
         if (!dest) {
             dest = createTemporary();
         }
-        LOG("Add " << l << " and " << r << " into " << dest);
+        f->actions.emplace_back(Action::Add, dest, l, r);
         return load(std::move(dest));
     }
 
     void print(Value &&v) {
-        LOG("Print " << v);
+        f->actions.emplace_back(Action::Print, v);
     }
 
     void lifetimeStart(const Storage *s) {
-        LOG("Lifetime start: " << s);
+        f->actions.emplace_back(Action::LifetimeStart, s);
     }
 
     void lifetimeEnd(const Storage *s) {
-        LOG("Lifetime end: " << s);
+        f->actions.emplace_back(Action::LifetimeEnd, s);
     }
 
 private:
     Storage::Ref createObject(Storage *s) {
-        objects.emplace_back(s);
+        f->objects.emplace_back(s);
         lifetimeStart(s);
         return std::shared_ptr<Storage>(s, [this](Storage *s){lifetimeEnd(s);});
     }
@@ -264,7 +344,7 @@ private:
     }
 
 private:
-    std::vector<std::unique_ptr<Storage>> objects;
+    std::unique_ptr<Function> f;
     std::map<std::string, LValue> scope;
     int tempCount{0};
 };
@@ -412,10 +492,10 @@ inline void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LVa
 /**
  * \private
  */
-class AnalysisVisitor : private ast::StatementVisitor, public ast::ProgramVisitor {
+class StatementAnalyzer : public ast::StatementVisitor {
 
 public:
-    AnalysisVisitor() {
+    StatementAnalyzer(FunctionBuilder &builder) : builder(builder) {
     }
 
     void visit(const ast::EmptyStatement *node) override {
@@ -432,17 +512,19 @@ public:
         builder.print(evalValue(builder, node->expression));
     }
 
-    void visit(const ast::Program *node) override {
-        LOG_FUNCTION();
-        for (const auto &stmt : node->body) {
-            stmt->accept(*this);
-        }
-        builder.finalize();
-    }
-
 private:
-    FunctionBuilder builder;
+    FunctionBuilder &builder;
 };
+
+std::unique_ptr<Function> analyze(const ast::Program *node) {
+    FunctionBuilder builder;
+    StatementAnalyzer analyzer(builder);
+
+    for (const auto &stmt : node->body) {
+        stmt->accept(analyzer);
+    }
+    return builder.build();
+}
 
 Constant::Constant(std::string value) : value(std::move(value)) {
     LOG("Create " << this);
