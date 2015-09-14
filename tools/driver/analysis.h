@@ -8,6 +8,8 @@
 
 namespace qore {
 
+class FunctionBuilder;
+
 /**
  * \private
  */
@@ -36,12 +38,19 @@ std::ostream &operator<<(std::ostream &os, const std::shared_ptr<Printable> &p) 
 
 /**
  * \private
+ * \todo better name
  */
 class Storage : public Printable {
 
 public:
     using Ref = std::shared_ptr<Storage>;
 
+protected:
+    Storage(FunctionBuilder &builder) : builder(builder) {
+    }
+
+protected:
+    FunctionBuilder &builder;
 };
 
 /**
@@ -59,13 +68,8 @@ class Constant : public Storage {
 public:
     using Ref = std::shared_ptr<Constant>;
 
-    Constant(std::string value) : value(std::move(value)) {
-        LOG("Create " << this);
-    }
-
-    ~Constant() {
-        LOG("Destroy " << this);
-    }
+    Constant(FunctionBuilder &builder, std::string value);
+    ~Constant();
 
     std::ostream &toStream(std::ostream &os) const override {
         return os << "constant '" << value << "'";
@@ -100,13 +104,8 @@ class LocalVariable : public Storage {
 public:
     using Ref = std::shared_ptr<LocalVariable>;
 
-    LocalVariable(std::string name) : name(std::move(name)) {
-        LOG("Create " << this);
-    }
-
-    ~LocalVariable() {
-        LOG("Destroy " << this);
-    }
+    LocalVariable(FunctionBuilder &builder, std::string name);
+    ~LocalVariable();
 
     std::ostream &toStream(std::ostream &os) const override {
         return os << "local variable " << name;
@@ -137,13 +136,8 @@ class TemporaryVariable : public Storage {
 public:
     using Ref = std::shared_ptr<TemporaryVariable>;
 
-    TemporaryVariable(int id) : id(id) {
-        LOG("Create " << this);
-    }
-
-    ~TemporaryVariable() {
-        LOG("Destroy " << this);
-    }
+    TemporaryVariable(FunctionBuilder &builder, int id);
+    ~TemporaryVariable();
 
     std::ostream &toStream(std::ostream &os) const override {
         return os << "temporary #" << id;
@@ -217,7 +211,7 @@ public:
     }
 
 private:
-    LValue(Storage *t) : ptr(t) {
+    LValue(Storage::Ref t) : ptr(t) {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const LValue &lvalue) {
@@ -238,20 +232,20 @@ class FunctionBuilder {
 public:
     void finalize() {
         scope.clear();
+        LOG("End of function");
     }
 
     LValue createLocalVariable(const std::string &name) {
         //TODO exception safety, duplicates etc.
-        LValue var(new LocalVariable(name));
+        LValue var(std::make_shared<LocalVariable>(*this, name));
         scope[name] = var;
-        LOG("Declare and init " << var);
         return var;
     }
 
     LValue resolveLocalVariable(const std::string &name) {
         auto &x = scope[name];
         if (!x) {
-            std::cout << "ERROR: undeclared\n";
+            LOG("ERROR: undeclared");
             return createLocalVariable(name);
         } else {
             return x;
@@ -259,9 +253,9 @@ public:
     }
 
     Value loadConstant(const std::string &value) {
-        Constant::Ref ref = createConstant(value);
-        LOG("Load value of " << ref);
-        return Value(ref);
+        Value c(std::make_shared<Constant>(*this, value));
+        LOG("Load " << c);
+        return c;
     }
 
     Value load(LValue &&lvalue) {
@@ -291,29 +285,20 @@ public:
         LOG("Print " << v);
     }
 
-private:
-    Constant::Ref createConstant(const std::string &value) {
-        for (const auto &c : constants) {
-            if (c->getValue() == value) {
-                return c;
-            }
-        }
-        constants.emplace_back(new Constant(value));
-        return constants.back();
+    void lifeTimeStart(const Storage *s) {
+        LOG("Lifetime start: " << s);
     }
 
-    //TODO: temps reuse stack space -> but this will be needed for locals as well, consider:
-    //          if (...) { int a; ... } else { double b; ... }
-    // In fact - what is the difference between a local variable an a temp? Temps just go out of scope immediately.
-    //use llvm.lifetime.start ?
+    void lifeTimeEnd(const Storage *s) {
+        LOG("Lifetime end: " << s);
+    }
+
+private:
     LValue createTemporary() {
-        LValue temp(new TemporaryVariable(tempCount++));
-        LOG("(Declare and) init " << temp);
-        return temp;
+        return LValue(std::make_shared<TemporaryVariable>(*this, tempCount++));
     }
 
 private:
-    std::vector<Constant::Ref> constants;
     std::map<std::string, LValue> scope;
     int tempCount{0};
 };
@@ -492,6 +477,30 @@ public:
 private:
     FunctionBuilder builder;
 };
+
+Constant::Constant(FunctionBuilder &builder, std::string value) : Storage(builder), value(std::move(value)) {
+    builder.lifeTimeStart(this);
+}
+
+Constant::~Constant() {
+    builder.lifeTimeEnd(this);
+}
+
+LocalVariable::LocalVariable(FunctionBuilder &builder, std::string name) : Storage(builder), name(std::move(name)) {
+    builder.lifeTimeStart(this);
+}
+
+LocalVariable::~LocalVariable() {
+    builder.lifeTimeEnd(this);
+}
+
+TemporaryVariable::TemporaryVariable(FunctionBuilder &builder, int id) : Storage(builder), id(id) {
+    builder.lifeTimeStart(this);
+}
+
+TemporaryVariable::~TemporaryVariable() {
+    builder.lifeTimeEnd(this);
+}
 
 } // namespace qore
 
