@@ -47,12 +47,12 @@ class ExpressionStatement;
 class Program;
 
 /**
- * \brief Interface for implementations of the visitor pattern for the AST.
+ * \brief Interface for expression visitors.
  */
-class Visitor {
+class ExpressionVisitor {
 
 public:
-    virtual ~Visitor() {}
+    virtual ~ExpressionVisitor() {}
 
     /**
      * \brief Called by an IntegerLiteral AST node.
@@ -96,6 +96,24 @@ public:
      */
     virtual void visit(const Identifier *node) = 0;
 
+protected:
+    ExpressionVisitor() = default;
+
+private:
+    ExpressionVisitor(const ExpressionVisitor &) = delete;
+    ExpressionVisitor(ExpressionVisitor &&) = delete;
+    ExpressionVisitor &operator=(const ExpressionVisitor &) = delete;
+    ExpressionVisitor &operator=(ExpressionVisitor &&) = delete;
+};
+
+/**
+ * \brief Interface for statement visitors.
+ */
+class StatementVisitor {
+
+public:
+    virtual ~StatementVisitor() {}
+
     /**
      * \brief Called by an EmptyStatement AST node.
      * \param node the node being visited
@@ -114,6 +132,24 @@ public:
      */
     virtual void visit(const ExpressionStatement *node) = 0;
 
+protected:
+    StatementVisitor() = default;
+
+private:
+    StatementVisitor(const StatementVisitor &) = delete;
+    StatementVisitor(StatementVisitor &&) = delete;
+    StatementVisitor &operator=(const StatementVisitor &) = delete;
+    StatementVisitor &operator=(StatementVisitor &&) = delete;
+};
+
+/**
+ * \brief Interface for program visitors.
+ */
+class ProgramVisitor {
+
+public:
+    virtual ~ProgramVisitor() {}
+
     /**
      * \brief Called by a Program AST node.
      * \param node the node being visited
@@ -121,13 +157,13 @@ public:
     virtual void visit(const Program *node) = 0;
 
 protected:
-    Visitor() = default;
+    ProgramVisitor() = default;
 
 private:
-    Visitor(const Visitor &) = delete;
-    Visitor(Visitor &&) = delete;
-    Visitor &operator=(const Visitor &) = delete;
-    Visitor &operator=(Visitor &&) = delete;
+    ProgramVisitor(const ProgramVisitor &) = delete;
+    ProgramVisitor(ProgramVisitor &&) = delete;
+    ProgramVisitor &operator=(const ProgramVisitor &) = delete;
+    ProgramVisitor &operator=(ProgramVisitor &&) = delete;
 };
 
 } // namespace ast

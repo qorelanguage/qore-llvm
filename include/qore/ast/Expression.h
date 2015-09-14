@@ -48,6 +48,12 @@ public:
      * \brief Pointer type.
      */
     using Ptr = std::unique_ptr<Expression>;
+
+    /**
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
+     * \param visitor the visitor to call
+     */
+    virtual void accept(ExpressionVisitor &visitor) const = 0;
 };
 
 /**
@@ -75,7 +81,7 @@ public:
         return Ptr(new IntegerLiteral(value, range));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(ExpressionVisitor &v) const override {
         v.visit(this);
     }
 
@@ -116,7 +122,7 @@ public:
         return Ptr(new StringLiteral(value, range));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(ExpressionVisitor &v) const override {
         v.visit(this);
     }
 
@@ -160,7 +166,7 @@ public:
         return Ptr(new BinaryExpression(std::move(left), operatorRange, std::move(right)));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(ExpressionVisitor &v) const override {
         v.visit(this);
     }
 
@@ -200,7 +206,7 @@ public:
         return Ptr(new UnaryExpression(operatorRange, std::move(operand)));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(ExpressionVisitor &v) const override {
         v.visit(this);
     }
 
@@ -242,7 +248,7 @@ public:
         return Ptr(new Assignment(std::move(left), operatorRange, std::move(right)));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(ExpressionVisitor &v) const override {
         v.visit(this);
     }
 
@@ -281,7 +287,7 @@ public:
         return Ptr(new VarDecl(range, std::move(name)));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(ExpressionVisitor &v) const override {
         v.visit(this);
     }
 
@@ -323,7 +329,7 @@ public:
         return Ptr(new Identifier(range, std::move(name)));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(ExpressionVisitor &v) const override {
         v.visit(this);
     }
 

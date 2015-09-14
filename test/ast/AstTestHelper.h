@@ -61,14 +61,14 @@ D *ast_cast(const std::unique_ptr<B> &bPtr, const char *file, int line, const ch
 namespace qore {
 namespace ast {
 
-template<typename Base>
+template<typename Base, typename VisitorType>
 class NodeAdapter : public Base {
 
 public:
     NodeAdapter(Base &node) : node(node) {
     }
 
-    void accept(Visitor &visitor) const override {
+    void accept(VisitorType &visitor) const override {
         node.accept(visitor);
     }
 
@@ -82,25 +82,25 @@ private:
 
 class MockExpression : public Expression {
 public:
-    MOCK_CONST_METHOD1(accept, void(Visitor &));
+    MOCK_CONST_METHOD1(accept, void(ExpressionVisitor &));
     MOCK_CONST_METHOD0(getRange, SourceRange());
 
     operator Ptr() {
-        return Ptr(new NodeAdapter<Expression>(*this));
+        return Ptr(new NodeAdapter<Expression, ExpressionVisitor>(*this));
     }
 };
 
 class MockStatement : public Statement {
 public:
-    MOCK_CONST_METHOD1(accept, void(Visitor &));
+    MOCK_CONST_METHOD1(accept, void(StatementVisitor &));
     MOCK_CONST_METHOD0(getRange, SourceRange());
 
     operator Ptr() {
-        return Ptr(new NodeAdapter<Statement>(*this));
+        return Ptr(new NodeAdapter<Statement, StatementVisitor>(*this));
     }
 };
 
-class MockVisitor : public Visitor {
+class MockExpressionVisitor : public ExpressionVisitor {
 public:
     MOCK_METHOD1(visit, void(const IntegerLiteral *));
     MOCK_METHOD1(visit, void(const StringLiteral *));
@@ -109,9 +109,17 @@ public:
     MOCK_METHOD1(visit, void(const Assignment *));
     MOCK_METHOD1(visit, void(const VarDecl *));
     MOCK_METHOD1(visit, void(const Identifier *));
+};
+
+class MockStatementVisitor : public StatementVisitor {
+public:
     MOCK_METHOD1(visit, void(const EmptyStatement *));
     MOCK_METHOD1(visit, void(const PrintStatement *));
     MOCK_METHOD1(visit, void(const ExpressionStatement *));
+};
+
+class MockProgramVisitor : public ProgramVisitor {
+public:
     MOCK_METHOD1(visit, void(const Program *));
 };
 

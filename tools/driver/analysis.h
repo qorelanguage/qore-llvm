@@ -4,7 +4,7 @@
 #include <cassert>
 #include <map>
 #include <string>
-#include "qore/ast/BaseVisitor.h"
+#include "qore/ast/Visitor.h"
 
 namespace qore {
 
@@ -318,20 +318,51 @@ private:
     int tempCount{0};
 };
 
+/**
+ * \private
+ */
 LValue evalLValue(FunctionBuilder &builder, const ast::Expression::Ptr &node);
+
+/**
+ * \private
+ */
 Value evalValue(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest = LValue());
+
+/**
+ * \private
+ */
 void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest = LValue());
 
 /**
  * \private
  */
-class LValueExpressionEvaluator : public ast::BaseVisitor {
+class LValueExpressionEvaluator : public ast::ExpressionVisitor {
 
 private:
-    LValueExpressionEvaluator(FunctionBuilder &builder) : BaseVisitor("LValueExpressionEvaluator"), builder(builder) {
+    LValueExpressionEvaluator(FunctionBuilder &builder) : builder(builder) {
     }
 
 public:
+    void visit(const ast::IntegerLiteral *node) override {
+        //TODO
+    }
+
+    void visit(const ast::StringLiteral *node) override {
+        //TODO
+    }
+
+    void visit(const ast::BinaryExpression *node) override {
+        //TODO
+    }
+
+    void visit(const ast::UnaryExpression *node) override {
+        //TODO
+    }
+
+    void visit(const ast::Assignment *node) override {
+        //TODO
+    }
+
     void visit(const ast::VarDecl *node) override {
         result = builder.createLocalVariable(node->name);
     }
@@ -350,13 +381,17 @@ private:
 /**
  * \private
  */
-class ValueExpressionEvaluator : public ast::BaseVisitor {
+class ValueExpressionEvaluator : public ast::ExpressionVisitor {
 
 protected:
-    ValueExpressionEvaluator(FunctionBuilder &builder, bool needsValue, LValue dest) : BaseVisitor("ValueExpressionEvaluator"), builder(builder), needsValue(needsValue), dest(std::move(dest)) {
+    ValueExpressionEvaluator(FunctionBuilder &builder, bool needsValue, LValue dest) : builder(builder), needsValue(needsValue), dest(std::move(dest)) {
     }
 
 public:
+    void visit(const ast::IntegerLiteral *node) override {
+        //TODO
+    }
+
     void visit(const ast::StringLiteral *node) override {
         assign(builder.loadConstant(node->value));
         checkNoEffect();
@@ -426,10 +461,14 @@ inline void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LVa
 /**
  * \private
  */
-class AnalysisVisitor : public ast::BaseVisitor {
+class AnalysisVisitor : private ast::StatementVisitor, public ast::ProgramVisitor {
 
 public:
-    AnalysisVisitor() : BaseVisitor("AnalysisVisitor") {
+    AnalysisVisitor() {
+    }
+
+    void visit(const ast::EmptyStatement *node) override {
+        LOG_FUNCTION();
     }
 
     void visit(const ast::ExpressionStatement *node) override {

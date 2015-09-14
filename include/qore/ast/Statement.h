@@ -48,6 +48,12 @@ public:
      * \brief Pointer type.
      */
     using Ptr = std::unique_ptr<Statement>;
+
+    /**
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
+     * \param visitor the visitor to call
+     */
+    virtual void accept(StatementVisitor &visitor) const = 0;
 };
 
 /**
@@ -76,7 +82,7 @@ public:
         return Ptr(new EmptyStatement(range));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(StatementVisitor &v) const override {
         v.visit(this);
     }
 
@@ -117,7 +123,7 @@ public:
         return Ptr(new PrintStatement(range, std::move(expression)));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(StatementVisitor &v) const override {
         v.visit(this);
     }
 
@@ -158,7 +164,7 @@ public:
         return Ptr(new ExpressionStatement(range, std::move(expression)));
     }
 
-    void accept(Visitor &v) const override {
+    void accept(StatementVisitor &v) const override {
         v.visit(this);
     }
 

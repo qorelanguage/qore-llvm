@@ -56,12 +56,6 @@ public:
     virtual ~Node() = default;
 
     /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
-     * \param visitor the visitor to call
-     */
-    virtual void accept(Visitor &visitor) const = 0;
-
-    /**
      * \brief Returns the range of locations in the source code of this node.
      * \return the range of locations
      */

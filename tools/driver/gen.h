@@ -19,7 +19,7 @@
 /**
  * \private
  */
-class CodeGenVisitor : public qore::ast::Visitor {
+class CodeGenVisitor : public qore::ast::ExpressionVisitor, public qore::ast::StatementVisitor, public qore::ast::ProgramVisitor {
 
 public:
     CodeGenVisitor(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {

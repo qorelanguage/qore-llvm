@@ -61,8 +61,12 @@ public:
         return Ptr(new Program(std::move(body), eofRange));
     }
 
-    void accept(Visitor &v) const override {
-        v.visit(this);
+    /**
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
+     * \param visitor the visitor to call
+     */
+    virtual void accept(ProgramVisitor &visitor) const {
+        visitor.visit(this);
     }
 
     SourceRange getRange() const override {

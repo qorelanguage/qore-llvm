@@ -48,7 +48,7 @@ namespace dump {
  * \tparam F the type of the formatter, see XmlFormat, JsonFormat, YamlFormat and CompactFormat
  */
 template<typename F>
-class DumpVisitor : public Visitor {
+class DumpVisitor : public ExpressionVisitor, public StatementVisitor, public ProgramVisitor {
 
 public:
     /**

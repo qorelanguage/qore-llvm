@@ -12,7 +12,7 @@
 /**
  * \private
  */
-class InterpretVisitor : public qore::ast::Visitor {
+class InterpretVisitor : public qore::ast::ExpressionVisitor, public qore::ast::StatementVisitor, public qore::ast::ProgramVisitor {
 public:
     QoreValue *current;
     std::vector<QoreValue*> temps;

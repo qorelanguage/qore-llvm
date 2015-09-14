@@ -31,7 +31,7 @@ namespace qore {
 namespace ast {
 
 struct ExpressionTest : ::testing::Test {
-    ::testing::StrictMock<MockVisitor> mockVisitor;
+    ::testing::StrictMock<MockExpressionVisitor> mockVisitor;
     SourceRange range = SourceTestHelper::createRange(11, 22, 33);
 };
 
