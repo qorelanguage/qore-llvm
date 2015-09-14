@@ -40,7 +40,7 @@
  * \brief Conditionally overrides the qore::Loggable::writeToLog() method.
  * \param l the expression to be written to the output stream
  */
-#define WRITE_TO_LOG(l) std::ostream &toStream(std::ostream &os) const override { return os << l; }
+#define WRITE_TO_LOG(l) std::ostream &writeToLog(std::ostream &os) const override { return os << l; }
 
 #else
 
