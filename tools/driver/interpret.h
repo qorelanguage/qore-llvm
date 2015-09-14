@@ -7,12 +7,15 @@
 #include "qore/ast/Program.h"
 #include "qore/runtime/runtime.h"
 
-static inline QoreValue *V(const qore::Storage *s) {
-    return static_cast<QoreValue*>(s->tag);
-}
+struct Interpreter : public qore::FunctionProcessor {
+    Interpreter() {
+    }
 
-void doInterpret(const std::unique_ptr<qore::Function> &f) {
-    for (const auto &a : f->actions) {
+    void takeOwnership(qore::Storage *s) override {
+        objects.emplace_back(s);
+    }
+
+    void processAction(const qore::Action &a) override {
         switch (a.type) {
             case qore::Action::Add:
                 eval_add(V(a.s1), *V(a.s2), *V(a.s3));
@@ -30,8 +33,6 @@ void doInterpret(const std::unique_ptr<qore::Function> &f) {
             case qore::Action::LifetimeEnd:
                 delete V(a.s1);
                 break;
-            case qore::Action::LoadValue:
-                break;
             case qore::Action::Print:
                 print_qv(*V(a.s1));
                 break;
@@ -44,6 +45,20 @@ void doInterpret(const std::unique_ptr<qore::Function> &f) {
                 QORE_UNREACHABLE("NOT IMPLEMENTED: " << a);
         }
     }
+
+    static inline QoreValue *V(const qore::Storage *s) {
+        return static_cast<QoreValue*>(s->tag);
+    }
+
+    std::vector<std::unique_ptr<qore::Storage>> objects;
+};
+
+void doInterpret(const std::unique_ptr<qore::Function> &f) {
+    Interpreter interpreter;
+    for (const auto &a : f->actions) {
+        interpreter.processAction(a);
+    }
+    //note: does not call interpreter.takeOwnership, because those are owned by f
 }
 
 #endif /* TOOLS_DRIVER_INTERPRET_H_ */

@@ -279,8 +279,6 @@ public:
                     builder.CreateCall(fnDeref, args);
                     break;
                 }
-                case qore::Action::LoadValue:
-                    break;
                 case qore::Action::Print: {
 //                    location(s);
                     llvm::Value* args[] = {V(a.s1)};

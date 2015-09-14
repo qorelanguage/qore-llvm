@@ -9,7 +9,7 @@
 
 namespace qore {
 
-class FunctionBuilder;
+class FunctionAnalyzer;
 
 /**
  * \private
@@ -150,7 +150,7 @@ private:
         return os << "value of " << value.ptr;
     }
 
-    friend class FunctionBuilder;
+    friend class FunctionAnalyzer;
 
 private:
     Storage::Ref ptr;
@@ -190,7 +190,7 @@ private:
         return os << "l-value " << lvalue.ptr;
     }
 
-    friend class FunctionBuilder;
+    friend class FunctionAnalyzer;
 
 private:
     Storage::Ref ptr;
@@ -203,7 +203,6 @@ public:
         Assign,
         LifetimeStart,
         LifetimeEnd,
-        LoadValue,              //is it needed?
         Print,
         Return,
         Trim,
@@ -233,8 +232,6 @@ std::ostream &operator<<(std::ostream &os, const Action &action) {
             return os << "LifetimeStart: " << action.s1;
         case Action::LifetimeEnd:
             return os << "LifetimeEnd: " << action.s1;
-        case Action::LoadValue:
-            return os << "LoadValue: " << action.s1;
         case Action::Print:
             return os << "Print: " << action.s1;
         case Action::Return:
@@ -245,43 +242,29 @@ std::ostream &operator<<(std::ostream &os, const Action &action) {
     QORE_UNREACHABLE("Invalid action");
 }
 
-class FunctionVisitor {
+/**
+ * \private
+ */
+class FunctionProcessor {
 public:
-    virtual ~FunctionVisitor() {
-    }
-};
+    virtual ~FunctionProcessor() {}
 
-class Function {
-
-public:
-    void dump() const {
-        LOG_FUNCTION();
-        for (const Action &a : actions) {
-            LOG(a);
-        }
-    }
-
-    //COPY/MOVE
-//private:
-    std::vector<std::unique_ptr<Storage>> objects;
-    std::vector<Action> actions;
-
-    friend class FunctionBuilder;
+    virtual void takeOwnership(Storage *o) = 0;     //TODO handle object ownership
+    virtual void processAction(const Action &action) = 0;
 };
 
 /**
  * \private
  */
-class FunctionBuilder {
+class FunctionAnalyzer {
 
 public:
-    FunctionBuilder() : f(new Function()) {
+    FunctionAnalyzer(FunctionProcessor &processor) : processor(processor) {
     }
 
-    std::unique_ptr<Function> build() {
+    void finalize() {
         scope.clear();
-        f->actions.emplace_back(Action::Return);
-        return std::move(f);
+        processor.processAction(Action::Return);
     }
 
     LValue createLocalVariable(const std::string &name) {
@@ -303,22 +286,20 @@ public:
 
     Value loadConstant(const std::string &value) {
         Value c(createObject(new Constant(value)));
-        f->actions.emplace_back(Action::LoadValue, c);
         return c;
     }
 
     Value load(LValue &&lvalue) {
-        f->actions.emplace_back(Action::LoadValue, lvalue);
         return Value(lvalue.ptr);
     }
 
     Value assign(LValue &&l, Value &&r) {
-        f->actions.emplace_back(Action::Assign, l, r);
+        processor.processAction(Action(Action::Assign, l, r));
         return load(std::move(l));
     }
 
     Value trim(LValue &&l) {
-        f->actions.emplace_back(Action::Trim, l);
+        processor.processAction(Action(Action::Trim, l));
         return load(std::move(l));
     }
 
@@ -326,27 +307,19 @@ public:
         if (!dest) {
             dest = createTemporary();
         }
-        f->actions.emplace_back(Action::Add, dest, l, r);
+        processor.processAction(Action(Action::Add, dest, l, r));
         return load(std::move(dest));
     }
 
     void print(Value &&v) {
-        f->actions.emplace_back(Action::Print, v);
-    }
-
-    void lifetimeStart(const Storage *s) {
-        f->actions.emplace_back(Action::LifetimeStart, s);
-    }
-
-    void lifetimeEnd(const Storage *s) {
-        f->actions.emplace_back(Action::LifetimeEnd, s);
+        processor.processAction(Action(Action::Print, v));
     }
 
 private:
     Storage::Ref createObject(Storage *s) {
-        f->objects.emplace_back(s);
-        lifetimeStart(s);
-        return std::shared_ptr<Storage>(s, [this](Storage *s){lifetimeEnd(s);});
+        processor.takeOwnership(s);
+        processor.processAction(Action(Action::LifetimeStart, s));
+        return std::shared_ptr<Storage>(s, [this](Storage *s){processor.processAction(Action(Action::LifetimeEnd, s));});
     }
 
     LValue createTemporary() {
@@ -354,7 +327,7 @@ private:
     }
 
 private:
-    std::unique_ptr<Function> f;
+    FunctionProcessor &processor;
     std::map<std::string, LValue> scope;        //TODO destroy in the order opposite of creation
     int tempCount{0};
 };
@@ -362,17 +335,17 @@ private:
 /**
  * \private
  */
-LValue evalLValue(FunctionBuilder &builder, const ast::Expression::Ptr &node);
+LValue evalLValue(FunctionAnalyzer &, const ast::Expression::Ptr &);
 
 /**
  * \private
  */
-Value evalValue(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest = LValue());
+Value evalValue(FunctionAnalyzer &, const ast::Expression::Ptr &, LValue && = LValue());
 
 /**
  * \private
  */
-void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest = LValue());
+void eval(FunctionAnalyzer &, const ast::Expression::Ptr &, LValue && = LValue());
 
 /**
  * \private
@@ -380,7 +353,7 @@ void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&d
 class LValueExpressionEvaluator : public ast::ExpressionVisitor {
 
 private:
-    LValueExpressionEvaluator(FunctionBuilder &builder) : builder(builder) {
+    LValueExpressionEvaluator(FunctionAnalyzer &analyzer) : analyzer(analyzer) {
     }
 
 public:
@@ -405,18 +378,18 @@ public:
     }
 
     void visit(const ast::VarDecl *node) override {
-        result = builder.createLocalVariable(node->name);
+        result = analyzer.createLocalVariable(node->name);
     }
 
     void visit(const ast::Identifier *node) override {
-        result = builder.resolveLocalVariable(node->name);
+        result = analyzer.resolveLocalVariable(node->name);
     }
 
 private:
-    FunctionBuilder &builder;
+    FunctionAnalyzer &analyzer;
     LValue result;
 
-    friend LValue evalLValue(FunctionBuilder &builder, const ast::Expression::Ptr &node);
+    friend LValue evalLValue(FunctionAnalyzer &, const ast::Expression::Ptr &);
 };
 
 /**
@@ -425,7 +398,7 @@ private:
 class ValueExpressionEvaluator : public ast::ExpressionVisitor {
 
 protected:
-    ValueExpressionEvaluator(FunctionBuilder &builder, bool needsValue, LValue dest) : builder(builder), needsValue(needsValue), dest(std::move(dest)) {
+    ValueExpressionEvaluator(FunctionAnalyzer &analyzer, bool needsValue, LValue dest) : analyzer(analyzer), needsValue(needsValue), dest(std::move(dest)) {
     }
 
 public:
@@ -434,36 +407,36 @@ public:
     }
 
     void visit(const ast::StringLiteral *node) override {
-        assign(builder.loadConstant(node->value));
+        assign(analyzer.loadConstant(node->value));
         checkNoEffect();
     }
 
     void visit(const ast::BinaryExpression *node) override {
-        Value l = evalValue(builder, node->left);
-        result = builder.add(std::move(dest), std::move(l), evalValue(builder, node->right));
+        Value l = evalValue(analyzer, node->left);
+        result = analyzer.add(std::move(dest), std::move(l), evalValue(analyzer, node->right));
         checkNoEffect();
     }
 
     void visit(const ast::UnaryExpression *node) override {
-        assign(builder.trim(evalLValue(builder, node->operand)));
+        assign(analyzer.trim(evalLValue(analyzer, node->operand)));
     }
 
     void visit(const ast::Assignment *node) override {
-        assign(evalValue(builder, node->right, evalLValue(builder, node->left)));
+        assign(evalValue(analyzer, node->right, evalLValue(analyzer, node->left)));
     }
 
     void visit(const ast::VarDecl *node) override {
-        assign(builder.load(builder.createLocalVariable(node->name)));
+        assign(analyzer.load(analyzer.createLocalVariable(node->name)));
     }
 
     void visit(const ast::Identifier *node) override {
-        assign(builder.load(builder.resolveLocalVariable(node->name)));
+        assign(analyzer.load(analyzer.resolveLocalVariable(node->name)));
         checkNoEffect();
     }
 
 private:
     void assign(Value &&value) {
-        result = !dest ? std::move(value) : builder.assign(std::move(dest), std::move(value));
+        result = !dest ? std::move(value) : analyzer.assign(std::move(dest), std::move(value));
     }
 
     void checkNoEffect() {
@@ -473,39 +446,39 @@ private:
     }
 
 private:
-    FunctionBuilder &builder;
+    FunctionAnalyzer &analyzer;
     bool needsValue;
     LValue dest;
     Value result;
 
-    friend Value evalValue(FunctionBuilder &, const ast::Expression::Ptr &, LValue &&);
-    friend void eval(FunctionBuilder &, const ast::Expression::Ptr &, LValue &&);
+    friend Value evalValue(FunctionAnalyzer &, const ast::Expression::Ptr &, LValue &&);
+    friend void eval(FunctionAnalyzer &, const ast::Expression::Ptr &, LValue &&);
 };
 
-inline LValue evalLValue(FunctionBuilder &builder, const ast::Expression::Ptr &node) {
-    LValueExpressionEvaluator r(builder);
+inline LValue evalLValue(FunctionAnalyzer &analyzer, const ast::Expression::Ptr &node) {
+    LValueExpressionEvaluator r(analyzer);
     node->accept(r);
     return std::move(r.result);
 }
 
-inline Value evalValue(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest) {
-    ValueExpressionEvaluator r(builder, true, std::move(dest));
+inline Value evalValue(FunctionAnalyzer &analyzer, const ast::Expression::Ptr &node, LValue &&dest) {
+    ValueExpressionEvaluator r(analyzer, true, std::move(dest));
     node->accept(r);
     return std::move(r.result);
 }
 
-inline void eval(FunctionBuilder &builder, const ast::Expression::Ptr &node, LValue &&dest) {
-    ValueExpressionEvaluator r(builder, false, std::move(dest));
+inline void eval(FunctionAnalyzer &analyzer, const ast::Expression::Ptr &node, LValue &&dest) {
+    ValueExpressionEvaluator r(analyzer, false, std::move(dest));
     node->accept(r);
 }
 
 /**
  * \private
  */
-class StatementAnalyzer : public ast::StatementVisitor {
+class StatementAnalyzer : public ast::StatementVisitor, public ast::ProgramVisitor {
 
 public:
-    StatementAnalyzer(FunctionBuilder &builder) : builder(builder) {
+    StatementAnalyzer(FunctionProcessor &processor) : analyzer(processor) {
     }
 
     void visit(const ast::EmptyStatement *node) override {
@@ -514,27 +487,24 @@ public:
 
     void visit(const ast::ExpressionStatement *node) override {
         LOG_FUNCTION();
-        eval(builder, node->expression);
+        eval(analyzer, node->expression);
     }
 
     void visit(const ast::PrintStatement *node) override {
         LOG_FUNCTION();
-        builder.print(evalValue(builder, node->expression));
+        analyzer.print(evalValue(analyzer, node->expression));
+    }
+
+    void visit(const ast::Program *node) override {
+        for (const auto &stmt : node->body) {
+            stmt->accept(*this);
+        }
+        analyzer.finalize();
     }
 
 private:
-    FunctionBuilder &builder;
+    FunctionAnalyzer analyzer;
 };
-
-std::unique_ptr<Function> analyze(const ast::Program *node) {
-    FunctionBuilder builder;
-    StatementAnalyzer analyzer(builder);
-
-    for (const auto &stmt : node->body) {
-        stmt->accept(analyzer);
-    }
-    return builder.build();
-}
 
 Constant::Constant(std::string value) : value(std::move(value)) {
     LOG("Create " << this);
@@ -560,6 +530,45 @@ TemporaryVariable::TemporaryVariable(int id) : id(id) {
 TemporaryVariable::~TemporaryVariable() {
     LOG("Destroy " << this);
 }
+
+class Function {
+
+public:
+    void dump() const {
+        LOG_FUNCTION();
+        for (const Action &a : actions) {
+            LOG(a);
+        }
+    }
+
+    //COPY/MOVE
+//private:
+    std::vector<std::unique_ptr<Storage>> objects;
+    std::vector<Action> actions;
+
+    friend class CImlp;
+};
+
+struct FunctionBuilder : public FunctionProcessor {
+
+    FunctionBuilder() : f(new Function()) {
+    }
+
+    void takeOwnership(Storage *s) override {
+        f->objects.emplace_back(s);
+    }
+
+    void processAction(const Action &action) override {
+        f->actions.push_back(action);
+    }
+
+    std::unique_ptr<Function> build() {
+        return std::move(f);
+    }
+
+private:
+    std::unique_ptr<Function> f;
+};
 
 } // namespace qore
 

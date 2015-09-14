@@ -98,27 +98,25 @@ int main(int argc, char *argv[]) {
     }
 
     if (optind >= argc) {
-        std::cerr << "Interactive mode not supported" << std::endl;
-        return -1;
-//TODO fix interactive mode
-//        if (dumpAst || compileLl || compileBc || jit) {
-//            std::cerr << "Interactive mode supports -i only" << std::endl;
-//            return -1;
-//        }
-//
-//        qore::SourceBuffer sourceBuffer = sourceMgr.createFromStdin();
-//        qore::ScannerImpl scanner{diagMgr, sourceBuffer};
-//        qore::ParserImpl parser{diagMgr, scanner};
-//
-//
-//        InterpretVisitor iv;
-//        while (true) {
-//            qore::ast::Statement::Ptr stmt = parser.parseStatement();
-//            if (!stmt) {
-//                return 0;
-//            }
-//            stmt->accept(iv);
-//        }
+        if (dumpAst || compileLl || compileBc || jit) {
+            std::cerr << "Interactive mode supports -i only" << std::endl;
+            return -1;
+        }
+
+        qore::SourceBuffer sourceBuffer = sourceMgr.createFromStdin();
+        qore::ScannerImpl scanner{diagMgr, sourceBuffer};
+        qore::ParserImpl parser{diagMgr, scanner};
+
+
+        Interpreter c;
+        qore::StatementAnalyzer a(c);
+        while (true) {
+            qore::ast::Statement::Ptr stmt = parser.parseStatement();
+            if (!stmt) {
+                return 0;
+            }
+            stmt->accept(a);
+        }
     }
 
     std::string outBase = outName.length() == 0 ? argv[optind] : outName;
@@ -143,7 +141,10 @@ int main(int argc, char *argv[]) {
         root->accept(dcv);
     }
 
-    std::unique_ptr<qore::Function> qMain = qore::analyze(root.get());
+    qore::FunctionBuilder builder;
+    qore::StatementAnalyzer analyzer(builder);
+    root->accept(analyzer);
+    std::unique_ptr<qore::Function> qMain = builder.build();
     qMain->dump();
 
     if (interpret) {
