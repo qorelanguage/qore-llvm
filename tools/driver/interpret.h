@@ -7,6 +7,9 @@
 #include "qore/ast/Program.h"
 #include "qore/runtime/runtime.h"
 
+/**
+ * \private
+ */
 struct Interpreter : public qore::FunctionProcessor {
     Interpreter() {
     }

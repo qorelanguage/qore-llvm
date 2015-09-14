@@ -6,6 +6,7 @@
 #include <string>
 #include "qore/ast/Visitor.h"
 #include "qore/common/Util.h"
+#include "qore/common/Loggable.h"
 
 namespace qore {
 
@@ -13,43 +14,20 @@ class FunctionAnalyzer;
 
 /**
  * \private
- */
-class Printable {
-
-public:
-    virtual ~Printable() {
-    }
-
-    virtual std::ostream &toStream(std::ostream &os) const = 0;
-};
-
-/**
- * \private
- */
-std::ostream &operator<<(std::ostream &os, const Printable *p) {
-    return p ? (p->toStream(os) << " <" << static_cast<const void*>(p) << ">") : os << "<nullptr>";
-}
-
-/**
- * \private
  * \todo better name
  */
-class Storage : public Printable {
+class Storage : public Loggable {
 
 public:
     using Ref = std::shared_ptr<Storage>;
 
-//TODO
+    virtual ~Storage() {
+    }
+
+    //TODO
     bool isConstant{false};
     mutable void *tag;
 };
-
-/**
- * \private
- */
-std::ostream &operator<<(std::ostream &os, const Storage::Ref &s) {
-    return os << s.get() << " [" << s.use_count() << "]";
-}
 
 /**
  * \private
@@ -60,13 +38,12 @@ public:
     Constant(std::string value);
     ~Constant();
 
-    std::ostream &toStream(std::ostream &os) const override {
-        return os << "constant '" << value << "'";
-    }
-
     const std::string &getValue() const {
         return value;
     }
+
+protected:
+    WRITE_TO_LOG("constant \"" << value << "\"");
 
 private:
     Constant(const Constant &) = delete;
@@ -87,9 +64,8 @@ public:
     LocalVariable(std::string name);
     ~LocalVariable();
 
-    std::ostream &toStream(std::ostream &os) const override {
-        return os << "local variable " << name;
-    }
+protected:
+    WRITE_TO_LOG("local variable " << name);
 
 private:
     LocalVariable(const LocalVariable &) = delete;
@@ -101,6 +77,8 @@ private:
     std::string name;
 };
 
+
+
 /**
  * \private
  */
@@ -110,9 +88,8 @@ public:
     TemporaryVariable(int id);
     ~TemporaryVariable();
 
-    std::ostream &toStream(std::ostream &os) const override {
-        return os << "temporary #" << id;
-    }
+protected:
+    WRITE_TO_LOG("temporary #" << id);
 
 private:
     TemporaryVariable(const TemporaryVariable &) = delete;
@@ -196,6 +173,9 @@ private:
     Storage::Ref ptr;
 };
 
+/**
+ * \private
+ */
 class Action {
 public:
     enum Type {
@@ -222,6 +202,9 @@ public:
     friend std::ostream &operator<<(std::ostream &, const Action &);
 };
 
+/**
+ * \private
+ */
 std::ostream &operator<<(std::ostream &os, const Action &action) {
     switch (action.type) {
         case Action::Add:
@@ -531,6 +514,9 @@ TemporaryVariable::~TemporaryVariable() {
     LOG("Destroy " << this);
 }
 
+/**
+ * \private
+ */
 class Function {
 
 public:
@@ -549,6 +535,9 @@ public:
     friend class CImlp;
 };
 
+/**
+ * \private
+ */
 struct FunctionBuilder : public FunctionProcessor {
 
     FunctionBuilder() : f(new Function()) {
