@@ -38,6 +38,10 @@ class Storage : public Printable {
 
 public:
     using Ref = std::shared_ptr<Storage>;
+
+//TODO
+    bool isConstant{false};
+    mutable void *tag;
 };
 
 /**
@@ -60,7 +64,7 @@ public:
         return os << "constant '" << value << "'";
     }
 
-    const std::string &getValue() {
+    const std::string &getValue() const {
         return value;
     }
 
@@ -210,7 +214,7 @@ public:
     }
 
     //COPY/MOVE
-private:
+//private:
     Type type;
     const Storage *s1;
     const Storage *s2;
@@ -241,6 +245,12 @@ std::ostream &operator<<(std::ostream &os, const Action &action) {
     QORE_UNREACHABLE("Invalid action");
 }
 
+class FunctionVisitor {
+public:
+    virtual ~FunctionVisitor() {
+    }
+};
+
 class Function {
 
 public:
@@ -252,7 +262,7 @@ public:
     }
 
     //COPY/MOVE
-private:
+//private:
     std::vector<std::unique_ptr<Storage>> objects;
     std::vector<Action> actions;
 
@@ -345,7 +355,7 @@ private:
 
 private:
     std::unique_ptr<Function> f;
-    std::map<std::string, LValue> scope;
+    std::map<std::string, LValue> scope;        //TODO destroy in the order opposite of creation
     int tempCount{0};
 };
 
@@ -528,6 +538,7 @@ std::unique_ptr<Function> analyze(const ast::Program *node) {
 
 Constant::Constant(std::string value) : value(std::move(value)) {
     LOG("Create " << this);
+    isConstant = true;
 }
 
 Constant::~Constant() {

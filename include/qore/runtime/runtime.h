@@ -21,11 +21,6 @@ struct QoreValue {
         int64_t intValue;
         QoreString *strValue;
     };
-
-    QoreValue() noexcept : tag(Tag::Nothing), intValue(0) {
-    }
-
-    ~QoreValue() noexcept;
 };
 
 //TODO shouldn't QoreValue be opaque?
@@ -36,9 +31,11 @@ typedef const QoreValue &Value;
 extern "C" void print_qv(Value qv) noexcept;
 extern "C" void make_int(LValue qv, int64_t value) noexcept;
 extern "C" void make_str(LValue qv, const char *value) noexcept;
+extern "C" void make_nothing(LValue qv) noexcept;
 extern "C" void eval_add(LValue qv, Value l, Value r) noexcept;
 extern "C" void eval_trim(LValue qv) noexcept;
 extern "C" void eval_assign(LValue l, Value r) noexcept;
+extern "C" void deref(LValue qv) noexcept;
 
 std::ostream &operator<<(std::ostream &os, const QoreValue &qv);
 std::ostream &operator<<(std::ostream &os, const QoreValue *qv);

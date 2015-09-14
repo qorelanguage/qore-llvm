@@ -40,7 +40,7 @@ private:
     QoreString &operator=(QoreString &&) = delete;
 };
 
-static void deref(LValue qv) {
+__attribute__((visibility("default"))) void deref(LValue qv) noexcept {
     LOG("deref qv = " << qv);
     if (qv->tag == Tag::Str) {
         qv->strValue->deref();
@@ -54,10 +54,6 @@ static void ref(LValue qv) {
     if (qv->tag == Tag::Str) {
         ++qv->strValue->refCount;
     }
-}
-
-QoreValue::~QoreValue() noexcept {
-    deref(this);
 }
 
 __attribute__((visibility("default"))) void print_qv(Value qv) noexcept {
@@ -87,6 +83,11 @@ __attribute__((visibility("default"))) void make_str(LValue qv, const char *valu
     qv->tag = Tag::Str;
     qv->strValue = new QoreString(value);
     LOG("make_str qv = " << qv);
+}
+
+__attribute__((visibility("default"))) void make_nothing(LValue qv) noexcept {
+    qv->tag = Tag::Nothing;
+    LOG("make_nothing qv = " << qv);
 }
 
 static inline void append(std::string &dest, Value v) {

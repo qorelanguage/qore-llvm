@@ -1,3 +1,5 @@
+#define QORE_LOG_COMPONENT "DRIVER"
+
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -5,8 +7,8 @@
 #include "qore/parser/ParserImpl.h"
 #include "qore/runtime/runtime.h"
 #include "qore/scanner/ScannerImpl.h"
-#include "interpret.h"
 #include "analysis.h"
+#include "interpret.h"
 #include "qore/ast/dump/DumpVisitor.h"
 #include "qore/ast/dump/XmlFormat.h"
 #include "qore/ast/dump/JsonFormat.h"
@@ -96,23 +98,27 @@ int main(int argc, char *argv[]) {
     }
 
     if (optind >= argc) {
-        if (dumpAst || compileLl || compileBc || jit) {
-            std::cerr << "Interactive mode supports -i only" << std::endl;
-            return -1;
-        }
-
-        qore::SourceBuffer sourceBuffer = sourceMgr.createFromStdin();
-        qore::ScannerImpl scanner{diagMgr, sourceBuffer};
-        qore::ParserImpl parser{diagMgr, scanner};
-
-        InterpretVisitor iv;
-        while (true) {
-            qore::ast::Statement::Ptr stmt = parser.parseStatement();
-            if (!stmt) {
-                return 0;
-            }
-            stmt->accept(iv);
-        }
+        std::cerr << "Interactive mode not supported" << std::endl;
+        return -1;
+//TODO fix interactive mode
+//        if (dumpAst || compileLl || compileBc || jit) {
+//            std::cerr << "Interactive mode supports -i only" << std::endl;
+//            return -1;
+//        }
+//
+//        qore::SourceBuffer sourceBuffer = sourceMgr.createFromStdin();
+//        qore::ScannerImpl scanner{diagMgr, sourceBuffer};
+//        qore::ParserImpl parser{diagMgr, scanner};
+//
+//
+//        InterpretVisitor iv;
+//        while (true) {
+//            qore::ast::Statement::Ptr stmt = parser.parseStatement();
+//            if (!stmt) {
+//                return 0;
+//            }
+//            stmt->accept(iv);
+//        }
     }
 
     std::string outBase = outName.length() == 0 ? argv[optind] : outName;
@@ -137,18 +143,16 @@ int main(int argc, char *argv[]) {
         root->accept(dcv);
     }
 
-    qore::analyze(root.get())->dump();
+    std::unique_ptr<qore::Function> qMain = qore::analyze(root.get());
+    qMain->dump();
 
     if (interpret) {
-        InterpretVisitor iv;
-        root->accept(iv);
+        doInterpret(qMain);
     }
 
 #ifdef QORE_USE_LLVM
     if (compileLl || compileBc || jit) {
-        CodeGenVisitor cgv(sourceMgr);
-        root->accept(cgv);
-        std::unique_ptr<llvm::Module> module(cgv.getModule());
+        std::unique_ptr<llvm::Module> module = doCodeGen(sourceMgr, qMain);
 
         if (compileLl) {
             std::error_code ec;
