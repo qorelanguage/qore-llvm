@@ -94,7 +94,7 @@ private:
  * \param obj the object to write
  * \return the output stream
  */
-std::ostream &operator<<(std::ostream &os, const Loggable &obj) {
+inline std::ostream &operator<<(std::ostream &os, const Loggable &obj) {
     return obj.writeToLog(os) << " <" << static_cast<const void*>(&obj) << ">";
 }
 
@@ -104,7 +104,7 @@ std::ostream &operator<<(std::ostream &os, const Loggable &obj) {
  * \param ptr a pointer to the object to write (can be `nullptr`)
  * \return the output stream
  */
-std::ostream &operator<<(std::ostream &os, const Loggable *ptr) {
+inline std::ostream &operator<<(std::ostream &os, const Loggable *ptr) {
     return ptr ? os << *ptr : os << "<nullptr>";
 }
 #endif

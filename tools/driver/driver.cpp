@@ -7,13 +7,17 @@
 #include "qore/parser/ParserImpl.h"
 #include "qore/runtime/runtime.h"
 #include "qore/scanner/ScannerImpl.h"
-#include "analysis.h"
-#include "interpret.h"
 #include "qore/ast/dump/DumpVisitor.h"
 #include "qore/ast/dump/XmlFormat.h"
 #include "qore/ast/dump/JsonFormat.h"
 #include "qore/ast/dump/YamlFormat.h"
 #include "qore/ast/dump/CompactFormat.h"
+
+#include "qore/analyzer/ExpressionAnalyzer.h"
+#include "qore/analyzer/StatementAnalyzer.h"
+#include "qore/analyzer/ScopeImpl.h"
+
+#include "interpret.h"
 
 #ifdef QORE_USE_LLVM
 #include "gen.h"
@@ -107,9 +111,10 @@ int main(int argc, char *argv[]) {
         qore::ScannerImpl scanner{diagMgr, sourceBuffer};
         qore::ParserImpl parser{diagMgr, scanner};
 
-
-        Interpreter c;
-        qore::StatementAnalyzer a(c);
+        Interpreter backend;
+        qore::analyzer::ScopeImpl<Interpreter> scope(backend);
+        qore::analyzer::ExpressionAnalyzer<Interpreter> exprAnalyzer(backend, scope);
+        qore::analyzer::StatementAnalyzer<Interpreter> a(backend, exprAnalyzer);
         while (true) {
             qore::ast::Statement::Ptr stmt = parser.parseStatement();
             if (!stmt) {
@@ -141,10 +146,14 @@ int main(int argc, char *argv[]) {
         root->accept(dcv);
     }
 
-    qore::FunctionBuilder builder;
-    qore::StatementAnalyzer analyzer(builder);
-    root->accept(analyzer);
-    std::unique_ptr<qore::Function> qMain = builder.build();
+    qore::il::Builder builder;
+    qore::analyzer::ScopeImpl<qore::il::Builder> scope(builder);
+    qore::analyzer::ExpressionAnalyzer<qore::il::Builder> exprAnalyzer(builder, scope);
+    qore::analyzer::StatementAnalyzer<qore::il::Builder> stmtAnalyzer(builder, exprAnalyzer);
+    root->accept(stmtAnalyzer);
+    scope.close();
+    builder.finalize();
+    std::unique_ptr<qore::il::Function> qMain = builder.build();
     qMain->dump();
 
     if (interpret) {

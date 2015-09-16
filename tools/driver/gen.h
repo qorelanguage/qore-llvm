@@ -66,7 +66,7 @@ public:
         location(node->getRange());
     }
 
-    void visit(const std::unique_ptr<qore::Function> &fff) {
+    void visit(const std::unique_ptr<qore::il::Function> &fff) {
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
         llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
@@ -223,35 +223,38 @@ public:
         };
         dib.replaceArrays(ditQoreValue, dib.getOrCreateArray(structElements));
 
+        for (auto &c : fff->constants) {
+            llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, c->getValue(), true);
+            llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v, "strLiteralValue");
+            gv->setUnnamedAddr(true);
+
+//                        location(e);
+            llvm::Value *value = builder.CreateAlloca(ltQoreValue, nullptr, "strLiteral");
+            llvm::Value* args[] = {value, builder.CreateConstGEP2_32(nullptr, gv, 0, 0)};
+            builder.CreateCall(fnMakeStr, args);
+            c->tag = value;
+        }
+
+
+
         //Compile code
         for (const auto &a : fff->actions) {
             switch (a.type) {
-                case qore::Action::Add: {
+                case qore::il::Action::Add: {
 //                    location(e->operatorRange);
                     llvm::Value* args[] = {V(a.s1), V(a.s2), V(a.s3)};
                     builder.CreateCall(fnEvalAdd, args);
                     break;
                 }
-                case qore::Action::Assign: {
+                case qore::il::Action::Assign: {
 //                    location(e->operatorRange);
                     llvm::Value* args[] = {V(a.s1), V(a.s2)};
                     builder.CreateCall(fnEvalAssign, args);
                     break;
                 }
-                case qore::Action::LifetimeStart: {
-                    if (a.s1->isConstant) {
-                        llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, static_cast<const qore::Constant*>(a.s1)->getValue(), true);
-                        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v, "strLiteralValue");
-                        gv->setUnnamedAddr(true);
-
-//                        location(e);
-                        llvm::Value *value = builder.CreateAlloca(ltQoreValue, nullptr, "strLiteral");
-                        llvm::Value* args[] = {value, builder.CreateConstGEP2_32(nullptr, gv, 0, 0)};
-                        builder.CreateCall(fnMakeStr, args);
-                        a.s1->tag = value;
-                    } else {
-//                        location(e);
-                        auto *v = builder.CreateAlloca(ltQoreValue, nullptr, "var");
+                case qore::il::Action::LifetimeStart: {
+//                    location(e);
+                    auto *v = builder.CreateAlloca(ltQoreValue, nullptr, "var");
 
 //                        llvm::DIExpression *diExpr = dib.createExpression();
 //                        llvm::DILocalVariable *diLocVar = dib.createLocalVariable(
@@ -268,28 +271,33 @@ public:
 //                                builder.GetInsertBlock());
 
 
-                        llvm::Value* args[] = {v};
-                        builder.CreateCall(fnMakeNothing, args);
-                        a.s1->tag = v;
-                    }
+                    llvm::Value* args[] = {v};
+                    builder.CreateCall(fnMakeNothing, args);
+                    a.s1->tag = v;
                     break;
                 }
-                case qore::Action::LifetimeEnd: {
+                case qore::il::Action::LifetimeEnd: {
                     llvm::Value* args[] = {V(a.s1)};
                     builder.CreateCall(fnDeref, args);
                     break;
                 }
-                case qore::Action::Print: {
+                case qore::il::Action::Print: {
 //                    location(s);
                     llvm::Value* args[] = {V(a.s1)};
                     builder.CreateCall(fnPrintQv, args);
                     break;
                 }
-                case qore::Action::Return:
+                case qore::il::Action::Return:
                     //builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, p->getRange().end.line, p->getRange().end.column, scope));
+
+                    for (auto &c : fff->constants) {
+                        llvm::Value* args[] = {V(c.get())};
+                        builder.CreateCall(fnDeref, args);
+                    }
+
                     builder.CreateRetVoid();
                     break;
-                case qore::Action::Trim: {
+                case qore::il::Action::Trim: {
 //                    location(e->operatorRange);
                     llvm::Value* args[] = {V(a.s1)};
                     builder.CreateCall(fnEvalTrim, args);
@@ -339,7 +347,7 @@ private:
     }
 
 private:
-    static inline llvm::Value *V(const qore::Storage *s) {
+    static inline llvm::Value *V(const qore::il::AValue *s) {
         return static_cast<llvm::Value*>(s->tag);
     }
 
@@ -371,7 +379,7 @@ private:
     llvm::DICompositeType *ditQoreValue;
 };
 
-std::unique_ptr<llvm::Module> doCodeGen(qore::SourceManager &sourceMgr, const std::unique_ptr<qore::Function> &f) {
+std::unique_ptr<llvm::Module> doCodeGen(qore::SourceManager &sourceMgr, const std::unique_ptr<qore::il::Function> &f) {
     CodeGen cg(sourceMgr);
     cg.visit(f);
     return std::unique_ptr<llvm::Module>(cg.getModule());

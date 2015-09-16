@@ -6,62 +6,99 @@
 #include <string>
 #include "qore/ast/Program.h"
 #include "qore/runtime/runtime.h"
+#include "qore/common/Util.h"
 
 /**
  * \private
  */
-struct Interpreter : public qore::FunctionProcessor {
+struct Interpreter {
+    using Value = std::shared_ptr<QoreValue>;
+    using LValue = std::shared_ptr<QoreValue>;
+
     Interpreter() {
     }
 
-    void takeOwnership(qore::Storage *s) override {
-        objects.emplace_back(s);
+    Value createStringConstant(const std::string &value, const qore::SourceRange &range) {
+        QoreValue *qv = new QoreValue();
+        make_str(qv, value.c_str());
+        return createObject(qv);
+    }
+    LValue createLocalVariable(const std::string &name, const qore::SourceRange &range) {
+        return createObject(new QoreValue());
+    }
+    LValue createTemporaryVariable(const qore::SourceRange &range) {
+        return createObject(new QoreValue());
+    }
+    void add(LValue dest, Value left, Value right) {
+        eval_add(dest.get(), *left, *right);
+    }
+    void assign(LValue left, Value right) {
+        eval_assign(left.get(), *right);
+    }
+    void trim(LValue lValue) {
+        eval_trim(lValue.get());
+    }
+    void print(Value value) {
+        print_qv(*value);
+    }
+    void finalize() {
     }
 
-    void processAction(const qore::Action &a) override {
+private:
+    std::shared_ptr<QoreValue> createObject(QoreValue *qv) {
+        return std::shared_ptr<QoreValue>(qv);
+    }
+};
+
+inline QoreValue *V(const qore::il::AValue *v) {
+    return static_cast<QoreValue*>(v->tag);
+}
+
+void doInterpret(const std::unique_ptr<qore::il::Function> &f) {
+    std::vector<std::unique_ptr<QoreValue>> objects;
+
+    for (const auto &c : f->constants) {
+        QoreValue *qv = new QoreValue();
+        make_str(qv, c->getValue().c_str());
+        objects.emplace_back(qv);
+        c->tag = qv;
+    }
+    for (const auto &a : f->actions) {
         switch (a.type) {
-            case qore::Action::Add:
+            case qore::il::Action::Type::Add: {
                 eval_add(V(a.s1), *V(a.s2), *V(a.s3));
                 break;
-            case qore::Action::Assign:
+            }
+            case qore::il::Action::Type::Assign: {
                 eval_assign(V(a.s1), *V(a.s2));
                 break;
-            case qore::Action::LifetimeStart:
-                a.s1->tag = new QoreValue();
-                make_nothing(V(a.s1));
-                if (a.s1->isConstant) {
-                    make_str(V(a.s1), static_cast<const qore::Constant*>(a.s1)->getValue().c_str());
-                }
+            }
+            case qore::il::Action::Type::LifetimeStart: {
+                QoreValue *qv = new QoreValue();
+                make_nothing(qv);
+//                objects.emplace_back(qv);
+                a.s1->tag = qv;
                 break;
-            case qore::Action::LifetimeEnd:
+            }
+            case qore::il::Action::Type::LifetimeEnd: {
                 delete V(a.s1);
                 break;
-            case qore::Action::Print:
+            }
+            case qore::il::Action::Type::Print: {
                 print_qv(*V(a.s1));
                 break;
-            case qore::Action::Return:
+            }
+            case qore::il::Action::Type::Return: {
                 break;
-            case qore::Action::Trim:
+            }
+            case qore::il::Action::Type::Trim: {
                 eval_trim(V(a.s1));
                 break;
+            }
             default:
                 QORE_UNREACHABLE("NOT IMPLEMENTED: " << a);
         }
     }
-
-    static inline QoreValue *V(const qore::Storage *s) {
-        return static_cast<QoreValue*>(s->tag);
-    }
-
-    std::vector<std::unique_ptr<qore::Storage>> objects;
-};
-
-void doInterpret(const std::unique_ptr<qore::Function> &f) {
-    Interpreter interpreter;
-    for (const auto &a : f->actions) {
-        interpreter.processAction(a);
-    }
-    //note: does not call interpreter.takeOwnership, because those are owned by f
 }
 
 #endif /* TOOLS_DRIVER_INTERPRET_H_ */
