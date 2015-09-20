@@ -8,97 +8,70 @@
 #include "qore/runtime/runtime.h"
 #include "qore/common/Util.h"
 
-/**
- * \private
- */
-struct Interpreter {
-    using Value = std::shared_ptr<QoreValue>;
-    using LValue = std::shared_ptr<QoreValue>;
 
-    Interpreter() {
-    }
+namespace qore {
 
-    Value createStringConstant(const std::string &value, const qore::SourceRange &range) {
-        QoreValue *qv = new QoreValue();
-        make_str(qv, value.c_str());
-        return createObject(qv);
-    }
-    LValue createLocalVariable(const std::string &name, const qore::SourceRange &range) {
-        return createObject(new QoreValue());
-    }
-    LValue createTemporaryVariable(const qore::SourceRange &range) {
-        return createObject(new QoreValue());
-    }
-    void add(LValue dest, Value left, Value right) {
-        eval_add(dest.get(), *left, *right);
-    }
-    void assign(LValue left, Value right) {
-        eval_assign(left.get(), *right);
-    }
-    void trim(LValue lValue) {
-        eval_trim(lValue.get());
-    }
-    void print(Value value) {
-        print_qv(*value);
-    }
-    void finalize() {
+class IntBackend {
+
+public:
+    using StringLiteralData = QoreValue;
+    using LocalVariableData = QoreValue;
+    using Value = QoreValue;
+    using LValue = QoreValue *;
+
+    LocalVariableData createLocalVariable(const std::string &name) {
+        QoreValue qv;
+        qv.tag = Tag::Nothing;
+        return qv;
     }
 
-private:
-    std::shared_ptr<QoreValue> createObject(QoreValue *qv) {
-        return std::shared_ptr<QoreValue>(qv);
+    StringLiteralData createStringLiteral(const std::string &value) {
+        return make_str(value.c_str());
+    }
+
+    void destroy(QoreValue &qv) {
+        strongDeref(qv);
+        qv.tag = Tag::Nothing;
+    }
+
+    Value load(QoreValue &qv) {
+        strongRef(qv);
+        return qv;
+    }
+
+    LValue loadPtr(LocalVariableData *var) {
+        return var;
+    }
+
+    Value loadUnique(LValue lval) {
+        return load_unique(lval);
+    }
+
+    void swap(LValue v1, Value &v2) {
+        std::swap(*v1, v2);
+    }
+
+    void trim(Value &v) {
+        eval_trim(v);
+    }
+
+    Value add(const Value &l, const Value &r) {
+        return eval_add(l, r);
+    }
+
+    void print(const Value &v) {
+        print_qv(v);
+    }
+
+    void ret() {
     }
 };
 
-inline QoreValue *V(const qore::il::AValue *v) {
-    return static_cast<QoreValue*>(v->tag);
+void doInterpret(const analyzer::Script &script) {
+    IntBackend ib;
+    Runner<IntBackend> runner(script, ib);
+    runner.run();
 }
-
-void doInterpret(const std::unique_ptr<qore::il::Function> &f) {
-    std::vector<std::unique_ptr<QoreValue>> objects;
-
-    for (const auto &c : f->constants) {
-        QoreValue *qv = new QoreValue();
-        make_str(qv, c->getValue().c_str());
-        objects.emplace_back(qv);
-        c->tag = qv;
-    }
-    for (const auto &a : f->actions) {
-        switch (a.type) {
-            case qore::il::Action::Type::Add: {
-                eval_add(V(a.s1), *V(a.s2), *V(a.s3));
-                break;
-            }
-            case qore::il::Action::Type::Assign: {
-                eval_assign(V(a.s1), *V(a.s2));
-                break;
-            }
-            case qore::il::Action::Type::LifetimeStart: {
-                QoreValue *qv = new QoreValue();
-                make_nothing(qv);
-//                objects.emplace_back(qv);
-                a.s1->tag = qv;
-                break;
-            }
-            case qore::il::Action::Type::LifetimeEnd: {
-                delete V(a.s1);
-                break;
-            }
-            case qore::il::Action::Type::Print: {
-                print_qv(*V(a.s1));
-                break;
-            }
-            case qore::il::Action::Type::Return: {
-                break;
-            }
-            case qore::il::Action::Type::Trim: {
-                eval_trim(V(a.s1));
-                break;
-            }
-            default:
-                QORE_UNREACHABLE("NOT IMPLEMENTED: " << a);
-        }
-    }
 }
 
 #endif /* TOOLS_DRIVER_INTERPRET_H_ */

@@ -28,43 +28,155 @@
 /// \brief TODO File description
 ///
 //------------------------------------------------------------------------------
-
 #ifndef INCLUDE_QORE_ANALYZER_EXPR_ANALYZER_H_
 #define INCLUDE_QORE_ANALYZER_EXPR_ANALYZER_H_
 
 #include "qore/analyzer/Scope.h"
 #include "qore/ast/Expression.h"
+#include "qore/common/Util.h"       //TODO remove
+
+#include "qore/analyzer/Code.h"
 
 namespace qore {
 namespace analyzer {
 namespace expr {
 
-template<typename Backend, bool needsValue>
-class ValueEvaluator;
+#define INS(op, ...) code.add(Ins(Opcode::op, ## __VA_ARGS__))
 
-template<typename Backend>
+#define EVAL_LVALUE(node) { LValueEvaluator visitor(scope, code);  node->accept(visitor); }
+#define EVAL_VALUE(node) { ValueEvaluator<true> visitor(scope, code);  node->accept(visitor); }
+#define EVAL(node) { ValueEvaluator<false> visitor(scope, code);  node->accept(visitor); }
+
+class LValueEvaluator : public ast::ExpressionVisitor {
+
+public:
+    LValueEvaluator(Scope &scope, Code &code) : scope(scope), code(code) {
+    }
+
+    void visit(const ast::IntegerLiteral *node) override {
+        errLValueExpected(node);
+    }
+
+    void visit(const ast::StringLiteral *node) override {
+        errLValueExpected(node);
+    }
+
+    void visit(const ast::BinaryExpression *node) override {
+        errLValueExpected(node);
+    }
+
+    void visit(const ast::UnaryExpression *node) override {
+        errLValueExpected(node);
+    }
+
+    void visit(const ast::Assignment *node) override {
+        errLValueExpected(node);
+    }
+
+    void visit(const ast::VarDecl *node) override {
+        INS(LoadLocVarPtr, scope.createLocalVariable(node->name, node->getRange()));
+    }
+
+    void visit(const ast::Identifier *node) override {
+        INS(LoadLocVarPtr, scope.resolve(node->name, node->getRange()));
+    }
+
+private:
+    void errLValueExpected(const ast::Node *node) {
+        //TODO report error
+        QORE_UNREACHABLE("Not implemented");
+    }
+
+private:
+    Scope &scope;
+    Code &code;
+};
+
+template<bool needsValue>
+class ValueEvaluator : public ast::ExpressionVisitor {
+
+public:
+    ValueEvaluator(Scope &scope, Code &code) : scope(scope), code(code) {
+    }
+
+    void visit(const ast::IntegerLiteral *node) override {
+        QORE_UNREACHABLE("Push int");
+        checkNoEffect();
+    }
+
+    void visit(const ast::StringLiteral *node) override {
+        INS(PushString, scope.createStringLiteral(node->value, node->getRange()));
+        checkNoEffect();
+    }
+
+    void visit(const ast::BinaryExpression *node) override {
+        EVAL_VALUE(node->left);
+        EVAL_VALUE(node->right);
+        INS(Add);
+        checkNoEffect();
+    }
+
+    void visit(const ast::UnaryExpression *node) override {
+        EVAL_LVALUE(node->operand);
+        INS(LoadUnique);
+        INS(Trim);
+        dup();
+        INS(Swap);
+        INS(CleanupLValue);
+        INS(PopAndDeref);
+    }
+
+    void visit(const ast::Assignment *node) override {
+        EVAL_VALUE(node->right);
+        //type conversions
+        dup();
+        EVAL_LVALUE(node->left);
+        INS(Swap);
+        INS(CleanupLValue);
+        INS(PopAndDeref);
+    }
+
+    void visit(const ast::VarDecl *node) override {
+        scope.createLocalVariable(node->name, node->getRange());
+        if (needsValue) {
+            INS(PushNothing);
+        }
+    }
+
+    void visit(const ast::Identifier *node) override {
+        INS(PushLocVar, scope.resolve(node->name, node->getRange()));
+        checkNoEffect();
+    }
+
+private:
+    void dup() {
+        if (needsValue) {
+            INS(Dup);
+        }
+    }
+    void checkNoEffect() {
+        if (!needsValue) {
+            //error statement has no effect
+            //produce code that derefs result
+        }
+    }
+
+private:
+    Scope &scope;
+    Code &code;
+};
+
 class Analyzer {
 
 public:
-    using Value = typename Backend::Value;
-    using LValue = typename Backend::LValue;
+    Analyzer() = default;
 
-public:
-    Analyzer(Backend &backend, Scope<Backend> &scope) : backend(backend), scope(scope) {
+    void eval(Scope &scope, Code &code, const ast::Expression::Ptr &node) {
+        EVAL(node);
     }
 
-    LValue evalLValue(const ast::Expression::Ptr &node);
-    Value evalValue(const ast::Expression::Ptr &node, LValue dest = LValue());
-    void eval(const ast::Expression::Ptr &node, LValue dest = LValue());
-
-    void errLValueExpected(const ast::Node *node) {
-        //TODO report error
-    }
-    LValue createLocalVariable(const ast::VarDecl *node) {
-        return scope.createLocalVariable(node->name, node->getRange());
-    }
-    LValue resolve(const ast::Identifier *node) {
-        return scope.resolve(node->name, node->getRange());
+    void evalValue(Scope &scope, Code &code, const ast::Expression::Ptr &node) {
+        EVAL_VALUE(node);
     }
 
 private:
@@ -72,151 +184,12 @@ private:
     Analyzer(Analyzer &&) = delete;
     Analyzer &operator=(const Analyzer &) = delete;
     Analyzer &operator=(Analyzer &&) = delete;
-
-private:
-    Backend &backend;
-    Scope<Backend> &scope;
-
-    friend class ValueEvaluator<Backend, true>;   //TODO remove friend
-    friend class ValueEvaluator<Backend, false>;   //TODO remove friend
 };
 
-template<typename Backend>
-class LValueEvaluator : public ast::ExpressionVisitor {
-
-public:
-    using LValue = typename Backend::LValue;
-
-    LValueEvaluator(Analyzer<Backend> &analyzer) : analyzer(analyzer) {
-    }
-
-    void visit(const ast::IntegerLiteral *node) override {
-        analyzer.errLValueExpected(node);
-    }
-
-    void visit(const ast::StringLiteral *node) override {
-        analyzer.errLValueExpected(node);
-    }
-
-    void visit(const ast::BinaryExpression *node) override {
-        analyzer.errLValueExpected(node);
-    }
-
-    void visit(const ast::UnaryExpression *node) override {
-        analyzer.errLValueExpected(node);
-    }
-
-    void visit(const ast::Assignment *node) override {
-        analyzer.errLValueExpected(node);
-    }
-
-    void visit(const ast::VarDecl *node) override {
-        result = analyzer.createLocalVariable(node);
-    }
-
-    void visit(const ast::Identifier *node) override {
-        result = analyzer.resolve(node);
-    }
-
-public:
-    LValue result;
-
-private:
-    Analyzer<Backend> &analyzer;
-};
-
-template<typename Backend, bool needsValue>
-class ValueEvaluator : public ast::ExpressionVisitor {
-
-public:
-    using Value = typename Backend::Value;
-    using LValue = typename Backend::LValue;
-
-    ValueEvaluator(Analyzer<Backend> &analyzer, LValue dest) : analyzer(analyzer), dest(std::move(dest)) {
-    }
-
-    void visit(const ast::IntegerLiteral *node) override {
-        //TODO
-    }
-
-    void visit(const ast::StringLiteral *node) override {
-        assign(analyzer.backend.createStringConstant(node->value, node->getRange()));
-        checkNoEffect();
-    }
-
-    void visit(const ast::BinaryExpression *node) override {
-        Value l = analyzer.evalValue(node->left);
-        Value r = analyzer.evalValue(node->right);
-        if (!dest) {
-            dest = analyzer.backend.createTemporaryVariable(node->operatorRange);
-        }
-        analyzer.backend.add(dest, std::move(l), std::move(r));
-        result = std::move(dest);
-        checkNoEffect();
-    }
-
-    void visit(const ast::UnaryExpression *node) override {
-        Value lValue = analyzer.evalLValue(node->operand);
-        analyzer.backend.trim(lValue);
-        assign(std::move(lValue));
-    }
-
-    void visit(const ast::Assignment *node) override {
-        assign(analyzer.evalValue(node->right, analyzer.evalLValue(node->left)));
-    }
-
-    void visit(const ast::VarDecl *node) override {
-        assign(analyzer.createLocalVariable(node));
-    }
-
-    void visit(const ast::Identifier *node) override {
-        assign(analyzer.resolve(node));
-        checkNoEffect();
-    }
-
-private:
-    void assign(Value value) {
-        if (!dest) {
-            result = std::move(value);
-        } else {
-            analyzer.backend.assign(dest, std::move(value));
-            result = std::move(dest);
-        }
-    }
-
-    void checkNoEffect() {
-        if (!dest && !needsValue) {
-            //error statement has no effect
-        }
-    }
-
-public:
-    Value result;
-
-private:
-    Analyzer<Backend> &analyzer;
-    LValue dest;
-};
-
-template<typename Backend>
-typename Backend::LValue Analyzer<Backend>::evalLValue(const ast::Expression::Ptr &node) {
-    LValueEvaluator<Backend> visitor(*this);
-    node->accept(visitor);
-    return std::move(visitor.result);
-}
-
-template<typename Backend>
-typename Backend::Value Analyzer<Backend>::evalValue(const ast::Expression::Ptr &node, LValue dest) {
-    ValueEvaluator<Backend, true> visitor(*this, std::move(dest));
-    node->accept(visitor);
-    return std::move(visitor.result);
-}
-
-template<typename Backend>
-void Analyzer<Backend>::eval(const ast::Expression::Ptr &node, LValue dest) {
-    ValueEvaluator<Backend, false> visitor(*this, std::move(dest));
-    node->accept(visitor);
-}
+#undef INS
+#undef EVAL_LVALUE
+#undef EVAL_VALUE
+#undef EVAL
 
 } // namespace expr
 } // namespace analyzer

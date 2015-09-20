@@ -40,23 +40,19 @@ private:
     QoreString &operator=(QoreString &&) = delete;
 };
 
-__attribute__((visibility("default"))) void deref(LValue qv) noexcept {
-    LOG("deref qv = " << qv);
-    if (qv->tag == Tag::Str) {
-        qv->strValue->deref();
-    }
-    qv->tag = Tag::Nothing;
-    qv->intValue = 0;
-}
-
-static void ref(LValue qv) {
-    LOG("ref qv = " << qv);
-    if (qv->tag == Tag::Str) {
-        ++qv->strValue->refCount;
+__attribute__((visibility("default"))) void strongDeref(QoreValue qv) noexcept {
+    if (qv.tag == Tag::Str) {
+        qv.strValue->deref();
     }
 }
 
-__attribute__((visibility("default"))) void print_qv(Value qv) noexcept {
+__attribute__((visibility("default"))) void strongRef(QoreValue qv) noexcept {
+    if (qv.tag == Tag::Str) {
+        ++qv.strValue->refCount;
+    }
+}
+
+__attribute__((visibility("default"))) void print_qv(QoreValue qv) noexcept {
     switch (qv.tag) {
         case Tag::Nothing:
             printf("Qore Print: <Nothing>\n");
@@ -73,24 +69,14 @@ __attribute__((visibility("default"))) void print_qv(Value qv) noexcept {
     }
 }
 
-__attribute__((visibility("default"))) void make_int(LValue qv, int64_t value) noexcept {
-    qv->tag = Tag::Int;
-    qv->intValue = value;
-    LOG("make_int qv = " << qv);
+__attribute__((visibility("default"))) QoreValue make_str(const char *value) noexcept {
+    QoreValue qv;
+    qv.tag = Tag::Str;
+    qv.strValue = new QoreString(value);
+    return qv;
 }
 
-__attribute__((visibility("default"))) void make_str(LValue qv, const char *value) noexcept {
-    qv->tag = Tag::Str;
-    qv->strValue = new QoreString(value);
-    LOG("make_str qv = " << qv);
-}
-
-__attribute__((visibility("default"))) void make_nothing(LValue qv) noexcept {
-    qv->tag = Tag::Nothing;
-    LOG("make_nothing qv = " << qv);
-}
-
-static inline void append(std::string &dest, Value v) {
+static inline void append(std::string &dest, QoreValue v) {
     if (v.tag == Tag::Nothing) {
         dest += "<Nothing>";
     } else if (v.tag == Tag::Int) {
@@ -102,19 +88,22 @@ static inline void append(std::string &dest, Value v) {
     }
 }
 
-__attribute__((visibility("default"))) void eval_add(LValue qv, Value l, Value r) noexcept {
-    LOG("eval_add qv = " << qv << ", l = " << l << ", r = " << r);
+__attribute__((visibility("default"))) QoreValue eval_add(QoreValue l, QoreValue r) noexcept {
+    LOG("eval_add l = " << l << ", r = " << r);
     if (l.tag == Tag::Int && r.tag == Tag::Int) {
-        make_int(qv, l.intValue + r.intValue);
-        return;
+        QoreValue qv;
+        qv.tag = Tag::Int;
+        qv.intValue = l.intValue + r.intValue;
+        return qv;
     }
     std::string str;
     append(str, l);
     append(str, r);
 
-    deref(qv);
-    qv->tag = Tag::Str;
-    qv->strValue = new QoreString(std::move(str));
+    QoreValue qv;
+    qv.tag = Tag::Str;
+    qv.strValue = new QoreString(std::move(str));
+    return qv;
 }
 
 static inline std::string trim(const std::string &s) {
@@ -123,26 +112,23 @@ static inline std::string trim(const std::string &s) {
    return (wsback <= wsfront ? std::string() : std::string(wsfront, wsback));
 }
 
-__attribute__((visibility("default"))) void eval_trim(LValue qv) noexcept {
+__attribute__((visibility("default"))) void eval_trim(QoreValue qv) noexcept {
     LOG("eval_trim qv = " << qv);
-    assert(qv->tag == Tag::Str);
-    std::string str = trim(qv->strValue->value);
-    if (qv->strValue->refCount == 1) {
-        qv->strValue->value = std::move(str);
-    } else {
-        qv->strValue->deref();
-        qv->strValue = new QoreString(std::move(str));
+    if (qv.tag == Tag::Str) {
+        std::string str = trim(qv.strValue->value);
+        qv.strValue->value = std::move(str);
     }
 }
 
-void ref(LValue qv);
-
-__attribute__((visibility("default"))) void eval_assign(LValue l, Value r) noexcept {
-    LOG("eval_assign l = " << l << ", r = " << r);
-
-    deref(l);
-    *l = r;
-    ref(l);
+__attribute__((visibility("default"))) QoreValue load_unique(const QoreValue *qv) noexcept {
+    if (qv->tag != Tag::Str) {
+        return *qv;
+    }
+    if (qv->strValue->refCount == 1) {
+        ++qv->strValue->refCount;
+        return *qv;
+    }
+    return make_str(qv->strValue->value.c_str());
 }
 
 std::ostream &operator<<(std::ostream &os, const QoreString *qs) {
@@ -154,7 +140,7 @@ std::ostream &operator<<(std::ostream &os, const QoreString &qs) {
 }
 
 std::ostream &operator<<(std::ostream &os, const QoreValue *qv) {
-    return os << static_cast<const void*>(qv) << ":{" << *qv << "}";
+    return qv ? os << static_cast<const void*>(qv) << ":{" << *qv << "}" : os << "nullptr";
 }
 
 std::ostream &operator<<(std::ostream &os, const QoreValue &qv) {

@@ -32,22 +32,25 @@
 #ifndef INCLUDE_QORE_ANALYZER_SCOPE_H_
 #define INCLUDE_QORE_ANALYZER_SCOPE_H_
 
-#include <string>
-#include "qore/context/SourceRange.h"
+#include "qore/analyzer/Entity.h"
 
 namespace qore {
 namespace analyzer {
 
-template<typename Backend>
 class Scope {
-public:
-    using LValue = typename Backend::LValue;
 
+public:
     virtual ~Scope() = default;
 
-    virtual void close() = 0;
-    virtual LValue createLocalVariable(const std::string &name, const SourceRange &range) = 0;
-    virtual LValue resolve(const std::string &name, const SourceRange &range) = 0;
+    //TODO predavat pouze id
+    //TODO LocalVariable -> Variable
+    virtual LocalVariable *createLocalVariable(const std::string &name, const SourceRange &range) = 0;
+    virtual LocalVariable *resolve(const std::string &name, const SourceRange &range) = 0;
+
+    virtual StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) = 0;
+
+
+    //TODO virtual void add(Ins ) = 0; ???
 };
 
 } // namespace analyzer
