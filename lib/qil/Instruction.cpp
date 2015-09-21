@@ -35,38 +35,23 @@ namespace qore {
 namespace qil {
 
 std::ostream &operator<<(std::ostream &os, const Instruction &ins) {
+#define OUT(M)  return os << M << " @" << ins.location
     switch (ins.opcode) {
-        case Opcode::LoadLocVarPtr:
-            return os << "LOAD_PTR of " << *ins.variable;
-        case Opcode::PushLocVar:
-            return os << "PUSH " << *ins.variable;
-        case Opcode::PushString:
-            return os << "PUSH " << *ins.stringLiteral;
-        case Opcode::Swap:
-            return os << "SWAP";
-        case Opcode::CleanupLValue:
-            return os << "CLEANUP_LVALUE";
-        case Opcode::PopAndDeref:
-            return os << "POP_AND_DEREF";
-        case Opcode::LoadUnique:
-            return os << "LOAD_UNIQUE";
-        case Opcode::Trim:
-            return os << "TRIM";
-        case Opcode::Dup:
-            return os << "DUP";
-        case Opcode::Add:
-            return os << "ADD";
-        case Opcode::PushNothing:
-            return os << "PUSH_NOTHING";
-        case Opcode::Print:
-            return os << "PRINT";
-        case Opcode::LifetimeStart:
-            return os << "LIFETIME_START " << *ins.variable;
-        case Opcode::LifetimeEnd:
-            return os << "LIFETIME_END " << *ins.variable;
-        case Opcode::Ret:
-            return os << "RET";
+        case Opcode::Add:               OUT("ADD " << ins.location);
+        case Opcode::Assign:            OUT("ASSIGN");
+        case Opcode::Discard:           OUT("DISCARD");
+        case Opcode::Dup:               OUT("DUP");
+        case Opcode::LifetimeEnd:       OUT("LIFETIME_END " << *ins.variable);
+        case Opcode::LifetimeStart:     OUT("LIFETIME_START " << *ins.variable);
+        case Opcode::LoadUnique:        OUT("LOAD_UNIQUE");
+        case Opcode::LoadVarPtr:        OUT("LOAD_VAR_PTR " << *ins.variable);
+        case Opcode::Print:             OUT("PRINT");
+        case Opcode::PushNothing:       OUT("PUSH_NOTHING");
+        case Opcode::PushString:        OUT("PUSH_STRING " << *ins.stringLiteral);
+        case Opcode::PushVar:           OUT("PUSH_VAR " << *ins.variable);
+        case Opcode::Trim:              OUT("TRIM");
     }
+#undef OUT
     QORE_UNREACHABLE("Invalid instruction Opcode: " << static_cast<int>(ins.opcode));
 }
 

@@ -48,7 +48,6 @@ public:
     void run(const qil::Code &code) {
         std::deque<typename Backend::Value> stack;
         typename Backend::LValue lValReg = nullptr;
-        bool done = false;
         for (const auto &i : code) {
             std::cout << "LVALREG: " << lValReg << "\n";
             std::cout << "Stack:\n";
@@ -66,19 +65,19 @@ public:
                 case qil::Opcode::PushString:
                     stack.push_back(backend.load(static_cast<typename Backend::StringLiteralData>(i.stringLiteral->data)));
                     break;
-                case qil::Opcode::LoadLocVarPtr:
+                case qil::Opcode::LoadVarPtr:
                     lValReg = backend.loadPtr(static_cast<typename Backend::LocalVariableData>(i.variable->data));
                     break;
-                case qil::Opcode::PushLocVar:
+                case qil::Opcode::PushVar:
                     stack.push_back(backend.load(static_cast<typename Backend::LocalVariableData>(i.variable->data)));
                     break;
-                case qil::Opcode::Swap:
+                case qil::Opcode::Assign:
                     backend.swap(lValReg, stack.back());
-                    break;
-                case qil::Opcode::CleanupLValue:
                     lValReg = nullptr;
+                    backend.destroy(stack.back());
+                    stack.pop_back();
                     break;
-                case qil::Opcode::PopAndDeref:
+                case qil::Opcode::Discard:
                     backend.destroy(stack.back());
                     stack.pop_back();
                     break;
@@ -104,15 +103,8 @@ public:
                     backend.destroy(v);
                     break;
                 }
-                case qil::Opcode::Ret:
-                    backend.ret();
-                    done = true;
-                    break;
                 default:
                     QORE_UNREACHABLE("Not implemented " << i);
-            }
-            if (done) {
-                break;
             }
         }
     }
@@ -166,12 +158,11 @@ public:
     }
 
     void analyze(const ast::Statement::Ptr &node) {
-        analyzer::script::Visitor<> visitor(*this, code);
+        analyzer::script::Visitor<> visitor(*this, codeBuilder);
         node->accept(visitor);
         //TODO if error reported, clear code
         //TODO interactive diag manager -> throw exception, catch it here
-        rrr.run(code);
-        code = qil::Code();
+        rrr.run(codeBuilder.build());
     }
 
     qil::Variable *createLocalVariable(const std::string &name, const SourceRange &range) override {
@@ -180,7 +171,7 @@ public:
             //TODO error redeclaration
         } else {
             var = create(name, range);
-            code.add(qil::Instruction(qil::Opcode::LifetimeStart, var));
+            codeBuilder.lifetimeStart(range.start, var);
         }
         return var;
     }
@@ -212,7 +203,7 @@ private:
 
 private:
     Backend backend;
-    qil::Code code;
+    qil::CodeBuilder codeBuilder;
     RunnerBase<Backend> rrr;
     std::vector<std::unique_ptr<qil::Variable>> variables;
     std::map<std::string, qil::Variable *> varLookup;

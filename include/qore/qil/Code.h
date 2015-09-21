@@ -31,12 +31,11 @@
 #ifndef INCLUDE_QORE_QIL_CODE_H_
 #define INCLUDE_QORE_QIL_CODE_H_
 
+#include <vector>
 #include "qore/qil/Instruction.h"
 
 namespace qore {
 namespace qil {
-
-//TODO make immutable, cleanup interface and document
 
 /**
  * \brief Represents a piece of QIL code.
@@ -44,37 +43,60 @@ namespace qil {
 class Code {
 
 public:
-    Code() {
+    /**
+     * \brief Iterator type.
+     */
+    using const_iterator = std::vector<Instruction>::const_iterator;
+
+    /**
+     * \brief Constructor.
+     * \param instructions the instructions making up the piece of code represented by this instance
+     */
+    Code(std::vector<Instruction> instructions) : instructions(std::move(instructions)) {
     }
 
+    /// \name Default move constructor and assignment.
+    /// \{
     Code(Code &&) = default;
     Code &operator=(Code &&) = default;
+    /// \}
 
-    std::vector<Instruction>::const_iterator begin() const {
-        return code.begin();
+    /**
+     * \brief Returns an iterator positioned at the first instruction.
+     * @return iterator positioned at the first instruction
+     */
+    const_iterator begin() const {
+        return instructions.begin();
     }
 
-    std::vector<Instruction>::const_iterator end() const {
-        return code.end();
-    }
-
-public:
-    void add(Instruction ins) {
-        code.emplace_back(std::move(ins));
+    /**
+     * \brief Returns an iterator positioned beyond the last instruction.
+     * @return iterator positioned beyond the last instruction
+     */
+    const_iterator end() const {
+        return instructions.end();
     }
 
 private:
-    std::vector<Instruction> code;
     Code(const Code &) = delete;
     Code &operator=(const Code &) = delete;
 
-    friend std::ostream &operator<<(std::ostream &os, const Code &c) {
-        for (const Instruction &i : c.code) {
-            os << i << "\n";
-        }
-        return os;
-    }
+private:
+    std::vector<Instruction> instructions;
 };
+
+/**
+ * \brief Dumps the code to an output stream.
+ * \param os the output stream
+ * \param code the code
+ * \return the output stream
+ */
+inline std::ostream &operator<<(std::ostream &os, const Code &code) {
+    for (const Instruction &i : code) {
+        os << i << "\n";
+    }
+    return os;
+}
 
 } // namespace qil
 } // namespace qore

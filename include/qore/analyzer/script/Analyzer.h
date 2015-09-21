@@ -36,6 +36,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include "qore/qil/CodeBuilder.h"
 
 namespace qore {
 namespace analyzer {
@@ -45,35 +46,35 @@ template<typename EA = expr::Analyzer>
 class Visitor : public ast::StatementVisitor {              //TODO topLevelCommand
 
 public:
-    Visitor(Scope &scope, qil::Code &code) : scope(scope), code(code) {
+    Visitor(Scope &scope, qil::CodeBuilder &codeBuilder) : scope(scope), codeBuilder(codeBuilder) {
     }
 
     void visit(const ast::EmptyStatement *node) override {
     }
 
     void visit(const ast::ExpressionStatement *node) override {
-        EA().eval(scope, code, node->expression);
+        EA().eval(scope, codeBuilder, node->expression);
     }
 
     void visit(const ast::PrintStatement *node) override {
-        EA().evalValue(scope, code, node->expression);
-        code.add(qil::Instruction(qil::Opcode::Print));
+        EA().evalValue(scope, codeBuilder, node->expression);
+        codeBuilder.print(node->getRange().start);
     }
 
 private:
     Scope &scope;
-    qil::Code &code;
+    qil::CodeBuilder &codeBuilder;
 };
 
 class ScriptScope : public Scope {
 
 public:
-    ScriptScope(qil::Code &code) : code(code) {
+    ScriptScope(qil::CodeBuilder &codeBuilder) : codeBuilder(codeBuilder) {
     }
 
-    void close() {
+    void close(const SourceLocation &location) {
         for (auto i = variables.rbegin(), e = variables.rend(); i != e; ++i) {
-            code.add(qil::Instruction(qil::Opcode::LifetimeEnd, i->get()));
+            codeBuilder.lifetimeEnd(location, i->get());
         }
     }
 
@@ -83,7 +84,7 @@ public:
             //TODO error redeclaration
         } else {
             var = create(name, range);
-            code.add(qil::Instruction(qil::Opcode::LifetimeStart, var));
+            codeBuilder.lifetimeStart(range.start, var);
         }
         return var;
     }
@@ -126,7 +127,7 @@ private:
     std::map<std::string, qil::Variable *> varLookup;
     std::vector<std::unique_ptr<qil::StringLiteral>> strings;
     std::map<std::string, qil::StringLiteral *> strLookup;
-    qil::Code &code;
+    qil::CodeBuilder &codeBuilder;
 };
 
 class Analyzer {
@@ -134,15 +135,14 @@ class Analyzer {
 public:
     template<typename EA = expr::Analyzer>
     Script analyze(const ast::Program::Ptr &node) {
-        qil::Code code;
-        ScriptScope scope(code);
-        Visitor<EA> visitor(scope, code);
+        qil::CodeBuilder codeBuilder;
+        ScriptScope scope(codeBuilder);
+        Visitor<EA> visitor(scope, codeBuilder);
         for (const auto &stmt : node->body) {       //TODO stmt -> topLevelCommand
             stmt->accept(visitor);
         }
-        scope.close();
-        code.add(qil::Instruction(qil::Opcode::Ret));
-        return Script(scope.getStrings(), scope.getVariables(), std::move(code));
+        scope.close(node->getRange().end);
+        return Script(scope.getStrings(), scope.getVariables(), codeBuilder.build());
     }
 };
 

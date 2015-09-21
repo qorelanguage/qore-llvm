@@ -69,6 +69,12 @@ private:
     Variable &operator=(Variable &&) = delete;
 };
 
+/**
+ * \brief Writes information about a variable to an output stream.
+ * \param os the output stream
+ * \param var the variable
+ * \return the output stream
+ */
 inline std::ostream &operator<<(std::ostream &os, const Variable &var) {
     return os << "Variable " << var.name << " @" << var.location << " (data: " << var.data << ")";
 }

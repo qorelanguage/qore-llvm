@@ -44,20 +44,11 @@ namespace qil {
  */
 struct Instruction {
     Opcode opcode;                          //!< The opcode of the instruction.
+    SourceLocation location;                //!< The source location associated with the instruction.
     union {
         Variable *variable;                 //!< A Variable argument of the instruction.
         StringLiteral *stringLiteral;       //!< A StringLiteral argument of the instruction.
     };
-
-//TODO remove these
-    Instruction(Opcode opcode) : opcode(opcode), variable(nullptr) {
-    }
-
-    Instruction(Opcode opcode, Variable *variable) : opcode(opcode), variable(variable) {
-    }
-
-    Instruction(Opcode opcode, StringLiteral *stringLiteral) : opcode(opcode), stringLiteral(stringLiteral) {
-    }
 };
 
 /**

@@ -69,6 +69,12 @@ private:
     StringLiteral &operator=(StringLiteral &&) = delete;
 };
 
+/**
+ * \brief Writes information about a string literal to an output stream.
+ * \param os the output stream
+ * \param str the string literal
+ * \return the output stream
+ */
 inline std::ostream &operator<<(std::ostream &os, const StringLiteral &str) {
     return os << "StringLiteral \"" << str.value << "\" @" << str.location << " (data: " << str.data << ")";
 }

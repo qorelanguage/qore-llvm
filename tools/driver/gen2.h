@@ -21,6 +21,9 @@
 
 namespace qore {
 
+/**
+ * \private
+ */
 class CallBuilder {
 
 public:
@@ -71,6 +74,9 @@ private:
 };
 
 
+/**
+ * \private
+ */
 class LLVMHelper {
 public:
 //    CodeGen(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
@@ -177,6 +183,9 @@ private:
 
 };
 
+/**
+ * \private
+ */
 class NewBackend : public LLVMHelper {
 public:
     using StringLiteralData = llvm::GlobalVariable *;
@@ -319,12 +328,9 @@ public:
         call(fnPrintQv).withQoreValueArg(v).build();
     }
 
-    void ret() {
+    llvm::Module *getModule() {
         builder.CreateRetVoid();
         module->dump();
-    }
-
-    llvm::Module *getModule() {
         return module;
     }
 

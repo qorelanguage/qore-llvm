@@ -35,22 +35,19 @@
 #include "qore/ast/Expression.h"
 #include "qore/common/Util.h"       //TODO remove
 
-#include "qore/qil/Code.h"
+#include "qore/qil/CodeBuilder.h"
 
 namespace qore {
 namespace analyzer {
 namespace expr {
 
-#define INS(op, ...) code.add(qil::Instruction(qil::Opcode::op, ## __VA_ARGS__))
 
-#define EVAL_LVALUE(node) { LValueEvaluator visitor(scope, code);  node->accept(visitor); }
-#define EVAL_VALUE(node) { ValueEvaluator<true> visitor(scope, code);  node->accept(visitor); }
-#define EVAL(node) { ValueEvaluator<false> visitor(scope, code);  node->accept(visitor); }
+//TODO make scope part of code builder?
 
 class LValueEvaluator : public ast::ExpressionVisitor {
 
 public:
-    LValueEvaluator(Scope &scope, qil::Code &code) : scope(scope), code(code) {
+    LValueEvaluator(Scope &scope, qil::CodeBuilder &codeBuilder) : scope(scope), codeBuilder(codeBuilder) {
     }
 
     void visit(const ast::IntegerLiteral *node) override {
@@ -74,11 +71,11 @@ public:
     }
 
     void visit(const ast::VarDecl *node) override {
-        INS(LoadLocVarPtr, scope.createLocalVariable(node->name, node->getRange()));
+        codeBuilder.loadVarPtr(node->getRange().start, scope.createLocalVariable(node->name, node->getRange()));
     }
 
     void visit(const ast::Identifier *node) override {
-        INS(LoadLocVarPtr, scope.resolve(node->name, node->getRange()));
+        codeBuilder.loadVarPtr(node->getRange().start, scope.resolve(node->name, node->getRange()));
     }
 
 private:
@@ -89,14 +86,13 @@ private:
 
 private:
     Scope &scope;
-    qil::Code &code;
+    qil::CodeBuilder &codeBuilder;
 };
 
 template<bool needsValue>
 class ValueEvaluator : public ast::ExpressionVisitor {
-
 public:
-    ValueEvaluator(Scope &scope, qil::Code &code) : scope(scope), code(code) {
+    ValueEvaluator(Scope &scope, qil::CodeBuilder &codeBuilder) : scope(scope), codeBuilder(codeBuilder) {
     }
 
     void visit(const ast::IntegerLiteral *node) override {
@@ -105,71 +101,74 @@ public:
     }
 
     void visit(const ast::StringLiteral *node) override {
-        INS(PushString, scope.createStringLiteral(node->value, node->getRange()));
-        checkNoEffect();
+        codeBuilder.pushString(node->getRange().start, scope.createStringLiteral(node->value, node->getRange()));
     }
 
     void visit(const ast::BinaryExpression *node) override {
-        EVAL_VALUE(node->left);
-        EVAL_VALUE(node->right);
-        INS(Add);
+        evalValue(node->left);
+        evalValue(node->right);
+        codeBuilder.add(node->operatorRange.start);
         checkNoEffect();
     }
 
     void visit(const ast::UnaryExpression *node) override {
-        EVAL_LVALUE(node->operand);
-        INS(LoadUnique);
-        INS(Trim);
-        dup();
-        INS(Swap);
-        INS(CleanupLValue);
-        INS(PopAndDeref);
+        evalLValue(node->operand);
+        codeBuilder
+            .loadUnique(node->getRange().start)
+            .trim(node->getRange().start)
+            .dupCond(node->getRange().start, needsValue)
+            .assign(node->getRange().start);
     }
 
     void visit(const ast::Assignment *node) override {
-        EVAL_VALUE(node->right);
-
-        //this can be done only if the type of lhs is known at compile time:
-        //type conversions
-        dup();
-
-        EVAL_LVALUE(node->left);
-
-        //otherwise it will need to be done here
-
-        INS(Swap);
-        INS(CleanupLValue);
-        INS(PopAndDeref);
+        evalValue(node->right);
+        evalLValue(node->left);
+        //type conversions & dup - if the type of lhs is known at compile time, we can do it before locking
+        codeBuilder
+            .dupCond(node->getRange().start, needsValue)
+            .assign(node->getRange().start);
     }
 
     void visit(const ast::VarDecl *node) override {
         scope.createLocalVariable(node->name, node->getRange());
         if (needsValue) {
-            INS(PushNothing);
+            codeBuilder.pushNothing(node->getRange().start);
         }
     }
 
     void visit(const ast::Identifier *node) override {
-        INS(PushLocVar, scope.resolve(node->name, node->getRange()));
+        codeBuilder.pushVar(node->getRange().start, scope.resolve(node->name, node->getRange()));
         checkNoEffect();
     }
 
 private:
-    void dup() {
-        if (needsValue) {
-            INS(Dup);
-        }
-    }
     void checkNoEffect() {
         if (!needsValue) {
             //error statement has no effect
-            //produce code that derefs result
+            codeBuilder.discard(SourceLocation());
         }
     }
 
+    void evalLValue(const ast::Expression::Ptr &node) {
+        LValueEvaluator visitor(scope, codeBuilder);
+        node->accept(visitor);
+    }
+
+    void evalValue(const ast::Expression::Ptr &node) {
+        ValueEvaluator<true> visitor(scope, codeBuilder);
+        node->accept(visitor);
+    }
+
+    void eval(const ast::Expression::Ptr &node) {
+        ValueEvaluator<false> visitor(scope, codeBuilder);
+        node->accept(visitor);
+    }
+
+
 private:
     Scope &scope;
-    qil::Code &code;
+    qil::CodeBuilder &codeBuilder;
+
 };
 
 class Analyzer {
@@ -177,12 +176,14 @@ class Analyzer {
 public:
     Analyzer() = default;
 
-    void eval(Scope &scope, qil::Code &code, const ast::Expression::Ptr &node) {
-        EVAL(node);
+    void eval(Scope &scope, qil::CodeBuilder &codeBuilder, const ast::Expression::Ptr &node) {
+        ValueEvaluator<false> visitor(scope, codeBuilder);
+        node->accept(visitor);
     }
 
-    void evalValue(Scope &scope, qil::Code &code, const ast::Expression::Ptr &node) {
-        EVAL_VALUE(node);
+    void evalValue(Scope &scope, qil::CodeBuilder &codeBuilder, const ast::Expression::Ptr &node) {
+        ValueEvaluator<true> visitor(scope, codeBuilder);
+        node->accept(visitor);
     }
 
 private:
@@ -192,7 +193,6 @@ private:
     Analyzer &operator=(Analyzer &&) = delete;
 };
 
-#undef INS
 #undef EVAL_LVALUE
 #undef EVAL_VALUE
 #undef EVAL

@@ -69,9 +69,6 @@ public:
     void print(const Value &v) {
         print_qv(v);
     }
-
-    void ret() {
-    }
 };
 
 void doInterpret(const analyzer::Script &script) {
