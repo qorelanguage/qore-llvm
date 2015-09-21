@@ -35,13 +35,13 @@
 #include "qore/ast/Expression.h"
 #include "qore/common/Util.h"       //TODO remove
 
-#include "qore/analyzer/Code.h"
+#include "qore/qil/Code.h"
 
 namespace qore {
 namespace analyzer {
 namespace expr {
 
-#define INS(op, ...) code.add(Ins(Opcode::op, ## __VA_ARGS__))
+#define INS(op, ...) code.add(qil::Instruction(qil::Opcode::op, ## __VA_ARGS__))
 
 #define EVAL_LVALUE(node) { LValueEvaluator visitor(scope, code);  node->accept(visitor); }
 #define EVAL_VALUE(node) { ValueEvaluator<true> visitor(scope, code);  node->accept(visitor); }
@@ -50,7 +50,7 @@ namespace expr {
 class LValueEvaluator : public ast::ExpressionVisitor {
 
 public:
-    LValueEvaluator(Scope &scope, Code &code) : scope(scope), code(code) {
+    LValueEvaluator(Scope &scope, qil::Code &code) : scope(scope), code(code) {
     }
 
     void visit(const ast::IntegerLiteral *node) override {
@@ -89,14 +89,14 @@ private:
 
 private:
     Scope &scope;
-    Code &code;
+    qil::Code &code;
 };
 
 template<bool needsValue>
 class ValueEvaluator : public ast::ExpressionVisitor {
 
 public:
-    ValueEvaluator(Scope &scope, Code &code) : scope(scope), code(code) {
+    ValueEvaluator(Scope &scope, qil::Code &code) : scope(scope), code(code) {
     }
 
     void visit(const ast::IntegerLiteral *node) override {
@@ -128,9 +128,15 @@ public:
 
     void visit(const ast::Assignment *node) override {
         EVAL_VALUE(node->right);
+
+        //this can be done only if the type of lhs is known at compile time:
         //type conversions
         dup();
+
         EVAL_LVALUE(node->left);
+
+        //otherwise it will need to be done here
+
         INS(Swap);
         INS(CleanupLValue);
         INS(PopAndDeref);
@@ -163,7 +169,7 @@ private:
 
 private:
     Scope &scope;
-    Code &code;
+    qil::Code &code;
 };
 
 class Analyzer {
@@ -171,11 +177,11 @@ class Analyzer {
 public:
     Analyzer() = default;
 
-    void eval(Scope &scope, Code &code, const ast::Expression::Ptr &node) {
+    void eval(Scope &scope, qil::Code &code, const ast::Expression::Ptr &node) {
         EVAL(node);
     }
 
-    void evalValue(Scope &scope, Code &code, const ast::Expression::Ptr &node) {
+    void evalValue(Scope &scope, qil::Code &code, const ast::Expression::Ptr &node) {
         EVAL_VALUE(node);
     }
 

@@ -14,19 +14,26 @@ namespace qore {
 class IntBackend {
 
 public:
-    using StringLiteralData = QoreValue;
-    using LocalVariableData = QoreValue;
+    using StringLiteralData = QoreValue *;
+    using LocalVariableData = QoreValue *;
     using Value = QoreValue;
     using LValue = QoreValue *;
 
     LocalVariableData createLocalVariable(const std::string &name) {
-        QoreValue qv;
-        qv.tag = Tag::Nothing;
+        QoreValue *qv = new QoreValue();
+        qv->tag = Tag::Nothing;
         return qv;
     }
 
     StringLiteralData createStringLiteral(const std::string &value) {
-        return make_str(value.c_str());
+        QoreValue *qv = new QoreValue();
+        *qv = make_str(value.c_str());
+        return qv;
+    }
+
+    void destroy(QoreValue *qv) {
+        strongDeref(*qv);
+        delete qv;
     }
 
     void destroy(QoreValue &qv) {
@@ -34,12 +41,12 @@ public:
         qv.tag = Tag::Nothing;
     }
 
-    Value load(QoreValue &qv) {
-        strongRef(qv);
-        return qv;
+    Value load(QoreValue *qv) {
+        strongRef(*qv);
+        return *qv;
     }
 
-    LValue loadPtr(LocalVariableData *var) {
+    LValue loadPtr(LocalVariableData var) {
         return var;
     }
 

@@ -25,48 +25,55 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief String literal descriptor.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_ANALYZER_ENTITY_H_
-#define INCLUDE_QORE_ANALYZER_ENTITY_H_
+#ifndef INCLUDE_QORE_QIL_STRINGLITERAL_H_
+#define INCLUDE_QORE_QIL_STRINGLITERAL_H_
 
+#include <ostream>
 #include <string>
-#include "qore/context/SourceRange.h"
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
-#include "qore/qil/Variable.h"
-#include "qore/qil/StringLiteral.h"
-#include "qore/qil/Code.h"
+#include "qore/context/SourceLocation.h"
 
 namespace qore {
-namespace analyzer {
+namespace qil {
 
-class Script {
+/**
+ * \brief Describes a string literal.
+ */
+class StringLiteral {
 
 public:
-    Script(std::vector<std::unique_ptr<qil::StringLiteral>> strings, std::vector<std::unique_ptr<qil::Variable>> variables, qil::Code code) : strings(std::move(strings)), variables(std::move(variables)), code(std::move(code)) {
-    }
+    /**
+     * \brief Type of data associated with the string literal.
+     */
+    using Data = void *;
 
-    const std::vector<std::unique_ptr<qil::StringLiteral>> &getStrings() const {
-        return strings;
-    }
+    /**
+     * \brief Constructor.
+     * \param value the value of the string literal
+     * \param location the location in the source
+     */
+    StringLiteral(std::string value, const SourceLocation &location);
+    ~StringLiteral();
 
-    const std::vector<std::unique_ptr<qil::Variable>> &getVariables() const {
-        return variables;
-    }
-
-    const qil::Code &getCode() const {
-        return code;
-    }
+public:
+    const std::string value;            //!< The value of the string literal.
+    const SourceLocation location;      //!< The location in the source.
+    Data data;                          //!< Data associated with the variable.
 
 private:
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    qil::Code code;
+    StringLiteral(const StringLiteral &) = delete;
+    StringLiteral(StringLiteral &&) = delete;
+    StringLiteral &operator=(const StringLiteral &) = delete;
+    StringLiteral &operator=(StringLiteral &&) = delete;
 };
 
-} // namespace analyzer
+inline std::ostream &operator<<(std::ostream &os, const StringLiteral &str) {
+    return os << "StringLiteral \"" << str.value << "\" @" << str.location << " (data: " << str.data << ")";
+}
+
+} // namespace qil
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANALYZER_ENTITY_H_
+#endif // INCLUDE_QORE_QIL_STRINGLITERAL_H_

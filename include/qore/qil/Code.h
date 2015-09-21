@@ -25,48 +25,58 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief QIL code representation.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_ANALYZER_ENTITY_H_
-#define INCLUDE_QORE_ANALYZER_ENTITY_H_
+#ifndef INCLUDE_QORE_QIL_CODE_H_
+#define INCLUDE_QORE_QIL_CODE_H_
 
-#include <string>
-#include "qore/context/SourceRange.h"
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
-#include "qore/qil/Variable.h"
-#include "qore/qil/StringLiteral.h"
-#include "qore/qil/Code.h"
+#include "qore/qil/Instruction.h"
 
 namespace qore {
-namespace analyzer {
+namespace qil {
 
-class Script {
+//TODO make immutable, cleanup interface and document
+
+/**
+ * \brief Represents a piece of QIL code.
+ */
+class Code {
 
 public:
-    Script(std::vector<std::unique_ptr<qil::StringLiteral>> strings, std::vector<std::unique_ptr<qil::Variable>> variables, qil::Code code) : strings(std::move(strings)), variables(std::move(variables)), code(std::move(code)) {
+    Code() {
     }
 
-    const std::vector<std::unique_ptr<qil::StringLiteral>> &getStrings() const {
-        return strings;
+    Code(Code &&) = default;
+    Code &operator=(Code &&) = default;
+
+    std::vector<Instruction>::const_iterator begin() const {
+        return code.begin();
     }
 
-    const std::vector<std::unique_ptr<qil::Variable>> &getVariables() const {
-        return variables;
+    std::vector<Instruction>::const_iterator end() const {
+        return code.end();
     }
 
-    const qil::Code &getCode() const {
-        return code;
+public:
+    void add(Instruction ins) {
+        code.emplace_back(std::move(ins));
     }
 
 private:
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    qil::Code code;
+    std::vector<Instruction> code;
+    Code(const Code &) = delete;
+    Code &operator=(const Code &) = delete;
+
+    friend std::ostream &operator<<(std::ostream &os, const Code &c) {
+        for (const Instruction &i : c.code) {
+            os << i << "\n";
+        }
+        return os;
+    }
 };
 
-} // namespace analyzer
+} // namespace qil
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANALYZER_ENTITY_H_
+#endif // INCLUDE_QORE_QIL_CODE_H_

@@ -21,6 +21,7 @@ endif(QORE_USE_LLVM)
 target_link_libraries(qore-llvm
     common
     parser
+    qil
     runtime
     scanner
     ${llvm_libs}

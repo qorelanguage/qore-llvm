@@ -44,10 +44,10 @@ public:
 
     //TODO predavat pouze id
     //TODO LocalVariable -> Variable
-    virtual LocalVariable *createLocalVariable(const std::string &name, const SourceRange &range) = 0;
-    virtual LocalVariable *resolve(const std::string &name, const SourceRange &range) = 0;
+    virtual qil::Variable *createLocalVariable(const std::string &name, const SourceRange &range) = 0;
+    virtual qil::Variable *resolve(const std::string &name, const SourceRange &range) = 0;
 
-    virtual StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) = 0;
+    virtual qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) = 0;
 
 
     //TODO virtual void add(Ins ) = 0; ???

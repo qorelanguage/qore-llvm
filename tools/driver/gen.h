@@ -1,6 +1,6 @@
 #ifndef TOOLS_DRIVER_GEN_H_
 #define TOOLS_DRIVER_GEN_H_
-
+#if 0
 #include <map>
 #include <string>
 #include "qore/ast/Program.h"
@@ -384,5 +384,5 @@ std::unique_ptr<llvm::Module> doCodeGen(qore::SourceManager &sourceMgr, const st
     cg.visit(f);
     return std::unique_ptr<llvm::Module>(cg.getModule());
 }
-
+#endif
 #endif /* TOOLS_DRIVER_GEN_H_ */

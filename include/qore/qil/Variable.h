@@ -25,48 +25,55 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief Variable descriptor.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_ANALYZER_ENTITY_H_
-#define INCLUDE_QORE_ANALYZER_ENTITY_H_
+#ifndef INCLUDE_QORE_QIL_VARIABLE_H_
+#define INCLUDE_QORE_QIL_VARIABLE_H_
 
+#include <ostream>
 #include <string>
-#include "qore/context/SourceRange.h"
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
-#include "qore/qil/Variable.h"
-#include "qore/qil/StringLiteral.h"
-#include "qore/qil/Code.h"
+#include "qore/context/SourceLocation.h"
 
 namespace qore {
-namespace analyzer {
+namespace qil {
 
-class Script {
+/**
+ * \brief Describes a variable.
+ */
+class Variable {
 
 public:
-    Script(std::vector<std::unique_ptr<qil::StringLiteral>> strings, std::vector<std::unique_ptr<qil::Variable>> variables, qil::Code code) : strings(std::move(strings)), variables(std::move(variables)), code(std::move(code)) {
-    }
+    /**
+     * \brief Type of data associated with the variable.
+     */
+    using Data = void *;
 
-    const std::vector<std::unique_ptr<qil::StringLiteral>> &getStrings() const {
-        return strings;
-    }
+    /**
+     * \brief Constructor.
+     * \param name the name of the variable
+     * \param location the location of the declaration in the source
+     */
+    Variable(std::string name, const SourceLocation &location);
+    ~Variable();
 
-    const std::vector<std::unique_ptr<qil::Variable>> &getVariables() const {
-        return variables;
-    }
-
-    const qil::Code &getCode() const {
-        return code;
-    }
+public:
+    const std::string name;             //!< The name of the variable.
+    const SourceLocation location;      //!< The location of declaration in the source.
+    Data data;                          //!< Data associated with the variable.
 
 private:
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    qil::Code code;
+    Variable(const Variable &) = delete;
+    Variable(Variable &&) = delete;
+    Variable &operator=(const Variable &) = delete;
+    Variable &operator=(Variable &&) = delete;
 };
 
-} // namespace analyzer
+inline std::ostream &operator<<(std::ostream &os, const Variable &var) {
+    return os << "Variable " << var.name << " @" << var.location << " (data: " << var.data << ")";
+}
+
+} // namespace qil
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANALYZER_ENTITY_H_
+#endif // INCLUDE_QORE_QIL_VARIABLE_H_

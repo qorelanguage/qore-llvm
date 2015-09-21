@@ -45,7 +45,7 @@ template<typename EA = expr::Analyzer>
 class Visitor : public ast::StatementVisitor {              //TODO topLevelCommand
 
 public:
-    Visitor(Scope &scope, Code &code) : scope(scope), code(code) {
+    Visitor(Scope &scope, qil::Code &code) : scope(scope), code(code) {
     }
 
     void visit(const ast::EmptyStatement *node) override {
@@ -57,39 +57,39 @@ public:
 
     void visit(const ast::PrintStatement *node) override {
         EA().evalValue(scope, code, node->expression);
-        code.add(Ins(Opcode::Print));
+        code.add(qil::Instruction(qil::Opcode::Print));
     }
 
 private:
     Scope &scope;
-    Code &code;
+    qil::Code &code;
 };
 
 class ScriptScope : public Scope {
 
 public:
-    ScriptScope(Code &code) : code(code) {
+    ScriptScope(qil::Code &code) : code(code) {
     }
 
     void close() {
         for (auto i = variables.rbegin(), e = variables.rend(); i != e; ++i) {
-            code.add(Ins(Opcode::LifetimeEnd, i->get()));
+            code.add(qil::Instruction(qil::Opcode::LifetimeEnd, i->get()));
         }
     }
 
-    LocalVariable *createLocalVariable(const std::string &name, const SourceRange &range) override {
-        LocalVariable *&var = varLookup[name];
+    qil::Variable *createLocalVariable(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
         if (var) {
             //TODO error redeclaration
         } else {
             var = create(name, range);
-            code.add(Ins(Opcode::LifetimeStart, var));
+            code.add(qil::Instruction(qil::Opcode::LifetimeStart, var));
         }
         return var;
     }
 
-    LocalVariable *resolve(const std::string &name, const SourceRange &range) override {
-        LocalVariable *&var = varLookup[name];
+    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
         if (!var) {
             //TODO ERROR: undeclared
             var = create(name, range);
@@ -97,36 +97,36 @@ public:
         return var;
     }
 
-    StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
-        StringLiteral *&s = strLookup[value];
+    qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
+        qil::StringLiteral *&s = strLookup[value];
         if (!s) {
-            s = new StringLiteral(strings.size(), std::move(value), std::move(range));
+            s = new qil::StringLiteral(std::move(value), range.start);
             strings.emplace_back(s);
         }
         return s;
     }
 
-    std::vector<std::unique_ptr<LocalVariable>> getVariables() {
+    std::vector<std::unique_ptr<qil::Variable>> getVariables() {
         return std::move(variables);
     }
 
-    std::vector<std::unique_ptr<StringLiteral>> getStrings() {
+    std::vector<std::unique_ptr<qil::StringLiteral>> getStrings() {
         return std::move(strings);
     }
 
 private:
-    LocalVariable *create(const std::string &name, const SourceRange &range) {
-        LocalVariable *v = new LocalVariable(variables.size(), name, range);
+    qil::Variable *create(const std::string &name, const SourceRange &range) {
+        qil::Variable *v = new qil::Variable(name, range.start);
         variables.emplace_back(v);
         return v;
     }
 
 private:
-    std::vector<std::unique_ptr<LocalVariable>> variables;
-    std::map<std::string, LocalVariable *> varLookup;
-    std::vector<std::unique_ptr<StringLiteral>> strings;
-    std::map<std::string, StringLiteral *> strLookup;
-    Code &code;
+    std::vector<std::unique_ptr<qil::Variable>> variables;
+    std::map<std::string, qil::Variable *> varLookup;
+    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
+    std::map<std::string, qil::StringLiteral *> strLookup;
+    qil::Code &code;
 };
 
 class Analyzer {
@@ -134,14 +134,14 @@ class Analyzer {
 public:
     template<typename EA = expr::Analyzer>
     Script analyze(const ast::Program::Ptr &node) {
-        Code code;
+        qil::Code code;
         ScriptScope scope(code);
         Visitor<EA> visitor(scope, code);
         for (const auto &stmt : node->body) {       //TODO stmt -> topLevelCommand
             stmt->accept(visitor);
         }
         scope.close();
-        code.add(Ins(Opcode::Ret));
+        code.add(qil::Instruction(qil::Opcode::Ret));
         return Script(scope.getStrings(), scope.getVariables(), std::move(code));
     }
 };

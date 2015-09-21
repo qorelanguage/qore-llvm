@@ -253,7 +253,7 @@ public:
         return v;
     }
 
-    void destroy(LocalVariableData &d) {
+    void destroy(LocalVariableData d) {
         //load & deref
     }
 
@@ -270,8 +270,8 @@ public:
         return val;
     }
 
-    LValue loadPtr(LocalVariableData *var) {
-        return *var;
+    LValue loadPtr(LocalVariableData var) {
+        return var;
     }
 
     StringLiteralData createStringLiteral(const std::string &value /*, const SourceRange &range*/) {

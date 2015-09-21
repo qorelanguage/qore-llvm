@@ -25,48 +25,50 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief QIL instruction.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_ANALYZER_ENTITY_H_
-#define INCLUDE_QORE_ANALYZER_ENTITY_H_
+#ifndef INCLUDE_QORE_QIL_INSTRUCTION_H_
+#define INCLUDE_QORE_QIL_INSTRUCTION_H_
 
-#include <string>
-#include "qore/context/SourceRange.h"
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
-#include "qore/qil/Variable.h"
+#include <ostream>
+#include "qore/qil/Opcode.h"
 #include "qore/qil/StringLiteral.h"
-#include "qore/qil/Code.h"
+#include "qore/qil/Variable.h"
 
 namespace qore {
-namespace analyzer {
+namespace qil {
 
-class Script {
+/**
+ * \brief The structure of a QIL instruction.
+ */
+struct Instruction {
+    Opcode opcode;                          //!< The opcode of the instruction.
+    union {
+        Variable *variable;                 //!< A Variable argument of the instruction.
+        StringLiteral *stringLiteral;       //!< A StringLiteral argument of the instruction.
+    };
 
-public:
-    Script(std::vector<std::unique_ptr<qil::StringLiteral>> strings, std::vector<std::unique_ptr<qil::Variable>> variables, qil::Code code) : strings(std::move(strings)), variables(std::move(variables)), code(std::move(code)) {
+//TODO remove these
+    Instruction(Opcode opcode) : opcode(opcode), variable(nullptr) {
     }
 
-    const std::vector<std::unique_ptr<qil::StringLiteral>> &getStrings() const {
-        return strings;
+    Instruction(Opcode opcode, Variable *variable) : opcode(opcode), variable(variable) {
     }
 
-    const std::vector<std::unique_ptr<qil::Variable>> &getVariables() const {
-        return variables;
+    Instruction(Opcode opcode, StringLiteral *stringLiteral) : opcode(opcode), stringLiteral(stringLiteral) {
     }
-
-    const qil::Code &getCode() const {
-        return code;
-    }
-
-private:
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    qil::Code code;
 };
 
-} // namespace analyzer
+/**
+ * \brief Writes an instruction to an output stream.
+ * \param os the output stream
+ * \param instruction the instruction
+ * \return the output stream
+ */
+std::ostream &operator<<(std::ostream &os, const Instruction &instruction);
+
+} // namespace qil
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANALYZER_ENTITY_H_
+#endif // INCLUDE_QORE_QIL_INSTRUCTION_H_

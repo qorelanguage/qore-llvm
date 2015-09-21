@@ -35,17 +35,17 @@
 
 namespace qore {
 
-template<typename Backend, typename Storage>
+template<typename Backend>
 class RunnerBase {
 
 public:
-    RunnerBase(Backend &backend = Backend(), Storage &storage = Storage()) : backend(backend), storage(storage) {
+    RunnerBase(Backend &backend = Backend()) : backend(backend) {
     }
 
     virtual ~RunnerBase() {
     }
 
-    void run(const analyzer::Code &code) {
+    void run(const qil::Code &code) {
         std::deque<typename Backend::Value> stack;
         typename Backend::LValue lValReg = nullptr;
         bool done = false;
@@ -56,39 +56,39 @@ public:
                 std::cout << "  " << v << "\n";
             }
             std::cout << "------" << i << "\n";
-            switch (i.getOpcode()) {
-                case analyzer::Opcode::LifetimeStart:
-                    storage.variableData[i.getLocVar()->getId()] = backend.createLocalVariable(i.getLocVar()->getName());
+            switch (i.opcode) {
+                case qil::Opcode::LifetimeStart:
+                    i.variable->data = backend.createLocalVariable(i.variable->name);
                     break;
-                case analyzer::Opcode::LifetimeEnd:
-                    backend.destroy(storage.variableData[i.getLocVar()->getId()]);
+                case qil::Opcode::LifetimeEnd:
+                    backend.destroy(static_cast<typename Backend::LocalVariableData>(i.variable->data));
                     break;
-                case analyzer::Opcode::PushString:
-                    stack.push_back(backend.load(storage.stringData[i.getStrLit()->getId()]));
+                case qil::Opcode::PushString:
+                    stack.push_back(backend.load(static_cast<typename Backend::StringLiteralData>(i.stringLiteral->data)));
                     break;
-                case analyzer::Opcode::LoadLocVarPtr:
-                    lValReg = backend.loadPtr(&storage.variableData[i.getLocVar()->getId()]);
+                case qil::Opcode::LoadLocVarPtr:
+                    lValReg = backend.loadPtr(static_cast<typename Backend::LocalVariableData>(i.variable->data));
                     break;
-                case analyzer::Opcode::PushLocVar:
-                    stack.push_back(backend.load(storage.variableData[i.getLocVar()->getId()]));
+                case qil::Opcode::PushLocVar:
+                    stack.push_back(backend.load(static_cast<typename Backend::LocalVariableData>(i.variable->data)));
                     break;
-                case analyzer::Opcode::Swap:
+                case qil::Opcode::Swap:
                     backend.swap(lValReg, stack.back());
                     break;
-                case analyzer::Opcode::CleanupLValue:
+                case qil::Opcode::CleanupLValue:
                     lValReg = nullptr;
                     break;
-                case analyzer::Opcode::PopAndDeref:
+                case qil::Opcode::PopAndDeref:
                     backend.destroy(stack.back());
                     stack.pop_back();
                     break;
-                case analyzer::Opcode::LoadUnique:
+                case qil::Opcode::LoadUnique:
                     stack.push_back(backend.loadUnique(lValReg));
                     break;
-                case analyzer::Opcode::Trim:
+                case qil::Opcode::Trim:
                     backend.trim(stack.back());
                     break;
-                case analyzer::Opcode::Add: {
+                case qil::Opcode::Add: {
                     typename Backend::Value r = stack.back();
                     stack.pop_back();
                     typename Backend::Value l = stack.back();
@@ -97,14 +97,14 @@ public:
                     backend.destroy(l);
                     break;
                 }
-                case analyzer::Opcode::Print: {
+                case qil::Opcode::Print: {
                     typename Backend::Value v = stack.back();
                     stack.pop_back();
                     backend.print(v);
                     backend.destroy(v);
                     break;
                 }
-                case analyzer::Opcode::Ret:
+                case qil::Opcode::Ret:
                     backend.ret();
                     done = true;
                     break;
@@ -119,7 +119,6 @@ public:
 
 protected:
     Backend &backend;
-    Storage &storage;
 };
 
 //oddelit create local variable od lifetime start
@@ -127,30 +126,26 @@ template<typename Backend>
 class Runner {
 
 public:
-    Runner(const analyzer::Script &script, Backend &backend) : script(script), backend(backend), stringData(script.getStrings().size()), variableData(script.getVariables().size()) {
+    Runner(const analyzer::Script &script, Backend &backend) : script(script), backend(backend) {
         for (const auto &s : script.getStrings()) {
-            stringData[s->getId()] = backend.createStringLiteral(s->getValue());
+            s->data = backend.createStringLiteral(s->value);
         }
     }
 
     ~Runner() {
-        for (auto &sd : stringData) {
-            backend.destroy(sd);
+        for (const auto &s : script.getStrings()) {
+            backend.destroy(static_cast<typename Backend::StringLiteralData>(s->data));
         }
     }
 
     void run() {
-        RunnerBase<Backend, Runner> r(backend, *this);
+        RunnerBase<Backend> r(backend);
         r.run(script.getCode());
     }
 
 private:
     const analyzer::Script &script;
     Backend &backend;
-    std::vector<typename Backend::StringLiteralData> stringData;
-    std::vector<typename Backend::LocalVariableData> variableData;
-
-    friend class RunnerBase<Backend, Runner>;
 };
 
 
@@ -158,15 +153,15 @@ template<typename Backend>
 class IntAnalyzer : private analyzer::Scope {
 
 public:
-    IntAnalyzer(Backend backend = Backend()) : backend(backend), rrr(backend, *this) {
+    IntAnalyzer(Backend backend = Backend()) : backend(backend), rrr(backend) {
     }
 
     ~IntAnalyzer() {
-        for (auto &vd : variableData) {
-            backend.destroy(vd.second);
+        for (const auto &v : variables) {
+            backend.destroy(static_cast<typename Backend::LocalVariableData>(v->data));
         }
-        for (auto &sd : stringData) {
-            backend.destroy(sd.second);
+        for (const auto &s : strings) {
+            backend.destroy(static_cast<typename Backend::StringLiteralData>(s->data));
         }
     }
 
@@ -176,57 +171,53 @@ public:
         //TODO if error reported, clear code
         //TODO interactive diag manager -> throw exception, catch it here
         rrr.run(code);
-        code = analyzer::Code();
+        code = qil::Code();
     }
 
-    analyzer::LocalVariable *createLocalVariable(const std::string &name, const SourceRange &range) override {
-        analyzer::LocalVariable *&var = varLookup[name];
+    qil::Variable *createLocalVariable(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
         if (var) {
             //TODO error redeclaration
         } else {
             var = create(name, range);
-            code.add(analyzer::Ins(analyzer::Opcode::LifetimeStart, var));
+            code.add(qil::Instruction(qil::Opcode::LifetimeStart, var));
         }
         return var;
     }
 
-    analyzer::LocalVariable *resolve(const std::string &name, const SourceRange &range) override {
-        analyzer::LocalVariable *&var = varLookup[name];
+    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
         if (!var) {
             //TODO ERROR: undeclared
         }
         return var;
     }
 
-    analyzer::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
-        analyzer::StringLiteral *&s = strLookup[value];
+    qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
+        qil::StringLiteral *&s = strLookup[value];
         if (!s) {
-            s = new analyzer::StringLiteral(strings.size(), value, range);
+            s = new qil::StringLiteral(value, range.start);
             strings.emplace_back(s);
-            stringData[s->getId()] = backend.createStringLiteral(value);
+            s->data = backend.createStringLiteral(value);
         }
         return s;
     }
 
 private:
-    analyzer::LocalVariable *create(const std::string &name, const SourceRange &range) {
-        analyzer::LocalVariable *v = new analyzer::LocalVariable(variables.size(), name, range);
+    qil::Variable *create(const std::string &name, const SourceRange &range) {
+        qil::Variable *v = new qil::Variable(name, range.start);
         variables.emplace_back(v);
         return v;
     }
 
 private:
     Backend backend;
-    analyzer::Code code;
-    RunnerBase<Backend, IntAnalyzer> rrr;
-    std::vector<std::unique_ptr<analyzer::LocalVariable>> variables;
-    std::map<std::string, analyzer::LocalVariable *> varLookup;
-    std::vector<std::unique_ptr<analyzer::StringLiteral>> strings;
-    std::map<std::string, analyzer::StringLiteral *> strLookup;
-    std::map<int, typename Backend::LocalVariableData> variableData;
-    std::map<int, typename Backend::StringLiteralData> stringData;
-
-    friend class RunnerBase<Backend, IntAnalyzer>;
+    qil::Code code;
+    RunnerBase<Backend> rrr;
+    std::vector<std::unique_ptr<qil::Variable>> variables;
+    std::map<std::string, qil::Variable *> varLookup;
+    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
+    std::map<std::string, qil::StringLiteral *> strLookup;
 };
 
 } // namespace qore

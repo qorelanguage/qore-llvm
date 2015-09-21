@@ -25,48 +25,39 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief Defines opcodes for the QIL.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_ANALYZER_ENTITY_H_
-#define INCLUDE_QORE_ANALYZER_ENTITY_H_
-
-#include <string>
-#include "qore/context/SourceRange.h"
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
-#include "qore/qil/Variable.h"
-#include "qore/qil/StringLiteral.h"
-#include "qore/qil/Code.h"
+#ifndef INCLUDE_QORE_QIL_OPCODE_H_
+#define INCLUDE_QORE_QIL_OPCODE_H_
 
 namespace qore {
-namespace analyzer {
+namespace qil {
 
-class Script {
+//TODO documentation
 
-public:
-    Script(std::vector<std::unique_ptr<qil::StringLiteral>> strings, std::vector<std::unique_ptr<qil::Variable>> variables, qil::Code code) : strings(std::move(strings)), variables(std::move(variables)), code(std::move(code)) {
-    }
-
-    const std::vector<std::unique_ptr<qil::StringLiteral>> &getStrings() const {
-        return strings;
-    }
-
-    const std::vector<std::unique_ptr<qil::Variable>> &getVariables() const {
-        return variables;
-    }
-
-    const qil::Code &getCode() const {
-        return code;
-    }
-
-private:
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    qil::Code code;
+/**
+ * \brief QIL opcodes.
+ */
+enum class Opcode {
+    LoadLocVarPtr,          //!< LoadLocVarPtr
+    PushString,             //!< PushString
+    Swap,                   //!< Swap
+    CleanupLValue,          //!< CleanupLValue
+    PopAndDeref,            //!< PopAndDeref
+    PushLocVar,             //!< PushLocVar
+    LoadUnique,             //!< LoadUnique
+    Trim,                   //!< Trim
+    Dup,                    //!< Dup
+    Add,                    //!< Add
+    PushNothing,            //!< PushNothing
+    Print,                  //!< Print
+    LifetimeStart,          //!< LifetimeStart
+    LifetimeEnd,            //!< LifetimeEnd
+    Ret,                    //!< Ret
 };
 
-} // namespace analyzer
+} // namespace qil
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANALYZER_ENTITY_H_
+#endif // INCLUDE_QORE_QIL_OPCODE_H_
