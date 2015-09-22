@@ -89,7 +89,6 @@ static inline void append(std::string &dest, QoreValue v) {
 }
 
 __attribute__((visibility("default"))) QoreValue eval_add(QoreValue l, QoreValue r) noexcept {
-    LOG("eval_add l = " << l << ", r = " << r);
     if (l.tag == Tag::Int && r.tag == Tag::Int) {
         QoreValue qv;
         qv.tag = Tag::Int;
@@ -113,7 +112,6 @@ static inline std::string trim(const std::string &s) {
 }
 
 __attribute__((visibility("default"))) void eval_trim(QoreValue qv) noexcept {
-    LOG("eval_trim qv = " << qv);
     if (qv.tag == Tag::Str) {
         std::string str = trim(qv.strValue->value);
         qv.strValue->value = std::move(str);

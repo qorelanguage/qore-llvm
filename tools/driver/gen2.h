@@ -62,10 +62,6 @@ public:
         return builder.CreateCall(f, args);
     }
 
-    operator llvm::Value*() {
-        return build();
-    }
-
 private:
     llvm::IRBuilder<> &builder;
     llvm::Function *f;
@@ -79,10 +75,10 @@ private:
  */
 class LLVMHelper {
 public:
-//    CodeGen(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
     LLVMHelper() {
         ltVoid = llvm::Type::getVoidTy(ctx);
         ltVoidPtr = llvm::Type::getInt8PtrTy(ctx);
+        ltInt32 = llvm::Type::getInt32Ty(ctx);
         ltInt64 = llvm::Type::getInt64Ty(ctx);
         ltUInt8 = llvm::Type::getInt8Ty(ctx);
         ltCharPtr = llvm::Type::getInt8PtrTy(ctx);
@@ -94,20 +90,21 @@ public:
         fnEvalAdd = f(ltQoreValue, "eval_add", ltInt64, ltUInt8, ltInt64, ltUInt8, nullptr);
         fnEvalTrim = f(ltVoid, "eval_trim", ltInt64, ltUInt8, nullptr);
         fnStrongDeref = f(ltVoid, "strongDeref", ltInt64, ltUInt8, nullptr);
-        fnStrongDerefPtr = f(ltVoid, "strongDerefPtr", ltQoreValuePtr, nullptr);
         fnStrongRef = f(ltVoid, "strongRef", ltInt64, ltUInt8, nullptr);
 
         fnLoadPtr = f(ltQoreValue, "loadPtr", ltQoreValuePtr, nullptr);
         fnReplace = f(ltQoreValue, "replace", ltQoreValuePtr, ltInt64, ltUInt8, nullptr);
         fnLoadUnique = f(ltQoreValue, "load_unique", ltQoreValuePtr, nullptr);
 
-        nothing = llvm::ConstantStruct::get(ltQoreValue, llvm::ConstantInt::get(ltInt64, 0), llvm::ConstantInt::get(ltUInt8, 0), nullptr);
+        nothing = llvm::ConstantStruct::get(ltQoreValue,
+                llvm::ConstantInt::get(ltInt64, 0),
+                llvm::ConstantInt::get(ltUInt8, 0),
+                nullptr);
         scope = nullptr;
 
-        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
-        llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
-        llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
-        builder.SetInsertPoint(bb);
+        ltVoidFunc = llvm::FunctionType::get(ltVoid, false);
+        llvm::Function *f = llvm::Function::Create(ltVoidFunc, llvm::Function::ExternalLinkage, "q", module);
+        builder.SetInsertPoint(llvm::BasicBlock::Create(ctx, "entry", f));
     }
 
     CallBuilder call(llvm::Function *f) {
@@ -131,6 +128,7 @@ public:
     llvm::Type *ltVoid;
     llvm::Type *ltVoidPtr;
     llvm::Type *ltUInt8;
+    llvm::Type *ltInt32;
     llvm::Type *ltInt64;
     llvm::Type *ltCharPtr;
     llvm::StructType *ltQoreValue;
@@ -140,16 +138,46 @@ public:
     llvm::Function *fnEvalAdd;
     llvm::Function *fnEvalTrim;
     llvm::Function *fnStrongDeref;
-    llvm::Function *fnStrongDerefPtr;
     llvm::Function *fnStrongRef;
     llvm::Function *fnLoadPtr;
     llvm::Function *fnReplace;
     llvm::Function *fnLoadUnique;
 
+    llvm::FunctionType *ltVoidFunc;
+
     llvm::DISubprogram *scope;
 
     llvm::DIFile *diFile;
     llvm::DICompositeType *ditQoreValue;
+
+
+    void globalXtor(const char *globalName, const char *funcName, llvm::IRBuilder<> &xtorBuilder) {
+        llvm::Type *funcTypePtr = llvm::PointerType::getUnqual(ltVoidFunc);
+        llvm::StructType *structType = llvm::StructType::get(ltInt32, funcTypePtr, ltVoidPtr, nullptr);
+        llvm::ArrayType *structArrayType = llvm::ArrayType::get(structType, 1);
+        llvm::Function *func = llvm::Function::Create(ltVoidFunc, llvm::Function::InternalLinkage, funcName, module);
+        llvm::Constant *structArray[] = {
+                llvm::ConstantStruct::get(structType,
+                        llvm::ConstantInt::get(ltInt32, 65535, false),
+                        llvm::ConstantExpr::getBitCast(func, funcTypePtr),
+                        llvm::Constant::getNullValue(ltVoidPtr),
+                        nullptr)
+        };
+        new llvm::GlobalVariable(*module, structArrayType, false,
+                llvm::GlobalValue::AppendingLinkage,
+                llvm::ConstantArray::get(structArrayType, structArray),
+                globalName);
+        xtorBuilder.SetInsertPoint(llvm::BasicBlock::Create(ctx, "entry", func));
+        xtorBuilder.SetInsertPoint(xtorBuilder.CreateRetVoid());
+    }
+
+    llvm::GlobalVariable *createStringConstant(const std::string &value) {
+        llvm::Constant *val = llvm::ConstantDataArray::getString(ctx, value, true);
+        llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*module, val->getType(), true,
+                llvm::GlobalValue::PrivateLinkage, val);
+        globalVar->setUnnamedAddr(true);
+        return globalVar;
+    }
 
 private:
     llvm::FunctionType *x(llvm::Type *returnType, va_list v) {
@@ -179,8 +207,6 @@ private:
         va_end(v);
         return llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, module);
     }
-
-
 };
 
 /**
@@ -189,143 +215,100 @@ private:
 class NewBackend : public LLVMHelper {
 public:
     using StringLiteralData = llvm::GlobalVariable *;
-    using LocalVariableData = llvm::AllocaInst *;
+    using VariableData = llvm::AllocaInst *;
     using Value = llvm::Value *;
     using LValue = llvm::Value *;
 
     NewBackend() {
-        llvm::FunctionType* CtorFTy;
-        llvm::Type *CtorPFTy;
-        llvm::StructType *CtorStructTy;
-
-
-        CtorFTy = llvm::FunctionType::get(ltVoid, false);
-        CtorPFTy = llvm::PointerType::getUnqual(CtorFTy);
-
-        // Get the type of a ctor entry, { i32, void ()*, i8* }.
-        CtorStructTy = llvm::StructType::get(llvm::Type::getInt32Ty(ctx), llvm::PointerType::getUnqual(CtorFTy), ltVoidPtr, nullptr);
-
-        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
-        llvm::Function *f = llvm::Function::Create(ft, llvm::Function::InternalLinkage, "qInit", module);
-        llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
-        ctorBuilder.SetInsertPoint(bb);
-        ctorBuilder.SetInsertPoint(ctorBuilder.CreateRetVoid());
-
-
-        // Construct the constructor and destructor arrays.
-          llvm::Constant *S[] = {
-              llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 65535, false),
-              llvm::ConstantExpr::getBitCast(f, CtorPFTy),
-              llvm::Constant::getNullValue(ltVoidPtr)};
-
-          llvm::Constant *Ctors[] = {
-                  llvm::ConstantStruct::get(CtorStructTy, S)
-          };
-
-          llvm::Function *f2 = llvm::Function::Create(ft, llvm::Function::InternalLinkage, "qD", module);
-          llvm::BasicBlock *bb2 = llvm::BasicBlock::Create(ctx, "entry", f2);
-          dtorBuilder.SetInsertPoint(bb2);
-          dtorBuilder.SetInsertPoint(dtorBuilder.CreateRetVoid());
-
-            llvm::Constant *Dtors[] = {
-                    llvm::ConstantStruct::get(CtorStructTy,
-                            llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 65535, false),
-                            llvm::ConstantExpr::getBitCast(f2, CtorPFTy),
-                            llvm::Constant::getNullValue(ltVoidPtr),
-                            nullptr)
-            };
-
-            llvm::ArrayType *AT = llvm::ArrayType::get(CtorStructTy, 1);
-
-        new llvm::GlobalVariable(*module, AT, false,
-                                       llvm::GlobalValue::AppendingLinkage,
-                                       llvm::ConstantArray::get(AT, Ctors),
-                                       "llvm.global_ctors");
-
-        new llvm::GlobalVariable(*module, AT, false,
-                                   llvm::GlobalValue::AppendingLinkage,
-                                   llvm::ConstantArray::get(AT, Dtors),
-                                   "llvm.global_dtors");
-
+        globalXtor("llvm.global_ctors", "qCtor", ctorBuilder);
+        globalXtor("llvm.global_dtors", "qDtor", dtorBuilder);
     }
 
-    ~NewBackend() {
-    }
-
-    LocalVariableData createLocalVariable(const std::string &name) {
-        //TODO do this in entry BB? Or make analyzer 2-pass?
-
-//        location(range);
-        llvm::AllocaInst *v = builder.CreateAlloca(ltQoreValue, nullptr, name);
-        builder.CreateStore(nothing, v);
-        //lifetime start
-        return v;
-    }
-
-    void destroy(LocalVariableData d) {
-        //load & deref
-    }
-
-    void destroy(StringLiteralData) {
-    }
-
-    void destroy(Value v) {
-        call(fnStrongDeref).withQoreValueArg(v).build();
-    }
-
-    Value load(const LocalVariableData &sl) {
-        Value val = builder.CreateLoad(sl);         //TODO align, volatile
-        call(fnStrongRef).withQoreValueArg(val).build();
-        return val;
-    }
-
-    LValue loadPtr(LocalVariableData var) {
+    VariableData createVariable(const std::string &name) {
+        llvm::AllocaInst *var = builder.CreateAlloca(ltQoreValue, nullptr, name);
+        builder.CreateStore(nothing, var);
         return var;
     }
 
-    StringLiteralData createStringLiteral(const std::string &value /*, const SourceRange &range*/) {
-//        location(range);
-        llvm::GlobalVariable *gv1 = new llvm::GlobalVariable(*module, ltQoreValue, false, llvm::GlobalValue::PrivateLinkage, nothing);
-        gv1->setUnnamedAddr(true);
-
-        llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, value, true);
-        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
-        gv->setUnnamedAddr(true);
-
-        ctorBuilder.CreateStore(CallBuilder(ctorBuilder, fnMakeStr).withGenericArg(ctorBuilder.CreateConstGEP2_32(nullptr, gv, 0, 0)).build(), gv1);
-        llvm::LoadInst *vx = dtorBuilder.CreateLoad(gv1);
-        CallBuilder(dtorBuilder, fnStrongDeref).withQoreValueArg(vx).build();
-        dtorBuilder.SetInsertPoint(vx);
-
-        return gv1;
-    }
-//
-    Value load(const StringLiteralData &sl) {
-        Value val = builder.CreateLoad(sl);         //TODO align, volatile
-        call(fnStrongRef).withQoreValueArg(val).build();
-        return val;
+    void destroyVariable(const VariableData &d) {
     }
 
-    void swap(LValue v1, Value &v2) {
-        llvm::Value *tmp1 = builder.CreateLoad(v1);
-        builder.CreateStore(v2, v1);
-        v2 = tmp1;
+    StringLiteralData createStringLiteral(const std::string &value) {
+        llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*module, ltQoreValue, false,
+                llvm::GlobalValue::PrivateLinkage, nothing);
+        globalVar->setUnnamedAddr(true);
+
+        //ctor
+        llvm::Value *strPtr = ctorBuilder.CreateConstGEP2_32(nullptr, createStringConstant(value), 0, 0);
+        ctorBuilder.CreateStore(CallBuilder(ctorBuilder, fnMakeStr).withGenericArg(strPtr).build(), globalVar);
+
+        //dtor
+        llvm::LoadInst *val = dtorBuilder.CreateLoad(globalVar);
+        CallBuilder(dtorBuilder, fnStrongDeref).withQoreValueArg(val).build();
+        dtorBuilder.SetInsertPoint(val);
+
+        return globalVar;
     }
 
-    Value loadUnique(LValue lval) {
-        return call(fnLoadUnique).withQoreValuePtrArg(lval).build();
-    }
-
-    void trim(Value &v) {
-        call(fnEvalTrim).withQoreValueArg(v).build();
+    void destroyStringLiteral(const StringLiteralData &) {
     }
 
     Value add(const Value &l, const Value &r) {
         return call(fnEvalAdd).withQoreValueArg(l).withQoreValueArg(r).build();
     }
 
+    Value assign(const LValue &dest, const Value &newValue) {
+        llvm::Value *originalValue = builder.CreateLoad(dest);
+        builder.CreateStore(newValue, dest);
+        return originalValue;
+    }
+
+    Value getNothing() {
+        return nothing;
+    }
+
+    void lifetimeEnd(const VariableData &var) {
+        //lifetime end
+    }
+
+    void lifetimeStart(const VariableData &var) {
+        //lifetime start
+    }
+
+    Value loadStringLiteralValue(const StringLiteralData &str) {
+        return builder.CreateLoad(str);         //TODO align, volatile
+    }
+
+    Value loadUnique(const LValue &lval) {
+        return call(fnLoadUnique).withQoreValuePtrArg(lval).build();
+    }
+
+    Value loadVariableValue(const VariableData &var) {
+        return builder.CreateLoad(var);         //TODO align, volatile
+    }
+
+    LValue loadVarPtr(const VariableData &var) {
+        return var;
+    }
+
     void print(const Value &v) {
         call(fnPrintQv).withQoreValueArg(v).build();
+    }
+
+    void strongDeref(Value v) {
+        call(fnStrongDeref).withQoreValueArg(v).build();
+    }
+
+    void strongRef(Value v) {
+        call(fnStrongRef).withQoreValueArg(v).build();
+    }
+
+    void trim(const Value &v) {
+        call(fnEvalTrim).withQoreValueArg(v).build();
+    }
+
+    void setLocation(const SourceLocation &loc) {
+        location(loc);
     }
 
     llvm::Module *getModule() {
@@ -339,14 +322,12 @@ private:
     llvm::IRBuilder<> dtorBuilder{ctx};
 };
 
-
 std::unique_ptr<llvm::Module> doCodeGen(const qore::analyzer::Script &script) {
     NewBackend cg;
     Runner<NewBackend> r(script, cg);
     r.run();
     return std::unique_ptr<llvm::Module>(cg.getModule());
 }
-
 
 } // namespace qore
 

@@ -32,88 +32,10 @@
 #define TOOLS_DRIVER_RUNNER_H_
 
 #include "qore/common/Util.h"
+#include "qore/qil/Machine.h"
 
 namespace qore {
 
-template<typename Backend>
-class RunnerBase {
-
-public:
-    RunnerBase(Backend &backend = Backend()) : backend(backend) {
-    }
-
-    virtual ~RunnerBase() {
-    }
-
-    void run(const qil::Code &code) {
-        std::deque<typename Backend::Value> stack;
-        typename Backend::LValue lValReg = nullptr;
-        for (const auto &i : code) {
-            std::cout << "LVALREG: " << lValReg << "\n";
-            std::cout << "Stack:\n";
-            for (const auto &v : stack) {
-                std::cout << "  " << v << "\n";
-            }
-            std::cout << "------" << i << "\n";
-            switch (i.opcode) {
-                case qil::Opcode::LifetimeStart:
-                    i.variable->data = backend.createLocalVariable(i.variable->name);
-                    break;
-                case qil::Opcode::LifetimeEnd:
-                    backend.destroy(static_cast<typename Backend::LocalVariableData>(i.variable->data));
-                    break;
-                case qil::Opcode::PushString:
-                    stack.push_back(backend.load(static_cast<typename Backend::StringLiteralData>(i.stringLiteral->data)));
-                    break;
-                case qil::Opcode::LoadVarPtr:
-                    lValReg = backend.loadPtr(static_cast<typename Backend::LocalVariableData>(i.variable->data));
-                    break;
-                case qil::Opcode::PushVar:
-                    stack.push_back(backend.load(static_cast<typename Backend::LocalVariableData>(i.variable->data)));
-                    break;
-                case qil::Opcode::Assign:
-                    backend.swap(lValReg, stack.back());
-                    lValReg = nullptr;
-                    backend.destroy(stack.back());
-                    stack.pop_back();
-                    break;
-                case qil::Opcode::Discard:
-                    backend.destroy(stack.back());
-                    stack.pop_back();
-                    break;
-                case qil::Opcode::LoadUnique:
-                    stack.push_back(backend.loadUnique(lValReg));
-                    break;
-                case qil::Opcode::Trim:
-                    backend.trim(stack.back());
-                    break;
-                case qil::Opcode::Add: {
-                    typename Backend::Value r = stack.back();
-                    stack.pop_back();
-                    typename Backend::Value l = stack.back();
-                    stack.back() = backend.add(l, r);
-                    backend.destroy(r);
-                    backend.destroy(l);
-                    break;
-                }
-                case qil::Opcode::Print: {
-                    typename Backend::Value v = stack.back();
-                    stack.pop_back();
-                    backend.print(v);
-                    backend.destroy(v);
-                    break;
-                }
-                default:
-                    QORE_UNREACHABLE("Not implemented " << i);
-            }
-        }
-    }
-
-protected:
-    Backend &backend;
-};
-
-//oddelit create local variable od lifetime start
 template<typename Backend>
 class Runner {
 
@@ -122,16 +44,22 @@ public:
         for (const auto &s : script.getStrings()) {
             s->data = backend.createStringLiteral(s->value);
         }
+        for (const auto &v : script.getVariables()) {
+            v->data = backend.createVariable(v->name);
+        }
     }
 
     ~Runner() {
+        for (const auto &v : script.getVariables()) {
+            backend.destroyVariable(static_cast<typename Backend::VariableData>(v->data));
+        }
         for (const auto &s : script.getStrings()) {
-            backend.destroy(static_cast<typename Backend::StringLiteralData>(s->data));
+            backend.destroyStringLiteral(static_cast<typename Backend::StringLiteralData>(s->data));
         }
     }
 
     void run() {
-        RunnerBase<Backend> r(backend);
+        qil::Machine<Backend> r(backend);
         r.run(script.getCode());
     }
 
@@ -149,11 +77,11 @@ public:
     }
 
     ~IntAnalyzer() {
-        for (const auto &v : variables) {
-            backend.destroy(static_cast<typename Backend::LocalVariableData>(v->data));
+        for (const auto &v : variables) {       //TODO let destructors do this
+            backend.destroyVariable(static_cast<typename Backend::VariableData>(v->data));
         }
         for (const auto &s : strings) {
-            backend.destroy(static_cast<typename Backend::StringLiteralData>(s->data));
+            backend.destroyStringLiteral(static_cast<typename Backend::StringLiteralData>(s->data));
         }
     }
 
@@ -171,6 +99,7 @@ public:
             //TODO error redeclaration
         } else {
             var = create(name, range);
+            var->data = backend.createVariable(name);
             codeBuilder.lifetimeStart(range.start, var);
         }
         return var;
@@ -204,7 +133,7 @@ private:
 private:
     Backend backend;
     qil::CodeBuilder codeBuilder;
-    RunnerBase<Backend> rrr;
+    qil::Machine<Backend> rrr;
     std::vector<std::unique_ptr<qil::Variable>> variables;
     std::map<std::string, qil::Variable *> varLookup;
     std::vector<std::unique_ptr<qil::StringLiteral>> strings;

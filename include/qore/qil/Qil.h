@@ -49,9 +49,9 @@ namespace qore {
  * Currently QIL models only the structure of basic blocks, i.e. there are no jumps or branching involved.
  *
  * The `LVALREG` represents an l-value. It is empty during 'normal' expression evaluation. During evaluation
- * of assignment expressions (even implied, such as `trim s`) it points to a memory location of a value to be
- * assign to. The content of the register also represents any locks necessary to protect the value - as long as
- * the register is not empty, no value can be dereferenced.
+ * of assignment expressions (even implied, such as `trim s`) it points to a memory location being written to.
+ * The content of the register also represents any locks necessary to protect the value - as long as the register
+ * is not empty, no value can be dereferenced.
  *
  * The discard queue is used for temporary storage of values that needs to be dereferenced once the locks held
  * by the l-value are released. In the description of the instructions (see \ref Opcode), the meaning of 'discard X'

@@ -42,8 +42,6 @@ namespace analyzer {
 namespace expr {
 
 
-//TODO make scope part of code builder?
-
 class LValueEvaluator : public ast::ExpressionVisitor {
 
 public:

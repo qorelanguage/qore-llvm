@@ -8,21 +8,24 @@
 #include "qore/runtime/runtime.h"
 #include "qore/common/Util.h"
 
-
 namespace qore {
 
 class IntBackend {
 
 public:
     using StringLiteralData = QoreValue *;
-    using LocalVariableData = QoreValue *;
+    using VariableData = QoreValue *;
     using Value = QoreValue;
     using LValue = QoreValue *;
 
-    LocalVariableData createLocalVariable(const std::string &name) {
+    VariableData createVariable(const std::string &name) {
         QoreValue *qv = new QoreValue();
         qv->tag = Tag::Nothing;
         return qv;
+    }
+
+    void destroyVariable(const VariableData &var) {
+        delete var;
     }
 
     StringLiteralData createStringLiteral(const std::string &value) {
@@ -31,43 +34,67 @@ public:
         return qv;
     }
 
-    void destroy(QoreValue *qv) {
-        strongDeref(*qv);
-        delete qv;
-    }
-
-    void destroy(QoreValue &qv) {
-        strongDeref(qv);
-        qv.tag = Tag::Nothing;
-    }
-
-    Value load(QoreValue *qv) {
-        strongRef(*qv);
-        return *qv;
-    }
-
-    LValue loadPtr(LocalVariableData var) {
-        return var;
-    }
-
-    Value loadUnique(LValue lval) {
-        return load_unique(lval);
-    }
-
-    void swap(LValue v1, Value &v2) {
-        std::swap(*v1, v2);
-    }
-
-    void trim(Value &v) {
-        eval_trim(v);
+    void destroyStringLiteral(const StringLiteralData &str) {
+        strongDeref(*str);
+        delete str;
     }
 
     Value add(const Value &l, const Value &r) {
         return eval_add(l, r);
     }
 
+    Value assign(const LValue &dest, const Value &newValue) {
+        QoreValue originalValue = *dest;
+        *dest = newValue;
+        return originalValue;
+    }
+
+    Value getNothing() {
+        QoreValue qv;
+        qv.tag = Tag::Nothing;
+        return qv;
+    }
+
+    void lifetimeEnd(const VariableData &) {
+    }
+
+
+    void lifetimeStart(const VariableData &) {
+    }
+
+    Value loadStringLiteralValue(const StringLiteralData &str) {
+        return *str;
+    }
+
+    Value loadUnique(const LValue &lval) {
+        return load_unique(lval);
+    }
+
+    Value loadVariableValue(const VariableData &var) {
+        return *var;
+    }
+
+    LValue loadVarPtr(const VariableData &var) {
+        return var;
+    }
+
     void print(const Value &v) {
         print_qv(v);
+    }
+
+    void strongDeref(const QoreValue &qv) {
+        ::strongDeref(qv);
+    }
+
+    void strongRef(const QoreValue &qv) {
+        ::strongRef(qv);
+    }
+
+    void trim(const Value &v) {
+        eval_trim(v);
+    }
+
+    void setLocation(const SourceLocation &loc) {
     }
 };
 
@@ -76,6 +103,7 @@ void doInterpret(const analyzer::Script &script) {
     Runner<IntBackend> runner(script, ib);
     runner.run();
 }
-}
+
+} // namespace qore
 
 #endif /* TOOLS_DRIVER_INTERPRET_H_ */

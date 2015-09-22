@@ -181,6 +181,7 @@ enum class Opcode {
      * - todo what if it is an object?
      *
      * ### Stack
+     *
      *     (...) -> (..., V)
      *
      * ### Registers
@@ -220,6 +221,7 @@ enum class Opcode {
      * - discard V
      *
      * ### Stack
+     *
      *     (..., V) -> (...)
      *
      * ### Registers
@@ -238,6 +240,7 @@ enum class Opcode {
      * - push Nothing
      *
      * ### Stack
+     *
      *     (...) -> (..., Nothing)
      *
      * ### Registers
@@ -258,6 +261,7 @@ enum class Opcode {
      * - push S
      *
      * ### Stack
+     *
      *     (...) -> (..., S)
      *
      * ### Registers
@@ -279,6 +283,7 @@ enum class Opcode {
      * - todo there will be locking involved unless var is local and not bound to any closure
      *
      * ### Stack
+     *
      *     (...) -> (..., V)
      *
      * ### Registers
