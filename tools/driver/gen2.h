@@ -322,7 +322,7 @@ private:
     llvm::IRBuilder<> dtorBuilder{ctx};
 };
 
-std::unique_ptr<llvm::Module> doCodeGen(const qore::analyzer::Script &script) {
+std::unique_ptr<llvm::Module> doCodeGen(const qore::qil::Script &script) {
     NewBackend cg;
     Runner<NewBackend> r(script, cg);
     r.run();

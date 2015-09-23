@@ -98,7 +98,7 @@ public:
     }
 };
 
-void doInterpret(const analyzer::Script &script) {
+void doInterpret(const qil::Script &script) {
     IntBackend ib;
     Runner<IntBackend> runner(script, ib);
     runner.run();

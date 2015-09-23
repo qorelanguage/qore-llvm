@@ -28,29 +28,52 @@
 /// \brief TODO File description
 ///
 //------------------------------------------------------------------------------
+#ifndef INCLUDE_QORE_QIL_SCRIPTBUILDER_H_
+#define INCLUDE_QORE_QIL_SCRIPTBUILDER_H_
 
-#ifndef INCLUDE_QORE_ANALYZER_SCOPE_H_
-#define INCLUDE_QORE_ANALYZER_SCOPE_H_
-
-#include "qore/qil/StringLiteral.h"
-#include "qore/qil/Variable.h"
+#include <map>
+#include <string>
+#include "qore/context/SourceRange.h"
+#include "qore/qil/CodeBuilder.h"
+#include "qore/qil/Script.h"
 
 namespace qore {
-namespace analyzer {
+namespace qil {
 
-class Scope {
+class ScriptBuilder {
 
 public:
-    virtual ~Scope() = default;
+    Script build() {
+        return Script(std::move(strings), std::move(variables), codeBuilder.build());
+    }
 
-    virtual qil::Variable *declareVariable(const std::string &name, const SourceRange &range) = 0;
-    virtual qil::Variable *resolve(const std::string &name, const SourceRange &range) = 0;
-    virtual qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) = 0;
+    StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) {
+        StringLiteral *&s = strLookup[value];
+        if (!s) {
+            s = new StringLiteral(std::move(value), range.start);
+            strings.emplace_back(s);
+        }
+        return s;
+    }
 
-    virtual qil::Variable *createVariable(const std::string &name, const SourceRange &range) = 0;
+    Variable *createVariable(const std::string &name, const SourceRange &range) {
+        Variable *v = new Variable(name, range.start);
+        variables.emplace_back(v);
+        return v;
+    }
+
+    CodeBuilder &getCodeBuilder() {
+        return codeBuilder;
+    }
+
+private:
+    CodeBuilder codeBuilder;
+    Script::Variables variables;
+    Script::Strings strings;
+    std::map<std::string, qil::StringLiteral *> strLookup;
 };
 
-} // namespace analyzer
+} // namespace qil
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANALYZER_SCOPE_H_
+#endif // INCLUDE_QORE_QIL_SCRIPTBUILDER_H_

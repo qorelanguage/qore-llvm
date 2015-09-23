@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     }
 
     qore::analyzer::script::Analyzer analyzer;
-    qore::analyzer::Script script = analyzer.analyze(root);
+    qore::qil::Script script = analyzer.analyze(root);
 
     if (interpret) {
         qore::doInterpret(script);

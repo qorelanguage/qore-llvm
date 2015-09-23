@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_QIL_CODEBUILDER_H_
 
 #include <vector>
-#include "qore/qil/Instruction.h"
+#include "qore/qil/Code.h"
 
 namespace qore {
 namespace qil {

@@ -37,10 +37,55 @@
 #include <map>
 #include <memory>
 #include "qore/qil/CodeBuilder.h"
+#include "qore/qil/ScriptBuilder.h"
 
 namespace qore {
 namespace analyzer {
 namespace script {
+
+class BlockScope : public Scope {
+
+public:
+    BlockScope(Scope &parentScope, qil::CodeBuilder &codeBuilder) : parentScope(parentScope), codeBuilder(codeBuilder) {
+    }
+    void close(const SourceLocation &location) {
+        for (auto i = variables.rbegin(), e = variables.rend(); i != e; ++i) {
+            codeBuilder.lifetimeEnd(location, *i);
+        }
+    }
+    qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
+        if (var) {
+            QORE_UNREACHABLE("Redeclaration " << name);
+            //TODO error redeclaration
+        } else {
+            var = createVariable(name, range);
+            variables.push_back(var);
+            codeBuilder.lifetimeStart(range.start, var);
+        }
+        return var;
+    }
+    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
+        if (!var) {
+            return parentScope.resolve(name, range);
+        }
+        return var;
+    }
+    qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
+        return parentScope.createStringLiteral(value, range);
+    }
+
+    qil::Variable *createVariable(const std::string &name, const SourceRange &range) override {
+        return parentScope.createVariable(name, range);
+    }
+
+private:
+    Scope &parentScope;
+    qil::CodeBuilder &codeBuilder;
+    std::vector<qil::Variable *> variables;
+    std::map<std::string, qil::Variable *> varLookup;
+};
 
 template<typename EA = expr::Analyzer>
 class Visitor : public ast::StatementVisitor {              //TODO topLevelCommand
@@ -50,7 +95,9 @@ public:
     }
 
     void visit(const ast::CompoundStatement *node) override {
-        QORE_UNREACHABLE("Not implemented");
+        BlockScope blockScope(scope, codeBuilder);
+        analyze(node->statements, blockScope, codeBuilder);
+        blockScope.close(node->getRange().end);
     }
 
     void visit(const ast::EmptyStatement *node) override {
@@ -65,6 +112,14 @@ public:
         codeBuilder.print(node->getRange().start);
     }
 
+public:
+    static void analyze(const ast::Statements &statements, Scope &scope, qil::CodeBuilder &codeBuilder) {
+        Visitor<EA> visitor(scope, codeBuilder);
+        for (const auto &stmt : statements) {       //TODO stmt -> topLevelCommand
+            stmt->accept(visitor);
+        }
+    }
+
 private:
     Scope &scope;
     qil::CodeBuilder &codeBuilder;
@@ -73,80 +128,41 @@ private:
 class ScriptScope : public Scope {
 
 public:
-    ScriptScope(qil::CodeBuilder &codeBuilder) : codeBuilder(codeBuilder) {
+    ScriptScope(qil::ScriptBuilder &scriptBuilder) : scriptBuilder(scriptBuilder) {
     }
 
-    void close(const SourceLocation &location) {
-        for (auto i = variables.rbegin(), e = variables.rend(); i != e; ++i) {
-            codeBuilder.lifetimeEnd(location, i->get());
-        }
-    }
-
-    qil::Variable *createLocalVariable(const std::string &name, const SourceRange &range) override {
-        qil::Variable *&var = varLookup[name];
-        if (var) {
-            //TODO error redeclaration
-        } else {
-            var = create(name, range);
-            codeBuilder.lifetimeStart(range.start, var);
-        }
-        return var;
+    qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
+        QORE_UNREACHABLE("Should not happen");
     }
 
     qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
-        qil::Variable *&var = varLookup[name];
-        if (!var) {
-            //TODO ERROR: undeclared
-            var = create(name, range);
-        }
-        return var;
+        //TODO recovery must be handled by the caller, otherwise the variable will always be global
+        QORE_UNREACHABLE("Undeclared " << name);
     }
 
     qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
-        qil::StringLiteral *&s = strLookup[value];
-        if (!s) {
-            s = new qil::StringLiteral(std::move(value), range.start);
-            strings.emplace_back(s);
-        }
-        return s;
+        return scriptBuilder.createStringLiteral(value, range);
     }
 
-    std::vector<std::unique_ptr<qil::Variable>> getVariables() {
-        return std::move(variables);
-    }
-
-    std::vector<std::unique_ptr<qil::StringLiteral>> getStrings() {
-        return std::move(strings);
+    qil::Variable *createVariable(const std::string &name, const SourceRange &range) override {
+        return scriptBuilder.createVariable(name, range);
     }
 
 private:
-    qil::Variable *create(const std::string &name, const SourceRange &range) {
-        qil::Variable *v = new qil::Variable(name, range.start);
-        variables.emplace_back(v);
-        return v;
-    }
-
-private:
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    std::map<std::string, qil::Variable *> varLookup;
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::map<std::string, qil::StringLiteral *> strLookup;
-    qil::CodeBuilder &codeBuilder;
+    qil::ScriptBuilder &scriptBuilder;
 };
 
 class Analyzer {
 
 public:
     template<typename EA = expr::Analyzer>
-    Script analyze(const ast::Program::Ptr &node) {
-        qil::CodeBuilder codeBuilder;
-        ScriptScope scope(codeBuilder);
-        Visitor<EA> visitor(scope, codeBuilder);
-        for (const auto &stmt : node->body) {       //TODO stmt -> topLevelCommand
-            stmt->accept(visitor);
-        }
+    qil::Script analyze(const ast::Program::Ptr &node) {
+        qil::ScriptBuilder scriptBuilder;
+        ScriptScope scriptScope(scriptBuilder);
+        BlockScope scope(scriptScope, scriptBuilder.getCodeBuilder());
+        Visitor<EA>::analyze(node->body, scope, scriptBuilder.getCodeBuilder());
         scope.close(node->getRange().end);
-        return Script(scope.getStrings(), scope.getVariables(), codeBuilder.build());
+        return scriptBuilder.build();
     }
 };
 

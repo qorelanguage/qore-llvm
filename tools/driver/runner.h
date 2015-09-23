@@ -40,104 +40,102 @@ template<typename Backend>
 class Runner {
 
 public:
-    Runner(const analyzer::Script &script, Backend &backend) : script(script), backend(backend) {
-        for (const auto &s : script.getStrings()) {
+    Runner(const qil::Script &script, Backend &backend) : script(script), backend(backend) {
+        for (const auto &s : script.strings) {
             s->data = backend.createStringLiteral(s->value);
         }
-        for (const auto &v : script.getVariables()) {
+        for (const auto &v : script.variables) {
             v->data = backend.createVariable(v->name);
         }
     }
 
     ~Runner() {
-        for (const auto &v : script.getVariables()) {
+        for (const auto &v : script.variables) {
             backend.destroyVariable(static_cast<typename Backend::VariableData>(v->data));
         }
-        for (const auto &s : script.getStrings()) {
+        for (const auto &s : script.strings) {
             backend.destroyStringLiteral(static_cast<typename Backend::StringLiteralData>(s->data));
         }
     }
 
     void run() {
         qil::Machine<Backend> r(backend);
-        r.run(script.getCode());
+        r.run(script.code);
     }
 
 private:
-    const analyzer::Script &script;
+    const qil::Script &script;
     Backend &backend;
 };
 
-
 template<typename Backend>
-class IntAnalyzer : private analyzer::Scope {
+class IntScriptScope : public analyzer::Scope {
 
 public:
-    IntAnalyzer(Backend backend = Backend()) : backend(backend), rrr(backend) {
+    IntScriptScope(Backend &backend, qil::ScriptBuilder &scriptBuilder) : backend(backend), scriptBuilder(scriptBuilder) {
+    }
+
+    qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
+        QORE_UNREACHABLE("Should not happen");
+    }
+
+    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
+        //TODO recovery must be handled by the caller, otherwise the variable will always be global
+        QORE_UNREACHABLE("Undeclared " << name);
+    }
+
+    qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
+        qil::StringLiteral *str = scriptBuilder.createStringLiteral(value, range);
+        str->data = backend.createStringLiteral(value);
+        return str;
+    }
+
+    qil::Variable *createVariable(const std::string &name, const SourceRange &range) override {
+        qil::Variable *var = scriptBuilder.createVariable(name, range);
+        var->data = backend.createVariable(name);
+        return var;
+    }
+
+private:
+    Backend backend;
+    qil::ScriptBuilder &scriptBuilder;
+};
+
+template<typename Backend>
+class IntAnalyzer {
+
+public:
+    IntAnalyzer(Backend backend = Backend()) : backend(backend), scriptScope(backend, scriptBuilder),
+            scope(scriptScope, scriptBuilder.getCodeBuilder()), rrr(backend) {
     }
 
     ~IntAnalyzer() {
-        for (const auto &v : variables) {       //TODO let destructors do this
+        LOG_FUNCTION();
+        scope.close(SourceLocation());
+        qil::Script script = scriptBuilder.build();
+        rrr.run(script.code);
+        for (const auto &v : script.variables) {       //TODO let destructors do this
             backend.destroyVariable(static_cast<typename Backend::VariableData>(v->data));
         }
-        for (const auto &s : strings) {
+        for (const auto &s : script.strings) {
             backend.destroyStringLiteral(static_cast<typename Backend::StringLiteralData>(s->data));
         }
     }
 
     void analyze(const ast::Statement::Ptr &node) {
-        analyzer::script::Visitor<> visitor(*this, codeBuilder);
+        analyzer::script::Visitor<> visitor(scope, scriptBuilder.getCodeBuilder());
         node->accept(visitor);
         //TODO if error reported, clear code
         //TODO interactive diag manager -> throw exception, catch it here
-        rrr.run(codeBuilder.build());
-    }
-
-    qil::Variable *createLocalVariable(const std::string &name, const SourceRange &range) override {
-        qil::Variable *&var = varLookup[name];
-        if (var) {
-            //TODO error redeclaration
-        } else {
-            var = create(name, range);
-            var->data = backend.createVariable(name);
-            codeBuilder.lifetimeStart(range.start, var);
-        }
-        return var;
-    }
-
-    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
-        qil::Variable *&var = varLookup[name];
-        if (!var) {
-            //TODO ERROR: undeclared
-        }
-        return var;
-    }
-
-    qil::StringLiteral *createStringLiteral(const std::string &value, const SourceRange &range) override {
-        qil::StringLiteral *&s = strLookup[value];
-        if (!s) {
-            s = new qil::StringLiteral(value, range.start);
-            strings.emplace_back(s);
-            s->data = backend.createStringLiteral(value);
-        }
-        return s;
-    }
-
-private:
-    qil::Variable *create(const std::string &name, const SourceRange &range) {
-        qil::Variable *v = new qil::Variable(name, range.start);
-        variables.emplace_back(v);
-        return v;
+        rrr.run(scriptBuilder.getCodeBuilder().build());
     }
 
 private:
     Backend backend;
-    qil::CodeBuilder codeBuilder;
+    qil::ScriptBuilder scriptBuilder;
+    IntScriptScope<Backend> scriptScope;
+    analyzer::script::BlockScope scope;
     qil::Machine<Backend> rrr;
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    std::map<std::string, qil::Variable *> varLookup;
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::map<std::string, qil::StringLiteral *> strLookup;
 };
 
 } // namespace qore

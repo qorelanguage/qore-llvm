@@ -25,48 +25,40 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO File description
+/// \brief Script definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_ANALYZER_ENTITY_H_
-#define INCLUDE_QORE_ANALYZER_ENTITY_H_
+#ifndef INCLUDE_QORE_QIL_SCRIPT_H_
+#define INCLUDE_QORE_QIL_SCRIPT_H_
 
-#include <string>
-#include "qore/context/SourceRange.h"
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
-#include "qore/qil/Variable.h"
-#include "qore/qil/StringLiteral.h"
+#include <memory>
+#include <vector>
 #include "qore/qil/Code.h"
 
 namespace qore {
-namespace analyzer {
+namespace qil {
 
+/**
+ * \brief Describes an analyzed script.
+ */
 class Script {
 
 public:
-    Script(std::vector<std::unique_ptr<qil::StringLiteral>> strings, std::vector<std::unique_ptr<qil::Variable>> variables, qil::Code code) : strings(std::move(strings)), variables(std::move(variables)), code(std::move(code)) {
-    }
+    using Strings = std::vector<std::unique_ptr<StringLiteral>>;
+    using Variables = std::vector<std::unique_ptr<Variable>>;
 
-    const std::vector<std::unique_ptr<qil::StringLiteral>> &getStrings() const {
-        return strings;
-    }
+public:
+    Strings strings;
+    Variables variables;
+    Code code;
 
-    const std::vector<std::unique_ptr<qil::Variable>> &getVariables() const {
-        return variables;
+public:
+    Script(Strings strings, Variables variables, Code code) : strings(std::move(strings)),
+            variables(std::move(variables)), code(std::move(code)) {
     }
-
-    const qil::Code &getCode() const {
-        return code;
-    }
-
-private:
-    std::vector<std::unique_ptr<qil::StringLiteral>> strings;
-    std::vector<std::unique_ptr<qil::Variable>> variables;
-    qil::Code code;
 };
 
-} // namespace analyzer
+} // namespace qil
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANALYZER_ENTITY_H_
+#endif // INCLUDE_QORE_QIL_SCRIPT_H_

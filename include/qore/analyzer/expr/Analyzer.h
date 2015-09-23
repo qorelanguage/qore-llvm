@@ -69,7 +69,7 @@ public:
     }
 
     void visit(const ast::VarDecl *node) override {
-        codeBuilder.loadVarPtr(node->getRange().start, scope.createLocalVariable(node->name, node->getRange()));
+        codeBuilder.loadVarPtr(node->getRange().start, scope.declareVariable(node->name, node->getRange()));
     }
 
     void visit(const ast::Identifier *node) override {
@@ -128,7 +128,7 @@ public:
     }
 
     void visit(const ast::VarDecl *node) override {
-        scope.createLocalVariable(node->name, node->getRange());
+        scope.declareVariable(node->name, node->getRange());
         if (needsValue) {
             codeBuilder.pushNothing(node->getRange().start);
         }
