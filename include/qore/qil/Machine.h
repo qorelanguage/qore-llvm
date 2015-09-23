@@ -31,6 +31,8 @@
 #ifndef INCLUDE_QORE_QIL_MACHINE_H_
 #define INCLUDE_QORE_QIL_MACHINE_H_
 
+#include "qore/qil/BasicBlock.h"
+
 namespace qore {
 namespace qil {
 
@@ -53,11 +55,23 @@ public:
      * \brief Executes give QIL code.
      * \param code the code to execute
      */
-    void run(const Code &code) {
-        for (const auto &ins : code) {
+    void run(BasicBlock *bb) {
+        for (const auto &ins : bb->instructions) {
             LOG("EXECUTING: " << ins);
             execute(ins);
         }
+    }
+
+    //TODO caller is responsible for the value (deref)
+    typename Backend::Value pop() {
+        assert(!stack.empty() && "Expected a result on the operand stack");
+        Value v = stack.back();
+        stack.pop_back();
+        return v;
+    }
+
+    void checkEmpty() {
+        assert(stack.empty() && "Unexpected leftover value on the operand stack");
     }
 
     /**
@@ -215,7 +229,9 @@ private:
         backend.trim(v);
     }
 
+public: //TODO better solution
     void discard(const Value &v) {
+        LOG("DISCARD " << v);
         if (lValReg) {
             discardQueue.push_back(v);
         } else {
@@ -223,6 +239,7 @@ private:
         }
     }
 
+private:
     void emptyDiscardQueue() {
         for (const Value &v : discardQueue) {
             backend.strongDeref(v);

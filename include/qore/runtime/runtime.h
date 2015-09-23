@@ -30,6 +30,7 @@ extern "C" void eval_trim(QoreValue qv) noexcept;
 extern "C" void strongDeref(QoreValue qv) noexcept;
 extern "C" void strongRef(QoreValue qv) noexcept;
 extern "C" QoreValue load_unique(const QoreValue *qv) noexcept;
+extern "C" bool eval_cond(QoreValue v) noexcept;
 
 std::ostream &operator<<(std::ostream &os, const QoreValue &qv);
 std::ostream &operator<<(std::ostream &os, const QoreValue *qv);

@@ -98,9 +98,58 @@ public:
     }
 };
 
+class InterpretRunner : public qil::TerminatorVisitor {
+
+public:
+    InterpretRunner(const qil::Script &script) : script(script), machine(backend), bb(script.code.entryBasicBlock) {
+        for (const auto &s : script.strings) {
+            s->data = backend.createStringLiteral(s->value);
+        }
+        for (const auto &v : script.variables) {
+            v->data = backend.createVariable(v->name);
+        }
+    }
+
+    ~InterpretRunner() {
+        for (const auto &v : script.variables) {
+            backend.destroyVariable(static_cast<IntBackend::VariableData>(v->data));
+        }
+        for (const auto &s : script.strings) {
+            backend.destroyStringLiteral(static_cast<IntBackend::StringLiteralData>(s->data));
+        }
+    }
+
+    void run() {
+        while (bb) {
+            machine.run(bb);
+            bb->terminator->accept(*this);
+        }
+    }
+
+    void visit(const qil::ConditionalTerminator *t) override {
+        IntBackend::Value value = machine.pop();
+        machine.checkEmpty();
+        bb = eval_cond(value) ? t->thenBlock : t->elseBlock;
+        machine.discard(value);
+    }
+    void visit(const qil::UnconditionalTerminator *t) override {
+        machine.checkEmpty();
+        bb = t->nextBlock;
+    }
+    void visit(const qil::RetVoidTerminator *t) override {
+        machine.checkEmpty();
+        bb = nullptr;
+    }
+
+private:
+    IntBackend backend;
+    const qil::Script &script;
+    qil::Machine<IntBackend> machine;
+    qil::BasicBlock *bb;
+};
+
 void doInterpret(const qil::Script &script) {
-    IntBackend ib;
-    Runner<IntBackend> runner(script, ib);
+    InterpretRunner runner(script);
     runner.run();
 }
 

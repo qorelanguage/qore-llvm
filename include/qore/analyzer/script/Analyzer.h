@@ -101,7 +101,23 @@ public:
     }
 
     void visit(const ast::IfStatement *node) override {
-        QORE_UNREACHABLE("Not implemented");
+        EA().evalValue(scope, codeBuilder, node->condition);
+
+        qil::BasicBlock *thenBlock = codeBuilder.createBasicBlock();
+        qil::BasicBlock *elseBlock = codeBuilder.createBasicBlock();        //TODO empty else branch -> no BB needed
+        qil::BasicBlock *mergeBlock = codeBuilder.createBasicBlock();
+
+        codeBuilder.terminateWithConditional(thenBlock, elseBlock);
+
+        codeBuilder.setBasicBlock(thenBlock);
+        node->thenBranch->accept(*this);
+        codeBuilder.terminate(mergeBlock);
+
+        codeBuilder.setBasicBlock(elseBlock);
+        node->elseBranch->accept(*this);
+        codeBuilder.terminate(mergeBlock);
+
+        codeBuilder.setBasicBlock(mergeBlock);
     }
 
     void visit(const ast::EmptyStatement *node) override {
@@ -166,6 +182,7 @@ public:
         BlockScope scope(scriptScope, scriptBuilder.getCodeBuilder());
         Visitor<EA>::analyze(node->body, scope, scriptBuilder.getCodeBuilder());
         scope.close(node->getRange().end);
+        scriptBuilder.getCodeBuilder().terminateRetVoid();
         return scriptBuilder.build();
     }
 };

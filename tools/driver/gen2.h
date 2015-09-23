@@ -84,6 +84,7 @@ public:
         ltCharPtr = llvm::Type::getInt8PtrTy(ctx);
         ltQoreValue = llvm::StructType::get(ltInt64, ltUInt8, nullptr);
         ltQoreValuePtr = ltQoreValue->getPointerTo();
+        ltBool = llvm::Type::getInt1Ty(ctx);
 
         fnPrintQv = f(ltVoid, "print_qv", ltInt64, ltUInt8, nullptr);
         fnMakeStr = f(ltQoreValue, "make_str", ltCharPtr, nullptr);
@@ -91,6 +92,7 @@ public:
         fnEvalTrim = f(ltVoid, "eval_trim", ltInt64, ltUInt8, nullptr);
         fnStrongDeref = f(ltVoid, "strongDeref", ltInt64, ltUInt8, nullptr);
         fnStrongRef = f(ltVoid, "strongRef", ltInt64, ltUInt8, nullptr);
+        fnEvalCond = f(ltBool, "eval_cond", ltInt64, ltUInt8, nullptr);
 
         fnLoadPtr = f(ltQoreValue, "loadPtr", ltQoreValuePtr, nullptr);
         fnReplace = f(ltQoreValue, "replace", ltQoreValuePtr, ltInt64, ltUInt8, nullptr);
@@ -103,8 +105,7 @@ public:
         scope = nullptr;
 
         ltVoidFunc = llvm::FunctionType::get(ltVoid, false);
-        llvm::Function *f = llvm::Function::Create(ltVoidFunc, llvm::Function::ExternalLinkage, "q", module);
-        builder.SetInsertPoint(llvm::BasicBlock::Create(ctx, "entry", f));
+        qMain = llvm::Function::Create(ltVoidFunc, llvm::Function::ExternalLinkage, "q", module);
     }
 
     CallBuilder call(llvm::Function *f) {
@@ -131,12 +132,14 @@ public:
     llvm::Type *ltInt32;
     llvm::Type *ltInt64;
     llvm::Type *ltCharPtr;
+    llvm::Type *ltBool;
     llvm::StructType *ltQoreValue;
     llvm::Type *ltQoreValuePtr;
     llvm::Function *fnPrintQv;
     llvm::Function *fnMakeStr;
     llvm::Function *fnEvalAdd;
     llvm::Function *fnEvalTrim;
+    llvm::Function *fnEvalCond;
     llvm::Function *fnStrongDeref;
     llvm::Function *fnStrongRef;
     llvm::Function *fnLoadPtr;
@@ -149,7 +152,7 @@ public:
 
     llvm::DIFile *diFile;
     llvm::DICompositeType *ditQoreValue;
-
+    llvm::Function *qMain;
 
     void globalXtor(const char *globalName, const char *funcName, llvm::IRBuilder<> &xtorBuilder) {
         llvm::Type *funcTypePtr = llvm::PointerType::getUnqual(ltVoidFunc);
@@ -230,9 +233,6 @@ public:
         return var;
     }
 
-    void destroyVariable(const VariableData &d) {
-    }
-
     StringLiteralData createStringLiteral(const std::string &value) {
         llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*module, ltQoreValue, false,
                 llvm::GlobalValue::PrivateLinkage, nothing);
@@ -248,9 +248,6 @@ public:
         dtorBuilder.SetInsertPoint(val);
 
         return globalVar;
-    }
-
-    void destroyStringLiteral(const StringLiteralData &) {
     }
 
     Value add(const Value &l, const Value &r) {
@@ -312,9 +309,13 @@ public:
     }
 
     llvm::Module *getModule() {
-        builder.CreateRetVoid();
+        qMain->viewCFG();
         module->dump();
         return module;
+    }
+
+    llvm::Value *eval_cond(Value v) {
+        return call(fnEvalCond).withQoreValueArg(v).build();
     }
 
 private:
@@ -322,11 +323,65 @@ private:
     llvm::IRBuilder<> dtorBuilder{ctx};
 };
 
+class CodeGenRunner : public qil::TerminatorVisitor {
+
+public:
+    CodeGenRunner(const qil::Script &script) : script(script), machine(backend) {
+        backend.builder.SetInsertPoint(getLlvmBb(script.code.entryBasicBlock));
+        for (const auto &s : script.strings) {
+            s->data = backend.createStringLiteral(s->value);
+        }
+        for (const auto &v : script.variables) {
+            v->data = backend.createVariable(v->name);
+        }
+    }
+
+    void run() {
+        for (const auto &bb : script.code.basicBlocks) {
+            backend.builder.SetInsertPoint(getLlvmBb(bb.get()));
+            machine.run(bb.get());
+            bb->terminator->accept(*this);
+        }
+    }
+
+    llvm::BasicBlock *getLlvmBb(qil::BasicBlock *bb) {
+        llvm::BasicBlock *llvmBb;
+        if (bb->data == nullptr) {
+            llvmBb = llvm::BasicBlock::Create(backend.ctx, "bb", backend.qMain);
+            bb->data = llvmBb;
+        } else {
+            llvmBb = static_cast<llvm::BasicBlock *>(bb->data);
+        }
+        return llvmBb;
+    }
+
+    void visit(const qil::ConditionalTerminator *t) override {
+        NewBackend::Value value = machine.pop();
+        machine.checkEmpty();
+        auto c = backend.eval_cond(value);
+        machine.discard(value);
+        auto tb = getLlvmBb(t->thenBlock);
+        auto eb = getLlvmBb(t->elseBlock);
+        backend.builder.CreateCondBr(c, tb, eb);
+    }
+    void visit(const qil::UnconditionalTerminator *t) override {
+        machine.checkEmpty();
+        backend.builder.CreateBr(getLlvmBb(t->nextBlock));
+    }
+    void visit(const qil::RetVoidTerminator *t) override {
+        machine.checkEmpty();
+        backend.builder.CreateRetVoid();
+    }
+
+    NewBackend backend;
+    const qil::Script &script;
+    qil::Machine<NewBackend> machine;
+};
+
 std::unique_ptr<llvm::Module> doCodeGen(const qore::qil::Script &script) {
-    NewBackend cg;
-    Runner<NewBackend> r(script, cg);
+    CodeGenRunner r(script);
     r.run();
-    return std::unique_ptr<llvm::Module>(cg.getModule());
+    return std::unique_ptr<llvm::Module>(r.backend.getModule());
 }
 
 } // namespace qore

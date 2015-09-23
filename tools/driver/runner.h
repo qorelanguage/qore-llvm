@@ -37,38 +37,6 @@
 namespace qore {
 
 template<typename Backend>
-class Runner {
-
-public:
-    Runner(const qil::Script &script, Backend &backend) : script(script), backend(backend) {
-        for (const auto &s : script.strings) {
-            s->data = backend.createStringLiteral(s->value);
-        }
-        for (const auto &v : script.variables) {
-            v->data = backend.createVariable(v->name);
-        }
-    }
-
-    ~Runner() {
-        for (const auto &v : script.variables) {
-            backend.destroyVariable(static_cast<typename Backend::VariableData>(v->data));
-        }
-        for (const auto &s : script.strings) {
-            backend.destroyStringLiteral(static_cast<typename Backend::StringLiteralData>(s->data));
-        }
-    }
-
-    void run() {
-        qil::Machine<Backend> r(backend);
-        r.run(script.code);
-    }
-
-private:
-    const qil::Script &script;
-    Backend &backend;
-};
-
-template<typename Backend>
 class IntScriptScope : public analyzer::Scope {
 
 public:
@@ -102,18 +70,19 @@ private:
 };
 
 template<typename Backend>
-class IntAnalyzer {
+class IntAnalyzer : public qil::TerminatorVisitor {
 
 public:
     IntAnalyzer(Backend backend = Backend()) : backend(backend), scriptScope(backend, scriptBuilder),
-            scope(scriptScope, scriptBuilder.getCodeBuilder()), rrr(backend) {
+            scope(scriptScope, scriptBuilder.getCodeBuilder()), machine(backend), bb(nullptr) {
     }
 
     ~IntAnalyzer() {
         LOG_FUNCTION();
         scope.close(SourceLocation());
         qil::Script script = scriptBuilder.build();
-        rrr.run(script.code);
+        bb = script.code.entryBasicBlock;
+        run();
         for (const auto &v : script.variables) {       //TODO let destructors do this
             backend.destroyVariable(static_cast<typename Backend::VariableData>(v->data));
         }
@@ -127,7 +96,34 @@ public:
         node->accept(visitor);
         //TODO if error reported, clear code
         //TODO interactive diag manager -> throw exception, catch it here
-        rrr.run(scriptBuilder.getCodeBuilder().build());
+        qil::Code code = scriptBuilder.getCodeBuilder().build();
+        bb = code.entryBasicBlock;
+        run();
+    }
+
+    void run() {
+        while (bb) {
+            machine.run(bb);
+            if (!bb->terminator) {
+                break;
+            }
+            bb->terminator->accept(*this);
+        }
+    }
+
+    void visit(const qil::ConditionalTerminator *t) override {
+        typename Backend::Value value = machine.pop();
+        machine.checkEmpty();
+        bb = eval_cond(value) ? t->thenBlock : t->elseBlock;
+        machine.discard(value);
+    }
+    void visit(const qil::UnconditionalTerminator *t) override {
+        machine.checkEmpty();
+        bb = t->nextBlock;
+    }
+    void visit(const qil::RetVoidTerminator *t) override {
+        machine.checkEmpty();
+        bb = nullptr;
     }
 
 private:
@@ -135,7 +131,8 @@ private:
     qil::ScriptBuilder scriptBuilder;
     IntScriptScope<Backend> scriptScope;
     analyzer::script::BlockScope scope;
-    qil::Machine<Backend> rrr;
+    qil::Machine<Backend> machine;
+    qil::BasicBlock *bb;
 };
 
 } // namespace qore

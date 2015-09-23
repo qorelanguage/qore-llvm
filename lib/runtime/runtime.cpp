@@ -129,6 +129,18 @@ __attribute__((visibility("default"))) QoreValue load_unique(const QoreValue *qv
     return make_str(qv->strValue->value.c_str());
 }
 
+__attribute__((visibility("default"))) bool eval_cond(QoreValue v) noexcept {
+    switch (v.tag) {
+        case Tag::Nothing:
+            return false;
+        case Tag::Int:
+            return v.intValue != 0;
+        case Tag::Str:
+            return v.strValue->value != "";
+    }
+    assert(false);
+}
+
 std::ostream &operator<<(std::ostream &os, const QoreString *qs) {
     return os << static_cast<const void*>(qs) << ":{" << *qs << "}";
 }

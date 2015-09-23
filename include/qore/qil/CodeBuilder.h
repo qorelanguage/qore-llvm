@@ -43,14 +43,41 @@ namespace qil {
 class CodeBuilder {
 
 public:
-    CodeBuilder() = default;
+    CodeBuilder() {
+        bb = createBasicBlock();
+        entryBasicBlock = bb;
+    }
 
     /**
      * \brief Builds the code and resets the builder to default state.
      * \return built code
      */
     Code build() {
-        return Code(std::move(instructions));
+        Code code = Code(std::move(basicBlocks), entryBasicBlock);
+        bb = createBasicBlock();
+        entryBasicBlock = bb;
+        return code;
+    }
+
+    void setBasicBlock(BasicBlock *bb) {
+        this->bb = bb;
+    }
+
+    BasicBlock *createBasicBlock() {
+        basicBlocks.emplace_back(new BasicBlock());
+        return basicBlocks.back().get();
+    }
+
+    void terminateRetVoid() {
+        bb->terminator = std::unique_ptr<Terminator>(new RetVoidTerminator());
+    }
+
+    void terminate(BasicBlock *nextBlock) {
+        bb->terminator = std::unique_ptr<Terminator>(new UnconditionalTerminator(nextBlock));
+    }
+
+    void terminateWithConditional(BasicBlock *thenBlock, BasicBlock *elseBlock) {
+        bb->terminator = std::unique_ptr<Terminator>(new ConditionalTerminator(thenBlock, elseBlock));
     }
 
     /// \name Builder methods
@@ -111,8 +138,9 @@ public:
 
 private:
     Instruction &makeIns(Opcode opcode, const SourceLocation &location) {
-        instructions.resize(instructions.size() + 1);
-        Instruction &i = instructions.back();
+        assert(bb && "No basic block set");
+        bb->instructions.resize(bb->instructions.size() + 1);
+        Instruction &i = bb->instructions.back();
         i.opcode = opcode;
         i.location = location;
         return i;
@@ -133,7 +161,9 @@ private:
         return *this;
     }
 
-    std::vector<Instruction> instructions;
+    BasicBlock *bb;
+    std::vector<std::unique_ptr<BasicBlock>> basicBlocks;
+    BasicBlock *entryBasicBlock;
 };
 
 } // namespace qil

@@ -1,10 +1,8 @@
 my s;
-s = "    abc    ";
-{
-    my s = "  x  ";
-    my a = s;
-    trim s;
-    print "s: *" + s + "*";
-    print "a: *" + a + "*";
-}
-print "s: *" + s + "*";
+s = "";
+if (my x = "1") {
+    print "A";
+    x = x + "A";
+} else
+    print "B";
+print x;
