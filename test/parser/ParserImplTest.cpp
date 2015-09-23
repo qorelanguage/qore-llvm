@@ -38,6 +38,7 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     ast::Statements statements() { return parser.statements(); }
     ast::Statement::Ptr statement() { return parser.statement(); }
     ast::PrintStatement::Ptr printStatement() { return parser.printStatement(); }
+    ast::IfStatement::Ptr ifStatement() { return parser.ifStatement(); }
     ast::ExpressionStatement::Ptr expressionStatement() { return parser.expressionStatement(); }
     ast::CompoundStatement::Ptr block() { return parser.block(); }
     ast::Expression::Ptr expression() { return parser.expression(); }
@@ -56,6 +57,7 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     SourceRange range5 = createRange(51, 52, 53);
     SourceRange range6 = createRange(61, 62, 63);
     SourceRange range7 = createRange(71, 72, 73);
+    SourceRange range8 = createRange(81, 82, 83);
 };
 
 TEST_F(ParserImplTest, parse) {
@@ -203,6 +205,40 @@ TEST_F(ParserImplTest, compoundStatement) {
     DIAG_NONE();
     ast::CompoundStatement::Ptr stmt = block();
     EXPECT_EQ(0U, stmt->statements.size());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, ifStatementNoElse) {
+    addToken(TokenType::KwIf, range1);
+    addToken(TokenType::ParenLeft, range2);
+    addToken(TokenType::Integer, 3, range3);
+    addToken(TokenType::ParenRight, range4);
+    addToken(TokenType::Semicolon, range5);
+    addToken(TokenType::Semicolon, range6);
+    DIAG_NONE();
+    ast::IfStatement::Ptr stmt = ifStatement();
+    AST_CAST(ast::IntegerLiteral, cond, stmt->condition);
+    AST_CAST(ast::EmptyStatement, thenB, stmt->thenBranch);
+    AST_CAST(ast::EmptyStatement, elseB, stmt->elseBranch);
+    EXPECT_EQ(SourceRange(range1.start, range5.end), stmt->getRange());
+    EXPECT_NOT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, ifStatementWithElse) {
+    addToken(TokenType::KwIf, range1);
+    addToken(TokenType::ParenLeft, range2);
+    addToken(TokenType::Integer, 3, range3);
+    addToken(TokenType::ParenRight, range4);
+    addToken(TokenType::Semicolon, range5);
+    addToken(TokenType::KwElse, range6);
+    addToken(TokenType::CurlyLeft, range7);
+    addToken(TokenType::CurlyRight, range8);
+    DIAG_NONE();
+    ast::IfStatement::Ptr stmt = ifStatement();
+    AST_CAST(ast::IntegerLiteral, cond, stmt->condition);
+    AST_CAST(ast::EmptyStatement, thenB, stmt->thenBranch);
+    AST_CAST(ast::CompoundStatement, elseB, stmt->elseBranch);
+    EXPECT_EQ(SourceRange(range1.start, range8.end), stmt->getRange());
     EXPECT_CONSUMED();
 }
 

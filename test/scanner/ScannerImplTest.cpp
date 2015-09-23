@@ -66,7 +66,7 @@ TEST_F(ScannerImplTest, EofSkipSpaces) {
 
 TEST_F(ScannerImplTest, Symbols) {
     Token t;
-    SCANNER(" + ;{}=");
+    SCANNER(" + ;{}=()");
 
     DIAG_NONE();
     scanner.read(&t);    EXPECT_EQ(TokenType::Plus, t.type);
@@ -74,6 +74,8 @@ TEST_F(ScannerImplTest, Symbols) {
     scanner.read(&t);    EXPECT_EQ(TokenType::CurlyLeft, t.type);
     scanner.read(&t);    EXPECT_EQ(TokenType::CurlyRight, t.type);
     scanner.read(&t);    EXPECT_EQ(TokenType::Assign, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::ParenLeft, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::ParenRight, t.type);
 }
 
 TEST_F(ScannerImplTest, InvalidCharDiagAndRecover) {
@@ -150,8 +152,10 @@ TEST_F(ScannerImplTest, KwPrint) {
 
 TEST_F(ScannerImplTest, Keyword) {
     Token t;
-    SCANNER("my trim");
+    SCANNER("else if my trim");
     DIAG_NONE();
+    scanner.read(&t); EXPECT_EQ(TokenType::KwElse, t.type);
+    scanner.read(&t); EXPECT_EQ(TokenType::KwIf, t.type);
     scanner.read(&t); EXPECT_EQ(TokenType::KwMy, t.type);
     scanner.read(&t); EXPECT_EQ(TokenType::KwTrim, t.type);
 }

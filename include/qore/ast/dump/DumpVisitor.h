@@ -151,6 +151,16 @@ public:
             << EndNode();
     }
 
+    void visit(const IfStatement *node) override {
+        formatter << BeginNode("ifStatement")
+            << Range(node->getRange())
+            << EndNodeHeader()
+            << Child("condition"), visitNode(node->condition)
+            << Child("then"), visitNode(node->thenBranch)
+            << Last() << Child("else"), visitNode(node->elseBranch)
+            << EndNode();
+    }
+
     void visit(const Program *node) override {
         formatter << BeginNode("program")
             << Range(node->getRange())

@@ -100,6 +100,10 @@ public:
         blockScope.close(node->getRange().end);
     }
 
+    void visit(const ast::IfStatement *node) override {
+        QORE_UNREACHABLE("Not implemented");
+    }
+
     void visit(const ast::EmptyStatement *node) override {
     }
 

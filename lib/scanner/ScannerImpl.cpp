@@ -66,6 +66,10 @@ TokenType ScannerImpl::readInternal(Token *token) {
             return TokenType::CurlyLeft;
         case '}':
             return TokenType::CurlyRight;
+        case '(':
+            return TokenType::ParenLeft;
+        case ')':
+            return TokenType::ParenRight;
         case '=':
             return TokenType::Assign;
         case '"':
@@ -118,7 +122,11 @@ TokenType ScannerImpl::readIdentifier(Token *token) {
 
     std::string s{start, end};
     //FIXME use something better
-    if (s == "my") {
+    if (s == "else") {
+        return TokenType::KwElse;
+    } else if (s == "if") {
+        return TokenType::KwIf;
+    } else if (s == "my") {
         return TokenType::KwMy;
     } else if (s == "print") {
         return TokenType::KwPrint;

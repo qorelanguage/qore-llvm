@@ -66,5 +66,15 @@ TEST_F(StatementTest, CompoundStatement) {
     EXPECT_EQ(range, node->getRange());
 }
 
+TEST_F(StatementTest, IfStatement) {
+    MockExpression expr;
+    MockStatement stmt1;
+    MockStatement stmt2;
+    IfStatement::Ptr node = IfStatement::create(range, expr, stmt1, stmt2);
+    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    node->accept(mockVisitor);
+    EXPECT_EQ(range, node->getRange());
+}
+
 } // namespace ast
 } // namespace qore

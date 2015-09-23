@@ -222,6 +222,54 @@ private:
     SourceRange range;
 };
 
+/**
+ * \brief Represents an if-then-else statement.
+ */
+class IfStatement : public Statement {
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<IfStatement>;
+
+public:
+    Expression::Ptr condition;              //!< The condition.
+    Statement::Ptr thenBranch;              //!< The statements of the positive branch.
+    Statement::Ptr elseBranch;              //!< The statements of the negative branch.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location in the source code
+     * \param condition the condition
+     * \param thenBranch the statements of the positive branch
+     * \param elseBranch the statements of the negative branch
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceRange range, Expression::Ptr condition, Statement::Ptr thenBranch,
+            Statement::Ptr elseBranch) {
+        return Ptr(new IfStatement(range, std::move(condition), std::move(thenBranch), std::move(elseBranch)));
+    }
+
+    void accept(StatementVisitor &v) const override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    IfStatement(SourceRange range, Expression::Ptr condition, Statement::Ptr thenBranch, Statement::Ptr elseBranch)
+        : condition(std::move(condition)), thenBranch(std::move(thenBranch)),
+          elseBranch(std::move(elseBranch)), range(range) {
+    }
+
+private:
+    SourceRange range;
+};
+
 } // namespace ast
 } // namespace qore
 

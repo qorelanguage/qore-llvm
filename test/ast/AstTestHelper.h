@@ -117,6 +117,7 @@ public:
     MOCK_METHOD1(visit, void(const PrintStatement *));
     MOCK_METHOD1(visit, void(const ExpressionStatement *));
     MOCK_METHOD1(visit, void(const CompoundStatement *));
+    MOCK_METHOD1(visit, void(const IfStatement *));
 };
 
 class MockProgramVisitor : public ProgramVisitor {

@@ -59,6 +59,7 @@ private:
     ast::CompoundStatement::Ptr block();
     ast::Statement::Ptr statement();
     ast::PrintStatement::Ptr printStatement();
+    ast::IfStatement::Ptr ifStatement();
     ast::ExpressionStatement::Ptr expressionStatement();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignment();

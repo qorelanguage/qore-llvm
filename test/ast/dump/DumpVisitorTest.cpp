@@ -221,6 +221,20 @@ TEST_F(DumpVisitorTest, compoundStmt) {
 )", ss.str());
 }
 
+TEST_F(DumpVisitorTest, ifStmt) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("if (1) ; else {}")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:17
++-body
+  +-ifStatement @1:1-1:17
+    +-integerLiteral @1:5-1:6 value: 1
+    +-emptyStatement @1:8-1:9
+    +-compoundStatement @1:15-1:17
+      +-statements
+)", ss.str());
+}
+
 } // namespace dump
 } // namespace ast
 } // namespace qore

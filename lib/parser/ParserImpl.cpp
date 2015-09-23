@@ -76,6 +76,7 @@ ast::CompoundStatement::Ptr ParserImpl::block() {
 //statement
 //    ::= ';'
 //    ::= printStatement
+//    ::= ifStatement
 //    ::= expressionStatement
 ast::Statement::Ptr ParserImpl::statement() {
     LOG_FUNCTION();
@@ -84,11 +85,37 @@ ast::Statement::Ptr ParserImpl::statement() {
             return ast::EmptyStatement::create(consume().range);
         case TokenType::KwPrint:
             return printStatement();
+        case TokenType::KwIf:
+            return ifStatement();
         case TokenType::CurlyLeft:
             return block();
         default:
             return expressionStatement();
     }
+}
+
+//ifStatement
+//    ::= KwIf '(' expression ')' statement
+//    ::= KwIf '(' expression ')' statement KwElse statement
+ast::IfStatement::Ptr ParserImpl::ifStatement() {
+    LOG_FUNCTION();
+    SourceLocation start = match(TokenType::KwIf).start;
+    match(TokenType::ParenLeft);
+    ast::Expression::Ptr condition = expression();
+    match(TokenType::ParenRight);
+    ast::Statement::Ptr thenBranch = statement();
+    ast::Statement::Ptr elseBranch;
+    SourceLocation end;
+    if (tokenType() == TokenType::KwElse) {
+        consume();
+        elseBranch = statement();
+        end = elseBranch->getRange().end;
+    } else {
+        end = thenBranch->getRange().end;
+        elseBranch = ast::EmptyStatement::create(SourceRange(end, end));
+    }
+    return ast::IfStatement::create(SourceRange(start, end), std::move(condition),
+            std::move(thenBranch), std::move(elseBranch));
 }
 
 //printStatement ::= KwPrint expression ';'

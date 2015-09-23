@@ -25,6 +25,8 @@
 //------------------------------------------------------------------------------
 
 TOK(EndOfFile)
+TOK(KwElse)
+TOK(KwIf)
 TOK(KwMy)
 TOK(KwPrint)
 TOK(KwTrim)
@@ -35,4 +37,6 @@ TOK(Plus)
 TOK(Semicolon)
 TOK(CurlyLeft)
 TOK(CurlyRight)
+TOK(ParenLeft)
+TOK(ParenRight)
 TOK(Assign)
