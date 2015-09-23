@@ -181,6 +181,47 @@ private:
     SourceRange range;
 };
 
+/**
+ * \brief Represents a compound statement.
+ */
+class CompoundStatement : public Statement {
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<CompoundStatement>;
+
+public:
+    Statements statements;          //!< The statements.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location in the source code
+     * \param statements the statements
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceRange range, Statements statements) {
+        return Ptr(new CompoundStatement(range, std::move(statements)));
+    }
+
+    void accept(StatementVisitor &v) const override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    CompoundStatement(SourceRange range, Statements statements) : statements(std::move(statements)), range(range) {
+    }
+
+private:
+    SourceRange range;
+};
+
 } // namespace ast
 } // namespace qore
 

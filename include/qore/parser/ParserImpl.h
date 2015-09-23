@@ -56,6 +56,7 @@ public:
 private:
     ast::Program::Ptr program();
     ast::Statements statements();
+    ast::CompoundStatement::Ptr block();
     ast::Statement::Ptr statement();
     ast::PrintStatement::Ptr printStatement();
     ast::ExpressionStatement::Ptr expressionStatement();

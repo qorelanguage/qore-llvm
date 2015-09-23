@@ -143,6 +143,14 @@ public:
             << EndNode();
     }
 
+    void visit(const CompoundStatement *node) override {
+        formatter << BeginNode("compoundStatement")
+            << Range(node->getRange())
+            << EndNodeHeader()
+            << Last() << Child("statements"), visitNodes(node->statements)
+            << EndNode();
+    }
+
     void visit(const Program *node) override {
         formatter << BeginNode("program")
             << Range(node->getRange())

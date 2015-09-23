@@ -49,6 +49,10 @@ public:
     Visitor(Scope &scope, qil::CodeBuilder &codeBuilder) : scope(scope), codeBuilder(codeBuilder) {
     }
 
+    void visit(const ast::CompoundStatement *node) override {
+        QORE_UNREACHABLE("Not implemented");
+    }
+
     void visit(const ast::EmptyStatement *node) override {
     }
 

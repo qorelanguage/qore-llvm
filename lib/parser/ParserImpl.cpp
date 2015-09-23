@@ -61,9 +61,22 @@ ast::Statements ParserImpl::statements() {
     return body;
 }
 
+//block ::= '{' statements '}
+ast::CompoundStatement::Ptr ParserImpl::block() {
+    LOG_FUNCTION();
+    SourceLocation start = match(TokenType::CurlyLeft).start;
+    ast::Statements statements;
+    while (tokenType() != TokenType::CurlyRight) {
+        statements.push_back(statement());
+    }
+    SourceLocation end = match(TokenType::CurlyRight).end;
+    return ast::CompoundStatement::create(SourceRange(start, end), std::move(statements));
+}
+
 //statement
 //    ::= ';'
 //    ::= printStatement
+//    ::= expressionStatement
 ast::Statement::Ptr ParserImpl::statement() {
     LOG_FUNCTION();
     switch (tokenType()) {
@@ -71,6 +84,8 @@ ast::Statement::Ptr ParserImpl::statement() {
             return ast::EmptyStatement::create(consume().range);
         case TokenType::KwPrint:
             return printStatement();
+        case TokenType::CurlyLeft:
+            return block();
         default:
             return expressionStatement();
     }

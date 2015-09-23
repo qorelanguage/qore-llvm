@@ -44,6 +44,7 @@ class Identifier;
 class EmptyStatement;
 class PrintStatement;
 class ExpressionStatement;
+class CompoundStatement;
 class Program;
 
 /**
@@ -131,6 +132,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(const ExpressionStatement *node) = 0;
+
+    /**
+     * \brief Called by a CompoundStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(const CompoundStatement *node) = 0;
 
 protected:
     StatementVisitor() = default;

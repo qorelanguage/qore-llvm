@@ -39,6 +39,7 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     ast::Statement::Ptr statement() { return parser.statement(); }
     ast::PrintStatement::Ptr printStatement() { return parser.printStatement(); }
     ast::ExpressionStatement::Ptr expressionStatement() { return parser.expressionStatement(); }
+    ast::CompoundStatement::Ptr block() { return parser.block(); }
     ast::Expression::Ptr expression() { return parser.expression(); }
     ast::Expression::Ptr additiveExpression() { return parser.additiveExpression(); }
     ast::Expression::Ptr prefixExpression() { return parser.prefixExpression(); }
@@ -193,6 +194,15 @@ TEST_F(ParserImplTest, printStatementErr) {
     AST_CAST(ast::IntegerLiteral, expr, stmt->expression);
     EXPECT_EQ(1234U, expr->value);
     EXPECT_EQ(SourceRange(range1.start, range5.end), stmt->getRange());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, compoundStatement) {
+    addToken(TokenType::CurlyLeft);
+    addToken(TokenType::CurlyRight);
+    DIAG_NONE();
+    ast::CompoundStatement::Ptr stmt = block();
+    EXPECT_EQ(0U, stmt->statements.size());
     EXPECT_CONSUMED();
 }
 
