@@ -54,7 +54,8 @@ public:
     JsonFormat(std::ostream &os = std::cout) : os(os), last(true) {
     }
 
-private:
+    /// \name Operator implementation.
+    /// \{
     JsonFormat &operator<<(BeginNode beginNode) {
         stack.push_back(last);
         last = false;
@@ -111,7 +112,9 @@ private:
         last = true;
         return *this;
     }
+    /// \}
 
+private:
     template<typename T>
     void qoute(T value) {
         os << "\"" << value << "\"";
@@ -122,8 +125,6 @@ private:
     std::vector<bool> stack;
     Indent indent;
     bool last;
-
-    friend class DumpVisitor<JsonFormat>;
 };
 
 /**

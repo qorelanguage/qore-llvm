@@ -46,6 +46,7 @@ class PrintStatement;
 class ExpressionStatement;
 class CompoundStatement;
 class IfStatement;
+class TryStatement;
 class Program;
 
 /**
@@ -145,6 +146,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(const IfStatement *node) = 0;
+
+    /**
+     * \brief Called by a TryStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(const TryStatement *node) = 0;
 
 protected:
     StatementVisitor() = default;

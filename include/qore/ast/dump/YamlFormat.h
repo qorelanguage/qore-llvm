@@ -81,7 +81,8 @@ public:
     YamlFormat(std::ostream &os = std::cout) : os(os) {
     }
 
-private:
+    /// \name Operator implementation.
+    /// \{
     template<typename T>
     YamlFormat &operator<<(T) {         //this handles BeginArray, EndArray EndNodeHeader and Last
         return *this;
@@ -114,12 +115,11 @@ private:
         }
         return *this;
     }
+    /// \}
 
 private:
     std::ostream &os;
     YamlIndent indent;
-
-    friend class DumpVisitor<YamlFormat>;
 };
 
 } // namespace dump

@@ -122,7 +122,9 @@ TokenType ScannerImpl::readIdentifier(Token *token) {
 
     std::string s{start, end};
     //FIXME use something better
-    if (s == "else") {
+    if (s == "catch") {
+        return TokenType::KwCatch;
+    } else if (s == "else") {
         return TokenType::KwElse;
     } else if (s == "if") {
         return TokenType::KwIf;
@@ -132,6 +134,8 @@ TokenType ScannerImpl::readIdentifier(Token *token) {
         return TokenType::KwPrint;
     } else if (s == "trim") {
         return TokenType::KwTrim;
+    } else if (s == "try") {
+        return TokenType::KwTry;
     }
 
     token->stringValue = std::move(s);

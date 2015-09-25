@@ -270,6 +270,52 @@ private:
     SourceRange range;
 };
 
+/**
+ * \brief Represents a try-catch statement.
+ */
+class TryStatement : public Statement {
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<TryStatement>;
+
+public:
+    Statement::Ptr tryBody;                 //!< The statements of the try block.
+    Identifier::Ptr var;                    //!< The variable in the catch block (can be nullptr)
+    Statement::Ptr catchBody;               //!< The statements of the catch block.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location in the source code
+     * \param tryBody the statements of the try block
+     * \param catchBody the statements of the catch block
+     * \param var the variable in the catch block (can be nullptr)
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceRange range, Statement::Ptr tryBody, Identifier::Ptr var, Statement::Ptr catchBody) {
+        return Ptr(new TryStatement(range, std::move(tryBody), std::move(var), std::move(catchBody)));
+    }
+
+    void accept(StatementVisitor &v) const override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    TryStatement(SourceRange range, Statement::Ptr tryBody, Identifier::Ptr var, Statement::Ptr catchBody)
+        : tryBody(std::move(tryBody)), var(std::move(var)), catchBody(std::move(catchBody)), range(range) {
+    }
+
+private:
+    SourceRange range;
+};
+
 } // namespace ast
 } // namespace qore
 

@@ -87,6 +87,8 @@ ast::Statement::Ptr ParserImpl::statement() {
             return printStatement();
         case TokenType::KwIf:
             return ifStatement();
+        case TokenType::KwTry:
+            return tryStatement();
         case TokenType::CurlyLeft:
             return block();
         default:
@@ -116,6 +118,26 @@ ast::IfStatement::Ptr ParserImpl::ifStatement() {
     }
     return ast::IfStatement::create(SourceRange(start, end), std::move(condition),
             std::move(thenBranch), std::move(elseBranch));
+}
+
+//tryStatement
+//    ::= KwTry statement KwCatch '(' identifier ')' statement
+//    ::= KwTry statement KwCatch '(' ')' statement
+ast::TryStatement::Ptr ParserImpl::tryStatement() {
+    LOG_FUNCTION();
+    SourceLocation start = match(TokenType::KwTry).start;
+    ast::Statement::Ptr tryBlock = statement();
+    match(TokenType::KwCatch);
+    match(TokenType::ParenLeft);
+    ast::Identifier::Ptr var;
+    if (tokenType() != TokenType::ParenRight) {
+        var = identifier();
+    }
+    match(TokenType::ParenRight);
+    ast::Statement::Ptr catchBlock = statement();
+    SourceLocation end = catchBlock->getRange().end;
+    return ast::TryStatement::create(SourceRange(start, end), std::move(tryBlock),
+            std::move(var), std::move(catchBlock));
 }
 
 //printStatement ::= KwPrint expression ';'
@@ -183,6 +205,7 @@ ast::Expression::Ptr ParserImpl::prefixExpression() {
 //primaryExpression
 //    ::= Number
 //    ::= String
+//    ::= identifier
 //    ::= varDecl
 ast::Expression::Ptr ParserImpl::primaryExpression() {
     LOG_FUNCTION();
@@ -193,7 +216,7 @@ ast::Expression::Ptr ParserImpl::primaryExpression() {
         case TokenType::String:
             return ast::StringLiteral::create(r, consume().stringValue);
         case TokenType::Identifier:
-            return ast::Identifier::create(r, consume().stringValue);
+            return identifier();
         case TokenType::KwMy:
             return varDecl();
         default:
@@ -215,6 +238,20 @@ ast::VarDecl::Ptr ParserImpl::varDecl() {
     }
     r.end = range().end;
     return ast::VarDecl::create(r, consume().stringValue);
+}
+
+//identifier 
+//    ::= Identifier
+//TODO $id
+ast::Identifier::Ptr ParserImpl::identifier() {
+    LOG_FUNCTION();
+    SourceRange r = range();
+    if (tokenType() != TokenType::Identifier) {
+        report(DiagId::ParserUnexpectedToken) << to_string(TokenType::Identifier) << token;
+        consume();
+        return ast::Identifier::create(r, "");      //TODO proper recovery
+    }
+    return ast::Identifier::create(r, consume().stringValue);
 }
 
 } // namespace qore

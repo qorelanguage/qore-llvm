@@ -25,11 +25,13 @@
 //------------------------------------------------------------------------------
 
 TOK(EndOfFile)
+TOK(KwCatch)
 TOK(KwElse)
 TOK(KwIf)
 TOK(KwMy)
 TOK(KwPrint)
 TOK(KwTrim)
+TOK(KwTry)
 TOK(Identifier)
 TOK(Integer)
 TOK(String)

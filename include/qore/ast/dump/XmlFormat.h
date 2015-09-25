@@ -55,7 +55,8 @@ public:
     XmlFormat(std::ostream &os = std::cout) : os(os), inHeader(false), savedChildName(nullptr) {
     }
 
-private:
+    /// \name Operator implementation.
+    /// \{
     XmlFormat &operator<<(BeginNode beginNode) {
         const char *tag = beginNode.type ? beginNode.type : savedChildName;
         os << indent << "<" << tag;
@@ -108,6 +109,7 @@ private:
     XmlFormat &operator<<(Last) {
         return *this;
     }
+    /// \}
 
 private:
     std::ostream &os;
@@ -115,8 +117,6 @@ private:
     Indent indent;
     bool inHeader;
     const char *savedChildName;
-
-    friend class DumpVisitor<XmlFormat>;
 };
 
 } // namespace dump

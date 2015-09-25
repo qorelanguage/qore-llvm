@@ -120,6 +120,10 @@ public:
         codeBuilder.setBasicBlock(mergeBlock);
     }
 
+    void visit(const ast::TryStatement *node) override {
+        QORE_UNREACHABLE("Not implemented");
+    }
+
     void visit(const ast::EmptyStatement *node) override {
     }
 

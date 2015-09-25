@@ -67,7 +67,9 @@ private:
         LastNode = 3
     };
 
-private:
+public:
+    /// \name Operator implementation.
+    /// \{
     CompactFormat &operator<<(BeginNode beginNode) {
         indent() << (beginNode.type ? beginNode.type : savedChildName);
         inHeader = true;
@@ -95,6 +97,7 @@ private:
         indentStack.push_back(IndentItem::Node);
         return *this;
     }
+
     CompactFormat &operator<<(EndNode) {
         if (inHeader) {
             os << "\n";
@@ -127,7 +130,9 @@ private:
         last = true;
         return *this;
     }
+    /// \}
 
+private:
     template<typename T>
     void qoute(T value) {
         os << value;
@@ -152,8 +157,6 @@ private:
     bool last;
     const char *savedChildName;
     std::array<const char *, 4> symbols;
-
-    friend class DumpVisitor<CompactFormat>;
 };
 
 /**

@@ -44,6 +44,54 @@ namespace ast {
 namespace dump {
 
 /**
+ * \private
+ */
+template<typename F>
+class FormatterWrapper {
+
+public:
+    FormatterWrapper(F &formatter, bool ignoreNext) : formatter(formatter), ignoreNext(ignoreNext) {
+    }
+
+    template<typename T>
+    F &operator <<(Attribute<T> attribute) {
+        if (!ignoreNext) {
+            formatter << attribute;
+        }
+        return formatter;
+    }
+
+    F &operator <<(Child child) {
+        if (!ignoreNext) {
+            formatter << child;
+        }
+        return formatter;
+    }
+
+private:
+    F &formatter;
+    bool ignoreNext;
+};
+
+/**
+ * \private
+ */
+struct Unless {
+    bool value;
+
+    Unless(bool value) : value(value) {
+    }
+};
+
+/**
+ * \private
+ */
+template<typename F>
+inline FormatterWrapper<F> operator <<(F &f, Unless u) {
+    return FormatterWrapper<F>(f, u.value);
+}
+
+/**
  * \brief A visitor for dumping the AST.
  * \tparam F the type of the formatter, see XmlFormat, JsonFormat, YamlFormat and CompactFormat
  */
@@ -161,6 +209,16 @@ public:
             << EndNode();
     }
 
+    void visit(const TryStatement *node) override {
+        formatter << BeginNode("tryStatement")
+            << Range(node->getRange())
+            << EndNodeHeader()
+            << Child("try"), visitNode(node->tryBody)
+            << Unless(node->var == nullptr) << Child("var"), visitNode(node->var)
+            << Last() << Child("catch"), visitNode(node->catchBody)
+            << EndNode();
+    }
+
     void visit(const Program *node) override {
         formatter << BeginNode("program")
             << Range(node->getRange())
@@ -172,7 +230,9 @@ public:
 private:
     template<typename N>
     F &visitNode(const N &node) {
-        node->accept(*this);
+        if (node) {
+            node->accept(*this);
+        }
         return formatter;
     }
 

@@ -235,6 +235,19 @@ TEST_F(DumpVisitorTest, ifStmt) {
 )", ss.str());
 }
 
+TEST_F(DumpVisitorTest, tryStmt) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("try ; catch (e) ;")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:18
++-body
+  +-tryStatement @1:1-1:18
+    +-emptyStatement @1:5-1:6
+    +-identifier @1:14-1:15 name: "e"
+    +-emptyStatement @1:17-1:18
+)", ss.str());
+}
+
 } // namespace dump
 } // namespace ast
 } // namespace qore

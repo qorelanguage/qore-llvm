@@ -152,12 +152,14 @@ TEST_F(ScannerImplTest, KwPrint) {
 
 TEST_F(ScannerImplTest, Keyword) {
     Token t;
-    SCANNER("else if my trim");
+    SCANNER("catch else if my trim try");
     DIAG_NONE();
+    scanner.read(&t); EXPECT_EQ(TokenType::KwCatch, t.type);
     scanner.read(&t); EXPECT_EQ(TokenType::KwElse, t.type);
     scanner.read(&t); EXPECT_EQ(TokenType::KwIf, t.type);
     scanner.read(&t); EXPECT_EQ(TokenType::KwMy, t.type);
     scanner.read(&t); EXPECT_EQ(TokenType::KwTrim, t.type);
+    scanner.read(&t); EXPECT_EQ(TokenType::KwTry, t.type);
 }
 
 TEST_F(ScannerImplTest, Identifier) {
