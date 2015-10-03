@@ -76,7 +76,7 @@ private:
  * \return the output stream
  */
 inline std::ostream &operator<<(std::ostream &os, const StringLiteral &str) {
-    return os << "StringLiteral \"" << str.value << "\" @" << str.location << " (data: " << str.data << ")";
+    return os << "\"" << str.value << "\"@" << str.location;
 }
 
 } // namespace qil

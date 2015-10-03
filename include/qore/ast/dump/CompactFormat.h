@@ -134,7 +134,7 @@ public:
 
 private:
     template<typename T>
-    void qoute(T value) {
+    void qoute(const T &value) {
         os << value;
     }
 
@@ -163,7 +163,7 @@ private:
  * \private
  */
 template<>
-inline void CompactFormat::qoute(std::string value) {
+inline void CompactFormat::qoute(const std::string &value) {
     os << "\"" << value << "\"";
 }
 

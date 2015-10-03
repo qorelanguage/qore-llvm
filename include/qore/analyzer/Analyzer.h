@@ -1,0 +1,298 @@
+//--------------------------------------------------------------------*- C++ -*-
+//
+//  Qore Programming Language
+//
+//  Copyright (C) 2015 Qore Technologies
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+//------------------------------------------------------------------------------
+///
+/// \file
+/// \brief TODO File description
+///
+//------------------------------------------------------------------------------
+#ifndef INCLUDE_QORE_ANALYZER_SCRIPT_ANALYZER_H_
+#define INCLUDE_QORE_ANALYZER_SCRIPT_ANALYZER_H_
+
+#include "qore/common/Util.h"
+#include "qore/ast/Program.h"
+#include "qore/ast/Rewriter.h"
+#include "qore/qil/Qil.h"
+#include "qore/qil/StringLiteral.h"
+#include "qore/qil/Variable.h"
+#include <string>
+#include <map>
+#include <memory>
+
+namespace qore {
+namespace analyzer {
+
+class Scope {
+
+public:
+    virtual ~Scope() = default;
+
+    virtual qil::Variable *declareVariable(const std::string &name, const SourceRange &range) = 0;
+    virtual qil::Variable *resolve(const std::string &name, const SourceRange &range) = 0;
+
+    virtual qil::Variable *createVariable(const std::string &name, const SourceRange &range) = 0;
+};
+
+class ScopeAdder : public ast::Rewriter {
+public:
+    ast::Statement *rewrite(ast::IfStatement *node) override {
+        return ast::ScopedStatement::wrap(node);
+    }
+
+    ast::Statement *rewrite(ast::TryStatement *node) override {
+        ast::Statement *s = node->tryBody.release();
+        node->tryBody.reset(ast::ScopedStatement::wrap(s));
+        //TODO try/catch scope
+        return node;
+    }
+
+    ast::Statement *rewrite(ast::CompoundStatement *node) override {
+        return ast::ScopedStatement::wrap(node);
+    }
+};
+
+class BlockScope : public Scope {
+public:
+    BlockScope(Scope &parentScope) : parentScope(parentScope) {
+    }
+    void closeInteractive() {
+        for (auto it = variables.rbegin(); it != variables.rend(); ++it) {
+            QoreValue *qv = static_cast<QoreValue *>((*it)->data);
+            strongDeref(*qv);
+            delete qv;
+        }
+    }
+    void close(ast::ScopedStatement *stmt) {
+        stmt->variables = std::move(variables);
+    }
+    qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
+        if (var) {
+            QORE_UNREACHABLE("Redeclaration " << name);
+            //TODO error redeclaration
+        } else {
+            var = createVariable(name, range);
+            variables.push_back(var);
+        }
+        return var;
+    }
+    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
+        qil::Variable *&var = varLookup[name];
+        if (!var) {
+            return parentScope.resolve(name, range);
+        }
+        return var;
+    }
+
+    qil::Variable *createVariable(const std::string &name, const SourceRange &range) override {
+        return parentScope.createVariable(name, range);
+    }
+
+private:
+    Scope &parentScope;
+    std::vector<qil::Variable *> variables;
+    std::map<std::string, qil::Variable *> varLookup;
+};
+
+class Resolver : public ast::Rewriter {
+public:
+    Resolver(Scope &scope) : scope(scope) {
+    }
+
+    ast::VarRef *rewrite(ast::VarDecl *node) override {
+        qil::Variable *v = scope.declareVariable(node->name, node->getRange());
+        //delete node;
+        return ast::VarRef::create(node->getRange(), v);
+    }
+
+    ast::VarRef *rewrite(ast::Identifier *node) override {
+        qil::Variable *v = scope.resolve(node->name, node->getRange());
+        //delete node;
+        return ast::VarRef::create(node->getRange(), v);
+    }
+
+    void visit(ast::ScopedStatement *node) override {
+        BlockScope bs(scope);
+        Resolver r(bs);
+        r.recurse(node->statement);
+        bs.close(node);
+    }
+
+private:
+    Scope &scope;
+};
+
+class StringReplacer : public ast::Rewriter {
+public:
+    StringReplacer(bool interactive = false) : interactive(interactive) {
+    }
+
+    ~StringReplacer() {
+        if (interactive) {
+            for (auto it = strings.rbegin(); it != strings.rend(); ++it) {
+                QoreValue *qv = static_cast<QoreValue *>((*it)->data);
+                strongDeref(*qv);
+                delete qv;
+            }
+        }
+    }
+
+
+    //TODO: ast::StrRef === qil::StringLiteral ?   -> cleanup ownership -> shared_ptr ???
+
+    ast::StrRef *rewrite(ast::StringLiteral *node) override {
+        qil::StringLiteral *&s = strLookup[node->value];
+        if (!s) {
+            s = new qil::StringLiteral(std::move(node->value), node->getRange().start);
+            if (interactive) {
+                QoreValue *qv = new QoreValue();
+                *qv = make_str(s->value.c_str());
+                s->data = qv;
+            }
+            strings.emplace_back(s);
+        }
+        //delete node;
+        return ast::StrRef::create(node->getRange(), s);
+    }
+
+public:
+    qil::Script::Strings strings;
+    std::map<std::string, qil::StringLiteral *> strLookup;
+private:
+    bool interactive;
+};
+
+//class ConstFolder : public ast::Rewriter {
+//public:
+//    ConstFolder() {
+//    }
+//
+//    ast::Expression *rewrite(ast::BinaryExpression *node) override {
+//        //TODO remove dynamic casts
+//        ast::StringLiteral *left = dynamic_cast<ast::StringLiteral *>(node->left.get());
+//        ast::StringLiteral *right = dynamic_cast<ast::StringLiteral *>(node->right.get());
+//        if (left && right) {
+//            left->value += right->value;
+//            node->left.release();
+//            //delete node
+//            return left;
+//        }
+//        return node;
+//    }
+//};
+
+class ScriptScope : public Scope {
+
+public:
+    ScriptScope() {
+    }
+
+    qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
+        QORE_UNREACHABLE("Should not happen");
+    }
+
+    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
+        //TODO recovery must be handled by the caller, otherwise the variable will always be global
+        QORE_UNREACHABLE("Undeclared " << name);
+    }
+
+    qil::Variable *createVariable(const std::string &name, const SourceRange &range) override {
+        qil::Variable *v = new qil::Variable(name, range.start);
+        initVar(v);
+        variables.emplace_back(v);
+        return v;
+    }
+
+    virtual void initVar(qil::Variable *v) {
+    }
+
+public:
+    qil::Script::Variables variables;
+};
+
+class InteractiveScriptScope : public ScriptScope {
+public:
+    virtual void initVar(qil::Variable *v) {
+        QoreValue *qv = new QoreValue();
+        qv->tag = Tag::Nothing;
+        v->data = qv;
+    }
+};
+
+
+class Analyzer {
+
+public:
+    qil::Script analyze(const ast::Program::Ptr &node) {
+        SourceRange range = node->getRange();
+        ast::Statement::Ptr body = ast::CompoundStatement::create(range, std::move(node->body));
+
+        ScopeAdder sa;
+        sa.recurse(body);
+
+        ScriptScope scriptScope;
+        Resolver r(scriptScope);
+        r.recurse(body);
+
+//        ConstFolder cf;
+//        cf.recurse(body);
+
+        StringReplacer sr;
+        sr.recurse(body);
+
+        qil::Script s;
+        s.variables = std::move(scriptScope.variables);
+        s.strings = std::move(sr.strings);
+        s.body = std::move(body);
+        return s;
+    }
+
+    void analyze(ast::Statement::Ptr &node) {
+        ScopeAdder sa;
+        sa.recurse(node);
+
+        Resolver r(interactiveScope);
+        r.recurse(node);
+
+//        ConstFolder cf;
+//        cf.recurse(body);
+
+        isr.recurse(node);
+    }
+
+    ~Analyzer() {
+        interactiveScope.closeInteractive();
+    }
+
+private:
+    StringReplacer isr{true};
+    InteractiveScriptScope interactiveScriptScope;
+    BlockScope interactiveScope{interactiveScriptScope};
+};
+
+} // namespace analyzer
+} // namespace qore
+
+#endif // INCLUDE_QORE_ANALYZER_SCRIPT_ANALYZER_H_

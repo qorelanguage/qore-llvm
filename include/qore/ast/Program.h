@@ -65,7 +65,7 @@ public:
      * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
      * \param visitor the visitor to call
      */
-    virtual void accept(ProgramVisitor &visitor) const {
+    virtual void accept(ProgramVisitor &visitor) {
         visitor.visit(this);
     }
 

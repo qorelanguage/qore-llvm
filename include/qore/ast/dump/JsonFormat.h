@@ -116,7 +116,7 @@ public:
 
 private:
     template<typename T>
-    void qoute(T value) {
+    void qoute(const T &value) {
         os << "\"" << value << "\"";
     }
 
@@ -131,7 +131,7 @@ private:
  * \private
  */
 template<>
-inline void JsonFormat::qoute(uint64_t value) {
+inline void JsonFormat::qoute(const uint64_t &value) {
     os << value;
 }
 

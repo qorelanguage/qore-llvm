@@ -34,6 +34,8 @@
 #include <memory>
 #include "qore/qore.h"
 #include "qore/ast/Node.h"
+#include "qore/qil/StringLiteral.h"
+#include "qore/qil/Variable.h"
 
 namespace qore {
 namespace ast {
@@ -53,7 +55,7 @@ public:
      * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
      * \param visitor the visitor to call
      */
-    virtual void accept(ExpressionVisitor &visitor) const = 0;
+    virtual void accept(ExpressionVisitor &visitor) = 0;
 };
 
 /**
@@ -81,7 +83,7 @@ public:
         return Ptr(new IntegerLiteral(value, range));
     }
 
-    void accept(ExpressionVisitor &v) const override {
+    void accept(ExpressionVisitor &v) override {
         v.visit(this);
     }
 
@@ -122,7 +124,7 @@ public:
         return Ptr(new StringLiteral(value, range));
     }
 
-    void accept(ExpressionVisitor &v) const override {
+    void accept(ExpressionVisitor &v) override {
         v.visit(this);
     }
 
@@ -166,7 +168,7 @@ public:
         return Ptr(new BinaryExpression(std::move(left), operatorRange, std::move(right)));
     }
 
-    void accept(ExpressionVisitor &v) const override {
+    void accept(ExpressionVisitor &v) override {
         v.visit(this);
     }
 
@@ -206,7 +208,7 @@ public:
         return Ptr(new UnaryExpression(operatorRange, std::move(operand)));
     }
 
-    void accept(ExpressionVisitor &v) const override {
+    void accept(ExpressionVisitor &v) override {
         v.visit(this);
     }
 
@@ -248,7 +250,7 @@ public:
         return Ptr(new Assignment(std::move(left), operatorRange, std::move(right)));
     }
 
-    void accept(ExpressionVisitor &v) const override {
+    void accept(ExpressionVisitor &v) override {
         v.visit(this);
     }
 
@@ -287,7 +289,7 @@ public:
         return Ptr(new VarDecl(range, std::move(name)));
     }
 
-    void accept(ExpressionVisitor &v) const override {
+    void accept(ExpressionVisitor &v) override {
         v.visit(this);
     }
 
@@ -296,8 +298,7 @@ public:
     }
 
 private:
-    VarDecl(SourceRange range, std::string name)
-        : name(std::move(name)), range(range) {
+    VarDecl(SourceRange range, std::string name) : name(std::move(name)), range(range) {
     }
 
 private:
@@ -329,7 +330,7 @@ public:
         return Ptr(new Identifier(range, std::move(name)));
     }
 
-    void accept(ExpressionVisitor &v) const override {
+    void accept(ExpressionVisitor &v) override {
         v.visit(this);
     }
 
@@ -338,8 +339,90 @@ public:
     }
 
 private:
-    Identifier(SourceRange range, std::string name)
-        : name(std::move(name)), range(range) {
+    Identifier(SourceRange range, std::string name) : name(std::move(name)), range(range) {
+    }
+
+private:
+    SourceRange range;
+};
+
+
+/**
+ * \brief Represents a variable.
+ */
+class VarRef : public Expression {
+
+public:
+    qil::Variable *ref;
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<VarRef>;
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location of the declaration
+     * \param ref the variable
+     * \return a unique pointer to the allocated node
+     */
+    static VarRef *create(SourceRange range, qil::Variable *ref) {
+        return new VarRef(range, ref);
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    VarRef(SourceRange range, qil::Variable *ref) : ref(ref), range(range) {
+    }
+
+private:
+    SourceRange range;
+};
+
+/**
+ * \brief Represents a string.
+ */
+class StrRef : public Expression {
+
+public:
+    qil::StringLiteral *ref;
+
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<VarRef>;
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param range the location of the declaration
+     * \param ref the string
+     * \return a unique pointer to the allocated node
+     */
+    static StrRef *create(SourceRange range, qil::StringLiteral *ref) {
+        return new StrRef(range, ref);
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return range;
+    }
+
+private:
+    StrRef(SourceRange range, qil::StringLiteral *ref) : ref(ref), range(range) {
     }
 
 private:

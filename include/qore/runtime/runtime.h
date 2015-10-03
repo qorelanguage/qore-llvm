@@ -25,11 +25,13 @@ struct QoreValue {
 
 extern "C" void print_qv(QoreValue qv) noexcept;
 extern "C" QoreValue make_str(const char *value) noexcept;
-extern "C" QoreValue eval_add(QoreValue l, QoreValue r) noexcept;
-extern "C" void eval_trim(QoreValue qv) noexcept;
-extern "C" void strongDeref(QoreValue qv) noexcept;
+extern "C" QoreValue eval_add(QoreValue l, QoreValue r);
+extern "C" void eval_trim(QoreValue qv);
+extern "C" void strongDeref(QoreValue qv);
+extern "C" void strongDerefNothrow(QoreValue qv) noexcept;
 extern "C" void strongRef(QoreValue qv) noexcept;
-extern "C" QoreValue load_unique(const QoreValue *qv) noexcept;
+extern "C" void unlock(QoreValue *qv) noexcept;
+extern "C" QoreValue load_unique(const QoreValue *qv);
 extern "C" bool eval_cond(QoreValue v) noexcept;
 
 std::ostream &operator<<(std::ostream &os, const QoreValue &qv);

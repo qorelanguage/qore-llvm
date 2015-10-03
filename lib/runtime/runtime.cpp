@@ -40,10 +40,21 @@ private:
     QoreString &operator=(QoreString &&) = delete;
 };
 
-__attribute__((visibility("default"))) void strongDeref(QoreValue qv) noexcept {
+__attribute__((visibility("default"))) void strongDeref(QoreValue qv) {
     if (qv.tag == Tag::Str) {
         qv.strValue->deref();
     }
+}
+
+__attribute__((visibility("default"))) void strongDerefNothrow(QoreValue qv) noexcept {
+    try {
+        strongDeref(qv);
+    } catch (...) {
+        //link to an existing exception
+    }
+}
+
+__attribute__((visibility("default"))) void unlock(QoreValue *qv) noexcept {
 }
 
 __attribute__((visibility("default"))) void strongRef(QoreValue qv) noexcept {
@@ -88,7 +99,7 @@ static inline void append(std::string &dest, QoreValue v) {
     }
 }
 
-__attribute__((visibility("default"))) QoreValue eval_add(QoreValue l, QoreValue r) noexcept {
+__attribute__((visibility("default"))) QoreValue eval_add(QoreValue l, QoreValue r) {
     if (l.tag == Tag::Int && r.tag == Tag::Int) {
         QoreValue qv;
         qv.tag = Tag::Int;
@@ -111,14 +122,17 @@ static inline std::string trim(const std::string &s) {
    return (wsback <= wsfront ? std::string() : std::string(wsfront, wsback));
 }
 
-__attribute__((visibility("default"))) void eval_trim(QoreValue qv) noexcept {
+__attribute__((visibility("default"))) void eval_trim(QoreValue qv) {
     if (qv.tag == Tag::Str) {
+        if (qv.strValue->value.find('a') != std::string::npos) {
+            throw 123;
+        }
         std::string str = trim(qv.strValue->value);
         qv.strValue->value = std::move(str);
     }
 }
 
-__attribute__((visibility("default"))) QoreValue load_unique(const QoreValue *qv) noexcept {
+__attribute__((visibility("default"))) QoreValue load_unique(const QoreValue *qv) {
     if (qv->tag != Tag::Str) {
         return *qv;
     }

@@ -10,147 +10,334 @@
 
 namespace qore {
 
-class IntBackend {
+class Value {
 
 public:
-    using StringLiteralData = QoreValue *;
-    using VariableData = QoreValue *;
-    using Value = QoreValue;
-    using LValue = QoreValue *;
-
-    VariableData createVariable(const std::string &name) {
-        QoreValue *qv = new QoreValue();
-        qv->tag = Tag::Nothing;
-        return qv;
-    }
-
-    void destroyVariable(const VariableData &var) {
-        delete var;
-    }
-
-    StringLiteralData createStringLiteral(const std::string &value) {
-        QoreValue *qv = new QoreValue();
-        *qv = make_str(value.c_str());
-        return qv;
-    }
-
-    void destroyStringLiteral(const StringLiteralData &str) {
-        strongDeref(*str);
-        delete str;
-    }
-
-    Value add(const Value &l, const Value &r) {
-        return eval_add(l, r);
-    }
-
-    Value assign(const LValue &dest, const Value &newValue) {
-        QoreValue originalValue = *dest;
-        *dest = newValue;
-        return originalValue;
-    }
-
-    Value getNothing() {
-        QoreValue qv;
+    Value() : hasValue(false) {     //TODO hasValue is useful only for logging
         qv.tag = Tag::Nothing;
-        return qv;
     }
 
-    void lifetimeEnd(const VariableData &) {
+    ~Value() {
+        if (hasValue) {
+            LOG("Deref " << qv);
+            strongDeref(qv);
+        }
+    }
+
+    Value(const QoreValue &qv) : qv(qv), hasValue(true) {
+        strongRef(qv);
+        LOG("Ref " << qv);
+    }
+
+    Value(Value &&src) : qv(src.qv), hasValue(src.hasValue) {
+        src.qv.tag = Tag::Nothing;
+        src.hasValue = false;
+    }
+
+    Value &operator=(Value &&src) {
+        assert(!hasValue);
+        if (src.hasValue) {
+            hasValue = true;
+            qv = src.qv;
+            src.qv.tag = Tag::Nothing;
+            src.hasValue = false;
+        }
+        return *this;
+    }
+
+    void swapValue(QoreValue &v) {
+        assert(hasValue);
+        std::swap(qv, v);
+    }
+
+    void print() {
+        assert(hasValue);
+        LOG("Print " << qv);
+        print_qv(qv);
+    }
+
+    bool evalCond() {
+        assert(hasValue);
+        LOG("EvalCond " << qv);
+        return eval_cond(qv);
+    }
+
+    Value add(Value &right) {
+        return Value(eval_add(qv, right.qv), false);        //TODO all refs and derefs are handled here, so runtime should not care -> make eval_add return ref = 0 ?
+    }
+
+    Value dup() {
+        return Value(qv);
+    }
+
+    void trim() {       //assumes unique
+        assert(hasValue);
+        LOG("Trim " << qv);
+        eval_trim(qv);
     }
 
 
-    void lifetimeStart(const VariableData &) {
+private:
+    Value(const QoreValue &qv, bool claimRef) : qv(qv), hasValue(true) {
+        if (claimRef) {
+            strongRef(qv);
+            LOG("Ref " << qv);
+        }
     }
 
-    Value loadStringLiteralValue(const StringLiteralData &str) {
-        return *str;
+private:
+    Value(const Value &) = delete;
+    Value &operator=(const Value &) = delete;
+
+private:
+    QoreValue qv;
+    bool hasValue;
+
+    friend std::ostream &operator<<(std::ostream &os, const Value &value) {
+        return os << value.qv;
     }
 
-    Value loadUnique(const LValue &lval) {
-        return load_unique(lval);
+    friend class LValue;
+};
+
+class LValue {
+
+public:
+    LValue(qil::Variable *var = nullptr) : var(var) {
+        if (var) {
+            LOG("Acquire lock: " << *var);
+        }
     }
 
-    Value loadVariableValue(const VariableData &var) {
-        return *var;
+    ~LValue() {
+        if (var) {
+            LOG("Release lock: " << *var);
+        }
     }
 
-    LValue loadVarPtr(const VariableData &var) {
-        return var;
+    LValue(LValue &&src) : var(src.var) {
+        src.var = nullptr;
     }
 
-    void print(const Value &v) {
-        print_qv(v);
+    LValue &operator=(LValue &&src) {
+        var = src.var;
+        src.var = nullptr;
+        return *this;
     }
 
-    void strongDeref(const QoreValue &qv) {
-        ::strongDeref(qv);
+    void swapValue(Value &qv) {
+        assert(var);
+        QoreValue *v = static_cast<QoreValue *>(var->data);
+        LOG("Assign " << qv << " to " << var);
+        qv.swapValue(*v);
     }
 
-    void strongRef(const QoreValue &qv) {
-        ::strongRef(qv);
+    Value loadUnique() {
+        QoreValue *v = static_cast<QoreValue *>(var->data);
+        LOG("Load unique " << *v);
+        return Value(load_unique(v), false);
     }
 
-    void trim(const Value &v) {
-        eval_trim(v);
+private:
+    LValue(const LValue &) = delete;
+    LValue &operator=(const LValue &) = delete;
+
+private:
+    qil::Variable *var;
+};
+
+class LValueEvaluator : private ast::ExpressionVisitor {
+private:
+    LValue result;
+
+public:
+    LValueEvaluator() {
     }
 
-    void setLocation(const SourceLocation &loc) {
+    static LValue eval(ast::Expression::Ptr &node) {
+        LValueEvaluator v;
+        node->accept(v);
+        return std::move(v.result);
+    }
+
+private:
+    void visit(ast::IntegerLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::BinaryExpression *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::UnaryExpression *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Assignment *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::VarDecl *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Identifier *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StrRef *node) override {QORE_UNREACHABLE("Not implemented");}
+
+    void visit(ast::VarRef *node) override {
+        result = LValue(node->ref);
     }
 };
 
-class InterpretRunner : public qil::TerminatorVisitor {
+class ValueEvaluator : private ast::ExpressionVisitor {
+private:
+    Value curVal;
 
 public:
-    InterpretRunner(const qil::Script &script) : script(script), machine(backend), bb(script.code.entryBasicBlock) {
-        for (const auto &s : script.strings) {
-            s->data = backend.createStringLiteral(s->value);
-        }
-        for (const auto &v : script.variables) {
-            v->data = backend.createVariable(v->name);
+    ValueEvaluator() {
+    }
+
+    static Value eval(ast::Expression::Ptr &node) {
+        ValueEvaluator v;
+        node->accept(v);
+        return std::move(v.curVal);
+    }
+
+private:
+    void visit(ast::IntegerLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::VarDecl *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Identifier *node) override {QORE_UNREACHABLE("Not implemented");}
+
+    void visit(ast::UnaryExpression *node) override {
+        Value val;
+        {
+            LValue lval = LValueEvaluator::eval(node->operand);
+            val = lval.loadUnique();
+            val.trim();
+            curVal = val.dup();         //if needs value
+            lval.swapValue(val);
+            //release lock
         }
     }
 
-    ~InterpretRunner() {
-        for (const auto &v : script.variables) {
-            backend.destroyVariable(static_cast<IntBackend::VariableData>(v->data));
+    void visit(ast::BinaryExpression *node) override {
+        Value left = eval(node->left);
+        Value right = eval(node->right);
+        curVal = left.add(right);
+    }
+
+
+    void visit(ast::VarRef *node) override {
+        curVal = Value(*static_cast<QoreValue *>(node->ref->data));
+    }
+
+    void visit(ast::StrRef *node) override {
+        curVal = Value(*static_cast<QoreValue *>(node->ref->data));
+    }
+
+    void visit(ast::Assignment *node) override {
+        Value right = eval(node->right);
+        {
+            LValue lval = LValueEvaluator::eval(node->left);
+            //type conversion
+            curVal = right.dup();   //if needs value
+            lval.swapValue(right);
+            //release lock
         }
-        for (const auto &s : script.strings) {
-            backend.destroyStringLiteral(static_cast<IntBackend::StringLiteralData>(s->data));
+    }
+};
+
+class InterpretVisitor : public ast::StatementVisitor {
+
+public:
+    void visit(ast::EmptyStatement *node) override {QORE_UNREACHABLE("Not implemented");}
+
+    void visit(ast::TryStatement *node) override {
+        try {
+            node->tryBody->accept(*this);
+        } catch (...) {
+            node->catchBody->accept(*this);
+        }
+    }
+
+    void visit(ast::IfStatement *node) override {
+        if (ValueEvaluator::eval(node->condition).evalCond()) {
+            node->thenBranch->accept(*this);
+        } else {
+            node->elseBranch->accept(*this);
+        }
+    }
+
+    void visit(ast::ExpressionStatement *node) override {
+        ValueEvaluator::eval(node->expression);
+    }
+
+    void visit(ast::PrintStatement *node) override {
+        ValueEvaluator::eval(node->expression).print();
+    }
+
+    void visit(ast::CompoundStatement *node) override {
+        for (auto &stmt : node->statements) {
+            stmt->accept(*this);
+        }
+    }
+
+    void visit(ast::ScopedStatement *node) override {
+        for (qil::Variable *v : node->variables) {
+            LOG("Lifetime start: " << *v);
+        }
+        try {
+            node->statement->accept(*this);
+        } catch (...) {
+            for (auto it = node->variables.rbegin(); it != node->variables.rend(); ++it) {
+                LOG("Lifetime end: " << **it);
+                QoreValue *qv = static_cast<QoreValue *>((*it)->data);
+                strongDeref(*qv);
+                qv->tag = Tag::Nothing;
+            }
+            throw;
+        }
+        for (auto it = node->variables.rbegin(); it != node->variables.rend(); ++it) {
+            LOG("Lifetime end: " << **it);
+            QoreValue *qv = static_cast<QoreValue *>((*it)->data);
+            strongDeref(*qv);
+            qv->tag = Tag::Nothing;
+        }
+    }
+};
+
+class Interpreter {
+
+public:
+    Interpreter(qil::Script &script) : script(script) {
+        for (auto &s : script.strings) {
+            QoreValue *qv = new QoreValue();
+            *qv = make_str(s->value.c_str());
+            s->data = qv;
+        }
+        for (auto &v : script.variables) {
+            QoreValue *qv = new QoreValue();
+            qv->tag = Tag::Nothing;
+            v->data = qv;
+        }
+    }
+
+    ~Interpreter() {
+        for (auto &v : script.variables) {
+            QoreValue *qv = static_cast<QoreValue *>(v->data);
+            strongDeref(*qv);   //shouldn't be needed, at this point all variables must be out of scope
+            delete qv;
+        }
+        for (auto &s : script.strings) {
+            QoreValue *qv = static_cast<QoreValue *>(s->data);
+            strongDeref(*qv);
+            delete qv;
         }
     }
 
     void run() {
-        while (bb) {
-            machine.run(bb);
-            bb->terminator->accept(*this);
+        try {
+            InterpretVisitor v;
+            script.body->accept(v);
+        } catch (...) {
+            LOG("EXCEPTION CAUGHT");
         }
     }
 
-    void visit(const qil::ConditionalTerminator *t) override {
-        IntBackend::Value value = machine.pop();
-        machine.checkEmpty();
-        bb = eval_cond(value) ? t->thenBlock : t->elseBlock;
-        machine.discard(value);
-    }
-    void visit(const qil::UnconditionalTerminator *t) override {
-        machine.checkEmpty();
-        bb = t->nextBlock;
-    }
-    void visit(const qil::RetVoidTerminator *t) override {
-        machine.checkEmpty();
-        bb = nullptr;
-    }
-
 private:
-    IntBackend backend;
-    const qil::Script &script;
-    qil::Machine<IntBackend> machine;
-    qil::BasicBlock *bb;
+    qil::Script &script;
 };
 
-void doInterpret(const qil::Script &script) {
-    InterpretRunner runner(script);
-    runner.run();
+void doInterpret(qil::Script &script) {
+    Interpreter i(script);
+    i.run();
 }
 
 } // namespace qore

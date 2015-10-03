@@ -53,7 +53,7 @@ public:
      * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
      * \param visitor the visitor to call
      */
-    virtual void accept(StatementVisitor &visitor) const = 0;
+    virtual void accept(StatementVisitor &visitor) = 0;
 };
 
 /**
@@ -82,7 +82,7 @@ public:
         return Ptr(new EmptyStatement(range));
     }
 
-    void accept(StatementVisitor &v) const override {
+    void accept(StatementVisitor &v) override {
         v.visit(this);
     }
 
@@ -123,7 +123,7 @@ public:
         return Ptr(new PrintStatement(range, std::move(expression)));
     }
 
-    void accept(StatementVisitor &v) const override {
+    void accept(StatementVisitor &v) override {
         v.visit(this);
     }
 
@@ -164,7 +164,7 @@ public:
         return Ptr(new ExpressionStatement(range, std::move(expression)));
     }
 
-    void accept(StatementVisitor &v) const override {
+    void accept(StatementVisitor &v) override {
         v.visit(this);
     }
 
@@ -206,7 +206,7 @@ public:
         return Ptr(new CompoundStatement(range, std::move(statements)));
     }
 
-    void accept(StatementVisitor &v) const override {
+    void accept(StatementVisitor &v) override {
         v.visit(this);
     }
 
@@ -220,6 +220,48 @@ private:
 
 private:
     SourceRange range;
+};
+
+class ScopedStatement : public Statement {
+public:
+    /**
+     * \brief Pointer type.
+     */
+    using Ptr = std::unique_ptr<ScopedStatement>;
+
+public:
+    Statement::Ptr statement;
+
+    mutable std::vector<qil::Variable *> variables;
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param statement the statement
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Statement::Ptr statement) {
+        return Ptr(new ScopedStatement(std::move(statement)));
+    }
+
+    static ScopedStatement *wrap(Statement *statement) {
+        return new ScopedStatement(statement);
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(this);
+    }
+
+    SourceRange getRange() const override {
+        return statement->getRange();
+    }
+
+private:
+    ScopedStatement(Statement::Ptr statement) : statement(std::move(statement)) {
+    }
+
+    ScopedStatement(Statement *statement) : statement(statement) {
+    }
 };
 
 /**
@@ -252,7 +294,7 @@ public:
         return Ptr(new IfStatement(range, std::move(condition), std::move(thenBranch), std::move(elseBranch)));
     }
 
-    void accept(StatementVisitor &v) const override {
+    void accept(StatementVisitor &v) override {
         v.visit(this);
     }
 
@@ -299,7 +341,7 @@ public:
         return Ptr(new TryStatement(range, std::move(tryBody), std::move(var), std::move(catchBody)));
     }
 
-    void accept(StatementVisitor &v) const override {
+    void accept(StatementVisitor &v) override {
         v.visit(this);
     }
 

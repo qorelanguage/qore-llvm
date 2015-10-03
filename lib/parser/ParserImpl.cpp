@@ -77,6 +77,7 @@ ast::CompoundStatement::Ptr ParserImpl::block() {
 //    ::= ';'
 //    ::= printStatement
 //    ::= ifStatement
+//    ::= tryStatement
 //    ::= expressionStatement
 ast::Statement::Ptr ParserImpl::statement() {
     LOG_FUNCTION();
@@ -123,6 +124,7 @@ ast::IfStatement::Ptr ParserImpl::ifStatement() {
 //tryStatement
 //    ::= KwTry statement KwCatch '(' identifier ')' statement
 //    ::= KwTry statement KwCatch '(' ')' statement
+//TODO try ... catch (hash $a) ...
 ast::TryStatement::Ptr ParserImpl::tryStatement() {
     LOG_FUNCTION();
     SourceLocation start = match(TokenType::KwTry).start;
@@ -164,7 +166,9 @@ ast::Expression::Ptr ParserImpl::expression() {
     return assignment();
 }
 
-//assignment ::= additiveExpression '=' assignment
+//assignment
+//    ::= additiveExpression
+//    ::= additiveExpression '=' assignment
 ast::Expression::Ptr ParserImpl::assignment() {
     LOG_FUNCTION();
     std::unique_ptr<ast::Expression> expr = additiveExpression();
@@ -240,7 +244,7 @@ ast::VarDecl::Ptr ParserImpl::varDecl() {
     return ast::VarDecl::create(r, consume().stringValue);
 }
 
-//identifier 
+//identifier
 //    ::= Identifier
 //TODO $id
 ast::Identifier::Ptr ParserImpl::identifier() {

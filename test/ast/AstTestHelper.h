@@ -68,7 +68,7 @@ public:
     NodeAdapter(Base &node) : node(node) {
     }
 
-    void accept(VisitorType &visitor) const override {
+    void accept(VisitorType &visitor) override {
         node.accept(visitor);
     }
 
@@ -82,7 +82,7 @@ private:
 
 class MockExpression : public Expression {
 public:
-    MOCK_CONST_METHOD1(accept, void(ExpressionVisitor &));
+    MOCK_METHOD1(accept, void(ExpressionVisitor &));
     MOCK_CONST_METHOD0(getRange, SourceRange());
 
     operator Ptr() {
@@ -92,7 +92,7 @@ public:
 
 class MockStatement : public Statement {
 public:
-    MOCK_CONST_METHOD1(accept, void(StatementVisitor &));
+    MOCK_METHOD1(accept, void(StatementVisitor &));
     MOCK_CONST_METHOD0(getRange, SourceRange());
 
     operator Ptr() {
@@ -102,28 +102,31 @@ public:
 
 class MockExpressionVisitor : public ExpressionVisitor {
 public:
-    MOCK_METHOD1(visit, void(const IntegerLiteral *));
-    MOCK_METHOD1(visit, void(const StringLiteral *));
-    MOCK_METHOD1(visit, void(const BinaryExpression *));
-    MOCK_METHOD1(visit, void(const UnaryExpression *));
-    MOCK_METHOD1(visit, void(const Assignment *));
-    MOCK_METHOD1(visit, void(const VarDecl *));
-    MOCK_METHOD1(visit, void(const Identifier *));
+    MOCK_METHOD1(visit, void(IntegerLiteral *));
+    MOCK_METHOD1(visit, void(StringLiteral *));
+    MOCK_METHOD1(visit, void(BinaryExpression *));
+    MOCK_METHOD1(visit, void(UnaryExpression *));
+    MOCK_METHOD1(visit, void(Assignment *));
+    MOCK_METHOD1(visit, void(VarDecl *));
+    MOCK_METHOD1(visit, void(Identifier *));
+    MOCK_METHOD1(visit, void(VarRef *));
+    MOCK_METHOD1(visit, void(StrRef *));
 };
 
 class MockStatementVisitor : public StatementVisitor {
 public:
-    MOCK_METHOD1(visit, void(const EmptyStatement *));
-    MOCK_METHOD1(visit, void(const PrintStatement *));
-    MOCK_METHOD1(visit, void(const ExpressionStatement *));
-    MOCK_METHOD1(visit, void(const CompoundStatement *));
-    MOCK_METHOD1(visit, void(const IfStatement *));
-    MOCK_METHOD1(visit, void(const TryStatement *));
+    MOCK_METHOD1(visit, void(EmptyStatement *));
+    MOCK_METHOD1(visit, void(PrintStatement *));
+    MOCK_METHOD1(visit, void(ExpressionStatement *));
+    MOCK_METHOD1(visit, void(CompoundStatement *));
+    MOCK_METHOD1(visit, void(IfStatement *));
+    MOCK_METHOD1(visit, void(TryStatement *));
+    MOCK_METHOD1(visit, void(ScopedStatement *));
 };
 
 class MockProgramVisitor : public ProgramVisitor {
 public:
-    MOCK_METHOD1(visit, void(const Program *));
+    MOCK_METHOD1(visit, void(Program *));
 };
 
 } // namespace ast

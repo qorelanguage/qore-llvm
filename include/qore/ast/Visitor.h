@@ -41,12 +41,15 @@ class UnaryExpression;
 class Assignment;
 class VarDecl;
 class Identifier;
+class VarRef;
+class StrRef;
 class EmptyStatement;
 class PrintStatement;
 class ExpressionStatement;
 class CompoundStatement;
 class IfStatement;
 class TryStatement;
+class ScopedStatement;
 class Program;
 
 /**
@@ -61,43 +64,55 @@ public:
      * \brief Called by an IntegerLiteral AST node.
      * \param node the node being visited
      */
-    virtual void visit(const IntegerLiteral *node) = 0;
+    virtual void visit(IntegerLiteral *node) = 0;
 
     /**
      * \brief Called by a StringLiteral AST node.
      * \param node the node being visited
      */
-    virtual void visit(const StringLiteral *node) = 0;
+    virtual void visit(StringLiteral *node) = 0;
 
     /**
      * \brief Called by a BinaryExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(const BinaryExpression *node) = 0;
+    virtual void visit(BinaryExpression *node) = 0;
 
     /**
      * \brief Called by a UnaryExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(const UnaryExpression *node) = 0;
+    virtual void visit(UnaryExpression *node) = 0;
 
     /**
      * \brief Called by an Assignment AST node.
      * \param node the node being visited
      */
-    virtual void visit(const Assignment *node) = 0;
+    virtual void visit(Assignment *node) = 0;
 
     /**
      * \brief Called by a VarDecl AST node.
      * \param node the node being visited
      */
-    virtual void visit(const VarDecl *node) = 0;
+    virtual void visit(VarDecl *node) = 0;
 
     /**
      * \brief Called by an Identifier AST node.
      * \param node the node being visited
      */
-    virtual void visit(const Identifier *node) = 0;
+    virtual void visit(Identifier *node) = 0;
+
+    /**
+     * \brief Called by a VarRef AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(VarRef *node) = 0;
+
+    /**
+     * \brief Called by a StrRef AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(StrRef *node) = 0;
 
 protected:
     ExpressionVisitor() = default;
@@ -121,37 +136,43 @@ public:
      * \brief Called by an EmptyStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(const EmptyStatement *node) = 0;
+    virtual void visit(EmptyStatement *node) = 0;
 
     /**
      * \brief Called by a PrintStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(const PrintStatement *node) = 0;
+    virtual void visit(PrintStatement *node) = 0;
 
     /**
      * \brief Called by an ExpressionStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(const ExpressionStatement *node) = 0;
+    virtual void visit(ExpressionStatement *node) = 0;
 
     /**
      * \brief Called by a CompoundStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(const CompoundStatement *node) = 0;
+    virtual void visit(CompoundStatement *node) = 0;
 
     /**
      * \brief Called by an IfStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(const IfStatement *node) = 0;
+    virtual void visit(IfStatement *node) = 0;
 
     /**
      * \brief Called by a TryStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(const TryStatement *node) = 0;
+    virtual void visit(TryStatement *node) = 0;
+
+    /**
+     * \brief Called by a ScopedStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ScopedStatement *node) = 0;
 
 protected:
     StatementVisitor() = default;
@@ -175,7 +196,7 @@ public:
      * \brief Called by a Program AST node.
      * \param node the node being visited
      */
-    virtual void visit(const Program *node) = 0;
+    virtual void visit(Program *node) = 0;
 
 protected:
     ProgramVisitor() = default;

@@ -54,7 +54,7 @@ public:
     }
 
     template<typename T>
-    F &operator <<(Attribute<T> attribute) {
+    F &operator<<(Attribute<T> attribute) {
         if (!ignoreNext) {
             formatter << attribute;
         }
@@ -87,7 +87,7 @@ struct Unless {
  * \private
  */
 template<typename F>
-inline FormatterWrapper<F> operator <<(F &f, Unless u) {
+inline FormatterWrapper<F> operator<<(F &f, Unless u) {
     return FormatterWrapper<F>(f, u.value);
 }
 
@@ -106,21 +106,21 @@ public:
     DumpVisitor(F formatter = F()) : formatter(formatter) {
     }
 
-    void visit(const IntegerLiteral *node) override {
+    void visit(IntegerLiteral *node) override {
         formatter << BeginNode("integerLiteral")
             << Range(node->getRange())
             << Last() << attribute("value", node->value)
             << EndNode();
     }
 
-    void visit(const StringLiteral *node) override {
+    void visit(StringLiteral *node) override {
         formatter << BeginNode("stringLiteral")
             << Range(node->getRange())
             << Last() << attribute("value", node->value)
             << EndNode();
     }
 
-    void visit(const BinaryExpression *node) override {
+    void visit(BinaryExpression *node) override {
         formatter << BeginNode("binaryExpression")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -132,7 +132,7 @@ public:
             << EndNode();
     }
 
-    void visit(const UnaryExpression *node) override {
+    void visit(UnaryExpression *node) override {
         formatter << BeginNode("unaryExpression")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -143,7 +143,7 @@ public:
             << EndNode();
     }
 
-    void visit(const Assignment *node) override {
+    void visit(Assignment *node) override {
         formatter << BeginNode("assignment")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -155,27 +155,41 @@ public:
             << EndNode();
     }
 
-    void visit(const VarDecl *node) override {
+    void visit(VarDecl *node) override {
         formatter << BeginNode("varDecl")
             << Range(node->getRange())
             << Last() << attribute("name", node->name)
             << EndNode();
     }
 
-    void visit(const Identifier *node) override {
+    void visit(Identifier *node) override {
         formatter << BeginNode("identifier")
             << Range(node->getRange())
             << Last() << attribute("name", node->name)
             << EndNode();
     }
 
-    void visit(const EmptyStatement *node) override {
+    void visit(VarRef *node) override {
+        formatter << BeginNode("varRef")
+            << Range(node->getRange())
+            << Last() << attribute("ref", *node->ref)
+            << EndNode();
+    }
+
+    void visit(StrRef *node) override {
+        formatter << BeginNode("strRef")
+            << Range(node->getRange())
+            << Last() << attribute("ref", *node->ref)
+            << EndNode();
+    }
+
+    void visit(EmptyStatement *node) override {
         formatter << BeginNode("emptyStatement")
             << Last() << Range(node->getRange())
             << EndNode();
     }
 
-    void visit(const PrintStatement *node) override {
+    void visit(PrintStatement *node) override {
         formatter << BeginNode("printStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -183,7 +197,7 @@ public:
             << EndNode();
     }
 
-    void visit(const ExpressionStatement *node) override {
+    void visit(ExpressionStatement *node) override {
         formatter << BeginNode("expressionStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -191,7 +205,7 @@ public:
             << EndNode();
     }
 
-    void visit(const CompoundStatement *node) override {
+    void visit(CompoundStatement *node) override {
         formatter << BeginNode("compoundStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -199,7 +213,7 @@ public:
             << EndNode();
     }
 
-    void visit(const IfStatement *node) override {
+    void visit(IfStatement *node) override {
         formatter << BeginNode("ifStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -209,7 +223,7 @@ public:
             << EndNode();
     }
 
-    void visit(const TryStatement *node) override {
+    void visit(TryStatement *node) override {
         formatter << BeginNode("tryStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -219,7 +233,16 @@ public:
             << EndNode();
     }
 
-    void visit(const Program *node) override {
+    void visit(ScopedStatement *node) override {
+        formatter << BeginNode("scopedStatement")
+            << Range(node->getRange())
+            << attribute("variables", node->variables)
+            << EndNodeHeader()
+            << Last() << Child("statement"), visitNode(node->statement)
+            << EndNode();
+    }
+
+    void visit(Program *node) override {
         formatter << BeginNode("program")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -250,13 +273,27 @@ private:
     }
 
     template<typename T>
-    static Attribute<T> attribute(const char *name, const T value) {
+    static Attribute<T> attribute(const char *name, const T &value) {
         return Attribute<T>(name, value);
     }
 
 private:
     F formatter;
 };
+
+template<typename T>
+inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vector) {
+    os << "[";
+    auto it = vector.begin();
+    auto end = vector.end();
+    if (it != end) {
+        os << *it;
+        while (++it != end) {
+            os << ", " << *it;
+        }
+    }
+    return os << "]";
+}
 
 } // namespace dump
 } // namespace ast

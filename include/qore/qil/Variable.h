@@ -76,7 +76,11 @@ private:
  * \return the output stream
  */
 inline std::ostream &operator<<(std::ostream &os, const Variable &var) {
-    return os << "Variable " << var.name << " @" << var.location << " (data: " << var.data << ")";
+    return os << var.name << "@" << var.location;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const Variable *var) {
+    return os << *var;
 }
 
 } // namespace qil

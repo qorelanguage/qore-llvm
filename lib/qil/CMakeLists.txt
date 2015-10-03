@@ -1,5 +1,4 @@
 add_library(qil STATIC
-    Instruction.cpp
     StringLiteral.cpp
     Variable.cpp
 )

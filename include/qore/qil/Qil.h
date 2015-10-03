@@ -31,34 +31,26 @@
 #ifndef INCLUDE_QORE_QIL_QIL_H_
 #define INCLUDE_QORE_QIL_QIL_H_
 
+#include <memory>
+#include <vector>
+#include "qore/ast/Statement.h"
+
 namespace qore {
 
 /**
- * \brief QoreInterLanguage representation of the code.
- *
- * QoreInterLanguage (QIL) is the code of a hypothetical stack machine described below. For the description
- * of individual instructions, see \ref Opcode.
- *
- * QIL Stack Machine
- * -----------------
- * The stack machine consists of:
- * - an operand stack,
- * - a register called `LVALREG`,
- * - a discard queue.
- *
- * Currently QIL models only the structure of basic blocks, i.e. there are no jumps or branching involved.
- *
- * The `LVALREG` represents an l-value. It is empty during 'normal' expression evaluation. During evaluation
- * of assignment expressions (even implied, such as `trim s`) it points to a memory location being written to.
- * The content of the register also represents any locks necessary to protect the value - as long as the register
- * is not empty, no value can be dereferenced.
- *
- * The discard queue is used for temporary storage of values that needs to be dereferenced once the locks held
- * by the l-value are released. In the description of the instructions (see \ref Opcode), the meaning of 'discard X'
- * is as follows:
- * > If `LVALREG` is empty, decrease the reference count of X, otherwise add X to the discard queue.
+ * \brief TODO remove qil?
  */
 namespace qil {
+
+class Script {
+public:
+    using Strings = std::vector<std::unique_ptr<StringLiteral>>;
+    using Variables = std::vector<std::unique_ptr<Variable>>;
+
+    Variables variables;
+    Strings strings;
+    ast::Statement::Ptr body;
+};
 
 } // namespace qil
 } // namespace qore

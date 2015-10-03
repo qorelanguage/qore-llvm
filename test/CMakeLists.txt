@@ -23,7 +23,7 @@ file(GLOB_RECURSE QORE_TEST_SOURCES "*.cpp")
 
 add_executable(unittests ${QORE_TEST_SOURCES})
 
-target_link_libraries(unittests PRIVATE googletest context parser runtime)
+target_link_libraries(unittests PRIVATE googletest context parser runtime qil)
 
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
 

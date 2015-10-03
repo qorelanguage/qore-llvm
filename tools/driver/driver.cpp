@@ -13,8 +13,7 @@
 #include "qore/ast/dump/YamlFormat.h"
 #include "qore/ast/dump/CompactFormat.h"
 
-#include "qore/analyzer/script/Analyzer.h"
-#include "runner.h"
+#include "qore/analyzer/Analyzer.h"
 #include "interpret.h"
 
 #ifdef QORE_USE_LLVM
@@ -109,13 +108,16 @@ int main(int argc, char *argv[]) {
         qore::ScannerImpl scanner{diagMgr, sourceBuffer};
         qore::ParserImpl parser{diagMgr, scanner};
 
-        qore::IntAnalyzer<qore::IntBackend> ia;
+        qore::analyzer::Analyzer analyzer;
+        qore::InterpretVisitor iv;
+
         while (true) {
             qore::ast::Statement::Ptr stmt = parser.parseStatement();
             if (!stmt) {
                 return 0;
             }
-            ia.analyze(stmt);
+            analyzer.analyze(stmt);
+            stmt->accept(iv);
         }
     }
 
@@ -141,8 +143,11 @@ int main(int argc, char *argv[]) {
         root->accept(dcv);
     }
 
-    qore::analyzer::script::Analyzer analyzer;
+    qore::analyzer::Analyzer analyzer;
     qore::qil::Script script = analyzer.analyze(root);
+
+    qore::ast::dump::DumpVisitor<qore::ast::dump::CompactFormat> dcv;
+    script.body->accept(dcv);
 
     if (interpret) {
         qore::doInterpret(script);
