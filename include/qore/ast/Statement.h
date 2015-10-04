@@ -232,7 +232,7 @@ public:
 public:
     Statement::Ptr statement;
 
-    mutable std::vector<qil::Variable *> variables;
+    std::vector<Variable::Ptr> variables;
 
 public:
     /**

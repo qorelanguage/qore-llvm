@@ -69,7 +69,7 @@ protected:
         return Expression::Ptr();
     }
 
-    virtual Expression::Ptr rewrite(VarRef::Ptr node) {
+    virtual Expression::Ptr rewrite(Variable::Ptr node) {
         return Expression::Ptr();
     }
 
@@ -164,7 +164,7 @@ public:
         valueExpr = rewrite(node);
     }
 
-    void visit(VarRef::Ptr node) override {
+    void visit(Variable::Ptr node) override {
         valueExpr = rewrite(node);
     }
 

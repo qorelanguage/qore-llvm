@@ -82,7 +82,7 @@ private:
 
 class QLValue {
 public:
-    explicit QLValue(qil::Variable *var = nullptr) : var(var) {
+    explicit QLValue(ast::Variable *var = nullptr) : var(var) {
     }
 
     ~QLValue() {
@@ -133,7 +133,7 @@ private:
     QLValue &operator=(const QLValue &) = delete;
 
 private:
-    qil::Variable *var;
+    ast::Variable *var;
 };
 
 class Cleanup {
@@ -289,8 +289,8 @@ public:
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::StringConstant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::VarRef::Ptr node) override {
-        result = QLValue(node->ref);
+    void visit(ast::Variable::Ptr node) override {
+        result = QLValue(node.get());
     }
 
 private:
@@ -671,9 +671,9 @@ public:
         setResult(codeGen.builder.CreateLoad(s, "str." + node->value));
     }
 
-    void visit(ast::VarRef::Ptr node) override {
-        llvm::Value *v = static_cast<llvm::Value *>(node->ref->data);
-        setResult(codeGen.builder.CreateLoad(v, "val." + node->ref->name));
+    void visit(ast::Variable::Ptr node) override {
+        llvm::Value *v = static_cast<llvm::Value *>(node->data);
+        setResult(codeGen.builder.CreateLoad(v, "val." + node->name));
     }
 
     void visit(ast::BinaryExpression::Ptr node) override {

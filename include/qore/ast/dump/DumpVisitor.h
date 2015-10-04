@@ -169,10 +169,10 @@ public:
             << EndNode();
     }
 
-    void visit(VarRef::Ptr node) override {
-        formatter << BeginNode("varRef")
+    void visit(Variable::Ptr node) override {
+        formatter << BeginNode("variable")
             << Range(node->getRange())
-            << Last() << attribute("ref", *node->ref)
+            << Last() << attribute("name", node->name)
             << EndNode();
     }
 

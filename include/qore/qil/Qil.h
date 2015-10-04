@@ -44,8 +44,8 @@ namespace qil {
 
 class Script {
 public:
-    using Strings = std::vector<std::shared_ptr<ast::StringConstant>>;
-    using Variables = std::vector<std::unique_ptr<Variable>>;
+    using Strings = std::vector<ast::StringConstant::Ptr>;
+    using Variables = std::vector<ast::Variable::Ptr>;
 
     Variables variables;
     Strings strings;

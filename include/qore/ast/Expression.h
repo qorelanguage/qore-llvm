@@ -34,7 +34,6 @@
 #include <memory>
 #include "qore/qore.h"
 #include "qore/ast/Node.h"
-#include "qore/qil/Variable.h"
 
 namespace qore {
 namespace ast {
@@ -349,26 +348,27 @@ private:
 /**
  * \brief Represents a variable.
  */
-class VarRef : public Expression, public std::enable_shared_from_this<VarRef> {
+class Variable : public Expression, public std::enable_shared_from_this<Variable> {
 
 public:
-    qil::Variable *ref;
+    std::string name;
+    void *data;         //TODO get rid of this
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::shared_ptr<VarRef>;
+    using Ptr = std::shared_ptr<Variable>;
 
 public:
     /**
      * \brief Allocates a new node.
      * \param range the location of the declaration
-     * \param ref the variable
+     * \param name the name of the variable
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(SourceRange range, qil::Variable *ref) {
-        return Ptr(new VarRef(range, ref));
+    static Ptr create(SourceRange range, std::string name) {
+        return Ptr(new Variable(range, std::move(name)));
     }
 
     void accept(ExpressionVisitor &v) override {
@@ -380,7 +380,7 @@ public:
     }
 
 private:
-    VarRef(SourceRange range, qil::Variable *ref) : ref(ref), range(range) {
+    Variable(SourceRange range, std::string name) : name(std::move(name)), data(nullptr), range(range) {
     }
 
 private:

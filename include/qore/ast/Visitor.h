@@ -41,7 +41,7 @@ class UnaryExpression;
 class Assignment;
 class VarDecl;
 class Identifier;
-class VarRef;
+class Variable;
 class StringConstant;
 class EmptyStatement;
 class PrintStatement;
@@ -103,10 +103,10 @@ public:
     virtual void visit(std::shared_ptr<Identifier> node) = 0;
 
     /**
-     * \brief Called by a VarRef AST node.
+     * \brief Called by a Variable AST node.
      * \param node the node being visited
      */
-    virtual void visit(std::shared_ptr<VarRef> node) = 0;
+    virtual void visit(std::shared_ptr<Variable> node) = 0;
 
     /**
      * \brief Called by a StringConstant AST node.

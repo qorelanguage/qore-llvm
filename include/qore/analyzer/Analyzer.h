@@ -35,7 +35,6 @@
 #include "qore/ast/Program.h"
 #include "qore/ast/Rewriter.h"
 #include "qore/qil/Qil.h"
-#include "qore/qil/Variable.h"
 #include <string>
 #include <map>
 #include <memory>
@@ -48,10 +47,10 @@ class Scope {
 public:
     virtual ~Scope() = default;
 
-    virtual qil::Variable *declareVariable(const std::string &name, const SourceRange &range) = 0;
-    virtual qil::Variable *resolve(const std::string &name, const SourceRange &range) = 0;
+    virtual ast::Variable::Ptr declareVariable(const std::string &name, const SourceRange &range) = 0;
+    virtual ast::Variable::Ptr resolve(const std::string &name, const SourceRange &range) = 0;
 
-    virtual qil::Variable *createVariable(const std::string &name, const SourceRange &range) = 0;
+    virtual ast::Variable::Ptr createVariable(const std::string &name, const SourceRange &range) = 0;
 };
 
 class ScopeAdder : public ast::Rewriter {
@@ -85,8 +84,8 @@ public:
     void close(ast::ScopedStatement::Ptr stmt) {
         stmt->variables = std::move(variables);
     }
-    qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
-        qil::Variable *&var = varLookup[name];
+    ast::Variable::Ptr declareVariable(const std::string &name, const SourceRange &range) override {
+        ast::Variable::Ptr &var = varLookup[name];
         if (var) {
             QORE_UNREACHABLE("Redeclaration " << name);
             //TODO error redeclaration
@@ -96,22 +95,22 @@ public:
         }
         return var;
     }
-    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
-        qil::Variable *&var = varLookup[name];
+    ast::Variable::Ptr resolve(const std::string &name, const SourceRange &range) override {
+        ast::Variable::Ptr &var = varLookup[name];
         if (!var) {
             return parentScope.resolve(name, range);
         }
         return var;
     }
 
-    qil::Variable *createVariable(const std::string &name, const SourceRange &range) override {
+    ast::Variable::Ptr createVariable(const std::string &name, const SourceRange &range) override {
         return parentScope.createVariable(name, range);
     }
 
 private:
     Scope &parentScope;
-    std::vector<qil::Variable *> variables;
-    std::map<std::string, qil::Variable *> varLookup;
+    std::vector<ast::Variable::Ptr> variables;
+    std::map<std::string, ast::Variable::Ptr> varLookup;
 };
 
 class Resolver : public ast::Rewriter {
@@ -120,15 +119,11 @@ public:
     }
 
     ast::Expression::Ptr rewrite(ast::VarDecl::Ptr node) override {
-        qil::Variable *v = scope.declareVariable(node->name, node->getRange());
-        //delete node;
-        return ast::VarRef::create(node->getRange(), v);
+        return scope.declareVariable(node->name, node->getRange());
     }
 
     ast::Expression::Ptr rewrite(ast::Identifier::Ptr node) override {
-        qil::Variable *v = scope.resolve(node->name, node->getRange());
-        //delete node;
-        return ast::VarRef::create(node->getRange(), v);
+        return scope.resolve(node->name, node->getRange());
     }
 
     void visit(ast::ScopedStatement::Ptr node) override {
@@ -203,23 +198,23 @@ public:
     ScriptScope() {
     }
 
-    qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
+    ast::Variable::Ptr declareVariable(const std::string &name, const SourceRange &range) override {
         QORE_UNREACHABLE("Should not happen");
     }
 
-    qil::Variable *resolve(const std::string &name, const SourceRange &range) override {
+    ast::Variable::Ptr resolve(const std::string &name, const SourceRange &range) override {
         //TODO recovery must be handled by the caller, otherwise the variable will always be global
         QORE_UNREACHABLE("Undeclared " << name);
     }
 
-    qil::Variable *createVariable(const std::string &name, const SourceRange &range) override {
-        qil::Variable *v = new qil::Variable(name, range.start);
+    ast::Variable::Ptr createVariable(const std::string &name, const SourceRange &range) override {
+        ast::Variable::Ptr v = ast::Variable::create(range, name);
         initVar(v);
         variables.emplace_back(v);
         return v;
     }
 
-    virtual void initVar(qil::Variable *v) {
+    virtual void initVar(ast::Variable::Ptr &v) {
     }
 
 public:
@@ -228,7 +223,7 @@ public:
 
 class InteractiveScriptScope : public ScriptScope {
 public:
-    virtual void initVar(qil::Variable *v) {
+    virtual void initVar(ast::Variable::Ptr &v) {
         QoreValue *qv = new QoreValue();
         qv->tag = Tag::Nothing;
         v->data = qv;

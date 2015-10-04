@@ -10,6 +10,20 @@
 
 namespace qore {
 
+/**
+ * \brief Writes information about a variable to an output stream.
+ * \param os the output stream
+ * \param var the variable
+ * \return the output stream
+ */
+inline std::ostream &operator<<(std::ostream &os, const ast::Variable &var) {
+    return os << var.name << "@" << var.getRange().start;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const ast::Variable *var) {
+    return os << *var;
+}
+
 class Value {
 
 public:
@@ -103,7 +117,7 @@ private:
 class LValue {
 
 public:
-    LValue(qil::Variable *var = nullptr) : var(var) {
+    LValue(ast::Variable *var = nullptr) : var(var) {
         if (var) {
             LOG("Acquire lock: " << *var);
         }
@@ -143,7 +157,7 @@ private:
     LValue &operator=(const LValue &) = delete;
 
 private:
-    qil::Variable *var;
+    ast::Variable *var;
 };
 
 class LValueEvaluator : private ast::ExpressionVisitor {
@@ -170,8 +184,8 @@ private:
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::StringConstant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::VarRef::Ptr node) override {
-        result = LValue(node->ref);
+    void visit(ast::Variable::Ptr node) override {
+        result = LValue(node.get());
     }
 };
 
@@ -214,8 +228,8 @@ private:
     }
 
 
-    void visit(ast::VarRef::Ptr node) override {
-        curVal = Value(*static_cast<QoreValue *>(node->ref->data));
+    void visit(ast::Variable::Ptr node) override {
+        curVal = Value(*static_cast<QoreValue *>(node->data));
     }
 
     void visit(ast::StringConstant::Ptr node) override {
@@ -270,7 +284,7 @@ public:
     }
 
     void visit(ast::ScopedStatement::Ptr node) override {
-        for (qil::Variable *v : node->variables) {
+        for (ast::Variable::Ptr &v : node->variables) {
             LOG("Lifetime start: " << *v);
         }
         try {
