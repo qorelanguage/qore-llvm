@@ -171,7 +171,7 @@ ast::Expression::Ptr ParserImpl::expression() {
 //    ::= additiveExpression '=' assignment
 ast::Expression::Ptr ParserImpl::assignment() {
     LOG_FUNCTION();
-    std::unique_ptr<ast::Expression> expr = additiveExpression();
+    ast::Expression::Ptr expr = additiveExpression();
     if (tokenType() == TokenType::Assign) {
         SourceRange r = consume().range;
         expr = ast::Assignment::create(std::move(expr), r, assignment());
@@ -185,7 +185,7 @@ ast::Expression::Ptr ParserImpl::assignment() {
 //    ::= '+' prefixExpression additiveExpressionRest
 ast::Expression::Ptr ParserImpl::additiveExpression() {
     LOG_FUNCTION();
-    std::unique_ptr<ast::Expression> expr = prefixExpression();
+    ast::Expression::Ptr expr = prefixExpression();
     while (tokenType() == TokenType::Plus) {
         SourceRange r = consume().range;
         expr = ast::BinaryExpression::create(std::move(expr), r, prefixExpression());

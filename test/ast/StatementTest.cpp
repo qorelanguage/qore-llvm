@@ -37,7 +37,7 @@ struct StatementTest : ::testing::Test {
 
 TEST_F(StatementTest, EmptyStatement) {
     EmptyStatement::Ptr node = EmptyStatement::create(range);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->getRange());
 }
@@ -45,7 +45,7 @@ TEST_F(StatementTest, EmptyStatement) {
 TEST_F(StatementTest, PrintStatement) {
     MockExpression expr;
     PrintStatement::Ptr node = PrintStatement::create(range, expr);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->getRange());
 }
@@ -53,7 +53,7 @@ TEST_F(StatementTest, PrintStatement) {
 TEST_F(StatementTest, ExpressionStatement) {
     MockExpression expr;
     ExpressionStatement::Ptr node = ExpressionStatement::create(range, expr);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->getRange());
 }
@@ -61,7 +61,7 @@ TEST_F(StatementTest, ExpressionStatement) {
 TEST_F(StatementTest, CompoundStatement) {
     Statements stmts;
     CompoundStatement::Ptr node = CompoundStatement::create(range, std::move(stmts));
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->getRange());
 }
@@ -71,7 +71,7 @@ TEST_F(StatementTest, IfStatement) {
     MockStatement stmt1;
     MockStatement stmt2;
     IfStatement::Ptr node = IfStatement::create(range, expr, stmt1, stmt2);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->getRange());
 }

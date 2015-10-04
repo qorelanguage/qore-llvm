@@ -161,16 +161,16 @@ public:
     }
 
 private:
-    void visit(ast::IntegerLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::BinaryExpression *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::UnaryExpression *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Assignment *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::VarDecl *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Identifier *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StrRef *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::IntegerLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::BinaryExpression::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::UnaryExpression::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Assignment::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringConstant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::VarRef *node) override {
+    void visit(ast::VarRef::Ptr node) override {
         result = LValue(node->ref);
     }
 };
@@ -190,12 +190,12 @@ public:
     }
 
 private:
-    void visit(ast::IntegerLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::VarDecl *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Identifier *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::IntegerLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::UnaryExpression *node) override {
+    void visit(ast::UnaryExpression::Ptr node) override {
         Value val;
         {
             LValue lval = LValueEvaluator::eval(node->operand);
@@ -207,22 +207,22 @@ private:
         }
     }
 
-    void visit(ast::BinaryExpression *node) override {
+    void visit(ast::BinaryExpression::Ptr node) override {
         Value left = eval(node->left);
         Value right = eval(node->right);
         curVal = left.add(right);
     }
 
 
-    void visit(ast::VarRef *node) override {
+    void visit(ast::VarRef::Ptr node) override {
         curVal = Value(*static_cast<QoreValue *>(node->ref->data));
     }
 
-    void visit(ast::StrRef *node) override {
-        curVal = Value(*static_cast<QoreValue *>(node->ref->data));
+    void visit(ast::StringConstant::Ptr node) override {
+        curVal = Value(*static_cast<QoreValue *>(node->data));
     }
 
-    void visit(ast::Assignment *node) override {
+    void visit(ast::Assignment::Ptr node) override {
         Value right = eval(node->right);
         {
             LValue lval = LValueEvaluator::eval(node->left);
@@ -237,9 +237,9 @@ private:
 class InterpretVisitor : public ast::StatementVisitor {
 
 public:
-    void visit(ast::EmptyStatement *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::EmptyStatement::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::TryStatement *node) override {
+    void visit(ast::TryStatement::Ptr node) override {
         try {
             node->tryBody->accept(*this);
         } catch (...) {
@@ -247,7 +247,7 @@ public:
         }
     }
 
-    void visit(ast::IfStatement *node) override {
+    void visit(ast::IfStatement::Ptr node) override {
         if (ValueEvaluator::eval(node->condition).evalCond()) {
             node->thenBranch->accept(*this);
         } else {
@@ -255,21 +255,21 @@ public:
         }
     }
 
-    void visit(ast::ExpressionStatement *node) override {
+    void visit(ast::ExpressionStatement::Ptr node) override {
         ValueEvaluator::eval(node->expression);
     }
 
-    void visit(ast::PrintStatement *node) override {
+    void visit(ast::PrintStatement::Ptr node) override {
         ValueEvaluator::eval(node->expression).print();
     }
 
-    void visit(ast::CompoundStatement *node) override {
+    void visit(ast::CompoundStatement::Ptr node) override {
         for (auto &stmt : node->statements) {
             stmt->accept(*this);
         }
     }
 
-    void visit(ast::ScopedStatement *node) override {
+    void visit(ast::ScopedStatement::Ptr node) override {
         for (qil::Variable *v : node->variables) {
             LOG("Lifetime start: " << *v);
         }

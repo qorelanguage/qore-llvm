@@ -38,7 +38,7 @@ struct ProgramTest : ::testing::Test {
 TEST_F(ProgramTest, ProgramEmpty) {
     Statements body;
     Program::Ptr node = Program::create(std::move(body), range);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->getRange());
 }

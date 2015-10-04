@@ -106,21 +106,21 @@ public:
     DumpVisitor(F formatter = F()) : formatter(formatter) {
     }
 
-    void visit(IntegerLiteral *node) override {
+    void visit(IntegerLiteral::Ptr node) override {
         formatter << BeginNode("integerLiteral")
             << Range(node->getRange())
             << Last() << attribute("value", node->value)
             << EndNode();
     }
 
-    void visit(StringLiteral *node) override {
+    void visit(StringLiteral::Ptr node) override {
         formatter << BeginNode("stringLiteral")
             << Range(node->getRange())
             << Last() << attribute("value", node->value)
             << EndNode();
     }
 
-    void visit(BinaryExpression *node) override {
+    void visit(BinaryExpression::Ptr node) override {
         formatter << BeginNode("binaryExpression")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -132,7 +132,7 @@ public:
             << EndNode();
     }
 
-    void visit(UnaryExpression *node) override {
+    void visit(UnaryExpression::Ptr node) override {
         formatter << BeginNode("unaryExpression")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -143,7 +143,7 @@ public:
             << EndNode();
     }
 
-    void visit(Assignment *node) override {
+    void visit(Assignment::Ptr node) override {
         formatter << BeginNode("assignment")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -155,41 +155,41 @@ public:
             << EndNode();
     }
 
-    void visit(VarDecl *node) override {
+    void visit(VarDecl::Ptr node) override {
         formatter << BeginNode("varDecl")
             << Range(node->getRange())
             << Last() << attribute("name", node->name)
             << EndNode();
     }
 
-    void visit(Identifier *node) override {
+    void visit(Identifier::Ptr node) override {
         formatter << BeginNode("identifier")
             << Range(node->getRange())
             << Last() << attribute("name", node->name)
             << EndNode();
     }
 
-    void visit(VarRef *node) override {
+    void visit(VarRef::Ptr node) override {
         formatter << BeginNode("varRef")
             << Range(node->getRange())
             << Last() << attribute("ref", *node->ref)
             << EndNode();
     }
 
-    void visit(StrRef *node) override {
-        formatter << BeginNode("strRef")
+    void visit(StringConstant::Ptr node) override {
+        formatter << BeginNode("stringConstant")
             << Range(node->getRange())
-            << Last() << attribute("ref", *node->ref)
+            << Last() << attribute("value", node->value)
             << EndNode();
     }
 
-    void visit(EmptyStatement *node) override {
+    void visit(EmptyStatement::Ptr node) override {
         formatter << BeginNode("emptyStatement")
             << Last() << Range(node->getRange())
             << EndNode();
     }
 
-    void visit(PrintStatement *node) override {
+    void visit(PrintStatement::Ptr node) override {
         formatter << BeginNode("printStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -197,7 +197,7 @@ public:
             << EndNode();
     }
 
-    void visit(ExpressionStatement *node) override {
+    void visit(ExpressionStatement::Ptr node) override {
         formatter << BeginNode("expressionStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -205,7 +205,7 @@ public:
             << EndNode();
     }
 
-    void visit(CompoundStatement *node) override {
+    void visit(CompoundStatement::Ptr node) override {
         formatter << BeginNode("compoundStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -213,7 +213,7 @@ public:
             << EndNode();
     }
 
-    void visit(IfStatement *node) override {
+    void visit(IfStatement::Ptr node) override {
         formatter << BeginNode("ifStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -223,7 +223,7 @@ public:
             << EndNode();
     }
 
-    void visit(TryStatement *node) override {
+    void visit(TryStatement::Ptr node) override {
         formatter << BeginNode("tryStatement")
             << Range(node->getRange())
             << EndNodeHeader()
@@ -233,7 +233,7 @@ public:
             << EndNode();
     }
 
-    void visit(ScopedStatement *node) override {
+    void visit(ScopedStatement::Ptr node) override {
         formatter << BeginNode("scopedStatement")
             << Range(node->getRange())
             << attribute("variables", node->variables)
@@ -242,7 +242,7 @@ public:
             << EndNode();
     }
 
-    void visit(Program *node) override {
+    void visit(Program::Ptr node) override {
         formatter << BeginNode("program")
             << Range(node->getRange())
             << EndNodeHeader()

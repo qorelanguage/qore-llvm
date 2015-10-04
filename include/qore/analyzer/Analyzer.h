@@ -35,7 +35,6 @@
 #include "qore/ast/Program.h"
 #include "qore/ast/Rewriter.h"
 #include "qore/qil/Qil.h"
-#include "qore/qil/StringLiteral.h"
 #include "qore/qil/Variable.h"
 #include <string>
 #include <map>
@@ -57,19 +56,18 @@ public:
 
 class ScopeAdder : public ast::Rewriter {
 public:
-    ast::Statement *rewrite(ast::IfStatement *node) override {
-        return ast::ScopedStatement::wrap(node);
+    ast::Statement::Ptr rewrite(ast::IfStatement::Ptr node) override {
+        return ast::ScopedStatement::create(node);
     }
 
-    ast::Statement *rewrite(ast::TryStatement *node) override {
-        ast::Statement *s = node->tryBody.release();
-        node->tryBody.reset(ast::ScopedStatement::wrap(s));
+    ast::Statement::Ptr rewrite(ast::TryStatement::Ptr node) override {
+        node->tryBody = ast::ScopedStatement::create(node->tryBody);
         //TODO try/catch scope
         return node;
     }
 
-    ast::Statement *rewrite(ast::CompoundStatement *node) override {
-        return ast::ScopedStatement::wrap(node);
+    ast::Statement::Ptr rewrite(ast::CompoundStatement::Ptr node) override {
+        return ast::ScopedStatement::create(node);
     }
 };
 
@@ -84,7 +82,7 @@ public:
             delete qv;
         }
     }
-    void close(ast::ScopedStatement *stmt) {
+    void close(ast::ScopedStatement::Ptr stmt) {
         stmt->variables = std::move(variables);
     }
     qil::Variable *declareVariable(const std::string &name, const SourceRange &range) override {
@@ -121,19 +119,19 @@ public:
     Resolver(Scope &scope) : scope(scope) {
     }
 
-    ast::VarRef *rewrite(ast::VarDecl *node) override {
+    ast::Expression::Ptr rewrite(ast::VarDecl::Ptr node) override {
         qil::Variable *v = scope.declareVariable(node->name, node->getRange());
         //delete node;
         return ast::VarRef::create(node->getRange(), v);
     }
 
-    ast::VarRef *rewrite(ast::Identifier *node) override {
+    ast::Expression::Ptr rewrite(ast::Identifier::Ptr node) override {
         qil::Variable *v = scope.resolve(node->name, node->getRange());
         //delete node;
         return ast::VarRef::create(node->getRange(), v);
     }
 
-    void visit(ast::ScopedStatement *node) override {
+    void visit(ast::ScopedStatement::Ptr node) override {
         BlockScope bs(scope);
         Resolver r(bs);
         r.recurse(node->statement);
@@ -159,13 +157,10 @@ public:
         }
     }
 
-
-    //TODO: ast::StrRef === qil::StringLiteral ?   -> cleanup ownership -> shared_ptr ???
-
-    ast::StrRef *rewrite(ast::StringLiteral *node) override {
-        qil::StringLiteral *&s = strLookup[node->value];
+    ast::Expression::Ptr rewrite(ast::StringLiteral::Ptr node) override {
+        ast::StringConstant::Ptr &s = strLookup[node->value];
         if (!s) {
-            s = new qil::StringLiteral(std::move(node->value), node->getRange().start);
+            s = ast::StringConstant::create(node->getRange(), std::move(node->value));
             if (interactive) {
                 QoreValue *qv = new QoreValue();
                 *qv = make_str(s->value.c_str());
@@ -173,13 +168,12 @@ public:
             }
             strings.emplace_back(s);
         }
-        //delete node;
-        return ast::StrRef::create(node->getRange(), s);
+        return s;
     }
 
 public:
     qil::Script::Strings strings;
-    std::map<std::string, qil::StringLiteral *> strLookup;
+    std::map<std::string, ast::StringConstant::Ptr> strLookup;
 private:
     bool interactive;
 };

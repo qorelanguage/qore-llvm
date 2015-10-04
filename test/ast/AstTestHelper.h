@@ -45,13 +45,13 @@ typename D::Ptr ast_cast(std::unique_ptr<B> &&bPtr, const char *file, int line, 
 }
 
 template<typename D, typename B>
-D *ast_cast(const std::unique_ptr<B> &bPtr, const char *file, int line, const char *valueS, const char *typeS) {
+std::shared_ptr<D> ast_cast(std::shared_ptr<B> bPtr, const char *file, int line, const char *valueS, const char *typeS) {
     D *d = dynamic_cast<D *>(bPtr.get());
     if (d == nullptr) {
         ADD_FAILURE_AT(file, line) << valueS << " was expected to return "
                 << typeS << ", but returned " << typeid(*bPtr.get()).name() << " instead";
     }
-    return d;
+    return d->shared_from_this();
 }
 
 #define AST_CAST(Type, Name, Value) \
@@ -102,32 +102,61 @@ public:
 
 class MockExpressionVisitor : public ExpressionVisitor {
 public:
-    MOCK_METHOD1(visit, void(IntegerLiteral *));
-    MOCK_METHOD1(visit, void(StringLiteral *));
-    MOCK_METHOD1(visit, void(BinaryExpression *));
-    MOCK_METHOD1(visit, void(UnaryExpression *));
-    MOCK_METHOD1(visit, void(Assignment *));
-    MOCK_METHOD1(visit, void(VarDecl *));
-    MOCK_METHOD1(visit, void(Identifier *));
-    MOCK_METHOD1(visit, void(VarRef *));
-    MOCK_METHOD1(visit, void(StrRef *));
+    MOCK_METHOD1(visit, void(std::shared_ptr<IntegerLiteral>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<StringLiteral>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<BinaryExpression>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<UnaryExpression>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<Assignment>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<VarDecl>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<Identifier>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<VarRef>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<StringConstant>));
 };
 
 class MockStatementVisitor : public StatementVisitor {
 public:
-    MOCK_METHOD1(visit, void(EmptyStatement *));
-    MOCK_METHOD1(visit, void(PrintStatement *));
-    MOCK_METHOD1(visit, void(ExpressionStatement *));
-    MOCK_METHOD1(visit, void(CompoundStatement *));
-    MOCK_METHOD1(visit, void(IfStatement *));
-    MOCK_METHOD1(visit, void(TryStatement *));
-    MOCK_METHOD1(visit, void(ScopedStatement *));
+    MOCK_METHOD1(visit, void(std::shared_ptr<EmptyStatement>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<PrintStatement>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<ExpressionStatement>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<CompoundStatement>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<IfStatement>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<TryStatement>));
+    MOCK_METHOD1(visit, void(std::shared_ptr<ScopedStatement>));
 };
 
 class MockProgramVisitor : public ProgramVisitor {
 public:
-    MOCK_METHOD1(visit, void(Program *));
+    MOCK_METHOD1(visit, void(std::shared_ptr<Program>));
 };
+
+template<typename T>
+class NodeMatcher : public testing::MatcherInterface<std::shared_ptr<T>> {
+public:
+    NodeMatcher(const T *value) : value(value) {
+    }
+
+    virtual ~NodeMatcher() = default;
+
+    virtual bool MatchAndExplain(std::shared_ptr<T> n, testing::MatchResultListener* listener) const {
+        return n.get() == value;
+    }
+
+    virtual void DescribeTo(std::ostream* os) const {
+        *os << "is " << typeid(T).name();
+    }
+
+    virtual void DescribeNegationTo(std::ostream* os) const {
+        *os << "is not " << typeid(T).name();
+    }
+
+private:
+    const T *value;
+};
+
+template<typename T>
+inline testing::Matcher<std::shared_ptr<T>> MatchNode(std::shared_ptr<T> node) {
+    return testing::MakeMatcher(new NodeMatcher<T>(node.get()));
+}
 
 } // namespace ast
 } // namespace qore

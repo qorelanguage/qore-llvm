@@ -37,7 +37,7 @@ struct ExpressionTest : ::testing::Test {
 
 TEST_F(ExpressionTest, IntegerLiteral) {
     IntegerLiteral::Ptr node = IntegerLiteral::create(range, 1234);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(1234U, node->value);
     EXPECT_EQ(range, node->getRange());
@@ -45,7 +45,7 @@ TEST_F(ExpressionTest, IntegerLiteral) {
 
 TEST_F(ExpressionTest, StringLiteral) {
     StringLiteral::Ptr node = StringLiteral::create(range, "test");
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ("test", node->value);
     EXPECT_EQ(range, node->getRange());
@@ -56,7 +56,7 @@ TEST_F(ExpressionTest, BinaryExpression) {
     MockExpression right;
 
     BinaryExpression::Ptr node = BinaryExpression::create(left, range, right);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->operatorRange);
 
@@ -73,7 +73,7 @@ TEST_F(ExpressionTest, UnaryExpression) {
     MockExpression operand;
 
     UnaryExpression::Ptr node = UnaryExpression::create(range, operand);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->operatorRange);
 
@@ -90,7 +90,7 @@ TEST_F(ExpressionTest, Assignment) {
     MockExpression right;
 
     Assignment::Ptr node = Assignment::create(left, range, right);
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ(range, node->operatorRange);
 
@@ -105,7 +105,7 @@ TEST_F(ExpressionTest, Assignment) {
 
 TEST_F(ExpressionTest, VarDecl) {
     VarDecl::Ptr node = VarDecl::create(range, "varName");
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ("varName", node->name);
     EXPECT_EQ(range, node->getRange());
@@ -113,7 +113,7 @@ TEST_F(ExpressionTest, VarDecl) {
 
 TEST_F(ExpressionTest, Identifier) {
     Identifier::Ptr node = Identifier::create(range, "varName");
-    EXPECT_CALL(mockVisitor, visit(node.get())).Times(1);
+    EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
     EXPECT_EQ("varName", node->name);
     EXPECT_EQ(range, node->getRange());

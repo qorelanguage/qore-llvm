@@ -50,7 +50,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<Node>;
+    using Ptr = std::shared_ptr<Node>;
 
 public:
     virtual ~Node() = default;

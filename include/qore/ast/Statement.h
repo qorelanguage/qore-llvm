@@ -47,7 +47,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<Statement>;
+    using Ptr = std::shared_ptr<Statement>;
 
     /**
      * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
@@ -64,13 +64,13 @@ using Statements = std::vector<Statement::Ptr>;
 /**
  * \brief Represents an empty statement.
  */
-class EmptyStatement : public Statement {
+class EmptyStatement : public Statement, public std::enable_shared_from_this<EmptyStatement> {
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<EmptyStatement>;
+    using Ptr = std::shared_ptr<EmptyStatement>;
 
 public:
     /**
@@ -83,7 +83,7 @@ public:
     }
 
     void accept(StatementVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -101,13 +101,13 @@ private:
 /**
  * \brief Represents a print statement.
  */
-class PrintStatement : public Statement {
+class PrintStatement : public Statement, public std::enable_shared_from_this<PrintStatement> {
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<PrintStatement>;
+    using Ptr = std::shared_ptr<PrintStatement>;
 
 public:
     Expression::Ptr expression;         //!< The expression to print.
@@ -124,7 +124,7 @@ public:
     }
 
     void accept(StatementVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -142,13 +142,13 @@ private:
 /**
  * \brief Represents an expression statement.
  */
-class ExpressionStatement : public Statement {
+class ExpressionStatement : public Statement, public std::enable_shared_from_this<ExpressionStatement> {
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<ExpressionStatement>;
+    using Ptr = std::shared_ptr<ExpressionStatement>;
 
 public:
     Expression::Ptr expression;         //!< The expression.
@@ -165,7 +165,7 @@ public:
     }
 
     void accept(StatementVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -184,13 +184,13 @@ private:
 /**
  * \brief Represents a compound statement.
  */
-class CompoundStatement : public Statement {
+class CompoundStatement : public Statement, public std::enable_shared_from_this<CompoundStatement> {
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<CompoundStatement>;
+    using Ptr = std::shared_ptr<CompoundStatement>;
 
 public:
     Statements statements;          //!< The statements.
@@ -207,7 +207,7 @@ public:
     }
 
     void accept(StatementVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -222,12 +222,12 @@ private:
     SourceRange range;
 };
 
-class ScopedStatement : public Statement {
+class ScopedStatement : public Statement, public std::enable_shared_from_this<ScopedStatement> {
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<ScopedStatement>;
+    using Ptr = std::shared_ptr<ScopedStatement>;
 
 public:
     Statement::Ptr statement;
@@ -244,12 +244,8 @@ public:
         return Ptr(new ScopedStatement(std::move(statement)));
     }
 
-    static ScopedStatement *wrap(Statement *statement) {
-        return new ScopedStatement(statement);
-    }
-
     void accept(StatementVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -259,21 +255,18 @@ public:
 private:
     ScopedStatement(Statement::Ptr statement) : statement(std::move(statement)) {
     }
-
-    ScopedStatement(Statement *statement) : statement(statement) {
-    }
 };
 
 /**
  * \brief Represents an if-then-else statement.
  */
-class IfStatement : public Statement {
+class IfStatement : public Statement, public std::enable_shared_from_this<IfStatement> {
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<IfStatement>;
+    using Ptr = std::shared_ptr<IfStatement>;
 
 public:
     Expression::Ptr condition;              //!< The condition.
@@ -295,7 +288,7 @@ public:
     }
 
     void accept(StatementVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -315,13 +308,13 @@ private:
 /**
  * \brief Represents a try-catch statement.
  */
-class TryStatement : public Statement {
+class TryStatement : public Statement, public std::enable_shared_from_this<TryStatement> {
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<TryStatement>;
+    using Ptr = std::shared_ptr<TryStatement>;
 
 public:
     Statement::Ptr tryBody;                 //!< The statements of the try block.
@@ -342,7 +335,7 @@ public:
     }
 
     void accept(StatementVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {

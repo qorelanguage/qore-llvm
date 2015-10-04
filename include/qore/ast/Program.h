@@ -39,13 +39,13 @@ namespace ast {
 /**
  * \brief Represents the whole script.
  */
-class Program : public Node {
+class Program : public Node, public std::enable_shared_from_this<Program> {
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<Program>;
+    using Ptr = std::shared_ptr<Program>;
 
 public:
     Statements body;        //!< The statements of the script.
@@ -66,7 +66,7 @@ public:
      * \param visitor the visitor to call
      */
     virtual void accept(ProgramVisitor &visitor) {
-        visitor.visit(this);
+        visitor.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {

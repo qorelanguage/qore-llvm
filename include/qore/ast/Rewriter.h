@@ -41,165 +41,174 @@ namespace ast {
 class Rewriter : public ExpressionVisitor, public StatementVisitor {
 
 protected:
-    virtual Expression *rewrite(IntegerLiteral *node) {
-        return node;
+    virtual Expression::Ptr rewrite(IntegerLiteral::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(StringLiteral *node) {
-        return node;
+    virtual Expression::Ptr rewrite(StringLiteral::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(BinaryExpression *node) {
-        return node;
+    virtual Expression::Ptr rewrite(BinaryExpression::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(UnaryExpression *node) {
-        return node;
+    virtual Expression::Ptr rewrite(UnaryExpression::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(Assignment *node) {
-        return node;
+    virtual Expression::Ptr rewrite(Assignment::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(VarDecl *node) {
-        return node;
+    virtual Expression::Ptr rewrite(VarDecl::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(Identifier *node) {
-        return node;
+    virtual Expression::Ptr rewrite(Identifier::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(VarRef *node) {
-        return node;
+    virtual Expression::Ptr rewrite(VarRef::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Expression *rewrite(StrRef *node) {
-        return node;
+    virtual Expression::Ptr rewrite(StringConstant::Ptr node) {
+        return Expression::Ptr();
     }
 
-    virtual Statement *rewrite(EmptyStatement *node) {
-        return node;
+    virtual Statement::Ptr rewrite(EmptyStatement::Ptr node) {
+        return Statement::Ptr();
     }
 
-    virtual Statement *rewrite(PrintStatement *node) {
-        return node;
+    virtual Statement::Ptr rewrite(PrintStatement::Ptr node) {
+        return Statement::Ptr();
     }
 
-    virtual Statement *rewrite(ExpressionStatement *node) {
-        return node;
+    virtual Statement::Ptr rewrite(ExpressionStatement::Ptr node) {
+        return Statement::Ptr();
     }
 
-    virtual Statement *rewrite(CompoundStatement *node) {
-        return node;
+    virtual Statement::Ptr rewrite(CompoundStatement::Ptr node) {
+        return Statement::Ptr();
     }
 
-    virtual Statement *rewrite(IfStatement *node) {
-        return node;
+    virtual Statement::Ptr rewrite(IfStatement::Ptr node) {
+        return Statement::Ptr();
     }
 
-    virtual Statement *rewrite(TryStatement *node) {
-        return node;
+    virtual Statement::Ptr rewrite(TryStatement::Ptr node) {
+        return Statement::Ptr();
     }
 
-    virtual Statement *rewrite(ScopedStatement *node) {
-        return node;
+    virtual Statement::Ptr rewrite(ScopedStatement::Ptr node) {
+        return Statement::Ptr();
     }
 
 public:
-    template<typename N>
-    void recurse(std::unique_ptr<N> &node) {
-        value = nullptr;
+    void recurse(Expression::Ptr &node) {
+        assert(!valueExpr);
         node->accept(*this);
-        if (value && node.get() != value) {
-            node.release();
-            node.reset(static_cast<N*>(value));
+        if (valueExpr) {
+            node = valueExpr;
+            valueExpr = nullptr;
+        }
+    }
+
+    void recurse(Statement::Ptr &node) {
+        assert(!valueStmt);
+        node->accept(*this);
+        if (valueStmt) {
+            node = valueStmt;
+            valueStmt = nullptr;
         }
     }
 
 public:
-    Node *value;
+    Expression::Ptr valueExpr;
+    Statement::Ptr valueStmt;
 
-    Rewriter() : value(nullptr) {
+    Rewriter() {
     }
 
-    void visit(IntegerLiteral *node) override {
-        value = rewrite(node);
+    void visit(IntegerLiteral::Ptr node) override {
+        valueExpr = rewrite(node);
     }
 
-    void visit(StringLiteral *node) override {
-        value = rewrite(node);
+    void visit(StringLiteral::Ptr node) override {
+        valueExpr = rewrite(node);
     }
 
-    void visit(BinaryExpression *node) override {
+    void visit(BinaryExpression::Ptr node) override {
         recurse(node->left);
         recurse(node->right);
-        value = rewrite(node);
+        valueExpr = rewrite(node);
     }
 
-    void visit(UnaryExpression *node) override {
+    void visit(UnaryExpression::Ptr node) override {
         recurse(node->operand);
-        value = rewrite(node);
+        valueExpr = rewrite(node);
     }
 
-    void visit(Assignment *node) override {
+    void visit(Assignment::Ptr node) override {
         recurse(node->left);
         recurse(node->right);
-        value = rewrite(node);
+        valueExpr = rewrite(node);
     }
 
-    void visit(VarDecl *node) override {
-        value = rewrite(node);
+    void visit(VarDecl::Ptr node) override {
+        valueExpr = rewrite(node);
     }
 
-    void visit(Identifier *node) override {
-        value = rewrite(node);
+    void visit(Identifier::Ptr node) override {
+        valueExpr = rewrite(node);
     }
 
-    void visit(VarRef *node) override {
-        value = rewrite(node);
+    void visit(VarRef::Ptr node) override {
+        valueExpr = rewrite(node);
     }
 
-    void visit(StrRef *node) override {
-        value = rewrite(node);
+    void visit(StringConstant::Ptr node) override {
+        valueExpr = rewrite(node);
     }
 
-    void visit(EmptyStatement *node) override {
-        value = rewrite(node);
+    void visit(EmptyStatement::Ptr node) override {
+        valueStmt = rewrite(node);
     }
 
-    void visit(PrintStatement *node) override {
+    void visit(PrintStatement::Ptr node) override {
         recurse(node->expression);
-        value = rewrite(node);
+        valueStmt = rewrite(node);
     }
 
-    void visit(ExpressionStatement *node) override {
+    void visit(ExpressionStatement::Ptr node) override {
         recurse(node->expression);
-        value = rewrite(node);
+        valueStmt = rewrite(node);
     }
 
-    void visit(CompoundStatement *node) override {
+    void visit(CompoundStatement::Ptr node) override {
         for (auto &stmt : node->statements) {
             recurse(stmt);
         }
-        value = rewrite(node);
+        valueStmt = rewrite(node);
     }
 
-    void visit(IfStatement *node) override {
+    void visit(IfStatement::Ptr node) override {
         recurse(node->condition);
         recurse(node->thenBranch);
         recurse(node->elseBranch);
-        value = rewrite(node);
+        valueStmt = rewrite(node);
     }
 
-    void visit(TryStatement *node) override {
+    void visit(TryStatement::Ptr node) override {
         recurse(node->tryBody);
         recurse(node->catchBody);
-        value = rewrite(node);
+        valueStmt = rewrite(node);
     }
 
-    void visit(ScopedStatement *node) override {
+    void visit(ScopedStatement::Ptr node) override {
         recurse(node->statement);
-        value = rewrite(node);
+        valueStmt = rewrite(node);
     }
 };
 

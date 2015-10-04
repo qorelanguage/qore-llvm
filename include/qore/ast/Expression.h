@@ -34,7 +34,6 @@
 #include <memory>
 #include "qore/qore.h"
 #include "qore/ast/Node.h"
-#include "qore/qil/StringLiteral.h"
 #include "qore/qil/Variable.h"
 
 namespace qore {
@@ -49,7 +48,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<Expression>;
+    using Ptr = std::shared_ptr<Expression>;
 
     /**
      * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
@@ -61,7 +60,7 @@ public:
 /**
  * \brief Represents an integer constant.
  */
-class IntegerLiteral : public Expression {
+class IntegerLiteral : public Expression, public std::enable_shared_from_this<IntegerLiteral> {
 
 public:
     qint value;         //!< The value of the integer literal.
@@ -70,7 +69,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<IntegerLiteral>;
+    using Ptr = std::shared_ptr<IntegerLiteral>;
 
 public:
     /**
@@ -84,7 +83,7 @@ public:
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -102,7 +101,7 @@ private:
 /**
  * \brief Represents a string literal.
  */
-class StringLiteral : public Expression {
+class StringLiteral : public Expression, public std::enable_shared_from_this<StringLiteral> {
 
 public:
     std::string value;      //!< The value of the string literal.
@@ -111,7 +110,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<StringLiteral>;
+    using Ptr = std::shared_ptr<StringLiteral>;
 
 public:
     /**
@@ -125,7 +124,7 @@ public:
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -143,7 +142,7 @@ private:
 /**
  * \brief Represents a binary expression.
  */
-class BinaryExpression : public Expression {
+class BinaryExpression : public Expression, public std::enable_shared_from_this<BinaryExpression> {
 
 public:
     Expression::Ptr left;           //!< The operand on the left side.
@@ -154,7 +153,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<BinaryExpression>;
+    using Ptr = std::shared_ptr<BinaryExpression>;
 
 public:
     /**
@@ -169,7 +168,7 @@ public:
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -185,7 +184,7 @@ private:
 /**
  * \brief Represents a unary expression.
  */
-class UnaryExpression : public Expression {
+class UnaryExpression : public Expression, public std::enable_shared_from_this<UnaryExpression> {
 
 public:
     SourceRange operatorRange;      //!< Location of the operator in the source.
@@ -195,7 +194,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<UnaryExpression>;
+    using Ptr = std::shared_ptr<UnaryExpression>;
 
 public:
     /**
@@ -209,7 +208,7 @@ public:
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -225,7 +224,7 @@ private:
 /**
  * \brief Represents an assignment.
  */
-class Assignment : public Expression {
+class Assignment : public Expression, public std::enable_shared_from_this<Assignment> {
 
 public:
     Expression::Ptr left;           //!< The operand on the left side.
@@ -236,7 +235,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<Assignment>;
+    using Ptr = std::shared_ptr<Assignment>;
 
 public:
     /**
@@ -251,7 +250,7 @@ public:
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -267,7 +266,7 @@ private:
 /**
  * \brief Represents a variable declaration.
  */
-class VarDecl : public Expression {
+class VarDecl : public Expression, public std::enable_shared_from_this<VarDecl> {
 
 public:
     std::string name;               //!< The name of the variable.
@@ -276,7 +275,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<VarDecl>;
+    using Ptr = std::shared_ptr<VarDecl>;
 
 public:
     /**
@@ -290,7 +289,7 @@ public:
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -308,7 +307,7 @@ private:
 /**
  * \brief Represents an identifier.
  */
-class Identifier : public Expression {
+class Identifier : public Expression, public std::enable_shared_from_this<Identifier> {
 
 public:
     std::string name;               //!< The name of the identifier.
@@ -317,7 +316,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<Identifier>;
+    using Ptr = std::shared_ptr<Identifier>;
 
 public:
     /**
@@ -331,7 +330,7 @@ public:
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -350,7 +349,7 @@ private:
 /**
  * \brief Represents a variable.
  */
-class VarRef : public Expression {
+class VarRef : public Expression, public std::enable_shared_from_this<VarRef> {
 
 public:
     qil::Variable *ref;
@@ -359,7 +358,7 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<VarRef>;
+    using Ptr = std::shared_ptr<VarRef>;
 
 public:
     /**
@@ -368,12 +367,12 @@ public:
      * \param ref the variable
      * \return a unique pointer to the allocated node
      */
-    static VarRef *create(SourceRange range, qil::Variable *ref) {
-        return new VarRef(range, ref);
+    static Ptr create(SourceRange range, qil::Variable *ref) {
+        return Ptr(new VarRef(range, ref));
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -391,30 +390,31 @@ private:
 /**
  * \brief Represents a string.
  */
-class StrRef : public Expression {
+class StringConstant : public Expression, public std::enable_shared_from_this<StringConstant> {
 
 public:
-    qil::StringLiteral *ref;
+    std::string value;      //TODO replace this with QoreString and remove the 'data' member
+    void *data;
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<VarRef>;
+    using Ptr = std::shared_ptr<StringConstant>;
 
 public:
     /**
      * \brief Allocates a new node.
      * \param range the location of the declaration
-     * \param ref the string
+     * \param value the string
      * \return a unique pointer to the allocated node
      */
-    static StrRef *create(SourceRange range, qil::StringLiteral *ref) {
-        return new StrRef(range, ref);
+    static Ptr create(SourceRange range, std::string value) {
+        return Ptr(new StringConstant(range, std::move(value)));
     }
 
     void accept(ExpressionVisitor &v) override {
-        v.visit(this);
+        v.visit(shared_from_this());
     }
 
     SourceRange getRange() const override {
@@ -422,7 +422,7 @@ public:
     }
 
 private:
-    StrRef(SourceRange range, qil::StringLiteral *ref) : ref(ref), range(range) {
+    StringConstant(SourceRange range, std::string value) : value(std::move(value)), data(nullptr), range(range) {
     }
 
 private:
