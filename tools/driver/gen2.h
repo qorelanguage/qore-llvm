@@ -280,16 +280,16 @@ public:
     LValEval(llvm::IRBuilder<> &builder, QLValue &result) : builder(builder), result(result) {
     }
 
-    void visit(ast::IntegerLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::BinaryExpression *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::UnaryExpression *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Assignment *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::VarDecl *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Identifier *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StrRef *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::IntegerLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::BinaryExpression::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::UnaryExpression::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Assignment::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringConstant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::VarRef *node) override {
+    void visit(ast::VarRef::Ptr node) override {
         result = QLValue(node->ref);
     }
 
@@ -550,10 +550,10 @@ public:
     }
 
 private:
-    void visit(ast::EmptyStatement *node) override {
+    void visit(ast::EmptyStatement::Ptr node) override {
     }
 
-    void visit(ast::IfStatement *node) override {
+    void visit(ast::IfStatement::Ptr node) override {
         QValue cond;
         eval(node->condition, cond);
         llvm::Value *b = call(fnEvalCond).withQoreValueArg(cond).build();   //can it throw?
@@ -575,7 +575,7 @@ private:
         builder.SetInsertPoint(bb3);
     }
 
-    void visit(ast::TryStatement *node) override {
+    void visit(ast::TryStatement::Ptr node) override {
         llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(ctx, "try.cont", qMain);
         llvm::BasicBlock *bb2 = llvm::BasicBlock::Create(ctx, "catch", qMain);
         exceptionBlocks.push_back(bb2);
@@ -590,27 +590,27 @@ private:
         builder.SetInsertPoint(bb1);
     }
 
-    void visit(ast::PrintStatement *node) override {
+    void visit(ast::PrintStatement::Ptr node) override {
         QValue val;
         eval(node->expression, val);
         call(fnPrintQv).withQoreValueArg(val).build();      //print_qv is noexcept
         discard(val);
     }
 
-    void visit(ast::ExpressionStatement *node) override {
+    void visit(ast::ExpressionStatement::Ptr node) override {
         QValue val;
         eval(node->expression, val);
         //this will not be needed
         discard(val);
     }
 
-    void visit(ast::CompoundStatement *node) override {
+    void visit(ast::CompoundStatement::Ptr node) override {
         for (auto &stmt : node->statements) {
             stmt->accept(*this);
         }
     }
 
-    void visit(ast::ScopedStatement *node) override {
+    void visit(ast::ScopedStatement::Ptr node) override {
         if (node->variables.empty()) {
             node->statement->accept(*this);
         } else {
@@ -661,22 +661,22 @@ public:
     ValEval(CodeGen &codeGen, QValue &result) : codeGen(codeGen), result(result) {
     }
 
-    void visit(ast::IntegerLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringLiteral *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::VarDecl *node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Identifier *node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::IntegerLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::StringLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::StrRef *node) override {
-        llvm::Value *s = static_cast<llvm::Value *>(node->ref->data);
-        setResult(codeGen.builder.CreateLoad(s, "str." + node->ref->value));
+    void visit(ast::StringConstant::Ptr node) override {
+        llvm::Value *s = static_cast<llvm::Value *>(node->data);
+        setResult(codeGen.builder.CreateLoad(s, "str." + node->value));
     }
 
-    void visit(ast::VarRef *node) override {
+    void visit(ast::VarRef::Ptr node) override {
         llvm::Value *v = static_cast<llvm::Value *>(node->ref->data);
         setResult(codeGen.builder.CreateLoad(v, "val." + node->ref->name));
     }
 
-    void visit(ast::BinaryExpression *node) override {
+    void visit(ast::BinaryExpression::Ptr node) override {
         QValue left;
         QValue right;
         eval(node->left, left);
@@ -687,7 +687,7 @@ public:
         codeGen.discard(left);
     }
 
-    void visit(ast::UnaryExpression *node) override {
+    void visit(ast::UnaryExpression::Ptr node) override {
         QLValue lval;
         evalLValue(node->operand, lval);
 
@@ -700,7 +700,7 @@ public:
         codeGen.discard(val);
     }
 
-    void visit(ast::Assignment *node) override {
+    void visit(ast::Assignment::Ptr node) override {
         QLValue left;
         QValue right;
         eval(node->right, right);
