@@ -287,7 +287,7 @@ public:
     void visit(ast::Assignment::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringConstant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Constant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
     void visit(ast::Variable::Ptr node) override {
         result = QLValue(node.get());
@@ -318,10 +318,15 @@ public:
         ltInt64 = llvm::Type::getInt64Ty(ctx);
         ltUInt8 = llvm::Type::getInt8Ty(ctx);
         ltCharPtr = llvm::Type::getInt8PtrTy(ctx);
+        ltQoreString = llvm::StructType::get(ctx, false);
+        ltQoreStringPtr = ltQoreString->getPointerTo();
         ltQoreValue = llvm::StructType::get(ltInt64, ltUInt8, nullptr);
         ltQoreValuePtr = ltQoreValue->getPointerTo();
         ltBool = llvm::Type::getInt1Ty(ctx);
         ltExc = llvm::StructType::get(ltCharPtr, ltInt32, nullptr);
+
+        fnAllocString = f(ltQoreStringPtr, "qrt_alloc_string", ltCharPtr, nullptr);
+        fnDerefString = f(ltVoid, "qrt_deref_string", ltQoreStringPtr->getPointerTo(), nullptr);
 
         fnPrintQv = f(ltVoid, "print_qv", ltInt64, ltUInt8, nullptr);
         fnMakeStr = f(ltQoreValue, "make_str", ltCharPtr, nullptr);
@@ -396,8 +401,12 @@ public:
     llvm::Type *ltCharPtr;
     llvm::Type *ltBool;
     llvm::StructType *ltQoreValue;
+    llvm::StructType *ltQoreString;
     llvm::StructType *ltExc;
     llvm::Type *ltQoreValuePtr;
+    llvm::Type *ltQoreStringPtr;
+    llvm::Function *fnAllocString;
+    llvm::Function *fnDerefString;
     llvm::Function *fnPrintQv;
     llvm::Function *fnMakeStr;
     llvm::Function *fnEvalAdd;
@@ -441,8 +450,8 @@ public:
         xtorBuilder.SetInsertPoint(xtorBuilder.CreateRetVoid());
     }
 
-    llvm::GlobalVariable *createStringConstant(const std::string &value) {
-        llvm::Constant *val = llvm::ConstantDataArray::getString(ctx, value, true);
+    llvm::GlobalVariable *createStringConstant(const QoreValueHolder &qvh) {
+        llvm::Constant *val = llvm::ConstantDataArray::getString(ctx, qrt_get_string(qvh.get()), true);
         llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*module, val->getType(), true,
                 llvm::GlobalValue::PrivateLinkage, val);
         globalVar->setUnnamedAddr(true);
@@ -501,28 +510,6 @@ class CodeGen : public LLVMHelper, private ast::StatementVisitor {
 
 public:
     CodeGen(Script &script) : script(script) {
-        llvm::IRBuilder<> ctorBuilder{ctx};
-        llvm::IRBuilder<> dtorBuilder{ctx};
-        globalXtor("llvm.global_ctors", "qCtor", ctorBuilder);
-        globalXtor("llvm.global_dtors", "qDtor", dtorBuilder);
-
-        for (auto &s : script.strings) {
-            llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*module, ltQoreValue, false,
-                    llvm::GlobalValue::PrivateLinkage, nothing);    //XXX these should be QoreObjects (with implicit Tag::Str)
-            globalVar->setUnnamedAddr(true);
-
-            //ctor
-            llvm::Value *strPtr = ctorBuilder.CreateConstGEP2_32(nullptr, createStringConstant(s->value), 0, 0);
-            ctorBuilder.CreateStore(CallBuilder(ctorBuilder, fnMakeStr).withGenericArg(strPtr).build(), globalVar);
-
-            //dtor
-            llvm::LoadInst *val = dtorBuilder.CreateLoad(globalVar);
-            CallBuilder(dtorBuilder, fnStrongDeref).withQoreValueArg2(val).build();
-            dtorBuilder.SetInsertPoint(val);
-
-            s->data = globalVar;
-        }
-
         qMain->setPersonalityFn(llvm::ConstantExpr::getBitCast(fnPersonality, ltCharPtr));
         builder.SetInsertPoint(llvm::BasicBlock::Create(ctx, "entry", qMain));
 
@@ -536,18 +523,47 @@ public:
         cleanup.cg = this;
     }
 
+    llvm::GlobalVariable *getString(ast::Constant::Ptr &node) {
+        auto &x = strMap[node];
+        if (!x) {
+            x = new llvm::GlobalVariable(*module, ltQoreStringPtr, false, llvm::GlobalValue::PrivateLinkage,
+                    llvm::Constant::getNullValue(ltQoreStringPtr));
+            x->setUnnamedAddr(true);
+        }
+        return x;
+    }
+
     void run() {
         script.body->accept(*this);
         builder.CreateRetVoid();
+
+        llvm::IRBuilder<> ctorBuilder{ctx};
+        llvm::IRBuilder<> dtorBuilder{ctx};
+        globalXtor("llvm.global_ctors", "qCtor", ctorBuilder);
+        globalXtor("llvm.global_dtors", "qDtor", dtorBuilder);
+
+        for (auto &s : strMap) {
+            llvm::GlobalVariable *globalVar = s.second;
+
+            //ctor
+            llvm::Value *strPtr = ctorBuilder.CreateConstGEP2_32(nullptr, createStringConstant(s.first->value), 0, 0);
+            ctorBuilder.CreateStore(CallBuilder(ctorBuilder, fnAllocString).withGenericArg(strPtr).build(), globalVar);
+
+            //dtor
+            llvm::Value *val = CallBuilder(dtorBuilder, fnDerefString).withGenericArg(globalVar).build();
+            dtorBuilder.SetInsertPoint(static_cast<llvm::CallInst*>(val));
+        }
     }
 
     llvm::Module *getModule() {
 //        qMain->viewCFG();
-//        module->dump();
+        module->dump();
         llvm::raw_os_ostream sss(std::cout);
         llvm::verifyModule(*module, &sss);
         return module;
     }
+
+    std::map<ast::Constant::Ptr, llvm::GlobalVariable *> strMap;
 
 private:
     void visit(ast::EmptyStatement::Ptr node) override {
@@ -666,9 +682,23 @@ public:
     void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::StringConstant::Ptr node) override {
-        llvm::Value *s = static_cast<llvm::Value *>(node->data);
-        setResult(codeGen.builder.CreateLoad(s, "str." + node->value));
+    void visit(ast::Constant::Ptr node) override {
+        llvm::Value *v1 = llvm::UndefValue::get(codeGen.ltQoreValue);
+        llvm::Value *v2 = codeGen.builder.CreateInsertValue(v1, llvm::ConstantInt::get(codeGen.ltUInt8, static_cast<int>(node->value.get().tag), false), {1});
+        llvm::Value *v3;
+
+        switch (node->value.get().tag) {
+            case Tag::Int:
+                v3 = llvm::ConstantInt::get(codeGen.ltInt64, node->value.get().intValue, false);
+                break;
+            case Tag::Str:
+                v3 = codeGen.builder.CreatePtrToInt(codeGen.builder.CreateLoad(codeGen.getString(node), std::string("str.") + qrt_get_string(node->value.get())), codeGen.ltInt64);
+                break;
+            default:
+                QORE_UNREACHABLE("Not implemented");
+        }
+
+        setResult(codeGen.builder.CreateInsertValue(v2, v3, {0}));
     }
 
     void visit(ast::Variable::Ptr node) override {

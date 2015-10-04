@@ -34,6 +34,7 @@
 #include <memory>
 #include "qore/qore.h"
 #include "qore/ast/Node.h"
+#include "qore/runtime/runtime.h"
 
 namespace qore {
 namespace ast {
@@ -54,6 +55,10 @@ public:
      * \param visitor the visitor to call
      */
     virtual void accept(ExpressionVisitor &visitor) = 0;
+
+    virtual bool isConstant() {
+        return false;
+    }
 };
 
 /**
@@ -388,29 +393,28 @@ private:
 };
 
 /**
- * \brief Represents a string.
+ * \brief Represents a constant.
  */
-class StringConstant : public Expression, public std::enable_shared_from_this<StringConstant> {
+class Constant : public Expression, public std::enable_shared_from_this<Constant> {
 
 public:
-    std::string value;      //XXX replace this with QoreString and remove the 'data' member
-    void *data;
+    QoreValueHolder value;
 
 public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::shared_ptr<StringConstant>;
+    using Ptr = std::shared_ptr<Constant>;
 
 public:
     /**
      * \brief Allocates a new node.
      * \param range the location of the declaration
-     * \param value the string
+     * \param value the constant value
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(SourceRange range, std::string value) {
-        return Ptr(new StringConstant(range, std::move(value)));
+    static Ptr create(SourceRange range, QoreValueHolder value) {
+        return Ptr(new Constant(range, std::move(value)));
     }
 
     void accept(ExpressionVisitor &v) override {
@@ -421,8 +425,12 @@ public:
         return range;
     }
 
+    bool isConstant() override {
+        return true;
+    }
+
 private:
-    StringConstant(SourceRange range, std::string value) : value(std::move(value)), data(nullptr), range(range) {
+    Constant(SourceRange range, QoreValueHolder value) : value(std::move(value)), range(range) {
     }
 
 private:

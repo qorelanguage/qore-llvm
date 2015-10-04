@@ -182,7 +182,7 @@ private:
     void visit(ast::Assignment::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringConstant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+    void visit(ast::Constant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
     void visit(ast::Variable::Ptr node) override {
         result = LValue(node.get());
@@ -232,8 +232,8 @@ private:
         curVal = Value(*static_cast<QoreValue *>(node->data));
     }
 
-    void visit(ast::StringConstant::Ptr node) override {
-        curVal = Value(*static_cast<QoreValue *>(node->data));
+    void visit(ast::Constant::Ptr node) override {
+        curVal = Value(node->value.get());
     }
 
     void visit(ast::Assignment::Ptr node) override {
@@ -311,11 +311,6 @@ class Interpreter {
 
 public:
     Interpreter(Script &script) : script(script) {
-        for (auto &s : script.strings) {
-            QoreValue *qv = new QoreValue();
-            *qv = make_str(s->value.c_str());
-            s->data = qv;
-        }
         for (auto &v : script.variables) {
             QoreValue *qv = new QoreValue();
             qv->tag = Tag::Nothing;
@@ -327,11 +322,6 @@ public:
         for (auto &v : script.variables) {
             QoreValue *qv = static_cast<QoreValue *>(v->data);
             strongDeref(*qv);   //shouldn't be needed, at this point all variables must be out of scope
-            delete qv;
-        }
-        for (auto &s : script.strings) {
-            QoreValue *qv = static_cast<QoreValue *>(s->data);
-            strongDeref(*qv);
             delete qv;
         }
     }

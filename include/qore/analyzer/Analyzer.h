@@ -42,11 +42,9 @@ namespace qore {
 
 class Script {
 public:
-    using Strings = std::vector<ast::StringConstant::Ptr>;
     using Variables = std::vector<ast::Variable::Ptr>;
 
     Variables variables;
-    Strings strings;
     ast::Statement::Ptr body;
 };
 
@@ -150,58 +148,35 @@ private:
 
 class StringReplacer : public ast::Rewriter {
 public:
-    StringReplacer(bool interactive = false) : interactive(interactive) {
-    }
-
-    ~StringReplacer() {
-        if (interactive) {
-            for (auto it = strings.rbegin(); it != strings.rend(); ++it) {
-                QoreValue *qv = static_cast<QoreValue *>((*it)->data);
-                strongDeref(*qv);
-                delete qv;
-            }
-        }
-    }
-
     ast::Expression::Ptr rewrite(ast::StringLiteral::Ptr node) override {
-        ast::StringConstant::Ptr &s = strLookup[node->value];
+        ast::Constant::Ptr &s = strLookup[node->value];
         if (!s) {
-            s = ast::StringConstant::create(node->getRange(), std::move(node->value));
-            if (interactive) {
-                QoreValue *qv = new QoreValue();
-                *qv = make_str(s->value.c_str());
-                s->data = qv;
-            }
-            strings.emplace_back(s);
+            s = ast::Constant::create(node->getRange(), QoreValueHolder(node->value));
         }
         return s;
     }
 
+    ast::Expression::Ptr rewrite(ast::IntegerLiteral::Ptr node) override {
+        return ast::Constant::create(node->getRange(), QoreValueHolder(node->value));
+    }
+
 public:
-    Script::Strings strings;
-    std::map<std::string, ast::StringConstant::Ptr> strLookup;
-private:
-    bool interactive;
+    std::map<std::string, ast::Constant::Ptr> strLookup;
 };
 
-//class ConstFolder : public ast::Rewriter {
-//public:
-//    ConstFolder() {
-//    }
-//
-//    ast::Expression *rewrite(ast::BinaryExpression *node) override {
-//        //TODO remove dynamic casts
-//        ast::StringLiteral *left = dynamic_cast<ast::StringLiteral *>(node->left.get());
-//        ast::StringLiteral *right = dynamic_cast<ast::StringLiteral *>(node->right.get());
-//        if (left && right) {
-//            left->value += right->value;
-//            node->left.release();
-//            //delete node
-//            return left;
-//        }
-//        return node;
-//    }
-//};
+class ConstFolder : public ast::Rewriter {
+public:
+    ConstFolder() {
+    }
+
+    ast::Expression::Ptr rewrite(ast::BinaryExpression::Ptr node) override {
+        if (!node->left->isConstant() || !node->right->isConstant()) {
+            return ast::Expression::Ptr();
+        }
+        static_cast<ast::Constant *>(node->left.get())->value.add(static_cast<ast::Constant *>(node->right.get())->value);
+        return node->left;
+    }
+};
 
 class ScriptScope : public Scope {
 
@@ -255,15 +230,14 @@ public:
         Resolver r(scriptScope);
         r.recurse(body);
 
-//        ConstFolder cf;
-//        cf.recurse(body);
-
         StringReplacer sr;
         sr.recurse(body);
 
+        ConstFolder cf;
+        cf.recurse(body);       //TODO this may produce duplicities
+
         Script s;
         s.variables = std::move(scriptScope.variables);
-        s.strings = std::move(sr.strings);
         s.body = std::move(body);
         return s;
     }
@@ -275,9 +249,6 @@ public:
         Resolver r(interactiveScope);
         r.recurse(node);
 
-//        ConstFolder cf;
-//        cf.recurse(body);
-
         isr.recurse(node);
     }
 
@@ -286,7 +257,7 @@ public:
     }
 
 private:
-    StringReplacer isr{true};
+    StringReplacer isr;
     InteractiveScriptScope interactiveScriptScope;
     BlockScope interactiveScope{interactiveScriptScope};
 };

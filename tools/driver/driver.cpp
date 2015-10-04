@@ -1,5 +1,5 @@
-//XXX StringLiteral -> allocate QoreString, not QoreValue (implicit Tag::Str) -> optimizations (deref cannot throw)
 //XXX Extract common code from interpret.h and gen2.h
+//XXX QValue - loaded string literals do not need throwing deref
 //XXX Create tools/driver/prototype and move everything dirty there
 //XXX Merge to develop
 

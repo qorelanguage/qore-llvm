@@ -16,15 +16,15 @@ public:
     std::string value;
 
     QoreString(const char *str) : refCount(1), value(str) {
-        LOG("Creating QoreString " << this);
+        LOG("Creating " << this);
     }
 
     QoreString(std::string str) : refCount(1), value(std::move(str)) {
-        LOG("Creating QoreString " << this);
+        LOG("Creating " << this);
     }
 
     ~QoreString() {
-        LOG("Destroying QoreString " << this);
+        LOG("Destroying " << this);
     }
 
     void deref() {
@@ -78,6 +78,22 @@ __attribute__((visibility("default"))) void print_qv(QoreValue qv) noexcept {
 //            std::cout << "Qore Print: " << qv.strValue << std::endl;
             break;
     }
+}
+
+__attribute__((visibility("default"))) QoreString *qrt_alloc_string(const char *value) {
+    return new QoreString(value);
+}
+
+__attribute__((visibility("default"))) void qrt_deref_string(QoreString *&str) {
+    if (!--str->refCount) {
+        delete str;
+        str = nullptr;
+    }
+}
+
+__attribute__((visibility("default"))) const char *qrt_get_string(const QoreValue &v) noexcept {
+    assert(v.tag == Tag::Str);
+    return v.strValue->value.c_str();
 }
 
 __attribute__((visibility("default"))) QoreValue make_str(const char *value) noexcept {
@@ -156,11 +172,11 @@ __attribute__((visibility("default"))) bool eval_cond(QoreValue v) noexcept {
 }
 
 std::ostream &operator<<(std::ostream &os, const QoreString *qs) {
-    return os << static_cast<const void*>(qs) << ":{" << *qs << "}";
+    return os << *qs;
 }
 
 std::ostream &operator<<(std::ostream &os, const QoreString &qs) {
-    return os << "[" << qs.refCount << "]'" << qs.value << "'";
+    return os << "QoreString[" << qs.refCount << "]{" << static_cast<const void*>(&qs) << "}:\"" << qs.value << "\"";
 }
 
 std::ostream &operator<<(std::ostream &os, const QoreValue *qv) {
@@ -176,4 +192,8 @@ std::ostream &operator<<(std::ostream &os, const QoreValue &qv) {
         return os << "strValue(" << qv.strValue << ")";
     }
     assert(false);
+}
+
+std::ostream &operator<<(std::ostream &os, const QoreValueHolder &qv) {
+    return os << qv.get();
 }

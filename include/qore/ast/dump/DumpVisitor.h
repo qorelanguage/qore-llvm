@@ -176,8 +176,8 @@ public:
             << EndNode();
     }
 
-    void visit(StringConstant::Ptr node) override {
-        formatter << BeginNode("stringConstant")
+    void visit(Constant::Ptr node) override {
+        formatter << BeginNode("constant")
             << Range(node->getRange())
             << Last() << attribute("value", node->value)
             << EndNode();

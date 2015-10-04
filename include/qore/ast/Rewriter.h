@@ -73,7 +73,7 @@ protected:
         return Expression::Ptr();
     }
 
-    virtual Expression::Ptr rewrite(StringConstant::Ptr node) {
+    virtual Expression::Ptr rewrite(Constant::Ptr node) {
         return Expression::Ptr();
     }
 
@@ -168,7 +168,7 @@ public:
         valueExpr = rewrite(node);
     }
 
-    void visit(StringConstant::Ptr node) override {
+    void visit(Constant::Ptr node) override {
         valueExpr = rewrite(node);
     }
 
