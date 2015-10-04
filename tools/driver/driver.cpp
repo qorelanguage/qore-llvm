@@ -1,3 +1,8 @@
+//XXX StringLiteral -> allocate QoreString, not QoreValue (implicit Tag::Str) -> optimizations (deref cannot throw)
+//XXX Extract common code from interpret.h and gen2.h
+//XXX Create tools/driver/prototype and move everything dirty there
+//XXX Merge to develop
+
 #define QORE_LOG_COMPONENT "DRIVER"
 
 #include <iostream>
@@ -144,7 +149,7 @@ int main(int argc, char *argv[]) {
     }
 
     qore::analyzer::Analyzer analyzer;
-    qore::qil::Script script = analyzer.analyze(root);
+    qore::Script script = analyzer.analyze(root);
 
     qore::ast::dump::DumpVisitor<qore::ast::dump::CompactFormat> dcv;
     script.body->accept(dcv);

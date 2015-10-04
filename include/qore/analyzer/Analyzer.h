@@ -34,12 +34,22 @@
 #include "qore/common/Util.h"
 #include "qore/ast/Program.h"
 #include "qore/ast/Rewriter.h"
-#include "qore/qil/Qil.h"
 #include <string>
 #include <map>
 #include <memory>
 
 namespace qore {
+
+class Script {
+public:
+    using Strings = std::vector<ast::StringConstant::Ptr>;
+    using Variables = std::vector<ast::Variable::Ptr>;
+
+    Variables variables;
+    Strings strings;
+    ast::Statement::Ptr body;
+};
+
 namespace analyzer {
 
 class Scope {
@@ -61,7 +71,8 @@ public:
 
     ast::Statement::Ptr rewrite(ast::TryStatement::Ptr node) override {
         node->tryBody = ast::ScopedStatement::create(node->tryBody);
-        //TODO try/catch scope
+        node->catchBody = ast::ScopedStatement::create(node->catchBody);
+        //TODO define exception variable in catch scope
         return node;
     }
 
@@ -167,7 +178,7 @@ public:
     }
 
 public:
-    qil::Script::Strings strings;
+    Script::Strings strings;
     std::map<std::string, ast::StringConstant::Ptr> strLookup;
 private:
     bool interactive;
@@ -218,7 +229,7 @@ public:
     }
 
 public:
-    qil::Script::Variables variables;
+    Script::Variables variables;
 };
 
 class InteractiveScriptScope : public ScriptScope {
@@ -230,11 +241,10 @@ public:
     }
 };
 
-
 class Analyzer {
 
 public:
-    qil::Script analyze(const ast::Program::Ptr &node) {
+    Script analyze(const ast::Program::Ptr &node) {
         SourceRange range = node->getRange();
         ast::Statement::Ptr body = ast::CompoundStatement::create(range, std::move(node->body));
 
@@ -251,7 +261,7 @@ public:
         StringReplacer sr;
         sr.recurse(body);
 
-        qil::Script s;
+        Script s;
         s.variables = std::move(scriptScope.variables);
         s.strings = std::move(sr.strings);
         s.body = std::move(body);

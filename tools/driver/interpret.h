@@ -27,7 +27,7 @@ inline std::ostream &operator<<(std::ostream &os, const ast::Variable *var) {
 class Value {
 
 public:
-    Value() : hasValue(false) {     //TODO hasValue is useful only for logging
+    Value() : hasValue(false) {     //XXX hasValue is useful only for logging
         qv.tag = Tag::Nothing;
     }
 
@@ -77,7 +77,7 @@ public:
     }
 
     Value add(Value &right) {
-        return Value(eval_add(qv, right.qv), false);        //TODO all refs and derefs are handled here, so runtime should not care -> make eval_add return ref = 0 ?
+        return Value(eval_add(qv, right.qv), false);        //XXX all refs and derefs are handled here, so runtime should not care -> make eval_add return ref = 0 ?
     }
 
     Value dup() {
@@ -310,7 +310,7 @@ public:
 class Interpreter {
 
 public:
-    Interpreter(qil::Script &script) : script(script) {
+    Interpreter(Script &script) : script(script) {
         for (auto &s : script.strings) {
             QoreValue *qv = new QoreValue();
             *qv = make_str(s->value.c_str());
@@ -346,10 +346,10 @@ public:
     }
 
 private:
-    qil::Script &script;
+    Script &script;
 };
 
-void doInterpret(qil::Script &script) {
+void doInterpret(Script &script) {
     Interpreter i(script);
     i.run();
 }

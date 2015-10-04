@@ -500,7 +500,7 @@ void evalLValue(CodeGen &codeGen, ast::Expression::Ptr &node, QLValue &dest);
 class CodeGen : public LLVMHelper, private ast::StatementVisitor {
 
 public:
-    CodeGen(qil::Script &script) : script(script) {
+    CodeGen(Script &script) : script(script) {
         llvm::IRBuilder<> ctorBuilder{ctx};
         llvm::IRBuilder<> dtorBuilder{ctx};
         globalXtor("llvm.global_ctors", "qCtor", ctorBuilder);
@@ -508,7 +508,7 @@ public:
 
         for (auto &s : script.strings) {
             llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*module, ltQoreValue, false,
-                    llvm::GlobalValue::PrivateLinkage, nothing);    //TODO these should be QoreObjects (with implicit Tag::Str)
+                    llvm::GlobalValue::PrivateLinkage, nothing);    //XXX these should be QoreObjects (with implicit Tag::Str)
             globalVar->setUnnamedAddr(true);
 
             //ctor
@@ -650,7 +650,7 @@ private:
     }
 
 private:
-    qil::Script &script;
+    Script &script;
 };
 
 
@@ -773,7 +773,7 @@ void Cleanup::buildLPad() {
     }
 }
 
-std::unique_ptr<llvm::Module> doCodeGen(qil::Script &script) {
+std::unique_ptr<llvm::Module> doCodeGen(Script &script) {
     CodeGen cg(script);
     cg.run();
     return std::unique_ptr<llvm::Module>(cg.getModule());

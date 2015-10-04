@@ -352,7 +352,7 @@ class Variable : public Expression, public std::enable_shared_from_this<Variable
 
 public:
     std::string name;
-    void *data;         //TODO get rid of this
+    void *data;         //XXX get rid of this
 
 public:
     /**
@@ -393,7 +393,7 @@ private:
 class StringConstant : public Expression, public std::enable_shared_from_this<StringConstant> {
 
 public:
-    std::string value;      //TODO replace this with QoreString and remove the 'data' member
+    std::string value;      //XXX replace this with QoreString and remove the 'data' member
     void *data;
 
 public:
