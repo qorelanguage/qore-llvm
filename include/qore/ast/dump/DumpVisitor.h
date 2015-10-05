@@ -116,7 +116,7 @@ public:
     void visit(StringLiteral::Ptr node) override {
         formatter << BeginNode("stringLiteral")
             << Range(node->getRange())
-            << Last() << attribute("value", node->value)
+            << Last() << attribute("value", node->value->getValue())
             << EndNode();
     }
 
