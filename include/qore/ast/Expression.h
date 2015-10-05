@@ -35,6 +35,7 @@
 #include "qore/qore.h"
 #include "qore/ast/Node.h"
 #include "qore/runtime/runtime.h"
+#include "qore/runtime/QoreString.h"
 
 namespace qore {
 namespace ast {
@@ -61,10 +62,22 @@ public:
     }
 };
 
+class ConstantExpression : public Expression {
+
+public:
+    bool isConstant() override {
+        return true;
+    }
+
+    virtual QoreValueHolder getConst() = 0;
+
+    static Expression::Ptr create(const SourceRange &range, const QoreValueHolder &value);
+};
+
 /**
  * \brief Represents an integer constant.
  */
-class IntegerLiteral : public Expression, public std::enable_shared_from_this<IntegerLiteral> {
+class IntegerLiteral : public ConstantExpression, public std::enable_shared_from_this<IntegerLiteral> {
 
 public:
     qint value;         //!< The value of the integer literal.
@@ -94,6 +107,10 @@ public:
         return range;
     }
 
+    QoreValueHolder getConst() override {
+        return QoreValueHolder(value);
+    }
+
 private:
     IntegerLiteral(int value, SourceRange range) : value(value), range(range) {
     }
@@ -105,10 +122,10 @@ private:
 /**
  * \brief Represents a string literal.
  */
-class StringLiteral : public Expression, public std::enable_shared_from_this<StringLiteral> {
+class StringLiteral : public ConstantExpression, public std::enable_shared_from_this<StringLiteral> {
 
 public:
-    std::string value;      //!< The value of the string literal.
+    qore::rt::QoreString *value;         //!< The value of the string literal.
 
 public:
     /**
@@ -123,7 +140,7 @@ public:
      * \param value the value of the string literal
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(SourceRange range, std::string value) {
+    static Ptr create(SourceRange range, qore::rt::QoreString *value) {     //TODO ref?
         return Ptr(new StringLiteral(value, range));
     }
 
@@ -135,13 +152,33 @@ public:
         return range;
     }
 
+    QoreValueHolder getConst() override {
+        return QoreValueHolder(value);
+    }
+
+    ~StringLiteral() {
+        value->deref();
+    }
+
 private:
-    StringLiteral(std::string value, SourceRange range) : value(value), range(range) {
+    StringLiteral(qore::rt::QoreString *value, SourceRange range) : value(value), range(range) {
+        value->ref();
     }
 
 private:
     SourceRange range;
 };
+
+inline Expression::Ptr ConstantExpression::create(const SourceRange &range, const QoreValueHolder &value) {
+    switch (value.get().tag) {
+        case Tag::Int:
+            return IntegerLiteral::create(range, value.get().intValue);
+        case Tag::Str:
+            return StringLiteral::create(range, value.get().strValue);
+        default:
+            assert(false);
+    }
+}
 
 /**
  * \brief Represents a binary expression.
@@ -386,51 +423,6 @@ public:
 
 private:
     Variable(SourceRange range, std::string name) : name(std::move(name)), data(nullptr), range(range) {
-    }
-
-private:
-    SourceRange range;
-};
-
-/**
- * \brief Represents a constant.
- */
-class Constant : public Expression, public std::enable_shared_from_this<Constant> {
-
-public:
-    QoreValueHolder value;
-
-public:
-    /**
-     * \brief Pointer type.
-     */
-    using Ptr = std::shared_ptr<Constant>;
-
-public:
-    /**
-     * \brief Allocates a new node.
-     * \param range the location of the declaration
-     * \param value the constant value
-     * \return a unique pointer to the allocated node
-     */
-    static Ptr create(SourceRange range, QoreValueHolder value) {
-        return Ptr(new Constant(range, std::move(value)));
-    }
-
-    void accept(ExpressionVisitor &v) override {
-        v.visit(shared_from_this());
-    }
-
-    SourceRange getRange() const override {
-        return range;
-    }
-
-    bool isConstant() override {
-        return true;
-    }
-
-private:
-    Constant(SourceRange range, QoreValueHolder value) : value(std::move(value)), range(range) {
     }
 
 private:

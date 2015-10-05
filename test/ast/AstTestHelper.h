@@ -110,7 +110,6 @@ public:
     MOCK_METHOD1(visit, void(std::shared_ptr<VarDecl>));
     MOCK_METHOD1(visit, void(std::shared_ptr<Identifier>));
     MOCK_METHOD1(visit, void(std::shared_ptr<Variable>));
-    MOCK_METHOD1(visit, void(std::shared_ptr<Constant>));
 };
 
 class MockStatementVisitor : public StatementVisitor {

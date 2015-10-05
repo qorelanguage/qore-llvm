@@ -42,7 +42,6 @@ class Assignment;
 class VarDecl;
 class Identifier;
 class Variable;
-class Constant;
 class EmptyStatement;
 class PrintStatement;
 class ExpressionStatement;
@@ -107,12 +106,6 @@ public:
      * \param node the node being visited
      */
     virtual void visit(std::shared_ptr<Variable> node) = 0;
-
-    /**
-     * \brief Called by a Constant AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(std::shared_ptr<Constant> node) = 0;
 
 protected:
     ExpressionVisitor() = default;

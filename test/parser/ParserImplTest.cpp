@@ -262,7 +262,7 @@ TEST_F(ParserImplTest, expression) {
     AST_CAST(ast::IntegerLiteral, left, expr->left);
     AST_CAST(ast::StringLiteral, right, expr->right);
     EXPECT_EQ(1234U, left->value);
-    EXPECT_EQ("abc", right->value);
+    EXPECT_EQ("abc", right->value->getValue());
     EXPECT_EQ(SourceRange(range1.start, range2.end), expr->getRange());
     EXPECT_NOT_CONSUMED();
 }
@@ -294,9 +294,9 @@ TEST_F(ParserImplTest, assignment) {
     AST_CAST(ast::Identifier, var3, bin->right);
 
     EXPECT_EQ("a", var1->name);
-    EXPECT_EQ("b", var2->value);
+    EXPECT_EQ("b", var2->value->getValue());
     EXPECT_EQ("c", var3->name);
-    EXPECT_EQ("d", var4->value);
+    EXPECT_EQ("d", var4->value->getValue());
     EXPECT_EQ(SourceRange(range1.start, range7.end), assign1->getRange());
     EXPECT_EQ(range2, assign1->operatorRange);
     EXPECT_EQ(SourceRange(range3.start, range7.end), assign2->getRange());
@@ -325,7 +325,7 @@ TEST_F(ParserImplTest, additiveDouble) {
     AST_CAST(ast::StringLiteral, right, expr->right);
     EXPECT_EQ(1234U, left->value);
     EXPECT_EQ(range2, expr->operatorRange);
-    EXPECT_EQ("abc", right->value);
+    EXPECT_EQ("abc", right->value->getValue());
     EXPECT_EQ(SourceRange(range1.start, range3.end), expr->getRange());
     EXPECT_NOT_CONSUMED();
 }
@@ -345,7 +345,7 @@ TEST_F(ParserImplTest, additiveTriple) {
     AST_CAST(ast::StringLiteral, leftRight, left->right);
     EXPECT_EQ(1234U, leftLeft->value);
     EXPECT_EQ(range2, left->operatorRange);
-    EXPECT_EQ("abc", leftRight->value);
+    EXPECT_EQ("abc", leftRight->value->getValue());
     EXPECT_EQ(range4, expr->operatorRange);
     EXPECT_EQ(1111U, right->value);
     EXPECT_EQ(SourceRange(range1.start, range3.end), left->getRange());
@@ -377,7 +377,7 @@ TEST_F(ParserImplTest, primaryString) {
     addToken(TokenType::String, "abc", range1);
     DIAG_NONE();
     AST_CAST(ast::StringLiteral, expr, primaryExpression());
-    EXPECT_EQ("abc", expr->value);
+    EXPECT_EQ("abc", expr->value->getValue());
     EXPECT_EQ(range1, expr->getRange());
     EXPECT_CONSUMED();
 }

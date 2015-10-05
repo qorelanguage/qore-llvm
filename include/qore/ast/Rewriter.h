@@ -73,10 +73,6 @@ protected:
         return Expression::Ptr();
     }
 
-    virtual Expression::Ptr rewrite(Constant::Ptr node) {
-        return Expression::Ptr();
-    }
-
     virtual Statement::Ptr rewrite(EmptyStatement::Ptr node) {
         return Statement::Ptr();
     }
@@ -165,10 +161,6 @@ public:
     }
 
     void visit(Variable::Ptr node) override {
-        valueExpr = rewrite(node);
-    }
-
-    void visit(Constant::Ptr node) override {
         valueExpr = rewrite(node);
     }
 

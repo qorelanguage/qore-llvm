@@ -19,6 +19,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_os_ostream.h"
 
+//FIXME separate qore logic from llvm logic, e.g. signatures of runtime functions are independent of the backend
 namespace qore {
 
 class QValue {
@@ -287,7 +288,6 @@ public:
     void visit(ast::Assignment::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Constant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
     void visit(ast::Variable::Ptr node) override {
         result = QLValue(node.get());
@@ -450,8 +450,8 @@ public:
         xtorBuilder.SetInsertPoint(xtorBuilder.CreateRetVoid());
     }
 
-    llvm::GlobalVariable *createStringConstant(const QoreValueHolder &qvh) {
-        llvm::Constant *val = llvm::ConstantDataArray::getString(ctx, qrt_get_string(qvh.get()), true);
+    llvm::GlobalVariable *createStringConstant(const qore::rt::QoreString *str) {
+        llvm::Constant *val = llvm::ConstantDataArray::getString(ctx, str->getValue(), true);
         llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(*module, val->getType(), true,
                 llvm::GlobalValue::PrivateLinkage, val);
         globalVar->setUnnamedAddr(true);
@@ -523,7 +523,7 @@ public:
         cleanup.cg = this;
     }
 
-    llvm::GlobalVariable *getString(ast::Constant::Ptr &node) {
+    llvm::GlobalVariable *getString(ast::StringLiteral::Ptr &node) {
         auto &x = strMap[node];
         if (!x) {
             x = new llvm::GlobalVariable(*module, ltQoreStringPtr, false, llvm::GlobalValue::PrivateLinkage,
@@ -563,7 +563,7 @@ public:
         return module;
     }
 
-    std::map<ast::Constant::Ptr, llvm::GlobalVariable *> strMap;
+    std::map<ast::StringLiteral::Ptr, llvm::GlobalVariable *> strMap;
 
 private:
     void visit(ast::EmptyStatement::Ptr node) override {
@@ -677,27 +677,20 @@ public:
     ValEval(CodeGen &codeGen, QValue &result) : codeGen(codeGen), result(result) {
     }
 
-    void visit(ast::IntegerLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
-    void visit(ast::Constant::Ptr node) override {
+    void visit(ast::IntegerLiteral::Ptr node) override {
         llvm::Value *v1 = llvm::UndefValue::get(codeGen.ltQoreValue);
-        llvm::Value *v2 = codeGen.builder.CreateInsertValue(v1, llvm::ConstantInt::get(codeGen.ltUInt8, static_cast<int>(node->value.get().tag), false), {1});
-        llvm::Value *v3;
+        llvm::Value *v2 = codeGen.builder.CreateInsertValue(v1, llvm::ConstantInt::get(codeGen.ltUInt8, static_cast<int>(Tag::Int), false), {1});
+        llvm::Value *v3 = llvm::ConstantInt::get(codeGen.ltInt64, node->value, false);
+        setResult(codeGen.builder.CreateInsertValue(v2, v3, {0}));
+    }
 
-        switch (node->value.get().tag) {
-            case Tag::Int:
-                v3 = llvm::ConstantInt::get(codeGen.ltInt64, node->value.get().intValue, false);
-                break;
-            case Tag::Str:
-                v3 = codeGen.builder.CreatePtrToInt(codeGen.builder.CreateLoad(codeGen.getString(node), std::string("str.") + qrt_get_string(node->value.get())), codeGen.ltInt64);
-                break;
-            default:
-                QORE_UNREACHABLE("Not implemented");
-        }
-
+    void visit(ast::StringLiteral::Ptr node) override {
+        llvm::Value *v1 = llvm::UndefValue::get(codeGen.ltQoreValue);
+        llvm::Value *v2 = codeGen.builder.CreateInsertValue(v1, llvm::ConstantInt::get(codeGen.ltUInt8, static_cast<int>(Tag::Str), false), {1});
+        llvm::Value *v3 = codeGen.builder.CreatePtrToInt(codeGen.builder.CreateLoad(codeGen.getString(node), std::string("str.") + node->value->getValue()), codeGen.ltInt64);
         setResult(codeGen.builder.CreateInsertValue(v2, v3, {0}));
     }
 

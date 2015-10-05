@@ -1,8 +1,3 @@
-//XXX Extract common code from interpret.h and gen2.h
-//XXX QValue - loaded string literals do not need throwing deref
-//XXX Create tools/driver/prototype and move everything dirty there
-//XXX Merge to develop
-
 #define QORE_LOG_COMPONENT "DRIVER"
 
 #include <iostream>

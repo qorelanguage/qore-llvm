@@ -24,6 +24,7 @@ inline std::ostream &operator<<(std::ostream &os, const ast::Variable *var) {
     return os << *var;
 }
 
+//XXX merge this class and QoreValueHolder
 class Value {
 
 public:
@@ -77,7 +78,7 @@ public:
     }
 
     Value add(Value &right) {
-        return Value(eval_add(qv, right.qv), false);        //XXX all refs and derefs are handled here, so runtime should not care -> make eval_add return ref = 0 ?
+        return Value(eval_add(qv, right.qv), false);
     }
 
     Value dup() {
@@ -182,7 +183,6 @@ private:
     void visit(ast::Assignment::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::Constant::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
 
     void visit(ast::Variable::Ptr node) override {
         result = LValue(node.get());
@@ -204,10 +204,18 @@ public:
     }
 
 private:
-    void visit(ast::IntegerLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
-    void visit(ast::StringLiteral::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::VarDecl::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
     void visit(ast::Identifier::Ptr node) override {QORE_UNREACHABLE("Not implemented");}
+
+    void visit(ast::IntegerLiteral::Ptr node) override {
+        QoreValueHolder qvh = node->getConst();
+        curVal = Value(qvh.get());
+    }
+
+    void visit(ast::StringLiteral::Ptr node) override {
+        QoreValueHolder qvh = node->getConst();
+        curVal = Value(qvh.get());
+    }
 
     void visit(ast::UnaryExpression::Ptr node) override {
         Value val;
@@ -230,10 +238,6 @@ private:
 
     void visit(ast::Variable::Ptr node) override {
         curVal = Value(*static_cast<QoreValue *>(node->data));
-    }
-
-    void visit(ast::Constant::Ptr node) override {
-        curVal = Value(node->value.get());
     }
 
     void visit(ast::Assignment::Ptr node) override {

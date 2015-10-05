@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <ostream>
+#include <qore/runtime/QoreString.h>
 
 enum class Tag : uint8_t {
     Nothing = 0,
@@ -10,22 +11,20 @@ enum class Tag : uint8_t {
     Str = 2,
 };
 
-class QoreString;
-
 /**
  * \private
  */
 struct QoreValue {
     union {
         int64_t intValue;
-        QoreString *strValue;
+        qore::rt::QoreString *strValue;
     };
     Tag tag;
 };
 
-extern "C" QoreString *qrt_alloc_string(const char *value);
-extern "C" void qrt_deref_string(QoreString *&str);
-extern "C" const char *qrt_get_string(const QoreValue &v) noexcept;             //???
+extern "C" qore::rt::QoreString *qrt_alloc_string(const char *value);
+extern "C" void qrt_deref_string(qore::rt::QoreString *&str);
+//extern "C" const char *qrt_get_string(const QoreValue &v) noexcept;             //???
 
 extern "C" void print_qv(QoreValue qv) noexcept;
 extern "C" QoreValue make_str(const char *value) noexcept;
@@ -45,9 +44,15 @@ public:
         qv.tag = Tag::Nothing;
     }
 
+    QoreValueHolder(qore::rt::QoreString *str) {
+        qv.tag = Tag::Str;
+        qv.strValue = str;
+        str->ref();
+    }
+
     QoreValueHolder(const std::string &str) {
         qv.tag = Tag::Str;
-        qv.strValue = qrt_alloc_string(str.c_str());
+        qv.strValue = new qore::rt::QoreString(str);
     }
 
     QoreValueHolder(uint64_t v) {
@@ -76,11 +81,14 @@ public:
         return qv;
     }
 
-    void add(const QoreValueHolder &r) {
-        qv = eval_add(qv, r.qv);
+    QoreValueHolder add0(const QoreValueHolder &r) {
+        return QoreValueHolder(eval_add(qv, r.qv));
     }
 
 private:
+    explicit QoreValueHolder(QoreValue qv) : qv(qv) {
+    }
+
     QoreValueHolder(const QoreValueHolder &) = delete;
     QoreValueHolder &operator=(const QoreValueHolder &) = delete;
 
@@ -90,8 +98,6 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const QoreValue &qv);
 std::ostream &operator<<(std::ostream &os, const QoreValue *qv);
-std::ostream &operator<<(std::ostream &os, const QoreString &qs);
-std::ostream &operator<<(std::ostream &os, const QoreString *qs);
 std::ostream &operator<<(std::ostream &os, const QoreValueHolder &qv);
 
 #endif /* INCLUDE_QORE_RUNTIME_RUNTIME_H_ */

@@ -217,8 +217,12 @@ ast::Expression::Ptr ParserImpl::primaryExpression() {
     switch (tokenType()) {
         case TokenType::Integer:
             return ast::IntegerLiteral::create(r, consume().intValue);
-        case TokenType::String:
-            return ast::StringLiteral::create(r, consume().stringValue);
+        case TokenType::String: {
+            qore::rt::QoreString *str = new qore::rt::QoreString(std::move(consume().stringValue));
+            auto ret = ast::StringLiteral::create(r, str);
+            str->deref();
+            return ret;
+        }
         case TokenType::Identifier:
             return identifier();
         case TokenType::KwMy:

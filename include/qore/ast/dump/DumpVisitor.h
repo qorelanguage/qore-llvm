@@ -176,13 +176,6 @@ public:
             << EndNode();
     }
 
-    void visit(Constant::Ptr node) override {
-        formatter << BeginNode("constant")
-            << Range(node->getRange())
-            << Last() << attribute("value", node->value)
-            << EndNode();
-    }
-
     void visit(EmptyStatement::Ptr node) override {
         formatter << BeginNode("emptyStatement")
             << Last() << Range(node->getRange())

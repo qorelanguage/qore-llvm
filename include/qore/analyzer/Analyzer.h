@@ -148,20 +148,18 @@ private:
 
 class StringReplacer : public ast::Rewriter {
 public:
-    ast::Expression::Ptr rewrite(ast::StringLiteral::Ptr node) override {
-        ast::Constant::Ptr &s = strLookup[node->value];
-        if (!s) {
-            s = ast::Constant::create(node->getRange(), QoreValueHolder(node->value));
-        }
-        return s;
-    }
 
-    ast::Expression::Ptr rewrite(ast::IntegerLiteral::Ptr node) override {
-        return ast::Constant::create(node->getRange(), QoreValueHolder(node->value));
-    }
+    //TODO move to parser
+//    ast::Expression::Ptr rewrite(ast::StringLiteral::Ptr node) override {
+//        ast::Constant::Ptr &s = strLookup[node->value];
+//        if (!s) {
+//            s = ast::Constant::create(node->getRange(), QoreValueHolder(node->value));
+//        }
+//        return s;
+//    }
 
 public:
-    std::map<std::string, ast::Constant::Ptr> strLookup;
+//    std::map<std::string, ast::Constant::Ptr> strLookup;
 };
 
 class ConstFolder : public ast::Rewriter {
@@ -173,8 +171,9 @@ public:
         if (!node->left->isConstant() || !node->right->isConstant()) {
             return ast::Expression::Ptr();
         }
-        static_cast<ast::Constant *>(node->left.get())->value.add(static_cast<ast::Constant *>(node->right.get())->value);
-        return node->left;
+        QoreValueHolder left = static_cast<ast::ConstantExpression *>(node->left.get())->getConst();
+        QoreValueHolder right = static_cast<ast::ConstantExpression *>(node->right.get())->getConst();
+        return ast::ConstantExpression::create(node->getRange(), left.add0(right));
     }
 };
 

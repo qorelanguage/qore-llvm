@@ -44,10 +44,11 @@ TEST_F(ExpressionTest, IntegerLiteral) {
 }
 
 TEST_F(ExpressionTest, StringLiteral) {
-    StringLiteral::Ptr node = StringLiteral::create(range, "test");
+    qore::rt::QoreString str("test");
+    StringLiteral::Ptr node = StringLiteral::create(range, &str);
     EXPECT_CALL(mockVisitor, visit(MatchNode(node))).Times(1);
     node->accept(mockVisitor);
-    EXPECT_EQ("test", node->value);
+    EXPECT_EQ(&str, node->value);
     EXPECT_EQ(range, node->getRange());
 }
 
