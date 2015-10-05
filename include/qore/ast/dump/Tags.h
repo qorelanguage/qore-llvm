@@ -63,14 +63,14 @@ struct BeginNode {
 template<typename T>
 struct Attribute {
     const char *name;       //!< The name of the attribute.
-    const T value;          //!< The value of the attribute.
+    const T &value;         //!< The value of the attribute.
 
     /**
      * \brief Constructor.
      * \param name the name of the attribute
      * \param value the value of the attribute
      */
-    Attribute(const char *name, const T value) : name(name), value(value) {
+    Attribute(const char *name, const T &value) : name(name), value(value) {
     }
 };
 

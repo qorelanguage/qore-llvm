@@ -1,6 +1,5 @@
 add_executable(qore-llvm
     driver.cpp
-    sandbox.cpp
 )
 
 if(QORE_USE_LLVM)
@@ -13,7 +12,7 @@ if(QORE_USE_LLVM)
         llvm_map_components_to_libnames(llvm_libs core bitwriter mcjit native)
         target_compile_definitions(qore-llvm PRIVATE QORE_ENABLE_JIT)
     else(QORE_ENABLE_JIT)
-        llvm_map_components_to_libnames(llvm_libs core bitwriter)
+        llvm_map_components_to_libnames(llvm_libs core bitwriter analysis)
     endif(QORE_ENABLE_JIT)
 
     target_compile_options(qore-llvm PRIVATE -fno-rtti)

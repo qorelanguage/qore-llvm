@@ -1,3 +1,5 @@
+#define QORE_LOG_COMPONENT "DRIVER"
+
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -5,15 +7,17 @@
 #include "qore/parser/ParserImpl.h"
 #include "qore/runtime/runtime.h"
 #include "qore/scanner/ScannerImpl.h"
-#include "interpret.h"
 #include "qore/ast/dump/DumpVisitor.h"
 #include "qore/ast/dump/XmlFormat.h"
 #include "qore/ast/dump/JsonFormat.h"
 #include "qore/ast/dump/YamlFormat.h"
 #include "qore/ast/dump/CompactFormat.h"
 
+#include "qore/analyzer/Analyzer.h"
+#include "interpret.h"
+
 #ifdef QORE_USE_LLVM
-#include "gen.h"
+#include "gen2.h"
 
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"
@@ -29,8 +33,6 @@
 
 #endif
 
-void sandbox();
-
 int main(int argc, char *argv[]) {
     qore::SourceManager sourceMgr;
     qore::DiagPrinter diagPrinter(sourceMgr);
@@ -45,11 +47,8 @@ int main(int argc, char *argv[]) {
     bool jit = false;
     std::string outName;
 
-    while ((opt = getopt(argc, argv, "sdilbjo:")) != -1) {
+    while ((opt = getopt(argc, argv, "dilbjo:")) != -1) {
         switch (opt) {
-            case 's':
-                sandbox();
-                return 0;
             case 'd':
                 dumpAst = true;
                 break;
@@ -109,12 +108,15 @@ int main(int argc, char *argv[]) {
         qore::ScannerImpl scanner{diagMgr, sourceBuffer};
         qore::ParserImpl parser{diagMgr, scanner};
 
-        InterpretVisitor iv;
+        qore::analyzer::Analyzer analyzer;
+        qore::InterpretVisitor iv;
+
         while (true) {
             qore::ast::Statement::Ptr stmt = parser.parseStatement();
             if (!stmt) {
                 return 0;
             }
+            analyzer.analyze(stmt);
             stmt->accept(iv);
         }
     }
@@ -141,15 +143,19 @@ int main(int argc, char *argv[]) {
         root->accept(dcv);
     }
 
+    qore::analyzer::Analyzer analyzer;
+    qore::Script script = analyzer.analyze(root);
+
+    qore::ast::dump::DumpVisitor<qore::ast::dump::CompactFormat> dcv;
+    script.body->accept(dcv);
+
     if (interpret) {
-        InterpretVisitor iv;
-        root->accept(iv);
+        qore::doInterpret(script);
     }
 
 #ifdef QORE_USE_LLVM
     if (compileLl || compileBc || jit) {
-        CodeGenVisitor cgv(sourceMgr);
-        std::unique_ptr<llvm::Module> module(static_cast<llvm::Module*>(root->accept(cgv)));
+        std::unique_ptr<llvm::Module> module = qore::doCodeGen(script);
 
         if (compileLl) {
             std::error_code ec;

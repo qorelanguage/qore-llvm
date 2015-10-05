@@ -50,21 +50,14 @@ public:
     /**
      * \brief Pointer type.
      */
-    using Ptr = std::unique_ptr<Node>;
+    using Ptr = std::shared_ptr<Node>;
 
 public:
     virtual ~Node() = default;
 
     /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
-     * \param visitor the visitor to call
-     * \return the value returned by the visitor
-     */
-    virtual void *accept(Visitor &visitor) const = 0;
-
-    /**
      * \brief Returns the range of locations in the source code of this node.
-     * \return the range of locaitons
+     * \return the range of locations
      */
     virtual SourceRange getRange() const = 0;
 

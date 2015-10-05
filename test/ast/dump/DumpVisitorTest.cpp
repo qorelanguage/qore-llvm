@@ -40,30 +40,37 @@ namespace ast {
 namespace dump {
 
 struct DumpVisitorTest : ::testing::Test {
-    SourceManager sourceMgr;
-    DiagManager diagMgr;
-    SourceBuffer srcBuffer = sourceMgr.createFromString("test", ";print 567 + \"ab\" +5;");
-    ScannerImpl scanner{diagMgr, srcBuffer};
-    ParserImpl parser{diagMgr, scanner};
-    Program::Ptr program = parser.parse();
+    Program::Ptr program = parse(";print 567 + \"ab\" +5;");
+
+    Program::Ptr parse(const std::string &src) {
+        SourceManager sourceMgr;
+        DiagManager diagMgr;
+        SourceBuffer srcBuffer = sourceMgr.createFromString("test", src);
+        ScannerImpl scanner{diagMgr, srcBuffer};
+        ParserImpl parser{diagMgr, scanner};
+        return parser.parse();
+    }
 };
 
 TEST_F(DumpVisitorTest, xml) {
     std::ostringstream ss;
     DumpVisitor<XmlFormat> dv{XmlFormat(ss)};
-    program->accept(dv);
-    EXPECT_EQ(R"(<program range="1:1-1:22">
+    parse(";print 567 + trim \"ab\" +5;")->accept(dv);
+    EXPECT_EQ(R"(<program range="1:1-1:27">
   <body>
     <emptyStatement range="1:1-1:2" />
-    <printStatement range="1:2-1:22">
-      <binaryExpression range="1:8-1:21">
-        <binaryExpression range="1:8-1:18">
+    <printStatement range="1:2-1:27">
+      <binaryExpression range="1:8-1:26">
+        <binaryExpression range="1:8-1:23">
           <integerLiteral range="1:8-1:11" value="567" />
           <operator range="1:12-1:13" />
-          <stringLiteral range="1:14-1:18" value="ab" />
+          <unaryExpression range="1:14-1:23">
+            <operator range="1:14-1:18" />
+            <stringLiteral range="1:19-1:23" value="ab" />
+          </unaryExpression>
         </binaryExpression>
-        <operator range="1:19-1:20" />
-        <integerLiteral range="1:20-1:21" value="5" />
+        <operator range="1:24-1:25" />
+        <integerLiteral range="1:25-1:26" value="5" />
       </binaryExpression>
     </printStatement>
   </body>
@@ -175,6 +182,70 @@ TEST_F(DumpVisitorTest, compactUnicode) {
 "\u251c\u2500integerLiteral @1:8-1:11 value: 567\n"
 "\u251c\u2500operator @1:12-1:13\n"
 "\u2514\u2500stringLiteral @1:14-1:18 value: \"ab\"\n", ss.str());
+}
+
+TEST_F(DumpVisitorTest, exprStmt) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("567;")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:5
++-body
+  +-expressionStatement @1:1-1:5
+    +-integerLiteral @1:1-1:4 value: 567
+)", ss.str());
+}
+
+TEST_F(DumpVisitorTest, assignVarDecl) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("my a = b;")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:10
++-body
+  +-expressionStatement @1:1-1:10
+    +-assignment @1:1-1:9
+      +-varDecl @1:1-1:5 name: "a"
+      +-operator @1:6-1:7
+      +-identifier @1:8-1:9 name: "b"
+)", ss.str());
+}
+
+TEST_F(DumpVisitorTest, compoundStmt) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("{;}")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:4
++-body
+  +-compoundStatement @1:1-1:4
+    +-statements
+      +-emptyStatement @1:2-1:3
+)", ss.str());
+}
+
+TEST_F(DumpVisitorTest, ifStmt) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("if (1) ; else {}")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:17
++-body
+  +-ifStatement @1:1-1:17
+    +-integerLiteral @1:5-1:6 value: 1
+    +-emptyStatement @1:8-1:9
+    +-compoundStatement @1:15-1:17
+      +-statements
+)", ss.str());
+}
+
+TEST_F(DumpVisitorTest, tryStmt) {
+    std::ostringstream ss;
+    DumpVisitor<CompactFormat> dv{CompactFormat(ss, false)};
+    parse("try ; catch (e) ;")->accept(dv);
+    EXPECT_EQ(R"(program @1:1-1:18
++-body
+  +-tryStatement @1:1-1:18
+    +-emptyStatement @1:5-1:6
+    +-identifier @1:14-1:15 name: "e"
+    +-emptyStatement @1:17-1:18
+)", ss.str());
 }
 
 } // namespace dump

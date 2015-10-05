@@ -40,6 +40,8 @@ namespace qore {
 
 /**
  * \brief Qore integer.
+ * \todo make this signed + fix scanner
+ * allowed range is [-9223372036854775807, 9223372036854775807], so scanner should accept [0, 9223372036854775807]
  */
 typedef uint64_t qint;
 

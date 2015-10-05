@@ -56,11 +56,19 @@ public:
 private:
     ast::Program::Ptr program();
     ast::Statements statements();
+    ast::CompoundStatement::Ptr block();
     ast::Statement::Ptr statement();
     ast::PrintStatement::Ptr printStatement();
+    ast::IfStatement::Ptr ifStatement();
+    ast::TryStatement::Ptr tryStatement();
+    ast::ExpressionStatement::Ptr expressionStatement();
     ast::Expression::Ptr expression();
+    ast::Expression::Ptr assignment();
     ast::Expression::Ptr additiveExpression();
+    ast::Expression::Ptr prefixExpression();
     ast::Expression::Ptr primaryExpression();
+    ast::VarDecl::Ptr varDecl();
+    ast::Identifier::Ptr identifier();
 
     friend class ParserImplTest;
 };

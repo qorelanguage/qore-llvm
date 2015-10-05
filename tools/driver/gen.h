@@ -1,7 +1,10 @@
 #ifndef TOOLS_DRIVER_GEN_H_
 #define TOOLS_DRIVER_GEN_H_
-
+#if 0
+#include <map>
+#include <string>
 #include "qore/ast/Program.h"
+#include "qore/common/Util.h"
 
 #include "llvm/ADT/APSInt.h"
 #include "llvm/IR/DataLayout.h"
@@ -12,105 +15,69 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Support/raw_os_ostream.h"
 
 /**
  * \private
  */
-class CodeGenVisitor : public qore::ast::Visitor {
+class CodeGen {
 
 public:
-    using R = void*;
+    CodeGen(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
+        ltVoid = llvm::Type::getVoidTy(ctx);
+        ltInt64 = llvm::Type::getInt64Ty(ctx);
+        ltCharPtr = llvm::Type::getInt8PtrTy(ctx);
+        ltQoreValue = llvm::StructType::get(ltInt64, ltInt64, nullptr);
+        ltQoreValuePtr = ltQoreValue->getPointerTo();
 
-    CodeGenVisitor(qore::SourceManager &sourceMgr) : sourceMgr(sourceMgr) {
-        llvm::Type* a[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
-        qvStruct = llvm::StructType::get(ctx, a, false);
-        llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), a, false);
-        printQvFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "print_qv", nullptr);
-        ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt64Ty(ctx)}, false);
-        makeIntFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_int", nullptr);
-        ft = llvm::FunctionType::get(qvStruct, {llvm::Type::getInt8PtrTy(ctx)}, false);
-        makeStrFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "make_str", nullptr);
-        llvm::Type* qv2[] = {llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx), llvm::Type::getInt64Ty(ctx)};
-        ft = llvm::FunctionType::get(qvStruct, qv2, false);
-        evalAddFunction = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "eval_add", nullptr);
-
-        module->getFunctionList().push_back(printQvFunction);
-        module->getFunctionList().push_back(makeIntFunction);
-        module->getFunctionList().push_back(makeStrFunction);
-        module->getFunctionList().push_back(evalAddFunction);
+        fnPrintQv = f(ltVoid, "print_qv", ltQoreValuePtr, nullptr);
+        fnMakeInt = f(ltVoid, "make_int", ltQoreValuePtr, ltInt64, nullptr);
+        fnMakeStr = f(ltVoid, "make_str", ltQoreValuePtr, ltCharPtr, nullptr);
+        fnMakeNothing = f(ltVoid, "make_nothing", ltQoreValuePtr, nullptr);
+        fnEvalAdd = f(ltVoid, "eval_add", ltQoreValuePtr, ltQoreValuePtr, ltQoreValuePtr, nullptr);
+        fnEvalTrim = f(ltVoid, "eval_trim", ltQoreValuePtr, nullptr);
+        fnEvalAssign = f(ltVoid, "eval_assign", ltQoreValuePtr, ltQoreValuePtr, nullptr);
+        fnDeref = f(ltVoid, "deref", ltQoreValuePtr, nullptr);
         scope = nullptr;
     }
 
-    R visit(const qore::ast::IntegerLiteral *e) override {
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
-        auto c = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx), e->value, true);
-        return builder.CreateCall(makeIntFunction, c);
+    llvm::Module *getModule() {
+        return module;
     }
-
-    R visit(const qore::ast::StringLiteral *e) override {
-        llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, e->value, true);
-        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v);
-        gv->setUnnamedAddr(true);
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
-        auto c = builder.CreateConstGEP2_32(nullptr, gv, 0, 0);
-        return builder.CreateCall(makeStrFunction, c);
-    }
-
-//    R visit(const qore::ast::VariableLoadExpression *e) override {
-//        return builder.CreateLoad(variables[e->getName()], e->getName());
+//    // this creates the int constant in the rodata section
+//    R visit(const qore::ast::IntegerLiteral *e) override {
+//        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope));
+//        llvm::Constant *v = llvm::ConstantStruct::get(ltQoreValue, llvm::ConstantInt::get(ltInt64, 1), llvm::ConstantInt::get(ltInt64, e->value), nullptr);
+//        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v, "intLiteral");
+//        gv->setUnnamedAddr(true);
+//        currentValue = gv;
+//        return nullptr;
 //    }
 
-//    R visit(const qore::ast::Assignment *e) override {
-//        llvm::Value *val = static_cast<llvm::Value*>(e->getValue()->accept(*this));
-//        llvm::AllocaInst *ai = builder.CreateAlloca(llvm::Type::getInt32Ty(ctx), nullptr, e->getVarName());
-//        builder.CreateStore(val, ai);
-//        variables[e->getVarName()] = ai;
-//        return val;
-//    }
-
-    R visit(const qore::ast::BinaryExpression *e) override {
-        llvm::Value *l = static_cast<llvm::Value*>(e->left->accept(*this));
-        llvm::Value *r = static_cast<llvm::Value*>(e->right->accept(*this));
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, e->operatorRange.start.line, e->operatorRange.start.column, scope));
-        auto tagL = builder.CreateExtractValue(l, {0}, "l.tag");
-        auto valL = builder.CreateExtractValue(l, {1}, "l.val");
-        auto tagR = builder.CreateExtractValue(r, {0}, "r.tag");
-        auto valR = builder.CreateExtractValue(r, {1}, "r.val");
-        llvm::Value* args[] = {tagL, valL, tagR, valR};
-        return builder.CreateCall(evalAddFunction, args);
+    void location(const qore::SourceLocation &l) {
+        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, l.line, l.column, scope));
     }
 
-    R visit(const qore::ast::EmptyStatement *) override {
-        return nullptr;
+    void location(const qore::SourceRange &r) {
+        location(r.start);
     }
 
-//    R visit(const qore::ast::ExpressionStatement *s) override {
-//        return s->getExpression()->accept(*this);
-//    }
-
-    R visit(const qore::ast::PrintStatement *s) override {
-        llvm::Value *value = static_cast<llvm::Value*>(s->expression->accept(*this));
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, s->getRange().start.line, s->getRange().start.column, scope));
-        auto tag = builder.CreateExtractValue(value, {0}, "qv.tag");
-        auto val = builder.CreateExtractValue(value, {1}, "qv.val");
-        llvm::Value* args[] = {tag, val};
-        builder.CreateCall(printQvFunction, args);
-        return nullptr;
+    void location(const qore::ast::Node *node) {
+        location(node->getRange());
     }
 
-    R visit(const qore::ast::Program *p) override {
+    void visit(const std::unique_ptr<qore::il::Function> &fff) {
         llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), false);
         llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "q", module);
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(ctx, "entry", f);
         builder.SetInsertPoint(bb);
 
-        llvm::DIBuilder dib(*module);
-
         //        !llvm.dbg.cu = !{!0}
         //        !0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "qore-llvm 1.0.0", isOptimized: false, runtimeVersion: 0, emissionKind: 1, enums: !2, subprograms: !3)
         //        !1 = !DIFile(filename: "/home/otethal/prj/qore-llvm/tools/sandbox/test.q", directory: "/home/otethal/prj/qore-llvm/tools/sandbox")
         //        !2 = !{}
-        char *c_path = realpath(sourceMgr.getName(p->getRange().start.sourceId).c_str(), nullptr);
+        char *c_path = strdup("/todo/path/to/source");
+//        char *c_path = realpath(sourceMgr.getName(p->getRange().start.sourceId).c_str(), nullptr);
         std::string fileName(c_path);
         free(c_path);   //TODO exception safety
         std::string path(fileName);
@@ -125,7 +92,7 @@ public:
                 "",     //flags
                 0);     //runtime version
 
-        llvm::DIFile *diFile = diCU->getFile();
+        diFile = diCU->getFile();
 
         //        !5 = !DISubroutineType(types: !6)
         //        !6 = !{null}
@@ -150,35 +117,272 @@ public:
         llvm::Metadata *ident = llvm::MDString::get(ctx, "qore-llvm 1.0.0");
         module->getOrInsertNamedMetadata("llvm.ident")->addOperand(llvm::MDNode::get(ctx, {ident}));
 
-        for (const auto &statement : p->body) {
-            statement->accept(*this);
+        //Standard types
+        auto ditUint64 = dib.createBasicType("uint64_t", 64, 64, llvm::dwarf::DW_ATE_unsigned);
+        auto ditInt64 = dib.createBasicType("int64_t", 64, 64, llvm::dwarf::DW_ATE_signed);
+        auto ditChar = dib.createBasicType("char", 8, 8, llvm::dwarf::DW_ATE_signed_char);
+        auto ditConstChar = dib.createQualifiedType(llvm::dwarf::DW_TAG_const_type, ditChar);
+        auto ditConstCharPtr = dib.createPointerType(ditConstChar, 64, 64); //name
+
+        //QoreValue Tag
+        llvm::Metadata * elements[]{
+                    dib.createEnumerator("Nothing", 0),
+                    dib.createEnumerator("Int", 1),
+                    dib.createEnumerator("Str", 2)
+                };
+        auto ditQoreValueTag = dib.createEnumerationType(
+                diFile,             // Scope
+                "Tag",
+                diFile,
+                1000,               // LineNumber
+                64,                 // SizeInBits
+                64,                 // AlignInBits
+                dib.getOrCreateArray(elements),
+                ditUint64, "QORE_RUNTIME_TAG"
+        );
+
+        //QoreValue
+        ditQoreValue = dib.createStructType(
+                diFile,             // Scope
+                "QoreValue",
+                diFile,
+                1000,               // LineNumber
+                128,                // SizeInBits
+                64,                 // AlignInBits
+                0,                  // Flags
+                nullptr,            // DerivedFrom
+                llvm::DINodeArray(),
+                0,                  // RuntimeLang
+                nullptr,            // VTableHolder
+                "QORE_RUNTIME_QORE_VALUE"
+        );
+
+        //QoreValue union
+        auto ditQoreValueUnion = dib.createUnionType(
+                ditQoreValue,       // Scope
+                "QoreValueUnion",
+                diFile,
+                1000,               // LineNumber
+                64,                 // SizeInBits
+                64,                 // AlignInBits
+                0,                  // Flags
+                llvm::DINodeArray(),
+                0,                  // RuntimeLang
+                "QORE_RUNTIME_QORE_VALUE_UNION"
+        );
+
+        llvm::Metadata * unionElements[]{
+                dib.createMemberType(
+                        ditQoreValueUnion,          //DIScope *Scope,
+                        "intValue",                 //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        0,                          //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditInt64
+                ),
+                dib.createMemberType(
+                        ditQoreValueUnion,          //DIScope *Scope,
+                        "strValue",                 //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        0,                          //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditConstCharPtr
+                )
+        };
+        dib.replaceArrays(ditQoreValueUnion, dib.getOrCreateArray(unionElements));
+
+        llvm::Metadata * structElements[]{
+                dib.createMemberType(
+                        ditQoreValue,               //DIScope *Scope,
+                        "tag",                      //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        0,                          //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditQoreValueTag
+                ),
+                dib.createMemberType(
+                        ditQoreValue,               //DIScope *Scope,
+                        "value",                    //StringRef Name,
+                        diFile,                     //DIFile *File,
+                        1000,                       //unsigned LineNo,
+                        64,                         //uint64_t SizeInBits,
+                        64,                         //uint64_t AlignInBits,
+                        64,                         //uint64_t OffsetInBits,
+                        llvm::DINode::FlagPublic,   //unsigned Flags,
+                        ditQoreValueUnion
+                )
+        };
+        dib.replaceArrays(ditQoreValue, dib.getOrCreateArray(structElements));
+
+        for (auto &c : fff->constants) {
+            llvm::Constant *v = llvm::ConstantDataArray::getString(ctx, c->getValue(), true);
+            llvm::GlobalVariable *gv = new llvm::GlobalVariable(*module, v->getType(), true, llvm::GlobalValue::PrivateLinkage, v, "strLiteralValue");
+            gv->setUnnamedAddr(true);
+
+//                        location(e);
+            llvm::Value *value = builder.CreateAlloca(ltQoreValue, nullptr, "strLiteral");
+            llvm::Value* args[] = {value, builder.CreateConstGEP2_32(nullptr, gv, 0, 0)};
+            builder.CreateCall(fnMakeStr, args);
+            c->tag = value;
         }
 
-        builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, p->getRange().end.line, p->getRange().end.column, scope));
-        builder.CreateRetVoid();
+
+
+        //Compile code
+        for (const auto &a : fff->actions) {
+            switch (a.type) {
+                case qore::il::Action::Add: {
+//                    location(e->operatorRange);
+                    llvm::Value* args[] = {V(a.s1), V(a.s2), V(a.s3)};
+                    builder.CreateCall(fnEvalAdd, args);
+                    break;
+                }
+                case qore::il::Action::Assign: {
+//                    location(e->operatorRange);
+                    llvm::Value* args[] = {V(a.s1), V(a.s2)};
+                    builder.CreateCall(fnEvalAssign, args);
+                    break;
+                }
+                case qore::il::Action::LifetimeStart: {
+//                    location(e);
+                    auto *v = builder.CreateAlloca(ltQoreValue, nullptr, "var");
+
+//                        llvm::DIExpression *diExpr = dib.createExpression();
+//                        llvm::DILocalVariable *diLocVar = dib.createLocalVariable(
+//                                llvm::dwarf::DW_TAG_auto_variable,
+//                                scope,
+//                                e->name,
+//                                diFile,
+//                                e->getRange().start.line,
+//                                ditQoreValue
+//                        );
+//
+//                        dib.insertDeclare(v, diLocVar, diExpr,
+//                                llvm::DILocation::get(ctx, e->getRange().start.line, e->getRange().start.column, scope),
+//                                builder.GetInsertBlock());
+
+
+                    llvm::Value* args[] = {v};
+                    builder.CreateCall(fnMakeNothing, args);
+                    a.s1->tag = v;
+                    break;
+                }
+                case qore::il::Action::LifetimeEnd: {
+                    llvm::Value* args[] = {V(a.s1)};
+                    builder.CreateCall(fnDeref, args);
+                    break;
+                }
+                case qore::il::Action::Print: {
+//                    location(s);
+                    llvm::Value* args[] = {V(a.s1)};
+                    builder.CreateCall(fnPrintQv, args);
+                    break;
+                }
+                case qore::il::Action::Return:
+                    //builder.SetCurrentDebugLocation(llvm::DILocation::get(ctx, p->getRange().end.line, p->getRange().end.column, scope));
+
+                    for (auto &c : fff->constants) {
+                        llvm::Value* args[] = {V(c.get())};
+                        builder.CreateCall(fnDeref, args);
+                    }
+
+                    builder.CreateRetVoid();
+                    break;
+                case qore::il::Action::Trim: {
+//                    location(e->operatorRange);
+                    llvm::Value* args[] = {V(a.s1)};
+                    builder.CreateCall(fnEvalTrim, args);
+                    break;
+                }
+                default:
+                    QORE_UNREACHABLE("NOT IMPLEMENTED: " << a);
+            }
+        }
+
         llvm::verifyFunction(*f);
 
         dib.finalize();
 
         module->dump();
-        return module;
+        llvm::raw_os_ostream sss(std::cout);
+        llvm::verifyModule(*module, &sss);
+    }
+
+private:
+    llvm::FunctionType *x(llvm::Type *returnType, va_list v) {
+        std::vector<llvm::Type *> args;
+        while (true) {
+            llvm::Type *arg = va_arg(v, llvm::Type*);
+            if (arg == nullptr) {
+                break;
+            }
+            args.push_back(arg);
+        }
+        return llvm::FunctionType::get(returnType, args, false);
+    }
+
+    llvm::FunctionType *x(llvm::Type *returnType, ...) {
+        va_list v;
+        va_start(v, returnType);
+        llvm::FunctionType *ft = x(returnType, v);
+        va_end(v);
+        return ft;
+    }
+
+    llvm::Function *f(llvm::Type *returnType, const std::string &name, ...) {
+        va_list v;
+        va_start(v, name);
+        llvm::FunctionType *ft = x(returnType, v);
+        va_end(v);
+        return llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, module);
+    }
+
+private:
+    static inline llvm::Value *V(const qore::il::AValue *s) {
+        return static_cast<llvm::Value*>(s->tag);
     }
 
 private:
     llvm::LLVMContext &ctx{llvm::getGlobalContext()};
     llvm::Module *module{new llvm::Module("Q", ctx)};
+    llvm::DIBuilder dib{*module};
     llvm::IRBuilder<> builder{ctx};
-    std::map<std::string, llvm::AllocaInst*> variables;
 
-    llvm::StructType *qvStruct;
-    llvm::Function *printQvFunction;
-    llvm::Function *makeIntFunction;
-    llvm::Function *makeStrFunction;
-    llvm::Function *evalAddFunction;
+    llvm::Type *ltVoid;
+    llvm::Type *ltInt64;
+    llvm::Type *ltCharPtr;
+    llvm::StructType *ltQoreValue;
+    llvm::Type *ltQoreValuePtr;
+    llvm::Function *fnPrintQv;
+    llvm::Function *fnMakeInt;
+    llvm::Function *fnMakeStr;
+    llvm::Function *fnMakeNothing;
+    llvm::Function *fnEvalAdd;
+    llvm::Function *fnEvalTrim;
+    llvm::Function *fnEvalAssign;
+    llvm::Function *fnDeref;
 
     llvm::DISubprogram *scope;
 
     qore::SourceManager &sourceMgr;
+
+    llvm::DIFile *diFile;
+    llvm::DICompositeType *ditQoreValue;
 };
 
+std::unique_ptr<llvm::Module> doCodeGen(qore::SourceManager &sourceMgr, const std::unique_ptr<qore::il::Function> &f) {
+    CodeGen cg(sourceMgr);
+    cg.visit(f);
+    return std::unique_ptr<llvm::Module>(cg.getModule());
+}
+#endif
 #endif /* TOOLS_DRIVER_GEN_H_ */

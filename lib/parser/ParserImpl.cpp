@@ -61,9 +61,24 @@ ast::Statements ParserImpl::statements() {
     return body;
 }
 
+//block ::= '{' statements '}
+ast::CompoundStatement::Ptr ParserImpl::block() {
+    LOG_FUNCTION();
+    SourceLocation start = match(TokenType::CurlyLeft).start;
+    ast::Statements statements;
+    while (tokenType() != TokenType::CurlyRight) {
+        statements.push_back(statement());
+    }
+    SourceLocation end = match(TokenType::CurlyRight).end;
+    return ast::CompoundStatement::create(SourceRange(start, end), std::move(statements));
+}
+
 //statement
 //    ::= ';'
 //    ::= printStatement
+//    ::= ifStatement
+//    ::= tryStatement
+//    ::= expressionStatement
 ast::Statement::Ptr ParserImpl::statement() {
     LOG_FUNCTION();
     switch (tokenType()) {
@@ -71,12 +86,60 @@ ast::Statement::Ptr ParserImpl::statement() {
             return ast::EmptyStatement::create(consume().range);
         case TokenType::KwPrint:
             return printStatement();
+        case TokenType::KwIf:
+            return ifStatement();
+        case TokenType::KwTry:
+            return tryStatement();
+        case TokenType::CurlyLeft:
+            return block();
         default:
-            SourceLocation start = token.range.start;
-            report(DiagId::ParserStatementExpected) << token;
-            recoverStatementEnd();
-            return ast::EmptyStatement::create(SourceRange(start, token.range.end));
+            return expressionStatement();
     }
+}
+
+//ifStatement
+//    ::= KwIf '(' expression ')' statement
+//    ::= KwIf '(' expression ')' statement KwElse statement
+ast::IfStatement::Ptr ParserImpl::ifStatement() {
+    LOG_FUNCTION();
+    SourceLocation start = match(TokenType::KwIf).start;
+    match(TokenType::ParenLeft);
+    ast::Expression::Ptr condition = expression();
+    match(TokenType::ParenRight);
+    ast::Statement::Ptr thenBranch = statement();
+    ast::Statement::Ptr elseBranch;
+    SourceLocation end;
+    if (tokenType() == TokenType::KwElse) {
+        consume();
+        elseBranch = statement();
+        end = elseBranch->getRange().end;
+    } else {
+        end = thenBranch->getRange().end;
+        elseBranch = ast::EmptyStatement::create(SourceRange(end, end));
+    }
+    return ast::IfStatement::create(SourceRange(start, end), std::move(condition),
+            std::move(thenBranch), std::move(elseBranch));
+}
+
+//tryStatement
+//    ::= KwTry statement KwCatch '(' identifier ')' statement
+//    ::= KwTry statement KwCatch '(' ')' statement
+//TODO try ... catch (hash $a) ...
+ast::TryStatement::Ptr ParserImpl::tryStatement() {
+    LOG_FUNCTION();
+    SourceLocation start = match(TokenType::KwTry).start;
+    ast::Statement::Ptr tryBlock = statement();
+    match(TokenType::KwCatch);
+    match(TokenType::ParenLeft);
+    ast::Identifier::Ptr var;
+    if (tokenType() != TokenType::ParenRight) {
+        var = identifier();
+    }
+    match(TokenType::ParenRight);
+    ast::Statement::Ptr catchBlock = statement();
+    SourceLocation end = catchBlock->getRange().end;
+    return ast::TryStatement::create(SourceRange(start, end), std::move(tryBlock),
+            std::move(var), std::move(catchBlock));
 }
 
 //printStatement ::= KwPrint expression ';'
@@ -88,43 +151,115 @@ ast::PrintStatement::Ptr ParserImpl::printStatement() {
     return ast::PrintStatement::create(SourceRange(start, end), std::move(expr));
 }
 
-//expression ::= additiveExpression
-ast::Expression::Ptr ParserImpl::expression() {
+//expressionStatement ::= expression ';'
+ast::ExpressionStatement::Ptr ParserImpl::expressionStatement() {
     LOG_FUNCTION();
-    return additiveExpression();
+    ast::Expression::Ptr expr = expression();
+    SourceLocation start = expr->getRange().start;
+    SourceLocation end = match(TokenType::Semicolon, &ParserImpl::recoverStatementEnd).end;
+    return ast::ExpressionStatement::create(SourceRange(start, end), std::move(expr));
 }
 
-//additiveExpression ::= primaryExpression additiveExpressionRest
-//additiveExpressionRest
-//    ::= *lambda*
-//    ::= '+' primaryExpression additiveExpressionRest
-ast::Expression::Ptr ParserImpl::additiveExpression() {
+//expression ::= assignment
+ast::Expression::Ptr ParserImpl::expression() {
     LOG_FUNCTION();
-    std::unique_ptr<ast::Expression> expr = primaryExpression();
-    while (tokenType() == TokenType::Plus) {
+    return assignment();
+}
+
+//assignment
+//    ::= additiveExpression
+//    ::= additiveExpression '=' assignment
+ast::Expression::Ptr ParserImpl::assignment() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr expr = additiveExpression();
+    if (tokenType() == TokenType::Assign) {
         SourceRange r = consume().range;
-        expr = ast::BinaryExpression::create(std::move(expr), r, primaryExpression());
+        expr = ast::Assignment::create(std::move(expr), r, assignment());
     }
     return expr;
+}
+
+//additiveExpression ::= prefixExpression additiveExpressionRest
+//additiveExpressionRest
+//    ::= *lambda*
+//    ::= '+' prefixExpression additiveExpressionRest
+ast::Expression::Ptr ParserImpl::additiveExpression() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr expr = prefixExpression();
+    while (tokenType() == TokenType::Plus) {
+        SourceRange r = consume().range;
+        expr = ast::BinaryExpression::create(std::move(expr), r, prefixExpression());
+    }
+    return expr;
+}
+
+//prefixExpression
+//    ::= primaryExpression
+//    ::= KwTrim prefixExpression
+ast::Expression::Ptr ParserImpl::prefixExpression() {
+    LOG_FUNCTION();
+    if (tokenType() == TokenType::KwTrim) {
+        SourceRange r = consume().range;
+        return ast::UnaryExpression::create(r, prefixExpression());
+    } else {
+        return primaryExpression();
+    }
 }
 
 //primaryExpression
 //    ::= Number
 //    ::= String
+//    ::= identifier
+//    ::= varDecl
 ast::Expression::Ptr ParserImpl::primaryExpression() {
     LOG_FUNCTION();
     SourceRange r = range();
     switch (tokenType()) {
         case TokenType::Integer:
-            return ast::IntegerLiteral::create(consume().intValue, r);
-        case TokenType::String:
-            return ast::StringLiteral::create(consume().stringValue, r);
+            return ast::IntegerLiteral::create(r, consume().intValue);
+        case TokenType::String: {
+            qore::rt::QoreString *str = new qore::rt::QoreString(std::move(consume().stringValue));
+            auto ret = ast::StringLiteral::create(r, str);
+            str->deref();
+            return ret;
+        }
+        case TokenType::Identifier:
+            return identifier();
+        case TokenType::KwMy:
+            return varDecl();
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << token;
             recoverConsumeToken();
             //TODO return special error node which will prevent further errors
-            return ast::IntegerLiteral::create(0, r);
+            return ast::IntegerLiteral::create(r, 0);
     }
+}
+
+//varDec ::= KwMy Identifier
+ast::VarDecl::Ptr ParserImpl::varDecl() {
+    LOG_FUNCTION();
+    SourceRange r = match(TokenType::KwMy);
+    if (tokenType() != TokenType::Identifier) {
+        report(DiagId::ParserExpectedVariableName) << token;
+        //TODO return special error node which will prevent further errors
+        return ast::VarDecl::create(r, "-error-");
+    }
+    r.end = range().end;
+    return ast::VarDecl::create(r, consume().stringValue);
+}
+
+//identifier
+//    ::= Identifier
+//TODO $id
+ast::Identifier::Ptr ParserImpl::identifier() {
+    LOG_FUNCTION();
+    SourceRange r = range();
+    if (tokenType() != TokenType::Identifier) {
+        report(DiagId::ParserUnexpectedToken) << to_string(TokenType::Identifier) << token;
+        consume();
+        return ast::Identifier::create(r, "");      //TODO proper recovery
+    }
+    return ast::Identifier::create(r, consume().stringValue);
 }
 
 } // namespace qore

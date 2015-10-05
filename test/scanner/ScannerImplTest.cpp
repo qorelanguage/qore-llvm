@@ -66,13 +66,16 @@ TEST_F(ScannerImplTest, EofSkipSpaces) {
 
 TEST_F(ScannerImplTest, Symbols) {
     Token t;
-    SCANNER(" + ;");
+    SCANNER(" + ;{}=()");
 
     DIAG_NONE();
-    scanner.read(&t);
-    EXPECT_EQ(TokenType::Plus, t.type);
-    scanner.read(&t);
-    EXPECT_EQ(TokenType::Semicolon, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::Plus, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::Semicolon, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::CurlyLeft, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::CurlyRight, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::Assign, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::ParenLeft, t.type);
+    scanner.read(&t);    EXPECT_EQ(TokenType::ParenRight, t.type);
 }
 
 TEST_F(ScannerImplTest, InvalidCharDiagAndRecover) {
@@ -147,18 +150,31 @@ TEST_F(ScannerImplTest, KwPrint) {
     EXPECT_EQ(8, t.range.end.column);
 }
 
-TEST_F(ScannerImplTest, InvalidIdDiagAndRecover) {
+TEST_F(ScannerImplTest, Keyword) {
+    Token t;
+    SCANNER("catch else if my trim try");
+    DIAG_NONE();
+    scanner.read(&t); EXPECT_EQ(TokenType::KwCatch, t.type);
+    scanner.read(&t); EXPECT_EQ(TokenType::KwElse, t.type);
+    scanner.read(&t); EXPECT_EQ(TokenType::KwIf, t.type);
+    scanner.read(&t); EXPECT_EQ(TokenType::KwMy, t.type);
+    scanner.read(&t); EXPECT_EQ(TokenType::KwTrim, t.type);
+    scanner.read(&t); EXPECT_EQ(TokenType::KwTry, t.type);
+}
+
+TEST_F(ScannerImplTest, Identifier) {
     Token t;
     SCANNER("\nprn print");
 
-    DIAG_EXPECT_AND_CAPTURE(r, DiagId::ScannerInvalidKeyword, 2, 1);
+    DIAG_NONE();
 
     scanner.read(&t);
-    EXPECT_EQ(TokenType::KwPrint, t.type);
+    EXPECT_EQ(TokenType::Identifier, t.type);
+    EXPECT_EQ("prn", t.stringValue);
     EXPECT_EQ(2, t.range.start.line);
-    EXPECT_EQ(5, t.range.start.column);
-
-    EXPECT_PRED2(contains, r.message, "prn");
+    EXPECT_EQ(1, t.range.start.column);
+    EXPECT_EQ(2, t.range.end.line);
+    EXPECT_EQ(4, t.range.end.column);
 }
 
 TEST_F(ScannerImplTest, String) {

@@ -38,9 +38,14 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     ast::Statements statements() { return parser.statements(); }
     ast::Statement::Ptr statement() { return parser.statement(); }
     ast::PrintStatement::Ptr printStatement() { return parser.printStatement(); }
+    ast::IfStatement::Ptr ifStatement() { return parser.ifStatement(); }
+    ast::ExpressionStatement::Ptr expressionStatement() { return parser.expressionStatement(); }
+    ast::CompoundStatement::Ptr block() { return parser.block(); }
     ast::Expression::Ptr expression() { return parser.expression(); }
     ast::Expression::Ptr additiveExpression() { return parser.additiveExpression(); }
+    ast::Expression::Ptr prefixExpression() { return parser.prefixExpression(); }
     ast::Expression::Ptr primaryExpression() { return parser.primaryExpression(); }
+    ast::VarDecl::Ptr varDecl() { return parser.varDecl(); }
 
     void EXPECT_CONSUMED() { EXPECT_FALSE(parser.hasToken); }
     void EXPECT_NOT_CONSUMED() { EXPECT_TRUE(parser.hasToken); }
@@ -50,6 +55,9 @@ struct ParserImplTest : ::testing::Test, DiagTestHelper, ScannerTestHelper {
     SourceRange range3 = createRange(31, 32, 33);
     SourceRange range4 = createRange(41, 42, 43);
     SourceRange range5 = createRange(51, 52, 53);
+    SourceRange range6 = createRange(61, 62, 63);
+    SourceRange range7 = createRange(71, 72, 73);
+    SourceRange range8 = createRange(81, 82, 83);
 };
 
 TEST_F(ParserImplTest, parse) {
@@ -141,12 +149,12 @@ TEST_F(ParserImplTest, statementPrint) {
     EXPECT_CONSUMED();
 }
 
-TEST_F(ParserImplTest, statementErr) {
+TEST_F(ParserImplTest, statementExpr) {
     addToken(TokenType::String, "abc", range1);
-    addToken(TokenType::Integer, 1234, range2);
     addToken(TokenType::Semicolon, range3);
-    DIAG_EXPECT(DiagId::ParserStatementExpected, 11, 12);
-    AST_CAST(ast::EmptyStatement, stmt, statement());
+    DIAG_NONE();
+    AST_CAST(ast::ExpressionStatement, stmt, statement());
+    AST_CAST(ast::StringLiteral, expr, stmt->expression);
     EXPECT_EQ(SourceRange(range1.start, range3.end), stmt->getRange());
     EXPECT_CONSUMED();
 }
@@ -191,6 +199,59 @@ TEST_F(ParserImplTest, printStatementErr) {
     EXPECT_CONSUMED();
 }
 
+TEST_F(ParserImplTest, compoundStatement) {
+    addToken(TokenType::CurlyLeft);
+    addToken(TokenType::CurlyRight);
+    DIAG_NONE();
+    ast::CompoundStatement::Ptr stmt = block();
+    EXPECT_EQ(0U, stmt->statements.size());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, ifStatementNoElse) {
+    addToken(TokenType::KwIf, range1);
+    addToken(TokenType::ParenLeft, range2);
+    addToken(TokenType::Integer, 3, range3);
+    addToken(TokenType::ParenRight, range4);
+    addToken(TokenType::Semicolon, range5);
+    addToken(TokenType::Semicolon, range6);
+    DIAG_NONE();
+    ast::IfStatement::Ptr stmt = ifStatement();
+    AST_CAST(ast::IntegerLiteral, cond, stmt->condition);
+    AST_CAST(ast::EmptyStatement, thenB, stmt->thenBranch);
+    AST_CAST(ast::EmptyStatement, elseB, stmt->elseBranch);
+    EXPECT_EQ(SourceRange(range1.start, range5.end), stmt->getRange());
+    EXPECT_NOT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, ifStatementWithElse) {
+    addToken(TokenType::KwIf, range1);
+    addToken(TokenType::ParenLeft, range2);
+    addToken(TokenType::Integer, 3, range3);
+    addToken(TokenType::ParenRight, range4);
+    addToken(TokenType::Semicolon, range5);
+    addToken(TokenType::KwElse, range6);
+    addToken(TokenType::CurlyLeft, range7);
+    addToken(TokenType::CurlyRight, range8);
+    DIAG_NONE();
+    ast::IfStatement::Ptr stmt = ifStatement();
+    AST_CAST(ast::IntegerLiteral, cond, stmt->condition);
+    AST_CAST(ast::EmptyStatement, thenB, stmt->thenBranch);
+    AST_CAST(ast::CompoundStatement, elseB, stmt->elseBranch);
+    EXPECT_EQ(SourceRange(range1.start, range8.end), stmt->getRange());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, expressionStatement) {
+    addToken(TokenType::String, "abc", range1);
+    addToken(TokenType::Semicolon, range3);
+    DIAG_NONE();
+    ast::ExpressionStatement::Ptr stmt = expressionStatement();
+    AST_CAST(ast::StringLiteral, expr, stmt->expression);
+    EXPECT_EQ(SourceRange(range1.start, range3.end), stmt->getRange());
+    EXPECT_CONSUMED();
+}
+
 TEST_F(ParserImplTest, expression) {
     addToken(TokenType::Integer, 1234, range1);
     addToken(TokenType::Plus);
@@ -201,8 +262,45 @@ TEST_F(ParserImplTest, expression) {
     AST_CAST(ast::IntegerLiteral, left, expr->left);
     AST_CAST(ast::StringLiteral, right, expr->right);
     EXPECT_EQ(1234U, left->value);
-    EXPECT_EQ("abc", right->value);
+    EXPECT_EQ("abc", right->value->getValue());
     EXPECT_EQ(SourceRange(range1.start, range2.end), expr->getRange());
+    EXPECT_NOT_CONSUMED();
+}
+
+//a = b + c = d
+//assign
+//+-a
+//+-assign
+//  +-binary
+//    +-b
+//    +-c
+//  +-d
+TEST_F(ParserImplTest, assignment) {
+    addToken(TokenType::Identifier, "a", range1);
+    addToken(TokenType::Assign, range2);
+    addToken(TokenType::String, "b", range3);
+    addToken(TokenType::Plus, range4);
+    addToken(TokenType::Identifier, "c", range5);
+    addToken(TokenType::Assign, range6);
+    addToken(TokenType::String, "d", range7);
+    addToken(TokenType::CurlyLeft);
+    DIAG_NONE();
+    AST_CAST(ast::Assignment, assign1, expression());
+    AST_CAST(ast::Identifier, var1, assign1->left);
+    AST_CAST(ast::Assignment, assign2, assign1->right);
+    AST_CAST(ast::BinaryExpression, bin, assign2->left);
+    AST_CAST(ast::StringLiteral, var4, assign2->right);
+    AST_CAST(ast::StringLiteral, var2, bin->left);
+    AST_CAST(ast::Identifier, var3, bin->right);
+
+    EXPECT_EQ("a", var1->name);
+    EXPECT_EQ("b", var2->value->getValue());
+    EXPECT_EQ("c", var3->name);
+    EXPECT_EQ("d", var4->value->getValue());
+    EXPECT_EQ(SourceRange(range1.start, range7.end), assign1->getRange());
+    EXPECT_EQ(range2, assign1->operatorRange);
+    EXPECT_EQ(SourceRange(range3.start, range7.end), assign2->getRange());
+    EXPECT_EQ(range6, assign2->operatorRange);
     EXPECT_NOT_CONSUMED();
 }
 
@@ -227,7 +325,7 @@ TEST_F(ParserImplTest, additiveDouble) {
     AST_CAST(ast::StringLiteral, right, expr->right);
     EXPECT_EQ(1234U, left->value);
     EXPECT_EQ(range2, expr->operatorRange);
-    EXPECT_EQ("abc", right->value);
+    EXPECT_EQ("abc", right->value->getValue());
     EXPECT_EQ(SourceRange(range1.start, range3.end), expr->getRange());
     EXPECT_NOT_CONSUMED();
 }
@@ -247,12 +345,23 @@ TEST_F(ParserImplTest, additiveTriple) {
     AST_CAST(ast::StringLiteral, leftRight, left->right);
     EXPECT_EQ(1234U, leftLeft->value);
     EXPECT_EQ(range2, left->operatorRange);
-    EXPECT_EQ("abc", leftRight->value);
+    EXPECT_EQ("abc", leftRight->value->getValue());
     EXPECT_EQ(range4, expr->operatorRange);
     EXPECT_EQ(1111U, right->value);
     EXPECT_EQ(SourceRange(range1.start, range3.end), left->getRange());
     EXPECT_EQ(SourceRange(range1.start, range5.end), expr->getRange());
     EXPECT_NOT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, trim) {
+    addToken(TokenType::KwTrim, 1234, range1);
+    addToken(TokenType::Integer, 1111, range2);
+    DIAG_NONE();
+    AST_CAST(ast::UnaryExpression, expr, prefixExpression());
+    EXPECT_EQ(range1, expr->operatorRange);
+    AST_CAST(ast::IntegerLiteral, operand, expr->operand);
+    EXPECT_EQ(SourceRange(range1.start, range2.end), expr->getRange());
+    EXPECT_CONSUMED();
 }
 
 TEST_F(ParserImplTest, primaryInteger) {
@@ -261,14 +370,35 @@ TEST_F(ParserImplTest, primaryInteger) {
     AST_CAST(ast::IntegerLiteral, expr, primaryExpression());
     EXPECT_EQ(1234U, expr->value);
     EXPECT_EQ(range1, expr->getRange());
+    EXPECT_CONSUMED();
 }
 
 TEST_F(ParserImplTest, primaryString) {
     addToken(TokenType::String, "abc", range1);
     DIAG_NONE();
     AST_CAST(ast::StringLiteral, expr, primaryExpression());
-    EXPECT_EQ("abc", expr->value);
+    EXPECT_EQ("abc", expr->value->getValue());
     EXPECT_EQ(range1, expr->getRange());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, primaryIdentifier) {
+    addToken(TokenType::Identifier, "abc", range1);
+    DIAG_NONE();
+    AST_CAST(ast::Identifier, id, primaryExpression());
+    EXPECT_EQ("abc", id->name);
+    EXPECT_EQ(range1, id->getRange());
+    EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, primaryVarDecl) {
+    addToken(TokenType::KwMy, range1);
+    addToken(TokenType::Identifier, "abc", range2);
+    DIAG_NONE();
+    AST_CAST(ast::VarDecl, var, primaryExpression());
+    EXPECT_EQ("abc", var->name);
+    EXPECT_EQ(SourceRange(range1.start, range2.end), var->getRange());
+    EXPECT_CONSUMED();
 }
 
 TEST_F(ParserImplTest, primaryFail) {
@@ -278,6 +408,16 @@ TEST_F(ParserImplTest, primaryFail) {
     EXPECT_EQ(0U, expr->value);
     EXPECT_EQ(range1, expr->getRange());
     EXPECT_CONSUMED();
+}
+
+TEST_F(ParserImplTest, varDeclNoId) {
+    addToken(TokenType::KwMy, range1);
+    addToken(TokenType::String, "abc", range2);
+    DIAG_EXPECT(DiagId::ParserExpectedVariableName, 21, 22);
+    ast::VarDecl::Ptr var = varDecl();
+    EXPECT_EQ("-error-", var->name);
+    EXPECT_EQ(range1, var->getRange());
+    EXPECT_NOT_CONSUMED();
 }
 
 } // namespace qore

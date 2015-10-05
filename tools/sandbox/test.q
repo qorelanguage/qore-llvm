@@ -1,4 +1,11 @@
-print 5 + 3;
-print "Hello, " + "world!";
-print 3 + "str";
-print "str" + 3;
+my a = "   a";
+my b = "b   ";
+print a + b;
+try {
+    if (my x = b + b) {
+        print trim x;
+    }
+    print "OK";
+} catch () {
+    print "EXC";
+}
