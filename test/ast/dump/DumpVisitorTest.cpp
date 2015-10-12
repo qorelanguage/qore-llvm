@@ -40,13 +40,13 @@ namespace ast {
 namespace dump {
 
 struct DumpVisitorTest : ::testing::Test {
+    SourceManager sourceMgr;
+    DiagManager diagMgr;
     Program::Ptr program = parse(";print 567 + \"ab\" +5;");
 
     Program::Ptr parse(const std::string &src) {
-        SourceManager sourceMgr;
-        DiagManager diagMgr;
-        SourceBuffer srcBuffer = sourceMgr.createFromString("test", src);
-        ScannerImpl scanner{diagMgr, srcBuffer};
+        Source &source = sourceMgr.createFromString("test", src);
+        ScannerImpl scanner{diagMgr, source};
         ParserImpl parser{diagMgr, scanner};
         return parser.parse();
     }

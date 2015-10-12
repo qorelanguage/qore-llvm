@@ -27,51 +27,47 @@
 #include "gtest/gtest.h"
 #include "qore/common/Util.h"
 #include "qore/context/SourceManager.h"
+#include "../Utils.h"
 #include "SourceTestHelper.h"
 
 namespace qore {
 
 struct SourceManagerTest : ::testing::Test, SourceTestHelper {
     SourceManager mgr;
+
+    std::string readAll(Source &src) {
+        std::string s;
+        while (true) {
+            int c = src.read();
+            if (c == Source::EndOfFile) {
+                return s;
+            }
+            s.push_back(c);
+        }
+    }
 };
 
 TEST_F(SourceManagerTest, FromString) {
-    SourceBuffer buf = mgr.createFromString("test", "xyz");
-    EXPECT_FALSE(isStdin(buf));
-    EXPECT_STREQ("xyz", getData(buf).data());
-    EXPECT_EQ("test", getNames(mgr)[0]);
+    Source &src = mgr.createFromString("test", "xyz");
+    EXPECT_EQ("xyz", readAll(src));
+    EXPECT_EQ("test", src.getName());
 }
 
 TEST_F(SourceManagerTest, FromStdin) {
-    SourceBuffer buf = mgr.createFromStdin();
-    EXPECT_TRUE(isStdin(buf));
-    EXPECT_STREQ("\n", getData(buf).data());
-    EXPECT_EQ("<stdin>", getNames(mgr)[0]);
+    RedirectStdin redirect("abc\n");
+    Source &src = mgr.createFromStdin();
+    EXPECT_EQ("abc\n", readAll(src));
+    EXPECT_EQ("<stdin>", src.getName());
 }
-
+//
 TEST_F(SourceManagerTest, FromFile) {
-    SourceBuffer buf = mgr.createFromFile("test/context/SourceManagerTest_FromFile");
-    EXPECT_FALSE(isStdin(buf));
-    EXPECT_STREQ("abc", getData(buf).data());
-    EXPECT_EQ("test/context/SourceManagerTest_FromFile", getNames(mgr)[0]);
+    Source &src = mgr.createFromFile("test/context/SourceManagerTest_FromFile");
+    EXPECT_EQ("abc", readAll(src));
+    EXPECT_EQ("test/context/SourceManagerTest_FromFile", src.getName());
 }
 
 TEST_F(SourceManagerTest, FromFileErr) {
-    auto before = getNames(mgr).size();
     EXPECT_THROW(mgr.createFromFile("test/context/SourceManagerTest_Nonexistent"), FatalError);
-    EXPECT_EQ(before, getNames(mgr).size());
-}
-
-TEST_F(SourceManagerTest, GetName) {
-    constexpr auto fileName("test/context/SourceManagerTest_FromFile");
-    SourceBuffer sb1 = mgr.createFromString("buf1", "abc");
-    SourceBuffer sb2 = mgr.createFromStdin();
-    SourceBuffer sb3 = mgr.createFromFile(fileName);
-
-    EXPECT_EQ(3U, getNames(mgr).size());
-    EXPECT_EQ("buf1", mgr.getName(getSourceId(sb1)));
-    EXPECT_EQ("<stdin>", mgr.getName(getSourceId(sb2)));
-    EXPECT_EQ(fileName, mgr.getName(getSourceId(sb3)));
 }
 
 } // namespace qore

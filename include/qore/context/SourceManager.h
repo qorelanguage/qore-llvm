@@ -31,12 +31,11 @@
 #ifndef INCLUDE_QORE_CONTEXT_SOURCEMANAGER_H_
 #define INCLUDE_QORE_CONTEXT_SOURCEMANAGER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
-#include "qore/context/SourceBuffer.h"
-#include "qore/context/SourceLocation.h"
-
-using namespace std::placeholders;
+#include "qore/context/Source.h"
+#include "qore/context/SourceId.h"
 
 namespace qore {
 
@@ -47,50 +46,51 @@ class SourceManager {
 
 public:
     /**
-     * \brief Creates a SourceBuffer from a string.
+     * \brief Creates a Source from a string.
      * \param name the name of the script
      * \param string the source of the script
-     * \return a SourceBuffer representing given script
+     * \return a Source representing given script, remains valid until the SourceManager is destroyed
      */
     //TODO add an optional starting line param
     //TODO join multiple sources together (?)
-    SourceBuffer createFromString(std::string name, std::string string) {
-        return SourceBuffer(createId(std::move(name)), string.begin(), string.end());
+    Source &createFromString(std::string name, std::string string) {
+        return create(std::move(name), std::vector<char>(string.begin(), string.end()));
     }
 
     /**
-     * \brief Creates a SourceBuffer for standard input.
+     * \brief Creates a Source for standard input.
      *
      * The input is read line by line whenever the scanner consumes a newline character.
-     * \return a SourceBuffer representing standard input
+     * \return a Source representing standard input, remains valid until the SourceManager is destroyed
      */
-    SourceBuffer createFromStdin() {
-        return SourceBuffer(createId("<stdin>"));
+    Source &createFromStdin() {
+        return create("<stdin>", std::vector<char>(), true);
     }
 
     /**
-     * \brief Creates a SourceBuffer by reading the contents of a file.
+     * \brief Creates a Source by reading the contents of a file.
      * \param fileName the name of the file
-     * \return a SourceBuffer representing the script read from the file
+     * \return a Source representing the script read from the file, remains valid until the SourceManager is destroyed
      */
-    SourceBuffer createFromFile(std::string fileName);
+    Source &createFromFile(std::string fileName);
 
     /**
      * \brief Returns the name of the source with the given id.
-     * \param id
+     * \param id the id of the source
      * \return the name of the source identified by `id`
      */
     const std::string &getName(SourceId id) const {
-        return names.at(id.id);
+        return sources.at(id.id)->getName();
     }
 
 private:
-    SourceId createId(std::string name) {
-        names.push_back(std::move(name));
-        return SourceId(names.size() - 1);
+    Source &create(std::string name, std::vector<char> &&data, bool stdin = false) {
+        //XXX needs synchronization
+        sources.emplace_back(new Source(std::move(name), SourceId(sources.size()), std::move(data), stdin));
+        return *sources.back();
     }
 
-    std::vector<std::string> names;
+    std::vector<std::unique_ptr<Source>> sources;
 
     friend class SourceTestHelper;
 };

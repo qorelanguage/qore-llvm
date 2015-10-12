@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
 
 #include "qore/context/DiagManager.h"
-#include "qore/context/SourcePointer.h"
+#include "qore/context/Source.h"
 #include "qore/scanner/Scanner.h"
 
 namespace qore {
@@ -46,9 +46,9 @@ public:
     /**
      * \brief Constructs a scanner for given source.
      * \param diagMgr used for reporting diagnostic messages
-     * \param sourcePointer a pointer to the source script
+     * \param src the source of the script
      */
-    ScannerImpl(DiagManager &diagMgr, SourcePointer sourcePointer);
+    ScannerImpl(DiagManager &diagMgr, Source &src);
 
     void read(Token *token) override;
 
@@ -60,7 +60,7 @@ private:
 
 private:
     DiagManager &diagMgr;
-    SourcePointer ptr;          //TODO stateless scanner?
+    Lookahead<Source &> src;
 };
 
 } //namespace qore

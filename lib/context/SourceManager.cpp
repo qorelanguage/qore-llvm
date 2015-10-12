@@ -25,11 +25,10 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Management of sources, locations, buffers and pointers.
+/// \brief Management of script sources.
 ///
 //------------------------------------------------------------------------------
 #include "qore/common/Util.h"
-#include "qore/context/SourcePointer.h"
 #include "qore/context/SourceManager.h"
 #include <fstream>
 #include <iostream>
@@ -38,22 +37,22 @@ namespace qore {
 
 const SourceId SourceId::Invalid;
 
-void SourcePointer::fill() {
+void Source::fill() {
     std::string line;
     std::getline(std::cin, line);
     if (std::cin.good()) {
-        line.push_back('\n');
-        sourceBuffer.data.insert(sourceBuffer.data.end() - 1, line.begin(), line.end());
+        buf.insert(buf.end(), line.begin(), line.end());
+        buf.push_back('\n');
     }
 }
 
-SourceBuffer SourceManager::createFromFile(std::string fileName) {
+Source &SourceManager::createFromFile(std::string fileName) {
     std::ifstream fileStream(fileName, std::ios::binary);
     std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
     if (!fileStream.good()) {
         throw FATAL_ERROR("Error reading file " << fileName);
     }
-    return SourceBuffer(createId(std::move(fileName)), std::move(data));
+    return create(std::move(fileName), std::move(data), false);
 }
 
 } // namespace qore

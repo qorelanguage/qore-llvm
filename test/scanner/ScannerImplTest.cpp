@@ -34,9 +34,10 @@ namespace qore {
 struct ScannerImplTest : ::testing::Test, DiagTestHelper {
 };
 
-#define SCANNER(str)    std::string inputString = str; \
-                SourceBuffer sourceBuffer = SourceTestHelper::createBuffer(inputString.begin(), inputString.end());  \
-                ScannerImpl scanner(diagMgr, sourceBuffer);
+#define SCANNER(str)                                                                                                \
+                std::string string = str;                                                                           \
+                Source source("str", SourceId::Invalid, std::vector<char>(string.begin(), string.end()), false);    \
+                ScannerImpl scanner(diagMgr, source);
 
 TEST_F(ScannerImplTest, Eof) {
     Token t;

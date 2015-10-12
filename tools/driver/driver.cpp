@@ -104,8 +104,8 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        qore::SourceBuffer sourceBuffer = sourceMgr.createFromStdin();
-        qore::ScannerImpl scanner{diagMgr, sourceBuffer};
+        qore::Source &source = sourceMgr.createFromStdin();
+        qore::ScannerImpl scanner{diagMgr, source};
         qore::ParserImpl parser{diagMgr, scanner};
 
         qore::analyzer::Analyzer analyzer;
@@ -127,8 +127,8 @@ int main(int argc, char *argv[]) {
         outBase.erase(outBase.begin() + i, outBase.end());
     }
 
-    qore::SourceBuffer sourceBuffer = sourceMgr.createFromFile(argv[optind]);
-    qore::ScannerImpl scanner(diagMgr, sourceBuffer);
+    qore::Source &src = sourceMgr.createFromFile(argv[optind]);
+    qore::ScannerImpl scanner(diagMgr, src);
     qore::ParserImpl parser(diagMgr, scanner);
     qore::ast::Program::Ptr root = parser.parse();
 
