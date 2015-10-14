@@ -29,8 +29,6 @@
 #include <iostream>
 #include <string>
 
-namespace qore {
-
 class RedirectStdin {
 public:
     RedirectStdin(std::string string) : stream(string), cin_backup(std::cin.rdbuf(stream.rdbuf())) {
@@ -64,7 +62,5 @@ private:
 inline bool contains(const std::string &hayStack, const std::string &needle) {
     return hayStack.find(needle) != std::string::npos;
 }
-
-} // namespace qore
 
 #endif // TEST_UTILS_H_

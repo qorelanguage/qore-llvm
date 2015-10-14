@@ -26,6 +26,10 @@
 #ifndef TEST_QTIF_H_
 #define TEST_QTIF_H_
 
+#include <string>
+#include <vector>
+#include "Utils.h"
+
 namespace qtif {
 
 inline std::vector<std::string> findFiles(const std::string &filter) {
