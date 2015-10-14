@@ -24,6 +24,8 @@
 //
 //------------------------------------------------------------------------------
 
+DIAG(PdpUnendedBlockComment, Error, "open block comment at the end of file")
+
 DIAG(ScannerInvalidCharacter, Error, "invalid character '%s'")
 DIAG(ScannerInvalidInteger, Error, "invalid integer literal '%s'")
 DIAG(ScannerUnendedStringLiteral, Error, "Unended string literal")
