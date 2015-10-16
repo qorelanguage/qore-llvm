@@ -67,7 +67,7 @@ int AbstractTest::findSeparator(Reader &reader) {
             posInPattern = 0;
         }
     }
-    throw Exception("missing separator " + separator, reader.getLine());
+    throw Exception("missing separator " + separator, reader.getLineNumber());
 }
 
 } // namespace qtif

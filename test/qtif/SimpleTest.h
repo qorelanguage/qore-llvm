@@ -36,7 +36,7 @@ namespace qtif {
  *
  * Example use:
  *
- *     class MyTestCase : public qtif::Test {};
+ *     class MyTestCase : public qtif::SimpleTest {};
  *     TEST_P(MyTestCase, TestName) {
  *         verify(testedFunction(getInput());
  *     }
@@ -46,7 +46,7 @@ class SimpleTest : public AbstractTest {
 
 protected:
     void parseExpectations(Reader &reader) override {
-        lineNumber = reader.getLine();
+        lineNumber = reader.getLineNumber();
         expected = reader.getRest<std::string>();
     }
 

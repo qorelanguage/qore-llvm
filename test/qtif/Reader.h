@@ -54,7 +54,7 @@ public:
         return it == end;
     }
 
-    int getLine() const {
+    int getLineNumber() const {
         return line;
     }
 
@@ -71,6 +71,23 @@ public:
     template<typename C>
     C getRest() {
         return C(it, end);
+    }
+
+    std::pair<int, std::string> readLine() {
+        std::pair<int, std::string> result;
+        result.first = line;
+        while (!eof()) {
+            int c = read();
+            if (c == '\r') {
+                skipIf('\n');
+                break;
+            }
+            if (c == '\n') {
+                break;
+            }
+            result.second.push_back(c);
+        }
+        return result;
     }
 
 private:

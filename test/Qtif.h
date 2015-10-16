@@ -27,6 +27,7 @@
 #define TEST_QTIF_H_
 
 #include "qtif/SimpleTest.h"
+#include "qtif/LineTest.h"
 
 /**
  * \brief Simple testing framework.

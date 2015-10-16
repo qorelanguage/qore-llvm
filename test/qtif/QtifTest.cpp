@@ -59,7 +59,7 @@ class QtifAbstractTest : public AbstractTest {
 
 protected:
     void parseExpectations(Reader &reader) override {
-        line = reader.getLine();
+        line = reader.getLineNumber();
         expected = reader.getRest<std::string>();
     }
 
@@ -87,5 +87,21 @@ TEST_P(QtifSimpleTest, X) {
 }
 
 QTIF_TEST_CASE(QtifSimpleTest, "qtif/test1");
+
+//------------------------------------------------------------------------------
+//LineTest
+//------------------------------------------------------------------------------
+class QtifLineTest : public LineTest {
+};
+
+TEST_P(QtifLineTest, X) {
+    LineOutputHelper output;
+    for (auto c : getInput()) {
+        output += tolower(c);
+    }
+    verify(output);
+}
+
+QTIF_TEST_CASE(QtifLineTest, "qtif/test1");
 
 } // namespace qtif
