@@ -32,10 +32,60 @@
 
 namespace qtif {
 
-TEST(Qtif, findFiles) {
+//------------------------------------------------------------------------------
+//dummy function being tested
+//------------------------------------------------------------------------------
+std::string toLower(const std::string &s) {
+    std::string output;
+    for (auto c : s) {
+        output += tolower(c);
+    }
+    return output;
+}
+
+//------------------------------------------------------------------------------
+//qtif core
+//------------------------------------------------------------------------------
+TEST(QtifCore, findFiles) {
     std::vector<std::string> files = findFiles("qtif/");
     EXPECT_EQ(1U, files.size());
     EXPECT_EQ(std::string(TEST_INPUT_DIR) + "/qtif/test1.qtif", files[0]);
 }
+
+//------------------------------------------------------------------------------
+//AbstractTest
+//------------------------------------------------------------------------------
+class QtifAbstractTest : public AbstractTest {
+
+protected:
+    void parseExpectations(Reader &reader) override {
+        line = reader.getLine();
+        expected = reader.getRest<std::string>();
+    }
+
+protected:
+    int line;
+    std::string expected;
+};
+
+TEST_P(QtifAbstractTest, X) {
+    EXPECT_EQ("AbC\ndEf\n", getInputAsString());
+    EXPECT_EQ(4, line);
+    EXPECT_EQ("abc\ndef\n", expected);
+}
+
+QTIF_TEST_CASE(QtifAbstractTest, "qtif/test1");
+
+//------------------------------------------------------------------------------
+//SimpleTest
+//------------------------------------------------------------------------------
+class QtifSimpleTest : public SimpleTest {
+};
+
+TEST_P(QtifSimpleTest, X) {
+    verify(toLower(getInputAsString()));
+}
+
+QTIF_TEST_CASE(QtifSimpleTest, "qtif/test1");
 
 } // namespace qtif

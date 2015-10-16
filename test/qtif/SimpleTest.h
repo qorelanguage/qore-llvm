@@ -23,23 +23,50 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_QTIF_H_
-#define TEST_QTIF_H_
+#ifndef TEST_QTIF_SIMPLETEST_H_
+#define TEST_QTIF_SIMPLETEST_H_
 
-#include "qtif/SimpleTest.h"
+#include "AbstractTest.h"
 
-/**
- * \brief Simple testing framework.
- */
 namespace qtif {
 
 /**
- * \brief Instantiates a test case.
- * \param TC test case name
- * \param qtif file name filter
+ * \brief A basic test that handles the 'expectations' part of the input file as a string that must match
+ * the actual output exactly.
+ *
+ * Example use:
+ *
+ *     class MyTestCase : public qtif::Test {};
+ *     TEST_P(MyTestCase, TestName) {
+ *         verify(testedFunction(getInput());
+ *     }
+ *     QTIF_TEST_CASE(MyTestCase, "input/file/filter")
  */
-#define QTIF_TEST_CASE(TC, F)   INSTANTIATE_TEST_CASE_P(TC, TC, testing::ValuesIn(qtif::findFiles(F)))
+class SimpleTest : public AbstractTest {
+
+protected:
+    void parseExpectations(Reader &reader) override {
+        lineNumber = reader.getLine();
+        expected = reader.getRest<std::string>();
+    }
+
+    /**
+     * \brief Called from a test to compare the actual output to the expectations part of the input file.
+     * \param actual the actual output of the component being tested
+     */
+    void verify(const std::string &actual) {
+        if (expected != actual) {
+            QTIF_MESSAGE(lineNumber)
+                    << "expected:\n---START---\n" << expected << "\n---END---\n"
+                    << "actual:\n---START---\n" << actual << "\n---END---";
+        }
+    }
+
+private:
+    int lineNumber;
+    std::string expected;
+};
 
 } // namespace qtif
 
-#endif // TEST_QTIF_H_
+#endif // TEST_QTIF_SIMPLETEST_H_

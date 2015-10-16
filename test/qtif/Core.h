@@ -23,23 +23,37 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_QTIF_H_
-#define TEST_QTIF_H_
+#ifndef TEST_QTIF_CORE_H_
+#define TEST_QTIF_CORE_H_
 
-#include "qtif/SimpleTest.h"
+#include <exception>
+#include <string>
+#include <vector>
 
-/**
- * \brief Simple testing framework.
- */
 namespace qtif {
 
-/**
- * \brief Instantiates a test case.
- * \param TC test case name
- * \param qtif file name filter
- */
-#define QTIF_TEST_CASE(TC, F)   INSTANTIATE_TEST_CASE_P(TC, TC, testing::ValuesIn(qtif::findFiles(F)))
+class Exception : public std::runtime_error {
+
+public:
+    Exception(const std::string &msg, int line) : runtime_error(msg), line(line) {
+    }
+
+    int getLine() const {
+        return line;
+    }
+
+private:
+    int line;
+};
+
+inline std::vector<std::string> findFiles(const std::string &filter) {
+    std::vector<std::string> files;
+    #define QTIF(n)     if (std::string(n).find(filter) != std::string::npos) { files.push_back(n); }
+    #include "test_files.inc"
+    #undef QTIF
+    return files;
+}
 
 } // namespace qtif
 
-#endif // TEST_QTIF_H_
+#endif // TEST_QTIF_CORE_H_

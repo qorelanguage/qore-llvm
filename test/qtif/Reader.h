@@ -23,23 +23,64 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_QTIF_H_
-#define TEST_QTIF_H_
+#ifndef TEST_QTIF_READER_H_
+#define TEST_QTIF_READER_H_
 
-#include "qtif/SimpleTest.h"
+#include <vector>
 
-/**
- * \brief Simple testing framework.
- */
 namespace qtif {
 
-/**
- * \brief Instantiates a test case.
- * \param TC test case name
- * \param qtif file name filter
- */
-#define QTIF_TEST_CASE(TC, F)   INSTANTIATE_TEST_CASE_P(TC, TC, testing::ValuesIn(qtif::findFiles(F)))
+class Reader {
+
+public:
+    using Iterator = std::vector<char>::iterator;
+
+    Reader(Iterator begin, Iterator end) : begin(begin), it(begin), end(end), line(1), wasCr(false) {
+    }
+
+    int read() {
+        if (it == end) {
+            return -1;
+        }
+        int c = *it++;
+        if (c == '\r' || (c == '\n' && !wasCr)) {
+            ++line;
+        }
+        wasCr = c == '\r';
+        return c;
+    }
+
+    bool eof() const {
+        return it == end;
+    }
+
+    int getLine() const {
+        return line;
+    }
+
+    int getPos() const {
+        return it - begin;
+    }
+
+    void skipIf(int c) {
+        if (it != end && *it == c) {
+            read();
+        }
+    }
+
+    template<typename C>
+    C getRest() {
+        return C(it, end);
+    }
+
+private:
+    Iterator begin;
+    Iterator it;
+    Iterator end;
+    int line;
+    bool wasCr;
+};
 
 } // namespace qtif
 
-#endif // TEST_QTIF_H_
+#endif // TEST_QTIF_READER_H_
