@@ -29,6 +29,7 @@
 namespace qtif {
 
 void AbstractTest::SetUp() {
+    setUpDone = false;
     fileName = GetParam();
     try {
         input = readFile(fileName);
@@ -37,6 +38,7 @@ void AbstractTest::SetUp() {
         parseExpectations(reader);
         input.resize(patternPos);
         input.shrink_to_fit();
+        setUpDone = true;
     } catch (Exception &e) {
         QTIF_FATAL(e.getLine()) << e.what();
     }

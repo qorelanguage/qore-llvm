@@ -24,6 +24,7 @@
 //
 //------------------------------------------------------------------------------
 #include "LineTest.h"
+#include <regex>
 
 namespace qtif {
 
@@ -54,7 +55,8 @@ protected:
 class StringExpectation : public Expectation {
 
 public:
-    StringExpectation(const std::string &fileName, int lineNumber, std::string line) : Expectation(fileName, lineNumber), line(std::move(line)) {
+    StringExpectation(const std::string &fileName, int lineNumber, std::string line)
+        : Expectation(fileName, lineNumber), line(std::move(line)) {
     }
 
     void checkEnd() override {
@@ -70,6 +72,29 @@ public:
 
 private:
     std::string line;
+};
+
+class RegexExpectation : public Expectation {
+
+public:
+    RegexExpectation(const std::string &fileName, int lineNumber, std::string regex)
+        : Expectation(fileName, lineNumber), regex(std::move(regex)) {
+    }
+
+    void checkEnd() override {
+        QTIF_REPORT << "expected additional output matching: " << regex;
+    }
+
+    bool checkLine(const std::string &str) override {
+        std::cout << "MATCHING " << str << " to " << regex << "\n";
+        if (!std::regex_search(str, std::regex(regex))) {
+            QTIF_REPORT << "the output: " << str << "\ndoes not match: " << regex;
+        }
+        return true;
+    }
+
+private:
+    std::string regex;
 };
 
 class EndSentinel : public Expectation {
@@ -93,7 +118,7 @@ LineTest::LineTest() : output(*this) {
 LineTest::~LineTest() {
 }
 
-void LineTest::TearDown() {
+void LineTest::verify() {
     if (!output.buffer.empty()) {
         processOutput(output.buffer);
     }
@@ -109,7 +134,20 @@ void LineTest::processOutput(const std::string &str) {
 void LineTest::parseExpectations(Reader &reader) {
     while (!reader.eof()) {
         auto x = reader.readLine();
-        expected.emplace_back(new StringExpectation(getFileName(), x.first, x.second));
+        if (x.second.length() >= 3 && x.second[0] == '#' && x.second[1] == '$') {
+            switch (x.second[2]) {
+                case '$':
+                    expected.emplace_back(new StringExpectation(getFileName(), x.first, x.second.erase(1, 1)));
+                    break;
+                case '~':
+                    expected.emplace_back(new RegexExpectation(getFileName(), x.first, x.second.erase(0, 3)));
+                    break;
+                default:
+                    throw Exception("Invalid expectation format: " + x.second, x.first);
+            }
+        } else {
+            expected.emplace_back(new StringExpectation(getFileName(), x.first, x.second));
+        }
     }
     expected.emplace_back(new EndSentinel(getFileName(), reader.getLineNumber()));
     current = expected.begin();

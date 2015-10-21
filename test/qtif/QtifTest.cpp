@@ -47,7 +47,7 @@ std::string toLower(const std::string &s) {
 //qtif core
 //------------------------------------------------------------------------------
 TEST(QtifCore, findFiles) {
-    std::vector<std::string> files = findFiles("qtif/");
+    std::vector<std::string> files = findFiles("qtif.[a-z]+1.qtif$");
     EXPECT_EQ(1U, files.size());
     EXPECT_EQ(std::string(TEST_INPUT_DIR) + "/qtif/test1.qtif", files[0]);
 }
@@ -100,6 +100,6 @@ TEST_P(QtifLineTest, X) {
     }
 }
 
-QTIF_TEST_CASE(QtifLineTest, "qtif/test1");
+QTIF_TEST_CASE(QtifLineTest, "qtif/test2");
 
 } // namespace qtif

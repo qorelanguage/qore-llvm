@@ -61,7 +61,7 @@ class LineTest : public AbstractTest {
 public:
     LineTest();
     ~LineTest();
-    void TearDown() override;
+    void verify() override;
     void parseExpectations(Reader &reader) override;
     void processOutput(const std::string &str);
 

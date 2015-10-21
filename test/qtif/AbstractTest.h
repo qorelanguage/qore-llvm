@@ -65,6 +65,11 @@ class AbstractTest : public testing::TestWithParam<std::string> {
 
 public:
     void SetUp() override;
+    void TearDown() override {
+        if (setUpDone) {
+            verify();
+        }
+    }
 
 protected:
     /**
@@ -73,6 +78,14 @@ protected:
      * \throws qtif::Exception on error
      */
     virtual void parseExpectations(Reader &reader) = 0;
+
+    /**
+     * \brief Called during TearDown() to check the end of the output.
+     *
+     * This method is not called if parseExpectation() throws an exception.
+     */
+    virtual void verify() {
+    }
 
     /**
      * Returns the name of the input file.
@@ -105,6 +118,7 @@ private:
 private:
     std::string fileName;
     std::vector<char> input;
+    bool setUpDone;
 };
 
 } // namespace qtif

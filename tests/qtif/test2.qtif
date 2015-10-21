@@ -1,0 +1,11 @@
+AbC
+#normal comment
+#$comment with a dollar
+dEf
+uvw4xyz2
+#$$$
+abc
+#normal comment
+#$$comment with a dollar
+def
+#$~[0-9][a-z]*[0-9]$

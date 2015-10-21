@@ -27,6 +27,7 @@
 #define TEST_QTIF_CORE_H_
 
 #include <exception>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -47,8 +48,9 @@ private:
 };
 
 inline std::vector<std::string> findFiles(const std::string &filter) {
+    std::regex regex(filter);
     std::vector<std::string> files;
-    #define QTIF(n)     if (std::string(n).find(filter) != std::string::npos) { files.push_back(n); }
+    #define QTIF(n)     if (std::regex_search(n, regex)) { files.push_back(n); }
     #include "test_files.inc"
     #undef QTIF
     return files;
