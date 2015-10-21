@@ -95,11 +95,9 @@ class QtifLineTest : public LineTest {
 };
 
 TEST_P(QtifLineTest, X) {
-    LineOutputHelper output;
     for (auto c : getInput()) {
-        output += tolower(c);
+        output << tolower(c);
     }
-    verify(output);
 }
 
 QTIF_TEST_CASE(QtifLineTest, "qtif/test1");

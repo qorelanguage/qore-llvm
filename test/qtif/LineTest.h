@@ -26,9 +26,19 @@
 #ifndef TEST_QTIF_LINETEST_H_
 #define TEST_QTIF_LINETEST_H_
 
+#include <memory>
 #include "AbstractTest.h"
 
 namespace qtif {
+
+class LineTestOutput {
+public:
+    LineTestOutput(class LineTest &lineTest) : lineTest(lineTest) {
+    }
+
+    class LineTest &lineTest;
+    std::string buffer;
+};
 
 /**
  * \brief A basic test that handles the 'expectations' part of the input file on a line-by-line basis.
@@ -39,73 +49,39 @@ namespace qtif {
  *
  *     class MyTestCase : public qtif::LineTest {};
  *     TEST_P(MyTestCase, TestName) {
- *         LineOutputHelper output;
  *         TestedComponent x(getInput());
  *         while (x.hasMore()) {
- *             output += x.produceCharacter()
+ *             output << x.produceCharacter()
  *         }
- *         verify(output);
  *     }
  *     QTIF_TEST_CASE(MyTestCase, "input/file/filter")
  */
 class LineTest : public AbstractTest {
 
-protected:
-    void parseExpectations(Reader &reader) override {
-        while (!reader.eof()) {
-            expected.push_back(reader.readLine());
-        }
-    }
-
-    /**
-     * \brief Called from a test to compare the actual output to the expectations part of the input file.
-     * \param actual the actual output of the component being tested represented as a vector of lines
-     */
-    void verify(const std::vector<std::string> &actual) {
-        auto count = std::min(expected.size(), actual.size());
-        for (auto i = 0U; i < count; ++i) {
-            if (expected[i].second == actual[i]) {
-            } else {
-                QTIF_MESSAGE(expected[i].first) << "expected: " << expected[i].second << "\nactual: " << actual[i];
-            }
-        }
-        if (expected.size() > count) {
-            QTIF_MESSAGE(expected[count].first) << "expected additional output: " << expected[count].second;
-        }
-        if (actual.size() > count) {
-            QTIF_MESSAGE(expected.empty() ? 1: expected.back().first) << "unexpected output: " << actual[count];
-        }
-    }
-
-private:
-    std::vector<std::pair<int, std::string>> expected;
-};
-
-/**
- * \brief A helper class for converting a stream of characters into a vector of lines. Only the NL character is
- * treated as the end of a line.
- */
-class LineOutputHelper {
-
 public:
-    LineOutputHelper &operator+=(int c) {
-        if (c == '\n') {
-            data.push_back(line);
-            line.clear();
-        } else {
-            line.push_back(c);
-        }
-        return *this;
-    }
+    LineTest();
+    ~LineTest();
+    void TearDown() override;
+    void parseExpectations(Reader &reader) override;
+    void processOutput(const std::string &str);
 
-    operator const std::vector<std::string> &() const {
-        return data;
-    }
+protected:
+    LineTestOutput output;
 
 private:
-    std::string line;
-    std::vector<std::string> data;
+    std::vector<std::unique_ptr<class Expectation>> expected;
+    std::vector<std::unique_ptr<class Expectation>>::iterator current;
 };
+
+inline LineTestOutput &operator<<(LineTestOutput &output, char c) {
+    if (c == '\n') {
+        output.lineTest.processOutput(output.buffer);
+        output.buffer.clear();
+    } else {
+        output.buffer.push_back(c);
+    }
+    return output;
+}
 
 } // namespace qtif
 
