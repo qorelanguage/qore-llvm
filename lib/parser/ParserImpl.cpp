@@ -255,7 +255,7 @@ ast::Identifier::Ptr ParserImpl::identifier() {
     LOG_FUNCTION();
     SourceRange r = range();
     if (tokenType() != TokenType::Identifier) {
-        report(DiagId::ParserUnexpectedToken) << to_string(TokenType::Identifier) << token;
+        report(DiagId::ParserUnexpectedToken) << token << to_string(TokenType::Identifier);
         consume();
         return ast::Identifier::create(r, "");      //TODO proper recovery
     }

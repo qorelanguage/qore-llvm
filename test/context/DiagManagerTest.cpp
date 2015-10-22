@@ -60,37 +60,38 @@ TEST_F(DiagManagerTest, BuilderCallsCallbackInDestructor) {
         DiagBuilder b([&, this](DiagRecord &r){
             callbackCalled = true;
             EXPECT_EQ(DiagId::ScannerInvalidInteger, r.id);
+            EXPECT_EQ("CODE", r.code);
             EXPECT_EQ(DiagLevel::Warning, r.level);
             EXPECT_EQ("Text", r.message);
             EXPECT_EQ(location, r.location);
-        }, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text", location);
+        }, DiagId::ScannerInvalidInteger, "CODE", DiagLevel::Warning, "Text", location);
         EXPECT_FALSE(callbackCalled);
     }
     EXPECT_TRUE(callbackCalled);
 }
 
 TEST_F(DiagManagerTest, BuilderArgChar) {
-    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text '%s' text", location)
+    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, "CODE", DiagLevel::Warning, "Text '%s' text", location)
             << '@';
     EXPECT_EQ("Text '@' text", capturedMessage);
 }
 
 TEST_F(DiagManagerTest, BuilderArgString) {
-    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text '%s' text", location)
+    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, "CODE", DiagLevel::Warning, "Text '%s' text", location)
             << "embedded";
     EXPECT_EQ("Text 'embedded' text", capturedMessage);
 }
 
 TEST_F(DiagManagerTest, BuilderArgCharRange) {
     const char *str = "embedded";
-    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text '%s' text", location)
+    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, "CODE", DiagLevel::Warning, "Text '%s' text", location)
             .arg(str + 2, str + 5);
     EXPECT_EQ("Text 'bed' text", capturedMessage);
 }
 
 TEST_F(DiagManagerTest, BuilderArgIterators) {
     std::vector<char> vec{'v', 'e', 'c', 't', 'o', 'r'};
-    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text '%s' text", location)
+    DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, "CODE", DiagLevel::Warning, "Text '%s' text", location)
             .arg(vec.begin() + 1, vec.end() - 1);
     EXPECT_EQ("Text 'ecto' text", capturedMessage);
 }
@@ -99,21 +100,23 @@ TEST_F(DiagManagerTest, BuilderDtorNothrow) {
     EXPECT_NO_THROW(
             DiagBuilder([](DiagRecord&){
                 throw std::exception();
-            }, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text", location);
+            }, DiagId::ScannerInvalidInteger, "CODE", DiagLevel::Warning, "Text", location);
     );
 }
 
 #ifndef NDEBUG
 TEST_F(DiagManagerDeathTest, BuilderDtorChecksMissingArgs) {
     EXPECT_DEATH(
-            DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text '%s' text", location);
-    , "Missing parameter");
+            DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger,
+                    "CODE", DiagLevel::Warning, "Text '%s' text", location);,
+            "Missing parameter");
 }
 
 TEST_F(DiagManagerDeathTest, BuilderExtraArg) {
     EXPECT_DEATH(
-            DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger, DiagLevel::Warning, "Text", location) << "a";
-    , "Unexpected parameter");
+            DiagBuilder(messageCaptor, DiagId::ScannerInvalidInteger,
+                    "CODE", DiagLevel::Warning, "Text", location) << "a";,
+            "Unexpected parameter");
 }
 
 TEST_F(DiagManagerDeathTest, EnableEnabled) {
@@ -124,11 +127,11 @@ TEST_F(DiagManagerDeathTest, EnableEnabled) {
 
 TEST_F(DiagManagerTest, ReportCreatesBuilder) {
     DiagManager mgr;
-    DiagBuilder b = mgr.report(DiagId::ScannerInvalidInteger, location);
+    DiagBuilder b = mgr.report(DiagId::ScannerInvalidCharacter, location);
     const DiagRecord &r = extractRecord(b);     //b must not go out of scope until we examine r
-    EXPECT_EQ(DiagId::ScannerInvalidInteger, r.id);
+    EXPECT_EQ(DiagId::ScannerInvalidCharacter, r.id);
     EXPECT_EQ(DiagLevel::Error, r.level);
-    EXPECT_EQ("invalid integer literal '%s'", r.message);
+    EXPECT_EQ("unexpected '%s'", r.message);
     EXPECT_EQ(location, r.location);
     b << "123";         //prevents dtor from asserting missing argument
 }
@@ -138,7 +141,7 @@ TEST_F(DiagManagerTest, ProcessCallsProcessor) {
     DiagManager mgr;
     mgr.addProcessor(&processor);
 
-    DiagRecord record{DiagId::ScannerInvalidCharacter, DiagLevel::Error, "message", location};
+    DiagRecord record{DiagId::ScannerInvalidCharacter, "CODE", DiagLevel::Error, "message", location};
     EXPECT_CALL(processor, process(MatchDiagRecord(record))).Times(1);
     callProcess(mgr, record);
 }
@@ -148,8 +151,8 @@ TEST_F(DiagManagerTest, DisableEnable) {
     DiagManager mgr;
     mgr.addProcessor(&processor);
 
-    DiagRecord record1{DiagId::ScannerInvalidCharacter, DiagLevel::Error, "message1", location};
-    DiagRecord record2{DiagId::ScannerInvalidInteger, DiagLevel::Warning, "message2", location};
+    DiagRecord record1{DiagId::ScannerInvalidCharacter, "CODE", DiagLevel::Error, "message1", location};
+    DiagRecord record2{DiagId::ScannerInvalidInteger, "CODE", DiagLevel::Warning, "message2", location};
     EXPECT_CALL(processor, process(MatchDiagRecord(record1))).Times(0);
     EXPECT_CALL(processor, process(MatchDiagRecord(record2))).Times(1);
     mgr.disable();
@@ -161,7 +164,7 @@ TEST_F(DiagManagerTest, DisableEnable) {
 TEST_F(DiagManagerTest, DiagPrinter) {
     SourceManager sourceMgr;
     DiagPrinter printer(sourceMgr);
-    DiagRecord record{DiagId::ScannerInvalidCharacter, DiagLevel::Error, "message", location};
+    DiagRecord record{DiagId::ScannerInvalidCharacter, "CODE", DiagLevel::Error, "message", location};
     sourceMgr.createFromString("name0", "src0");
     sourceMgr.createFromString("name1", "src1");
 
@@ -170,7 +173,7 @@ TEST_F(DiagManagerTest, DiagPrinter) {
         RedirectStderr _(capturedStderr);
         printer.process(record);
     }
-    EXPECT_EQ("name1:12:34: error: message\n", capturedStderr);
+    EXPECT_EQ("name1:12:34: error: CODE: message\n", capturedStderr);
 }
 
 TEST_F(DiagManagerTest, DisableDiagHelper) {

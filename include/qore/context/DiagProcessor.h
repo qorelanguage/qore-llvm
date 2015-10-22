@@ -78,7 +78,7 @@ public:
 
     void process(qore::DiagRecord &record) override {
         std::cerr << sourceMgr.getName(record.location.sourceId) << ':' << record.location
-                << ": " << record.level << ": " << record.message << '\n';
+                << ": " << record.level << ": " << record.code << ": " << record.message << '\n';
     }
 
 private:
