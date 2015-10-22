@@ -24,10 +24,18 @@
 //
 //------------------------------------------------------------------------------
 
-DIAG(ScannerInvalidCharacter, Error, "invalid character '%s'")
-DIAG(ScannerInvalidInteger, Error, "invalid integer literal '%s'")
-DIAG(ScannerUnendedStringLiteral, Error, "Unended string literal")
+DIAG(ScannerInvalidCharacter,                   "PARSE-EXCEPTION", Error,
+        "unexpected '%s'")
+DIAG(ScannerInvalidInteger,                     "PARSE-EXCEPTION", Error,
+        "numeric overflow in integer '%s': cannot represent in a 64-bit signed number; "
+        "please use a floating-point or arbitrary-precision number instead (ex: '%sn'); "
+        "integers must be in the range %s (MININT) to %s (MAXINT)")
+DIAG(ScannerUnendedStringLiteral,               "PARSE-EXCEPTION", Error,
+        "unended string literal")
 
-DIAG(ParserUnexpectedToken, Error, "expected %s, got %s instead")
-DIAG(ParserExpectedPrimaryExpression, Error, "expected primary expression, got %s instead")
-DIAG(ParserExpectedVariableName, Error, "expected variable name, got %s instead")
+DIAG(ParserUnexpectedToken,                     "PARSE-EXCEPTION", Error,
+        "syntax error, unexpected %s, expecting %s")
+DIAG(ParserExpectedPrimaryExpression,           "PARSE-EXCEPTION", Error,
+        "unexpected %s, expecting primary expression")
+DIAG(ParserExpectedVariableName,                "PARSE-EXCEPTION", Error,
+        "unexpected %s, expecting variable name")

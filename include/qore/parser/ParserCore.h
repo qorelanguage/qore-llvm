@@ -52,7 +52,7 @@ protected:
         if (tokenType() == expected) {
             return consume().range;
         }
-        report(DiagId::ParserUnexpectedToken) << to_string(expected) << token;
+        report(DiagId::ParserUnexpectedToken) << token << to_string(expected);
         (this->*recoverStrategy)();
         return token.range;
     }

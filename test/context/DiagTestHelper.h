@@ -42,7 +42,11 @@
         .WillOnce(::testing::SaveArg<0>(&dest))
 
 MATCHER_P(MatchDiagRecord, r, "") {
-    return arg.id == r.id && arg.level == r.level && arg.message == r.message && arg.location == r.location;
+    return arg.id == r.id
+            && arg.code == r.code
+            && arg.level == r.level
+            && arg.message == r.message
+            && arg.location == r.location;
 }
 
 MATCHER_P3(MatchDiagRecordIdAndLocation, expectedDiagId, expectedLine, expectedColumn, "") {
