@@ -214,6 +214,19 @@ LineTestOutput &LineTestOutput::operator<<(char c) {
     return *this;
 }
 
+LineTestOutput &LineTestOutput::operator<<(const std::string &str) {
+    for (auto c : str) {
+        *this << c;
+    }
+    return *this;
+}
+
+LineTestOutput &LineTestOutput::operator<<(int i) {
+    std::ostringstream s;
+    s << i;
+    return *this << s.str();
+}
+
 void LineTestOutput::flush() {
     if (!buffer.empty()) {
         lineTest.processOutput(buffer);

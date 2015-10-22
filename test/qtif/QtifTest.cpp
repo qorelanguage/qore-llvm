@@ -100,7 +100,7 @@ TEST_P(QtifLineTest, X) {
             c = ' ';
             diagMgr.report(qore::DiagId::ScannerInvalidCharacter, qore::SourceLocation{}) << "underscore";
         }
-        output << tolower(c);
+        output << static_cast<char>(tolower(c));
     }
 }
 
