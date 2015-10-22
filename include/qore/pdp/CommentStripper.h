@@ -38,8 +38,6 @@
 namespace qore {
 namespace pdp {
 
-//TESTY
-
 /**
  * \brief Removes comments from a Source.
  *
