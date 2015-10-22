@@ -27,6 +27,7 @@
 #define TEST_QTIF_LINETEST_H_
 
 #include <memory>
+#include "qore/context/DiagManager.h"
 #include "AbstractTest.h"
 
 namespace qtif {
@@ -36,8 +37,23 @@ public:
     LineTestOutput(class LineTest &lineTest) : lineTest(lineTest) {
     }
 
+    LineTestOutput &operator<<(char c);
+    void flush();
+
+private:
     class LineTest &lineTest;
     std::string buffer;
+};
+
+class LineTestDiagProcessor : public qore::DiagProcessor {
+public:
+    LineTestDiagProcessor(class LineTest &lineTest) : lineTest(lineTest) {
+    }
+
+    void process(qore::DiagRecord &record) override;
+
+private:
+    class LineTest &lineTest;
 };
 
 /**
@@ -64,24 +80,17 @@ public:
     void verify() override;
     void parseExpectations(Reader &reader) override;
     void processOutput(const std::string &str);
+    void processDiag(qore::DiagRecord &record);
 
 protected:
+    qore::DiagManager diagMgr;
     LineTestOutput output;
+    LineTestDiagProcessor diagProcessor;
 
 private:
     std::vector<std::unique_ptr<class Expectation>> expected;
     std::vector<std::unique_ptr<class Expectation>>::iterator current;
 };
-
-inline LineTestOutput &operator<<(LineTestOutput &output, char c) {
-    if (c == '\n') {
-        output.lineTest.processOutput(output.buffer);
-        output.buffer.clear();
-    } else {
-        output.buffer.push_back(c);
-    }
-    return output;
-}
 
 } // namespace qtif
 

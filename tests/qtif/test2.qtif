@@ -1,11 +1,45 @@
 AbC
+
 #normal comment
 #$comment with a dollar
-dEf
 uvw4xyz2
+produces_error
+ #$# not a test comment
+ #$$ both dollars must be produced
+ #$~ ^not\sa r[eg]+x
+ #$! not a diag msg expectation
 #$$$
+#$#              lines starting with #$# (such as this one) are ignored by the test framework
+#$#
+#$#
+#$#
+#$#              lines not starting with #$ must match exactly:
 abc
+#$#              works for empty lines as well:
+
+#$#              qore comments that do not start with a dollar sign can be matched normally:
 #normal comment
+#$#              starting dollar signs in comments need to be doubled:
 #$$comment with a dollar
-def
+#$#              lines starting with #$~ use regex for matching:
 #$~[0-9][a-z]*[0-9]$
+#$#              lines starting with #$! expect a diagnostic message the format is 
+#$#                      #$!ID[@LINE[:COL]][-MSG] 
+#$#              where:
+#$#               - ID is mandatory DiagId
+#$#               - LINE is optional line number where the diagnostic should be reported
+#$#               - COL is optional column number where the diagnostic should be reported
+#$#               - MSG is optional regex that must match the message of the error/warning
+#$#              there is currently no way to check code (e.g. PARSE-EXCEPTION) or level (error/warning)
+#$#              since they are defined by DiagId
+#$#              The example below expects that a ScannerInvalidCharacter error with the word 'underscore' in
+#$#              the message eill be reported during before matching the next line:
+#$!ScannerInvalidCharacter-underscore
+produces error
+#$#
+#$#              note that the #$ sequence has meaning only at the start of a line
+#$#              the following lines have no special meaning and must match the output exactly
+ #$# not a test comment
+ #$$ both dollars must be produced
+ #$~ ^not\sa r[eg]+x
+ #$! not a diag msg expectation

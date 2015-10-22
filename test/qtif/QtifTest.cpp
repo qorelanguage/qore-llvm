@@ -96,6 +96,10 @@ class QtifLineTest : public LineTest {
 
 TEST_P(QtifLineTest, X) {
     for (auto c : getInput()) {
+        if (c == '_') {
+            c = ' ';
+            diagMgr.report(qore::DiagId::ScannerInvalidCharacter, qore::SourceLocation{}) << "underscore";
+        }
         output << tolower(c);
     }
 }

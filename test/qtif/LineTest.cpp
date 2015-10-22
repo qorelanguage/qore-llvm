@@ -40,6 +40,20 @@ public:
 
     virtual void checkEnd() = 0;
     virtual bool checkLine(const std::string &) = 0;
+    virtual bool checkDiag(qore::DiagRecord &record) {
+        QTIF_REPORT << formatDiagRecord(record);
+        return false;
+    }
+
+protected:
+    std::string formatDiagRecord(qore::DiagRecord &record) {
+        std::ostringstream s;
+        s << "unexpected " << record.level << " at " << record.location << "\n"
+                << "  id: " << record.id << "\n"
+                << "  code: " << record.code << "\n"
+                << "  message: " << record.message;
+        return s.str();
+    }
 
 private:
     Expectation(const Expectation &) = delete;
@@ -86,7 +100,6 @@ public:
     }
 
     bool checkLine(const std::string &str) override {
-        std::cout << "MATCHING " << str << " to " << regex << "\n";
         if (!std::regex_search(str, std::regex(regex))) {
             QTIF_REPORT << "the output: " << str << "\ndoes not match: " << regex;
         }
@@ -95,6 +108,85 @@ public:
 
 private:
     std::string regex;
+};
+
+class DiagExpectation : public Expectation {
+
+public:
+    DiagExpectation(const std::string &fileName, int lineNumber, std::string line)
+        : Expectation(fileName, lineNumber), expLine(-1), expColumn(-1) {
+        std::regex regex("^([a-zA-Z]+)(@([0-9]+)(:([0-9]+))?)?(-(.*))?$");
+        std::smatch m;
+        if (!std::regex_match(line, m, regex)) {
+            throw Exception("Invalid diagnostic expectation format: " + line, lineNumber);
+        }
+        assert(m.size() == 8 && m[1].matched);
+        expId = m[1];
+        if (m[3].matched) {
+            expLine = std::stoi(m[3]);
+            if (m[5].matched) {
+                expColumn = std::stoi(m[5]);
+            }
+        }
+        expMsgMatched = m[7].matched;
+        expMsg = m[7];
+    }
+
+    void checkEnd() override {
+        QTIF_REPORT << "expected diagnostic message:\n" << describe();
+    }
+
+    bool checkLine(const std::string &str) override {
+        QTIF_REPORT << "expected diagnostic message:\n" << describe() << "\nactual output: " << str;
+        return true;
+    }
+
+    bool checkDiag(qore::DiagRecord &record) override {
+        bool match = true;
+
+        std::ostringstream id;
+        id << record.id;
+
+        match &= id.str() == expId;
+        if (expLine >= 0) {
+            match &= expLine == record.location.line;
+        }
+        if (expColumn >= 0) {
+            match &= expColumn == record.location.column;
+        }
+        if (expMsgMatched) {
+            std::regex r(expMsg);
+            match &= std::regex_search(record.message, r);
+        }
+
+        if (!match) {
+            QTIF_REPORT << formatDiagRecord(record) << "\nexpected:\n" << describe();
+        }
+        return true;
+    }
+
+private:
+    std::string describe() {
+        std::ostringstream s;
+        s << "  id: " << expId;
+        if (expLine >= 0) {
+            s << "\n  location: " << expLine;
+            if (expColumn >= 0) {
+                s << ":" << expColumn;
+            }
+        }
+        if (expMsgMatched) {
+            s << "\n  message regex: " << expMsg;
+        }
+        return s.str();
+    }
+
+private:
+    std::string expId;
+    int expLine;
+    int expColumn;
+    bool expMsgMatched;
+    std::string expMsg;
 };
 
 class EndSentinel : public Expectation {
@@ -112,21 +204,47 @@ public:
     }
 };
 
-LineTest::LineTest() : output(*this) {
+LineTestOutput &LineTestOutput::operator<<(char c) {
+    if (c == '\n') {
+        lineTest.processOutput(buffer);
+        buffer.clear();
+    } else {
+        buffer.push_back(c);
+    }
+    return *this;
+}
+
+void LineTestOutput::flush() {
+    if (!buffer.empty()) {
+        lineTest.processOutput(buffer);
+        buffer.clear();
+    }
+}
+
+void LineTestDiagProcessor::process(qore::DiagRecord &record) {
+    lineTest.processDiag(record);
+}
+
+LineTest::LineTest() : output(*this), diagProcessor(*this) {
+    diagMgr.addProcessor(&diagProcessor);
 }
 
 LineTest::~LineTest() {
 }
 
 void LineTest::verify() {
-    if (!output.buffer.empty()) {
-        processOutput(output.buffer);
-    }
+    output.flush();
     (*current)->checkEnd();
 }
 
 void LineTest::processOutput(const std::string &str) {
     if ((*current)->checkLine(str)) {
+        ++current;
+    }
+}
+
+void LineTest::processDiag(qore::DiagRecord &record) {
+    if ((*current)->checkDiag(record)) {
         ++current;
     }
 }
@@ -141,6 +259,12 @@ void LineTest::parseExpectations(Reader &reader) {
                     break;
                 case '~':
                     expected.emplace_back(new RegexExpectation(getFileName(), x.first, x.second.erase(0, 3)));
+                    break;
+                case '!':
+                    expected.emplace_back(new DiagExpectation(getFileName(), x.first, x.second.erase(0, 3)));
+                    break;
+                case '#':
+                    //comment
                     break;
                 default:
                     throw Exception("Invalid expectation format: " + x.second, x.first);
