@@ -50,12 +50,13 @@ public:
      * \brief Creates the builder.
      * \param processCallback the function to be called for processing the message once it is built
      * \param id the identifier of the diagnostic
+     * \param code the diagnostic code
      * \param level the level of the diagnostic
      * \param message the diagnostic message
      * \param location the location in the source
      */
-    DiagBuilder(ProcessCallback processCallback, DiagId id, DiagLevel level, std::string message,
-            SourceLocation location);
+    DiagBuilder(ProcessCallback processCallback, DiagId id, const char *code, DiagLevel level,
+            std::string message, SourceLocation location);
 
     /**
      * \brief Default move constructor.

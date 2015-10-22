@@ -43,7 +43,7 @@ namespace qore {
  * \ref DiagData.inc
  */
 enum class DiagId {
-    #define DIAG(N, L, D)       N,
+    #define DIAG(N, C, L, D)        N,
     /// \cond IGNORED_BY_DOXYGEN
     #include "qore/context/DiagData.inc"
     /// \endcond
@@ -79,6 +79,7 @@ std::ostream &operator<<(std::ostream &o, DiagLevel level);
  */
 struct DiagRecord {
     DiagId id;                      //!< Identifier of the diagnostic.
+    const char *code;               //!< Diagnostic code.
     DiagLevel level;                //!< Diagnostic level.
     std::string message;            //!< Diagnostic message.
     SourceLocation location;        //!< Location in the source.

@@ -23,44 +23,81 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_UTILS_H_
-#define TEST_UTILS_H_
+#ifndef TEST_QTIF_READER_H_
+#define TEST_QTIF_READER_H_
 
-#include <iostream>
-#include <string>
+#include <vector>
 
-class RedirectStdin {
+namespace qtif {
+
+class Reader {
+
 public:
-    RedirectStdin(std::string string) : stream(string), cin_backup(std::cin.rdbuf(stream.rdbuf())) {
+    using Iterator = std::vector<char>::iterator;
+
+    Reader(Iterator begin, Iterator end) : begin(begin), it(begin), end(end), line(1), wasCr(false) {
     }
 
-    ~RedirectStdin() {
-        std::cin.rdbuf(cin_backup);
+    int read() {
+        if (it == end) {
+            return -1;
+        }
+        int c = *it++;
+        if (c == '\r' || (c == '\n' && !wasCr)) {
+            ++line;
+        }
+        wasCr = c == '\r';
+        return c;
+    }
+
+    bool eof() const {
+        return it == end;
+    }
+
+    int getLineNumber() const {
+        return line;
+    }
+
+    int getPos() const {
+        return it - begin;
+    }
+
+    void skipIf(int c) {
+        if (it != end && *it == c) {
+            read();
+        }
+    }
+
+    template<typename C>
+    C getRest() {
+        return C(it, end);
+    }
+
+    std::pair<int, std::string> readLine() {
+        std::pair<int, std::string> result;
+        result.first = line;
+        while (!eof()) {
+            int c = read();
+            if (c == '\r') {
+                skipIf('\n');
+                break;
+            }
+            if (c == '\n') {
+                break;
+            }
+            result.second.push_back(c);
+        }
+        return result;
     }
 
 private:
-    std::istringstream stream;
-    std::streambuf* cin_backup;
+    Iterator begin;
+    Iterator it;
+    Iterator end;
+    int line;
+    bool wasCr;
 };
 
-class RedirectStderr {
-public:
-    RedirectStderr(std::string &dest) : dest(dest), cerr_backup(std::cerr.rdbuf(stream.rdbuf())) {
-    }
+} // namespace qtif
 
-    ~RedirectStderr() {
-        std::cerr.rdbuf(cerr_backup);
-        dest = stream.str();
-    }
-
-private:
-    std::string &dest;
-    std::ostringstream stream;
-    std::streambuf* cerr_backup;
-};
-
-inline bool contains(const std::string &hayStack, const std::string &needle) {
-    return hayStack.find(needle) != std::string::npos;
-}
-
-#endif // TEST_UTILS_H_
+#endif // TEST_QTIF_READER_H_

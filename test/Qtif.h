@@ -23,44 +23,24 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_UTILS_H_
-#define TEST_UTILS_H_
+#ifndef TEST_QTIF_H_
+#define TEST_QTIF_H_
 
-#include <iostream>
-#include <string>
+#include "qtif/SimpleTest.h"
+#include "qtif/LineTest.h"
 
-class RedirectStdin {
-public:
-    RedirectStdin(std::string string) : stream(string), cin_backup(std::cin.rdbuf(stream.rdbuf())) {
-    }
+/**
+ * \brief Simple testing framework.
+ */
+namespace qtif {
 
-    ~RedirectStdin() {
-        std::cin.rdbuf(cin_backup);
-    }
+/**
+ * \brief Instantiates a test case.
+ * \param TC test case name
+ * \param qtif file name filter
+ */
+#define QTIF_TEST_CASE(TC, F)   INSTANTIATE_TEST_CASE_P(TC, TC, testing::ValuesIn(qtif::findFiles(F)))
 
-private:
-    std::istringstream stream;
-    std::streambuf* cin_backup;
-};
+} // namespace qtif
 
-class RedirectStderr {
-public:
-    RedirectStderr(std::string &dest) : dest(dest), cerr_backup(std::cerr.rdbuf(stream.rdbuf())) {
-    }
-
-    ~RedirectStderr() {
-        std::cerr.rdbuf(cerr_backup);
-        dest = stream.str();
-    }
-
-private:
-    std::string &dest;
-    std::ostringstream stream;
-    std::streambuf* cerr_backup;
-};
-
-inline bool contains(const std::string &hayStack, const std::string &needle) {
-    return hayStack.find(needle) != std::string::npos;
-}
-
-#endif // TEST_UTILS_H_
+#endif // TEST_QTIF_H_

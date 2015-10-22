@@ -38,12 +38,13 @@ namespace qore {
 
 /// \cond IGNORED_BY_DOXYGEN
 struct DiagInfo {
+    const char *code;
     DiagLevel level;
     const char *description;
 };
 
 static const DiagInfo data[] = {
-    #define DIAG(N, L, D)       { DiagLevel::L, D },
+    #define DIAG(N, C, L, D)        { C, DiagLevel::L, D },
     #include "qore/context/DiagData.inc"
     #undef DIAG
 };
@@ -61,7 +62,7 @@ std::ostream &operator<<(std::ostream &o, DiagLevel level) {
 
 std::ostream &operator<<(std::ostream &o, DiagId id) {
     switch (id) {
-        #define DIAG(N, L, D)       case DiagId::N: return o << #N;
+        #define DIAG(N, C, L, D)        case DiagId::N: return o << #N;
         /// \cond IGNORED_BY_DOXYGEN
         #include "qore/context/DiagData.inc"
         /// \endcond
@@ -72,7 +73,8 @@ std::ostream &operator<<(std::ostream &o, DiagId id) {
 
 DiagBuilder DiagManager::report(DiagId diagId, SourceLocation location) {
     const DiagInfo &info = data[static_cast<int>(diagId)];
-    return DiagBuilder(std::bind(&DiagManager::process, this, _1), diagId, info.level, info.description, location);
+    return DiagBuilder(std::bind(&DiagManager::process, this, _1), diagId,
+            info.code, info.level, info.description, location);
 }
 
 void DiagManager::process(DiagRecord &record) {
@@ -85,9 +87,9 @@ void DiagManager::process(DiagRecord &record) {
     }
 }
 
-DiagBuilder::DiagBuilder(ProcessCallback processCallback, DiagId id, DiagLevel level, std::string message,
-        SourceLocation location)
-: processCallback(processCallback), record{id, level, message, location} {
+DiagBuilder::DiagBuilder(ProcessCallback processCallback, DiagId id, const char *code, DiagLevel level,
+        std::string message, SourceLocation location)
+        : processCallback(processCallback), record{id, code, level, message, location} {
 }
 
 DiagBuilder::~DiagBuilder() {

@@ -31,11 +31,12 @@
 namespace qore {
 
 TEST(DiagRecordTest, Ctor) {
-    DiagRecord dr{DiagId::ScannerInvalidCharacter, DiagLevel::Warning, "", {SourceId::Invalid, 1, 2}};
+    DiagRecord dr{DiagId::ScannerInvalidCharacter, "", DiagLevel::Warning, "", {SourceId::Invalid, 1, 2}};
 }
 
 TEST(DiagRecordTest, IdToString) {
-#define DIAG(N, L, D)  EXPECT_EQ(#N, static_cast<std::ostringstream&>(std::ostringstream().flush() << DiagId::N).str());
+#define DIAG(N, C, L, D) \
+    EXPECT_EQ(#N, static_cast<std::ostringstream&>(std::ostringstream().flush() << DiagId::N).str());
 #include "qore/context/DiagData.inc"
 #undef DIAG
 }

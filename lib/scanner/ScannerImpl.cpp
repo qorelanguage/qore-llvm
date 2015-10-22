@@ -113,7 +113,9 @@ TokenType ScannerImpl::readInteger(Token *token) {
     errno = 0;
     token->intValue = strtoull(start, &end, 10);
     if (errno || end != start + s.size()) {
-        diagMgr.report(DiagId::ScannerInvalidInteger, token->range.start) << s;
+        //FIXME create constants for 9223372036854775807 and actually use them when checking the literal
+        diagMgr.report(DiagId::ScannerInvalidInteger, token->range.start) << s << s
+                << "-9223372036854775807" << "9223372036854775807";
         token->intValue = 0;
     }
     return TokenType::Integer;
