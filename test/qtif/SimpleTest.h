@@ -23,44 +23,50 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_UTILS_H_
-#define TEST_UTILS_H_
+#ifndef TEST_QTIF_SIMPLETEST_H_
+#define TEST_QTIF_SIMPLETEST_H_
 
-#include <iostream>
-#include <string>
+#include "AbstractTest.h"
 
-class RedirectStdin {
-public:
-    RedirectStdin(std::string string) : stream(string), cin_backup(std::cin.rdbuf(stream.rdbuf())) {
+namespace qtif {
+
+/**
+ * \brief A basic test that handles the 'expectations' part of the input file as a string that must match
+ * the actual output exactly.
+ *
+ * Example use:
+ *
+ *     class MyTestCase : public qtif::SimpleTest {};
+ *     TEST_P(MyTestCase, TestName) {
+ *         verify(testedFunction(getInput());
+ *     }
+ *     QTIF_TEST_CASE(MyTestCase, "input/file/filter")
+ */
+class SimpleTest : public AbstractTest {
+
+protected:
+    void parseExpectations(Reader &reader) override {
+        lineNumber = reader.getLineNumber();
+        expected = reader.getRest<std::string>();
     }
 
-    ~RedirectStdin() {
-        std::cin.rdbuf(cin_backup);
+    /**
+     * \brief Called from a test to compare the actual output to the expectations part of the input file.
+     * \param actual the actual output of the component being tested
+     */
+    void verify(const std::string &actual) {
+        if (expected != actual) {
+            QTIF_MESSAGE(lineNumber)
+                    << "expected:\n---START---\n" << expected << "\n---END---\n"
+                    << "actual:\n---START---\n" << actual << "\n---END---";
+        }
     }
 
 private:
-    std::istringstream stream;
-    std::streambuf* cin_backup;
+    int lineNumber;
+    std::string expected;
 };
 
-class RedirectStderr {
-public:
-    RedirectStderr(std::string &dest) : dest(dest), cerr_backup(std::cerr.rdbuf(stream.rdbuf())) {
-    }
+} // namespace qtif
 
-    ~RedirectStderr() {
-        std::cerr.rdbuf(cerr_backup);
-        dest = stream.str();
-    }
-
-private:
-    std::string &dest;
-    std::ostringstream stream;
-    std::streambuf* cerr_backup;
-};
-
-inline bool contains(const std::string &hayStack, const std::string &needle) {
-    return hayStack.find(needle) != std::string::npos;
-}
-
-#endif // TEST_UTILS_H_
+#endif // TEST_QTIF_SIMPLETEST_H_

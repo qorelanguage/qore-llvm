@@ -23,44 +23,39 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#ifndef TEST_UTILS_H_
-#define TEST_UTILS_H_
+#ifndef TEST_QTIF_CORE_H_
+#define TEST_QTIF_CORE_H_
 
-#include <iostream>
+#include <exception>
+#include <regex>
 #include <string>
+#include <vector>
 
-class RedirectStdin {
+namespace qtif {
+
+class Exception : public std::runtime_error {
+
 public:
-    RedirectStdin(std::string string) : stream(string), cin_backup(std::cin.rdbuf(stream.rdbuf())) {
+    Exception(const std::string &msg, int line) : runtime_error(msg), line(line) {
     }
 
-    ~RedirectStdin() {
-        std::cin.rdbuf(cin_backup);
+    int getLine() const {
+        return line;
     }
 
 private:
-    std::istringstream stream;
-    std::streambuf* cin_backup;
+    int line;
 };
 
-class RedirectStderr {
-public:
-    RedirectStderr(std::string &dest) : dest(dest), cerr_backup(std::cerr.rdbuf(stream.rdbuf())) {
-    }
-
-    ~RedirectStderr() {
-        std::cerr.rdbuf(cerr_backup);
-        dest = stream.str();
-    }
-
-private:
-    std::string &dest;
-    std::ostringstream stream;
-    std::streambuf* cerr_backup;
-};
-
-inline bool contains(const std::string &hayStack, const std::string &needle) {
-    return hayStack.find(needle) != std::string::npos;
+inline std::vector<std::string> findFiles(const std::string &filter) {
+    std::regex regex(filter);
+    std::vector<std::string> files;
+    #define QTIF(n)     if (std::regex_search(n, regex)) { files.push_back(n); }
+    #include "test_files.inc"
+    #undef QTIF
+    return files;
 }
 
-#endif // TEST_UTILS_H_
+} // namespace qtif
+
+#endif // TEST_QTIF_CORE_H_
