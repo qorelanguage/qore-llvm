@@ -221,6 +221,10 @@ LineTestOutput &LineTestOutput::operator<<(const std::string &str) {
     return *this;
 }
 
+LineTestOutput &LineTestOutput::operator<<(const qore::SourceLocation &loc) {
+    return *this << '@' << loc.line << ':' << loc.column;
+}
+
 LineTestOutput &LineTestOutput::operator<<(int i) {
     std::ostringstream s;
     s << i;

@@ -24,61 +24,49 @@
 //
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
-#include "qore/pdp/CommentStripper.h"
+#include "qore/pdp/DirectiveParser.h"
 #include "../Qtif.h"
+#include <sstream>
 
 namespace qore {
 namespace pdp {
 
-class CommentStripperTest : public qtif::LineTest {
+class DirectiveParserTest : public qtif::LineTest {
+public:
+    void handleDirective(SourceLocation loc, DirectiveId id, SourceLocation argLoc, const std::string &arg) {
+        std::ostringstream ss;
+        ss << id;
+        output << '#' << ss.str() << loc << '-' << arg << argLoc;
+    }
 };
 
-TEST_P(CommentStripperTest, Run) {
+TEST_P(DirectiveParserTest, Run) {
     Source src(getFileName(), SourceId::Invalid, getInput(), false);
-    CommentStripper<> cs(diagMgr, src);
+    DirectiveParser<DirectiveParserTest> dp(diagMgr, *this, src);
 
     int c;
-    while ((c = cs.read()) != Source::EndOfFile) {
+    while ((c = dp.read()) != Source::EndOfFile) {
         output << static_cast<char>(c);
     }
 }
 
-QTIF_TEST_CASE(CommentStripperTest, "pdp/cs/simple");
+QTIF_TEST_CASE(DirectiveParserTest, "pdp/dp");
 
-class CommentStripperExtTest : public qtif::LineTest {
-};
-
-TEST_P(CommentStripperExtTest, Run) {
-    Source src(getFileName(), SourceId::Invalid, getInput(), false);
-    CommentStripper<> cs(diagMgr, src);
-
-    int c;
-    do {
-        SourceLocation loc = cs.getLocation();
-        c = cs.read();
-        if (c > 32 && c < 127) {
-            output << static_cast<char>(c);
-        } else {
-            switch (c) {
-                case Source::EndOfFile:
-                    output << "\\eof";
-                    break;
-                case ' ':
-                    output << "\\space";
-                    break;
-                case '\n':
-                    output << "\\n";
-                    break;
-                default:
-                    FAIL() << "Unknown character: " << c;
-                    break;
-            }
-        }
-        output << loc << '\n';
-    } while (c != Source::EndOfFile);
+TEST(DirectivesTest, IdToStream) {
+#define PD(I, N, A) \
+    EXPECT_EQ(#I, static_cast<std::ostringstream&>(std::ostringstream().flush() << DirectiveId::I).str());
+#include "qore/pdp/DirectivesData.inc"
+#undef PD
 }
 
-QTIF_TEST_CASE(CommentStripperExtTest, "pdp/cs/ext");
+#ifdef QORE_COVERAGE
+TEST(DirectivesTest, IdToStreamErr) {
+    std::ostringstream ss;
+    EXPECT_THROW(ss << static_cast<DirectiveId>(999), class Unreachable);
+}
+#endif
+
+//FIXME test comments in directives
 
 } // namespace pdp
 } // namespace qore

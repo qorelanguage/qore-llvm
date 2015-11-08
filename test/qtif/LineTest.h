@@ -40,6 +40,7 @@ public:
     LineTestOutput &operator<<(char c);
     LineTestOutput &operator<<(const std::string &str);
     LineTestOutput &operator<<(int i);
+    LineTestOutput &operator<<(const qore::SourceLocation &loc);
     void flush();
 
 private:

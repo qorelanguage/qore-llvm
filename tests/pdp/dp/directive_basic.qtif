@@ -1,0 +1,11 @@
+Aaa
+%ifdef       abc     
+%ifdef abc
+%endif     
+%endif
+#$$$
+Aaa
+#IfDef@2:2-abc@2:14
+#IfDef@3:2-abc@3:8
+#Endif@4:2-@4:12
+#Endif@5:2-@5:7

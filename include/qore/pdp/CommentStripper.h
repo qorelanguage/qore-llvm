@@ -42,7 +42,7 @@ namespace pdp {
  * \brief Removes comments from a Source.
  *
  * Preserves all newline characters. Generates a single space character for each block comment to avoid
- * joining two tokens as in `a/&lowast;...&lowast;/b`.
+ * joining two tokens which are separated by the block comment.
  * \tparam Src the type of the underlying source
  */
 template<typename Src = Source>
