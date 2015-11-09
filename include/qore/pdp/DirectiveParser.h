@@ -34,6 +34,7 @@
 #include <algorithm>
 #include "qore/context/DiagManager.h"
 #include "qore/context/Source.h"
+#include "qore/pdp/CommentStripper.h"
 #include "qore/pdp/Directives.h"
 
 namespace qore {
@@ -45,9 +46,8 @@ namespace pdp {
  * The newline characters at the end of the parse directives are preserved, but their column number is reported as 1.
  * \tparam Handler the type of the callback - must define a method
  *         `void handleDirective(SourceLocation loc, DirectiveId id, SourceLocation argLoc, const std::string &arg)`
- * \tparam Src the type of the underlying source
  */
-template<typename Handler, typename Src = Source>
+template<typename Handler>
 class DirectiveParser {
 
 public:
@@ -58,7 +58,7 @@ public:
      * \param src the source stream
      */
     DirectiveParser(DiagManager &diagMgr, Handler &handler, Source &src) : diagMgr(diagMgr),
-        handler(handler), src(src) {
+        handler(handler), src(diagMgr, src) {
     }
 
     /**
@@ -87,6 +87,7 @@ public:
 
 private:
     void parseDirective() {
+        static const Directives directives;
         SourceLocation loc = getLocation();
         std::string directive;
         std::string arg;
@@ -117,16 +118,11 @@ private:
     }
 
 private:
-    static const Directives directives;
-
-private:
     DiagManager &diagMgr;
     Handler &handler;
-    Lookahead<Src> src;
+    Lookahead<CommentStripper> src;
     bool startOfLine{true};
 };
-
-template<typename Handler, typename Src> const Directives DirectiveParser<Handler, Src>::directives;
 
 } // namespace pdp
 } // namespace qore

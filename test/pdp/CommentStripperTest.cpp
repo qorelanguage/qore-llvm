@@ -35,7 +35,7 @@ class CommentStripperTest : public qtif::LineTest {
 
 TEST_P(CommentStripperTest, Run) {
     Source src(getFileName(), SourceId::Invalid, getInput(), false);
-    CommentStripper<> cs(diagMgr, src);
+    CommentStripper cs(diagMgr, src);
 
     int c;
     while ((c = cs.read()) != Source::EndOfFile) {
@@ -50,7 +50,7 @@ class CommentStripperExtTest : public qtif::LineTest {
 
 TEST_P(CommentStripperExtTest, Run) {
     Source src(getFileName(), SourceId::Invalid, getInput(), false);
-    CommentStripper<> cs(diagMgr, src);
+    CommentStripper cs(diagMgr, src);
 
     int c;
     do {

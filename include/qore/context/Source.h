@@ -136,7 +136,8 @@ public:
      * \brief Creates the instance.
      * \param src the underlying source
      */
-    Lookahead(Src &src) : src(src), savedChar(Empty) {
+    template<typename... _Args>
+    Lookahead(_Args&&... __args) : src(__args...), savedChar(Empty) {
     }
 
     /**
@@ -176,7 +177,7 @@ private:
     constexpr static int Empty = -2;
 
 private:
-    Src &src;
+    Src src;
     int savedChar;
     SourceLocation savedLocation;
 };

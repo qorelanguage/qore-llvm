@@ -43,9 +43,7 @@ namespace pdp {
  *
  * Preserves all newline characters. Generates a single space character for each block comment to avoid
  * joining two tokens which are separated by the block comment.
- * \tparam Src the type of the underlying source
  */
-template<typename Src = Source>
 class CommentStripper {
 
 private:
@@ -59,7 +57,7 @@ public:
      * \param diagMgr for reporting diagnostics (an open block comment at the end of file)
      * \param src the source to remove comments from
      */
-    CommentStripper(DiagManager &diagMgr, Src &src) : diagMgr(diagMgr), src(src) {
+    CommentStripper(DiagManager &diagMgr, Source &src) : diagMgr(diagMgr), src(src) {
     }
 
     /**
@@ -169,7 +167,7 @@ private:
 
 private:
     DiagManager &diagMgr;
-    Lookahead<Src> src;
+    Lookahead<Source &> src;
     State state{State::Default};
 };
 
