@@ -66,7 +66,5 @@ TEST(DirectivesTest, IdToStreamErr) {
 }
 #endif
 
-//FIXME test comments in directives
-
 } // namespace pdp
 } // namespace qore
