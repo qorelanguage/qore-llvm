@@ -55,7 +55,7 @@ public:
     /**
      * \brief Creates a new source.
      * \param name the name of the source
-     * \param id the id if the source
+     * \param id the id of the source
      * \param buf the source buffer
      * \param stdin `true` if additional lines should be read from stdin
      */

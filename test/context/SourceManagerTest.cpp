@@ -33,7 +33,7 @@
 namespace qore {
 
 struct SourceManagerTest : ::testing::Test, SourceTestHelper {
-    SourceManager mgr;
+    SourceManager mgr{"test/context/"};
 
     std::string readAll(Source &src) {
         std::string s;
@@ -61,13 +61,13 @@ TEST_F(SourceManagerTest, FromStdin) {
 }
 //
 TEST_F(SourceManagerTest, FromFile) {
-    Source &src = mgr.createFromFile("test/context/SourceManagerTest_FromFile");
+    Source &src = mgr.createFromFile("SourceManagerTest_FromFile");
     EXPECT_EQ("abc", readAll(src));
     EXPECT_EQ("test/context/SourceManagerTest_FromFile", src.getName());
 }
 
 TEST_F(SourceManagerTest, FromFileErr) {
-    EXPECT_THROW(mgr.createFromFile("test/context/SourceManagerTest_Nonexistent"), FatalError);
+    EXPECT_THROW(mgr.createFromFile("SourceManagerTest_Nonexistent"), FatalError);
 }
 
 } // namespace qore

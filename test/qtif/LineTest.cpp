@@ -242,7 +242,7 @@ void LineTestDiagProcessor::process(qore::DiagRecord &record) {
     lineTest.processDiag(record);
 }
 
-LineTest::LineTest() : output(*this), diagProcessor(*this) {
+LineTest::LineTest() : srcMgr(std::string(TEST_INPUT_DIR) + "/"), output(*this), diagProcessor(*this) {
     diagMgr.addProcessor(&diagProcessor);
 }
 

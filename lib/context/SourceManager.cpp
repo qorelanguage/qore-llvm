@@ -47,12 +47,13 @@ void Source::fill() {
 }
 
 Source &SourceManager::createFromFile(std::string fileName) {
-    std::ifstream fileStream(fileName, std::ios::binary);
+    std::string fullName = includePath + fileName;
+    std::ifstream fileStream(fullName, std::ios::binary);
     std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
     if (!fileStream.good()) {
         throw FATAL_ERROR("Error reading file " << fileName);
     }
-    return create(std::move(fileName), std::move(data), false);
+    return create(std::move(fullName), std::move(data), false);
 }
 
 } // namespace qore

@@ -87,6 +87,7 @@ public:
 
 protected:
     qore::DiagManager diagMgr;
+    qore::SourceManager srcMgr;
     LineTestOutput output;
     LineTestDiagProcessor diagProcessor;
 

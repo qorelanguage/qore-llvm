@@ -46,6 +46,13 @@ class SourceManager {
 
 public:
     /**
+     * \brief Constructor.
+     * \param includePath the include path to prepend to each file name passed to createFromFile()
+     */
+    SourceManager(std::string includePath = "") : includePath(std::move(includePath)) {
+    }
+
+    /**
      * \brief Creates a Source from a string.
      * \param name the name of the script
      * \param string the source of the script
@@ -90,6 +97,7 @@ private:
         return *sources.back();
     }
 
+    std::string includePath;
     std::vector<std::unique_ptr<Source>> sources;
 
     friend class SourceTestHelper;
