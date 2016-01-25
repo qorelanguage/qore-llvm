@@ -1,0 +1,9 @@
+First/*comment on a*/line.
+Second/*and
+third*/line.
+#$$$
+#$# Block comments are replaced with a single space character
+First line.
+#$# The space is generated even if there are newlines in the comment (which are preserved)
+Second
+ line.

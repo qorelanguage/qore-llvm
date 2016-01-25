@@ -6,6 +6,8 @@
 # run this script after compiling tests with COVERAGE=ON
 # the output is in build-coverage/index.html
 
+make clean clean-coverage
+make -j8
 lcov -c -i -d . -o initial-coverage.info
 bin/unittests
 lcov -c -d . -o test-coverage.info

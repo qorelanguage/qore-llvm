@@ -1,0 +1,15 @@
+"This is /* not a comment
+and neither \" /* is this" 
+'This is still /* not a comment
+but \' /* this is
+a comment */
+A quote /* in a comment " has no meaning, 
+so this ends the comment: */
+#$$$
+"This is /* not a comment
+and neither \" /* is this" 
+'This is still /* not a comment
+but \' 
+ 
+A quote 
+ 

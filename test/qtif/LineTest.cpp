@@ -221,6 +221,10 @@ LineTestOutput &LineTestOutput::operator<<(const std::string &str) {
     return *this;
 }
 
+LineTestOutput &LineTestOutput::operator<<(const qore::SourceLocation &loc) {
+    return *this << '@' << loc.line << ':' << loc.column;
+}
+
 LineTestOutput &LineTestOutput::operator<<(int i) {
     std::ostringstream s;
     s << i;
@@ -238,7 +242,7 @@ void LineTestDiagProcessor::process(qore::DiagRecord &record) {
     lineTest.processDiag(record);
 }
 
-LineTest::LineTest() : output(*this), diagProcessor(*this) {
+LineTest::LineTest() : srcMgr(std::string(TEST_INPUT_DIR) + "/"), output(*this), diagProcessor(*this) {
     diagMgr.addProcessor(&diagProcessor);
 }
 

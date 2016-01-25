@@ -23,46 +23,48 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Scanner implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-#define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-
-#include "qore/context/DiagManager.h"
-#include "qore/context/Source.h"
-#include "qore/scanner/Scanner.h"
+#include "gtest/gtest.h"
+#include "qore/pdp/DirectiveParser.h"
+#include "../Qtif.h"
+#include <sstream>
 
 namespace qore {
+namespace pdp {
 
-/**
- * \brief Implements the Scanner interface.
- */
-class ScannerImpl : public Scanner {
-
+class DirectiveParserTest : public qtif::LineTest {
 public:
-    /**
-     * \brief Constructs a scanner for given source.
-     * \param diagMgr used for reporting diagnostic messages
-     * \param src the source of the script
-     */
-    ScannerImpl(DiagManager &diagMgr, Source &src);
-
-    void read(Token *token) override;
-
-private:
-    TokenType readInternal(Token *token);
-    TokenType readInteger(Token *token);
-    TokenType readIdentifier(Token *token);
-    TokenType readString(Token *token);
-
-private:
-    DiagManager &diagMgr;
-    Lookahead<Source &> src;
+    void handleDirective(SourceLocation loc, DirectiveId id, SourceLocation argLoc, const std::string &arg) {
+        std::ostringstream ss;
+        ss << id;
+        output << '#' << ss.str() << loc << '-' << arg << argLoc;
+    }
 };
 
-} //namespace qore
+TEST_P(DirectiveParserTest, Run) {
+    Source src(getFileName(), SourceId::Invalid, getInput(), false);
+    DirectiveParser<DirectiveParserTest> dp(diagMgr, *this, src);
 
-#endif /* INCLUDE_QORE_SCANNER_SCANNERIMPL_H_ */
+    int c;
+    while ((c = dp.read()) != Source::EndOfFile) {
+        output << static_cast<char>(c);
+    }
+}
+
+QTIF_TEST_CASE(DirectiveParserTest, "pdp/dp");
+
+TEST(DirectivesTest, IdToStream) {
+#define PD(I, N, A) \
+    EXPECT_EQ(#I, static_cast<std::ostringstream&>(std::ostringstream().flush() << DirectiveId::I).str());
+#include "qore/pdp/DirectivesData.inc"
+#undef PD
+}
+
+#ifdef QORE_COVERAGE
+TEST(DirectivesTest, IdToStreamErr) {
+    std::ostringstream ss;
+    EXPECT_THROW(ss << static_cast<DirectiveId>(999), class Unreachable);
+}
+#endif
+
+} // namespace pdp
+} // namespace qore

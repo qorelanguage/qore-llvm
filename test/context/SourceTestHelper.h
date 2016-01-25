@@ -28,11 +28,9 @@
 
 #include <string>
 #include <vector>
-#include "qore/context/SourceBuffer.h"
 #include "qore/context/SourceId.h"
 #include "qore/context/SourceLocation.h"
 #include "qore/context/SourceManager.h"
-#include "qore/context/SourcePointer.h"
 #include "qore/context/SourceRange.h"
 
 namespace qore {
@@ -58,39 +56,6 @@ public:
 
     static SourceRange createRange(int line, int column1, int column2, SourceId srcId = createId(1)) {
         return SourceRange(createLocation(line, column1, srcId), createLocation(line, column2, srcId));
-    }
-
-    static SourceBuffer createBuffer(SourceId sourceId = createId(1)) {
-        return SourceBuffer(sourceId);
-    }
-
-    static SourceBuffer createBuffer(std::vector<char> data, SourceId sourceId = createId(1)) {
-        return SourceBuffer(sourceId, std::move(data));
-    }
-
-    template<typename Iterator>
-    static SourceBuffer createBuffer(Iterator begin, Iterator end, SourceId sourceId = createId(1)) {
-        return SourceBuffer(sourceId, begin, end);
-    }
-
-    static SourceId getSourceId(const SourceBuffer &sb) {
-        return sb.sourceId;
-    }
-
-    static std::vector<char> &getData(SourceBuffer &sb) {
-        return sb.data;
-    }
-
-    static bool isStdin(const SourceBuffer &sb) {
-        return sb.isStdin;
-    }
-
-    static const std::vector<std::string> &getNames(const SourceManager &mgr) {
-        return mgr.names;
-    }
-
-    static std::vector<char>::size_type getIndex(const SourcePointer &ptr) {
-        return ptr.index;
     }
 };
 

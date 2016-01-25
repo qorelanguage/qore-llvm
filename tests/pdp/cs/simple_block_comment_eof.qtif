@@ -1,0 +1,5 @@
+/*
+#$$$
+#$# an open block comment at the end of the file must be reported:
+
+#$!PdpUnendedBlockComment@2

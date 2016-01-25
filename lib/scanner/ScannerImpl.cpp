@@ -34,8 +34,7 @@
 
 namespace qore {
 
-ScannerImpl::ScannerImpl(DiagManager &diagMgr, SourcePointer sourcePointer)
-: diagMgr(diagMgr), ptr(std::move(sourcePointer)) {
+ScannerImpl::ScannerImpl(DiagManager &diagMgr, Source &src) : diagMgr(diagMgr), src(src) {
     LOG_FUNCTION();
 }
 
@@ -44,33 +43,40 @@ void ScannerImpl::read(Token *token) {
 
     token->stringValue.clear();
     do {
-        while (isspace(*ptr)) {
-            ++ptr;
+        while (isspace(src.peek())) {
+            src.read();
         }
-        token->range.start = ptr.getLocation();
+        token->range.start = src.getLocation();
     } while ((token->type = readInternal(token)) == TokenType::None);
-    token->range.end = ptr.getLocation();
+    token->range.end = src.getLocation();
     LOG("Returning token " << *token);
 }
 
 TokenType ScannerImpl::readInternal(Token *token) {
     LOG_FUNCTION();
-    switch (char c = *ptr++) {
-        case '\0':
+    switch (src.peek()) {
+        case Source::EndOfFile:
             return TokenType::EndOfFile;
         case '+':
+            src.read();
             return TokenType::Plus;
         case ';':
+            src.read();
             return TokenType::Semicolon;
         case '{':
+            src.read();
             return TokenType::CurlyLeft;
         case '}':
+            src.read();
             return TokenType::CurlyRight;
         case '(':
+            src.read();
             return TokenType::ParenLeft;
         case ')':
+            src.read();
             return TokenType::ParenRight;
         case '=':
+            src.read();
             return TokenType::Assign;
         case '"':
             return readString(token);
@@ -91,24 +97,24 @@ TokenType ScannerImpl::readInternal(Token *token) {
         case 'Z':
             return readIdentifier(token);
         default:
-            diagMgr.report(DiagId::ScannerInvalidCharacter, token->range.start) << c;
+            diagMgr.report(DiagId::ScannerInvalidCharacter, token->range.start) << src.read();
             return TokenType::None;
     }
 }
 
 TokenType ScannerImpl::readInteger(Token *token) {
-    const char *start = ptr - 1;
-    char *end;
-
-    while (isdigit(*ptr)) {
-        ++ptr;
+    std::string &s = token->stringValue;
+    while (isdigit(src.peek())) {
+        s.push_back(src.read());
     }
 
+    const char *start = s.c_str();
+    char *end;
     errno = 0;
     token->intValue = strtoull(start, &end, 10);
-    if (errno || end != ptr) {
+    if (errno || end != start + s.size()) {
         //FIXME create constants for 9223372036854775807 and actually use them when checking the literal
-        diagMgr.report(DiagId::ScannerInvalidInteger, token->range.start).arg(start, ptr).arg(start, ptr)
+        diagMgr.report(DiagId::ScannerInvalidInteger, token->range.start) << s << s
                 << "-9223372036854775807" << "9223372036854775807";
         token->intValue = 0;
     }
@@ -116,13 +122,11 @@ TokenType ScannerImpl::readInteger(Token *token) {
 }
 
 TokenType ScannerImpl::readIdentifier(Token *token) {
-    const char *start = ptr - 1;
-    while (isalnum(*ptr)) {
-        ++ptr;
+    std::string &s = token->stringValue;
+    while (isalnum(src.peek())) {
+        s.push_back(src.read());
     }
-    const char *end = ptr;
 
-    std::string s{start, end};
     //FIXME use something better
     if (s == "catch") {
         return TokenType::KwCatch;
@@ -139,15 +143,14 @@ TokenType ScannerImpl::readIdentifier(Token *token) {
     } else if (s == "try") {
         return TokenType::KwTry;
     }
-
-    token->stringValue = std::move(s);
     return TokenType::Identifier;
 }
 
 TokenType ScannerImpl::readString(Token *token) {
+    src.read();
     char c;
-    while ((c = *ptr++) != '"') {
-        if (c == '\0' || c == '\n') {
+    while ((c = src.read()) != '"') {
+        if (c == Source::EndOfFile || c == '\n') {
             diagMgr.report(DiagId::ScannerUnendedStringLiteral, token->range.start);
             break;
         }

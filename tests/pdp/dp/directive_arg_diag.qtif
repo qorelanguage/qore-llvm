@@ -1,0 +1,15 @@
+Aaa
+%ifdef     
+%ifdef
+%endif     abc    
+%endif abc
+#$$$
+Aaa
+#$!PdpMissingArgument@2:2-ifdef
+
+#$!PdpMissingArgument@3:2-ifdef
+
+#$!PdpUnexpectedArgument@4:2-endif
+
+#$!PdpUnexpectedArgument@5:2-endif
+

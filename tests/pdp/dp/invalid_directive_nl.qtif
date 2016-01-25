@@ -1,0 +1,8 @@
+Aaa
+%non-existent-directive ignored until end of line
+Bbb
+#$$$
+Aaa
+#$!PdpUnknownDirective@2:2-non-existent-directive
+
+Bbb

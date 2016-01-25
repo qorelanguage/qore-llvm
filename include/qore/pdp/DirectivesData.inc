@@ -23,46 +23,10 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Scanner implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
-#define INCLUDE_QORE_SCANNER_SCANNERIMPL_H_
 
-#include "qore/context/DiagManager.h"
-#include "qore/context/Source.h"
-#include "qore/scanner/Scanner.h"
-
-namespace qore {
-
-/**
- * \brief Implements the Scanner interface.
- */
-class ScannerImpl : public Scanner {
-
-public:
-    /**
-     * \brief Constructs a scanner for given source.
-     * \param diagMgr used for reporting diagnostic messages
-     * \param src the source of the script
-     */
-    ScannerImpl(DiagManager &diagMgr, Source &src);
-
-    void read(Token *token) override;
-
-private:
-    TokenType readInternal(Token *token);
-    TokenType readInteger(Token *token);
-    TokenType readIdentifier(Token *token);
-    TokenType readString(Token *token);
-
-private:
-    DiagManager &diagMgr;
-    Lookahead<Source &> src;
-};
-
-} //namespace qore
-
-#endif /* INCLUDE_QORE_SCANNER_SCANNERIMPL_H_ */
+PD(Include,                 "include",          Single)
+PD(Define,                  "define",           Single)
+PD(IfDef,                   "ifdef",            Single)
+PD(IfNDef,                  "ifndef",           Single)
+PD(Else,                    "else",             None)
+PD(Endif,                   "endif",            None)
