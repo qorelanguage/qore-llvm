@@ -25,16 +25,35 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Qore namespace.
+/// \brief Defines the structure of diagnostic messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#include "qore/comp/DiagRecord.h"
+#include "qore/common/Exceptions.h"
 
-/**
- * \brief The main namespace used by qore.
- */
 namespace qore {
+namespace comp {
+
+std::ostream &operator<<(std::ostream &o, DiagLevel level) {
+    switch (level) {
+        case DiagLevel::Error:
+            return o << "error";
+        case DiagLevel::Warning:
+            return o << "warning";
+    }
+    QORE_UNREACHABLE("Invalid value of DiagLevel: " << static_cast<int>(level));
 }
 
-#endif /* INCLUDE_QORE_H_ */
+std::ostream &operator<<(std::ostream &o, DiagId id) {
+    switch (id) {
+        #define DIAG(N, C, L, D)        case DiagId::N: return o << #N;
+        /// \cond IGNORED_BY_DOXYGEN
+        #include "qore/comp/DiagData.inc"
+        /// \endcond
+        #undef DIAG
+    }
+    QORE_UNREACHABLE("Invalid value of DiagId: " << static_cast<int>(id));
+}
+
+} // namespace comp
+} // namespace qore

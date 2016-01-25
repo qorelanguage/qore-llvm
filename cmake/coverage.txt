@@ -1,0 +1,25 @@
+if(QORE_COVERAGE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -DQORE_COVERAGE")
+
+    add_custom_target(clean-coverage
+        COMMAND find . -name *gcda -o -name *gcno | xargs rm
+        COMMAND rm -rf coverage
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+
+    add_custom_target(coverage
+        COMMAND find . -name '*gcda' -exec rm -rf {} +;
+        COMMAND rm -rf coverage
+        COMMAND lcov -c -i -d . -o initial-coverage.info
+        COMMAND ./bin/unittests
+        COMMAND lcov -c -d . -o test-coverage.info
+        COMMAND lcov -a initial-coverage.info -a test-coverage.info -o coverage.info
+        COMMAND lcov -r coverage.info '/usr/*' -o coverage.info
+        COMMAND lcov -r coverage.info '*googletest*' -o coverage.info
+        COMMAND lcov -r coverage.info 'test/*' -o coverage.info
+        COMMAND genhtml coverage.info -o coverage -s -p ${CMAKE_SOURCE_DIR} --highlight --demangle-cpp
+        COMMAND rm *coverage.info
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    add_dependencies(coverage unittests)
+endif(QORE_COVERAGE)

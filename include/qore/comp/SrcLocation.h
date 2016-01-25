@@ -25,16 +25,45 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Qore namespace.
+/// \brief Representation of locations in the source code.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#ifndef INCLUDE_QORE_COMP_SRCLOCATION_H_
+#define INCLUDE_QORE_COMP_SRCLOCATION_H_
+
+#include <cassert>
+
+namespace qore {
+namespace comp {
 
 /**
- * \brief The main namespace used by qore.
+ * \brief Represents a location in the source code.
  */
-namespace qore {
-}
+class SourceLocation {
 
-#endif /* INCLUDE_QORE_H_ */
+public:
+    /**
+     * \brief Constructs an empty location instance.
+     *
+     * The instance should be filled in later using copy assignment.
+     */
+    SourceLocation() : sourceId(-1), offset(-1) {
+    }
+
+    /**
+     * \brief Constructs a location with given parameters.
+     * \param sourceId the source id
+     * \param offset the offset in the source
+     */
+    SourceLocation(int sourceId, int offset) : sourceId(sourceId), offset(offset) {
+    }
+
+private:
+    int sourceId;           //!< Id of the source.
+    int offset;             //!< Offset in the source.
+};
+
+} // namespace comp
+} // namespace qore
+
+#endif // INCLUDE_QORE_COMP_SRCLOCATION_H_

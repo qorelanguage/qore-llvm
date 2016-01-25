@@ -23,18 +23,14 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Qore namespace.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#include "gtest/gtest.h"
+#include "qore/common/Exceptions.h"
 
-/**
- * \brief The main namespace used by qore.
- */
 namespace qore {
+
+TEST(FatalErrorTest, what) {
+    FatalError err = FATAL_ERROR("msg" << "arg");
+    EXPECT_STREQ("msgarg", err.what());
 }
 
-#endif /* INCLUDE_QORE_H_ */
+} // namespace qore

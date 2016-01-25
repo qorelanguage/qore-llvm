@@ -1,6 +1,0 @@
-A
-B#comment without newline#$$$
-#$~A@1:1
-#$~\\n@1:2
-#$~B@2:1
-#$~\\eof@2

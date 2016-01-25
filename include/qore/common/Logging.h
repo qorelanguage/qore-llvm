@@ -58,6 +58,20 @@
 #include <sstream>
 
 /**
+ * \brief Defines the component name to be associated with logging messages.
+ *
+ * Each logging message is assigned to a component which can be used for filtering. By default the component name
+ * is the same as the source file name.
+ */
+#ifndef QORE_LOG_COMPONENT
+#define QORE_LOG_COMPONENT          __FILE__
+#endif
+
+#ifdef WIN32
+#define __PRETTY_FUNCTION__         __FUNCSIG__
+#endif
+
+/**
  * \brief Logs a message with custom location.
  * \param C the name of the component for filtering
  * \param M the message to log

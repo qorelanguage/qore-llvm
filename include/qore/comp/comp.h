@@ -25,16 +25,20 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Qore namespace.
+/// \brief Qore compiler namespace.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#ifndef INCLUDE_QORE_COMP_H_
+#define INCLUDE_QORE_COMP_H_
+
+namespace qore {
 
 /**
- * \brief The main namespace used by qore.
+ * \brief The namespace used by the Qore compiler.
  */
-namespace qore {
+namespace comp {
 }
 
-#endif /* INCLUDE_QORE_H_ */
+}
+
+#endif /* INCLUDE_QORE_COMP_H_ */

@@ -1,41 +1,12 @@
-#Setup GoogleTest and GoogleMock
-
-find_package(Threads REQUIRED)
-include(ExternalProject)
-ExternalProject_Add(qgtest URL http://googletest.googlecode.com/files/gtest-1.7.0.zip PREFIX ${CMAKE_BINARY_DIR}/ext INSTALL_COMMAND "")
-ExternalProject_Add(qgmock URL http://googlemock.googlecode.com/files/gmock-1.7.0.zip PREFIX ${CMAKE_BINARY_DIR}/ext INSTALL_COMMAND "")
-
-#Forcing exact location in order to avoid using LLVM's (patched) copy of gtest
-add_library(googletest-gtest STATIC IMPORTED)
-set_target_properties(googletest-gtest PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/ext/src/qgtest-build/libgtest.a)
-
-add_library(googletest-gmock STATIC IMPORTED)
-set_target_properties(googletest-gmock PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/ext/src/qgmock-build/libgmock.a)
-
-add_library(googletest INTERFACE)
-target_link_libraries(googletest INTERFACE googletest-gtest googletest-gmock ${CMAKE_THREAD_LIBS_INIT})
-target_include_directories(googletest INTERFACE ${CMAKE_BINARY_DIR}/ext/src/qgtest/include ${CMAKE_BINARY_DIR}/ext/src/qgmock/include)
-
-enable_testing()
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
-
 file(GLOB_RECURSE QORE_TEST_SOURCES "*.cpp")
-
-set(QORE_TEST_INPUT_DIR ${CMAKE_SOURCE_DIR}/tests)
-file(GLOB_RECURSE QORE_TEST_INPUT_FILE_LIST ${QORE_TEST_INPUT_DIR}/*.qtif)
-
-set(QORE_TEST_INPUT_FILES "")
-foreach(file ${QORE_TEST_INPUT_FILE_LIST})
-    set(QORE_TEST_INPUT_FILES "${QORE_TEST_INPUT_FILES}QTIF(\"${file}\")\n")
-endforeach()
-
-configure_file(test_files.inc.in test_files.inc)
 
 add_executable(unittests ${QORE_TEST_SOURCES})
 
-target_include_directories(unittests PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(unittests PRIVATE googletest context parser runtime)
+target_link_libraries(unittests
+    common
+    comp
+    gtest
+    gmock
+)
 
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
-
-add_dependencies(check unittests)

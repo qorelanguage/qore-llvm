@@ -23,18 +23,46 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Qore namespace.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
+#include "qore/comp/DiagManager.h"
+//#include "../Utils.h"
+//#include "DiagTestHelper.h"
+//#include "SourceTestHelper.h"
 
-/**
- * \brief The main namespace used by qore.
- */
 namespace qore {
+namespace comp {
+
+class MockDiagProcessor : public IDiagProcessor {
+public:
+    MOCK_METHOD1(process, void(DiagRecord &));
+};
+
+struct DiagManagerTest : ::testing::Test {
+    DiagManagerTest() {
+        diagMgr.addProcessor(&mockProcessor);
+    }
+    DiagManager diagMgr;
+    MockDiagProcessor mockProcessor;
+};
+
+TEST_F(DiagManagerTest, Report) {
+    DiagRecord record;
+    EXPECT_CALL(mockProcessor, process(::testing::_)).WillOnce(::testing::SaveArg<0>(&record));
+
+    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+
+    EXPECT_EQ(DiagId::ParserUnexpectedToken, record.id);
+    EXPECT_STREQ("PARSE-EXCEPTION", record.code);
+    EXPECT_EQ("syntax error, unexpected a, expecting xyz", record.message);
+    EXPECT_EQ(DiagLevel::Error, record.level);
 }
 
-#endif /* INCLUDE_QORE_H_ */
+TEST_F(DiagManagerTest, BuilderCatchesExceptions) {
+    EXPECT_CALL(mockProcessor, process(::testing::_)).WillOnce(::testing::Throw(std::exception()));
+
+    EXPECT_NO_THROW(diagMgr.report(DiagId::ScannerInvalidCharacter, SourceLocation()) << 'a';);
+}
+
+} // namespace comp
+} // namespace qore

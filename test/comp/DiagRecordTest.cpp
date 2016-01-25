@@ -23,18 +23,38 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Qore namespace.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#include <sstream>
+#include "gtest/gtest.h"
+#include "qore/common/Exceptions.h"
+#include "qore/comp/DiagRecord.h"
 
-/**
- * \brief The main namespace used by qore.
- */
 namespace qore {
+namespace comp {
+
+TEST(DiagRecordTest, IdToString) {
+#define DIAG(N, C, L, D) \
+    EXPECT_EQ(#N, static_cast<std::ostringstream&>(std::ostringstream().flush() << DiagId::N).str());
+#include "qore/comp/DiagData.inc"
+#undef DIAG
 }
 
-#endif /* INCLUDE_QORE_H_ */
+TEST(DiagRecordTest, LevelToStream) {
+    std::ostringstream ss;
+    ss << "*" << DiagLevel::Error << "#" << DiagLevel::Warning << "$";
+    EXPECT_EQ("*error#warning$", ss.str());
+}
+
+#ifdef QORE_COVERAGE
+TEST(DiagRecordTest, IdToStreamErr) {
+    std::ostringstream ss;
+    EXPECT_THROW(ss << static_cast<DiagId>(999), class Unreachable);
+}
+
+TEST(DiagRecordTest, LevelToStreamErr) {
+    std::ostringstream ss;
+    EXPECT_THROW(ss << static_cast<DiagLevel>(999), class Unreachable);
+}
+#endif
+
+} // namespace comp
+} // namespace qore
