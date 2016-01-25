@@ -231,7 +231,7 @@ public:
      * \brief Disables diagnostic messages until the end of the scope.
      * \param diagMgr the diagnostic manager
      */
-    DisableDiag(DiagManager &diagMgr) : diagMgr(diagMgr) {
+    explicit DisableDiag(DiagManager &diagMgr) : diagMgr(diagMgr) {
         diagMgr.disable();
     }
 

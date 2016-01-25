@@ -70,7 +70,7 @@ public:
      * \brief Constructor.
      * \param level initial indentation level (can be negative)
      */
-    Indent(int level = 0) : level(level) {
+    explicit Indent(int level = 0) : level(level) {
     }
 
     /**

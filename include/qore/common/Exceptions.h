@@ -72,7 +72,7 @@ public:
      * \brief Constructs the exception.
      * \param message the message of the exception
      */
-    FatalError(std::string message) : message(std::move(message)) {
+    explicit FatalError(std::string message) : message(std::move(message)) {
     }
 
     /**
