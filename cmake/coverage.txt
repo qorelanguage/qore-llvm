@@ -15,6 +15,7 @@ if(QORE_COVERAGE)
         COMMAND lcov -c -d . -o test-coverage.info
         COMMAND lcov -a initial-coverage.info -a test-coverage.info -o coverage.info
         COMMAND lcov -r coverage.info '/usr/*' -o coverage.info
+        COMMAND lcov -r coverage.info '*/llvm/*' -o coverage.info
         COMMAND lcov -r coverage.info '*googletest*' -o coverage.info
         COMMAND lcov -r coverage.info 'test/*' -o coverage.info
         COMMAND genhtml coverage.info -o coverage -s -p ${CMAKE_SOURCE_DIR} --highlight --demangle-cpp
