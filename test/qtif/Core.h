@@ -23,43 +23,39 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Scanner implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SCANNER_H_
-#define INCLUDE_QORE_COMP_SCANNER_H_
+#ifndef TEST_QTIF_CORE_H_
+#define TEST_QTIF_CORE_H_
 
-#include "qore/comp/DiagManager.h"
-#include "qore/comp/IScanner.h"
+#include <exception>
+#include <regex>
+#include <string>
+#include <vector>
 
-namespace qore {
-namespace comp {
+namespace qtif {
 
-/**
- * \brief Implements the IScanner interface.
- */
-class Scanner : public IScanner {
+class Exception : public std::runtime_error {
 
 public:
-    /**
-     * \brief Constructs the scanner.
-     * \param diagMgr used for reporting diagnostic messages
-     */
-    Scanner(DiagManager &diagMgr);
+    Exception(const std::string &msg, int line) : runtime_error(msg), line(line) {
+    }
 
-    Token read(Source &src) override;
-
-private:
-    TokenType readInternal(Source &src);
-    TokenType readIdentifier(Source &src);
+    int getLine() const {
+        return line;
+    }
 
 private:
-    DiagManager &diagMgr;
+    int line;
 };
 
-} //namespace comp
-} //namespace qore
+inline std::vector<std::string> findFiles(const std::string &filter) {
+    std::regex regex(filter);
+    std::vector<std::string> files;
+    #define QTIF(n)     if (std::regex_search(n, regex)) { files.push_back(n); }
+    #include "test_files.inc"
+    #undef QTIF
+    return files;
+}
 
-#endif /* INCLUDE_QORE_COMP_SCANNER_H_ */
+} // namespace qtif
+
+#endif // TEST_QTIF_CORE_H_

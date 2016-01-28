@@ -23,43 +23,50 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Scanner implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SCANNER_H_
-#define INCLUDE_QORE_COMP_SCANNER_H_
+#ifndef TEST_QTIF_SIMPLETEST_H_
+#define TEST_QTIF_SIMPLETEST_H_
 
-#include "qore/comp/DiagManager.h"
-#include "qore/comp/IScanner.h"
+#include "AbstractTest.h"
 
-namespace qore {
-namespace comp {
+namespace qtif {
 
 /**
- * \brief Implements the IScanner interface.
+ * \brief A basic test that handles the 'expectations' part of the input file as a string that must match
+ * the actual output exactly.
+ *
+ * Example use:
+ *
+ *     class MyTestCase : public qtif::SimpleTest {};
+ *     TEST_P(MyTestCase, TestName) {
+ *         verify(testedFunction(getInput());
+ *     }
+ *     QTIF_TEST_CASE(MyTestCase, "input/file/filter")
  */
-class Scanner : public IScanner {
+class SimpleTest : public AbstractTest {
 
-public:
+protected:
+    void parseExpectations(Reader &reader) override {
+        lineNumber = reader.getLineNumber();
+        expected = reader.getRest<std::string>();
+    }
+
     /**
-     * \brief Constructs the scanner.
-     * \param diagMgr used for reporting diagnostic messages
+     * \brief Called from a test to compare the actual output to the expectations part of the input file.
+     * \param actual the actual output of the component being tested
      */
-    Scanner(DiagManager &diagMgr);
-
-    Token read(Source &src) override;
+    void verify(const std::string &actual) {
+        if (expected != actual) {
+            QTIF_MESSAGE(lineNumber)
+                    << "expected:\n---START---\n" << expected << "\n---END---\n"
+                    << "actual:\n---START---\n" << actual << "\n---END---";
+        }
+    }
 
 private:
-    TokenType readInternal(Source &src);
-    TokenType readIdentifier(Source &src);
-
-private:
-    DiagManager &diagMgr;
+    int lineNumber;
+    std::string expected;
 };
 
-} //namespace comp
-} //namespace qore
+} // namespace qtif
 
-#endif /* INCLUDE_QORE_COMP_SCANNER_H_ */
+#endif // TEST_QTIF_SIMPLETEST_H_

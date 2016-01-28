@@ -23,43 +23,24 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Scanner implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SCANNER_H_
-#define INCLUDE_QORE_COMP_SCANNER_H_
+#ifndef TEST_QTIF_H_
+#define TEST_QTIF_H_
 
-#include "qore/comp/DiagManager.h"
-#include "qore/comp/IScanner.h"
-
-namespace qore {
-namespace comp {
+#include "qtif/SimpleTest.h"
+#include "qtif/LineTest.h"
 
 /**
- * \brief Implements the IScanner interface.
+ * \brief Simple testing framework.
  */
-class Scanner : public IScanner {
+namespace qtif {
 
-public:
-    /**
-     * \brief Constructs the scanner.
-     * \param diagMgr used for reporting diagnostic messages
-     */
-    Scanner(DiagManager &diagMgr);
+/**
+ * \brief Instantiates a test case.
+ * \param TC test case name
+ * \param qtif file name filter
+ */
+#define QTIF_TEST_CASE(TC, F)   INSTANTIATE_TEST_CASE_P(TC, TC, testing::ValuesIn(qtif::findFiles(F)))
 
-    Token read(Source &src) override;
+} // namespace qtif
 
-private:
-    TokenType readInternal(Source &src);
-    TokenType readIdentifier(Source &src);
-
-private:
-    DiagManager &diagMgr;
-};
-
-} //namespace comp
-} //namespace qore
-
-#endif /* INCLUDE_QORE_COMP_SCANNER_H_ */
+#endif // TEST_QTIF_H_
