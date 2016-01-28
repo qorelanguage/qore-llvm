@@ -30,75 +30,98 @@ namespace qore {
 namespace comp {
 
 struct SourceTest : ::testing::Test {
-    std::string str{"te"};
+    std::string str{"ab\ncd"};
     Source src{"abc", 123, std::vector<char>(str.begin(), str.end())};
-
-    void expectLocation(int expectedOffset) {
-        SourceLocation l = src.getLocation();
-        EXPECT_EQ(123, l.sourceId);
-        EXPECT_EQ(expectedOffset, l.offset);
-    }
 };
 
 TEST_F(SourceTest, getName) {
     EXPECT_EQ("abc", src.getName());
 }
 
+TEST_F(SourceTest, getId) {
+    EXPECT_EQ(123, src.getId());
+}
+
 TEST_F(SourceTest, read) {
-    EXPECT_EQ('t', src.read());
-    expectLocation(1);
-    EXPECT_EQ('e', src.read());
+    EXPECT_EQ('a', src.read());
+    EXPECT_EQ('b', src.read());
 }
 
 TEST_F(SourceTest, peek) {
-    EXPECT_EQ('t', src.peek());
-    expectLocation(0);
-    EXPECT_EQ('t', src.peek());
+    EXPECT_EQ('a', src.peek());
+    EXPECT_EQ('a', src.peek());
 }
 
 TEST_F(SourceTest, unread) {
-    EXPECT_EQ('t', src.read());
+    EXPECT_EQ('a', src.read());
     src.unread();
-    expectLocation(0);
-    EXPECT_EQ('t', src.read());
+    EXPECT_EQ('a', src.read());
 }
 
 TEST_F(SourceTest, append) {
-    EXPECT_EQ('t', src.read());
-    EXPECT_EQ('e', src.read());
+    EXPECT_EQ('a', src.read());
+    EXPECT_EQ('b', src.read());
+    EXPECT_EQ('\n', src.read());
+    EXPECT_EQ('c', src.read());
+    EXPECT_EQ('d', src.read());
     EXPECT_EQ('\0', src.peek());
-    expectLocation(2);
     src.append("x");
-    expectLocation(2);
     EXPECT_EQ('x', src.read());
-    expectLocation(3);
     EXPECT_EQ('\0', src.read());
 }
 
 TEST_F(SourceTest, eof) {
-    EXPECT_EQ('t', src.read());
-    EXPECT_EQ('e', src.read());
-    expectLocation(2);
+    EXPECT_EQ('a', src.read());
+    EXPECT_EQ('b', src.read());
+    EXPECT_EQ('\n', src.read());
+    EXPECT_EQ('c', src.read());
+    EXPECT_EQ('d', src.read());
     EXPECT_EQ('\0', src.read());
-    expectLocation(2);
     EXPECT_EQ('\0', src.read());
 }
 
 TEST_F(SourceTest, isFirstOnLine) {
-    std::string str = "ab\ncd";
-    Source s{"abc", 123, std::vector<char>(str.begin(), str.end())};
-    EXPECT_TRUE(s.isFirstOnLine());
-    s.read();
-    EXPECT_FALSE(s.isFirstOnLine());
-    s.read();
-    EXPECT_FALSE(s.isFirstOnLine());
-    s.read();
-    EXPECT_TRUE(s.isFirstOnLine());
-    s.read();
-    EXPECT_FALSE(s.isFirstOnLine());
-    s.read();
-    EXPECT_FALSE(s.isFirstOnLine());
-    s.read();
+    EXPECT_TRUE(src.isFirstOnLine());
+    src.read();
+    EXPECT_FALSE(src.isFirstOnLine());
+    src.read();
+    EXPECT_FALSE(src.isFirstOnLine());
+    src.read();
+    EXPECT_TRUE(src.isFirstOnLine());
+    src.read();
+    EXPECT_FALSE(src.isFirstOnLine());
+    src.read();
+    EXPECT_FALSE(src.isFirstOnLine());
+    src.read();
+}
+
+TEST_F(SourceTest, getMarkLocation) {
+    src.read();
+    src.setMark();
+    src.read();
+    src.read();
+    src.read();
+    SourceLocation l = src.getMarkLocation();
+    EXPECT_EQ(123, l.sourceId);
+    EXPECT_EQ(1, l.offset);
+}
+
+TEST_F(SourceTest, getMarkedString) {
+    src.read();
+    src.setMark();
+    src.read();
+    src.read();
+    src.read();
+    EXPECT_EQ("b\nc", src.getMarkedString());
+}
+
+TEST_F(SourceTest, getMarkedLength) {
+    src.read();
+    src.setMark();
+    src.read();
+    src.read();
+    src.read();
+    EXPECT_EQ(3, src.getMarkedLength());
 }
 
 } // namespace comp

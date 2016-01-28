@@ -90,6 +90,7 @@ public:
         assert(std::find(data.begin(), data.end(), '\0') == data.end());
         data.push_back('\0');
         ptr = data.begin();
+        mark = data.begin();
     }
 
     /**
@@ -101,11 +102,11 @@ public:
     }
 
     /**
-     * \brief Returns the location of the next character returned by read().
-     * \return the current location
+     * \brief Returns the id of the source.
+     * \return the id of the source
      */
-    SourceLocation getLocation() const {
-        return SourceLocation(id, ptr - data.begin());
+    int getId() const {
+        return id;
     }
 
     /**
@@ -141,8 +142,10 @@ public:
     void append(const std::string &string) {
         assert(find(string.begin(), string.end(), '\0') == string.end());
         auto offset = ptr - data.begin();
+        auto markOffset = ptr - data.begin();
         data.insert(data.end() - 1, string.begin(), string.end());
         ptr = data.begin() + offset;
+        mark = data.begin() + markOffset;
     }
 
     /**
@@ -158,6 +161,37 @@ public:
         return *p == '\n' || *p == '\r';
     }
 
+    /**
+     * \brief Marks the current location in the source.
+     */
+    void setMark() {
+        mark = ptr;
+    }
+
+    /**
+     * \brief Returns the marked location.
+     * \return the marked location
+     */
+    SourceLocation getMarkLocation() const {
+        return SourceLocation(getId(), mark - data.begin());
+    }
+
+    /**
+     * \brief Returns the substring from the mark up to the current location.
+     * \return the substring from the mark up to the current location
+     */
+    std::string getMarkedString() const {
+        return std::string(mark, ptr);
+    }
+
+    /**
+     * \brief Returns the length of the substring from the mark up to the current location.
+     * \return the length of the substring from the mark up to the current location
+     */
+    int getMarkedLength() const {
+        return ptr - mark;
+    }
+
 private:
     Source(const Source &) = delete;
     Source(Source &&) = delete;
@@ -169,6 +203,7 @@ private:
     int id;
     std::vector<char> data;
     std::vector<char>::iterator ptr;
+    std::vector<char>::iterator mark;
 };
 
 } // namespace comp
