@@ -64,5 +64,12 @@ TEST_F(DiagManagerTest, BuilderCatchesExceptions) {
     EXPECT_NO_THROW(diagMgr.report(DiagId::ScannerInvalidCharacter, SourceLocation()) << 'a';);
 }
 
+TEST_F(DiagManagerTest, Disable) {
+    EXPECT_CALL(mockProcessor, process(::testing::_)).Times(0);
+
+    DisableDiag dd(diagMgr);
+    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+}
+
 } // namespace comp
 } // namespace qore
