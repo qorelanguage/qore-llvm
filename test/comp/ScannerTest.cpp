@@ -63,6 +63,18 @@ TEST_P(ScannerTestNoWs, Run) {
 
 QTIF_TEST_CASE(ScannerTestNoWs, "scanner/nows-");
 
+class ScannerTestDirectiveParam : public qtif::LineTest {
+};
+
+TEST_P(ScannerTestDirectiveParam, Run) {
+    Scanner scanner(diagMgr);
+    while (getSrc().peek() != 0) {
+        output << scanner.readDirectiveParam(getSrc()) << '\n';
+    }
+}
+
+QTIF_TEST_CASE(ScannerTestDirectiveParam, "scanner/dirparam");
+
 TEST(ScannerCoverage, Whitespace) {
     DiagManager diagMgr;
     Scanner scanner(diagMgr);

@@ -33,17 +33,15 @@
 
 #include <unordered_map>
 #include "qore/comp/DiagManager.h"
-#include "qore/comp/IScanner.h"
+#include "qore/comp/Token.h"
 
 namespace qore {
 namespace comp {
 
-//XXX is the IScanner interface needed?
-
 /**
- * \brief Implements the IScanner interface.
+ * \brief Lexical analyzer which converts a stream of source characters into a stream of tokens.
  */
-class Scanner : public IScanner {
+class Scanner {
 
 public:
     /**
@@ -52,7 +50,19 @@ public:
      */
     Scanner(DiagManager &diagMgr);
 
-    Token read(Source &src) override;
+    /**
+     * \brief Reads the next token from the source script.
+     * \param src the source to read characters from
+     * \return the token read from the source
+     */
+    Token read(Source &src);
+
+    /**
+     * \brief Reads a directive parameter - all characters up to a newline skipping any comments.
+     * \param src the source to read characters from
+     * \return  trimmed directive parameter
+     */
+    std::string readDirectiveParam(Source &src);
 
 private:
     TokenType readInternal(Source &src);
@@ -61,6 +71,12 @@ private:
     TokenType readString(Source &src, char type);
     TokenType readLineComment(Source &src);
     TokenType readBlockComment(Source &src);
+
+private:
+    Scanner(const Scanner &) = delete;
+    Scanner(Scanner &&) = delete;
+    Scanner &operator=(const Scanner &) = delete;
+    Scanner &operator=(Scanner &&) = delete;
 
 private:
     DiagManager &diagMgr;

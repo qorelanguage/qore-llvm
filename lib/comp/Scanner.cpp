@@ -30,6 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/Scanner.h"
 #include "qore/common/Logging.h"
+#include "qore/common/Util.h"
 
 /// \cond IGNORED_BY_DOXYGEN
 #define REPORT(diagId)  diagMgr.report(DiagId::diagId, src.getMarkLocation())
@@ -61,6 +62,46 @@ Token Scanner::read(Source &src) {
 
     LOG("Returning token " << type);
     return Token(type, src.getMarkLocation(), src.getMarkedLength());
+}
+
+std::string Scanner::readDirectiveParam(Source &src) {
+    std::string s;
+
+    if (src.peek() != '\0' && !isspace(src.peek())) {
+        //TODO require whitespace between directive name and parameter?
+    }
+
+    while (true) {
+        int c = src.read();
+
+        switch (c) {
+            case '#':
+                readLineComment(src);
+                break;
+            case '/':
+                if (src.peek() == '*') {
+                    readBlockComment(src);
+                    s.push_back(' ');
+                } else {
+                    s.push_back(c);
+                }
+                break;
+            case '\'':
+            case '"':
+                s.push_back(c);
+                src.setMark();
+                readString(src, c);
+                s.append(src.getMarkedString());
+                break;
+            case '\0':
+            case '\r':
+            case '\n':
+                return util::trim<>(s, isspace);
+            default:
+                s.push_back(c);
+                break;
+        }
+    }
 }
 
 TokenType Scanner::readInternal(Source &src) {
@@ -101,7 +142,6 @@ TokenType Scanner::readInternal(Source &src) {
             }
             REPORT(ScannerInvalidCharacter) << c;
             return TokenType::None;
-            break;
         case '"':
         case '\'':
             return readString(src, c);
