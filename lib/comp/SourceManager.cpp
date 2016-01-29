@@ -54,7 +54,7 @@ Source &SourceManager::create(std::string name, std::vector<char> &&data) {
 }
 
 Source &SourceManager::createFromFile(std::string fileName, SourceLocation location) {
-    std::string fullName = includePath + "/" + fileName;
+    std::string fullName = includePath + fileName;
     std::ifstream fileStream(fullName, std::ios::binary);
     std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
     if (!fileStream.good()) {

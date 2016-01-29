@@ -74,12 +74,12 @@ public:
     Source &createFromFile(std::string fileName, SourceLocation location = SourceLocation());
 
     /**
-     * \brief Returns the name of the source with the given id.
+     * \brief Returns the source with the given id.
      * \param id the id of the source
-     * \return the name of the source identified by `id`
+     * \return the source identified by `id`
      */
-    const std::string &getName(int id) const {
-        return sources.at(id)->getName();
+    Source &get(int id) const {
+        return *sources.at(id);
     }
 
 private:

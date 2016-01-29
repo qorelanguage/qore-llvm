@@ -1,6 +1,7 @@
 add_library(comp STATIC
     DiagManager.cpp
     DiagRecord.cpp
+    DirectiveProcessor.cpp
     Scanner.cpp
     Source.cpp
     SourceManager.cpp

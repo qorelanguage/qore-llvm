@@ -23,54 +23,58 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include <sstream>
-#include "gtest/gtest.h"
-#include "qore/comp/SourceManager.h"
-#include "MockDiagProcessor.h"
-
-#define QTIF(a)
-#include "test_files.inc"
-#undef QTIF
+///
+/// \file
+/// \brief Processor of parse directives.
+///
+//------------------------------------------------------------------------------
+#include "qore/comp/DirectiveProcessor.h"
+#include "qore/common/Logging.h"
 
 namespace qore {
 namespace comp {
 
-struct SourceManagerTest : ::testing::Test, DiagManagerHelper {
-    SourceManager mgr{diagMgr, std::string(TEST_INPUT_DIR) + "/"};
+DirectiveProcessor::DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr) : diagMgr(diagMgr), srcMgr(srcMgr),
+    scanner(diagMgr) {
+    LOG_FUNCTION();
+}
 
-    std::string readAll(Source &src) {
-        std::string s;
-        while (true) {
-            int c = src.read();
-            if (c == 0) {
-                return s;
-            }
-            s.push_back(c);
+void DirectiveProcessor::setSource(Source &src) {
+    assert(srcStack.empty());
+    srcStack.push(src);
+}
+
+Token DirectiveProcessor::read() {
+    LOG_FUNCTION();
+    assert(!srcStack.empty());
+    while (true) {
+        Token t = scanner.read(srcStack.top());
+        switch (t.type) {
+            case TokenType::EndOfFile:
+                if (srcStack.size() == 1) {
+                    return t;
+                }
+                srcStack.pop();
+                break;
+            case TokenType::Comment:
+            case TokenType::None:
+            case TokenType::Whitespace:
+                break;
+            case TokenType::PdInclude:
+                processInclude();
+                break;
+            default:
+                return t;
         }
     }
-};
-
-TEST_F(SourceManagerTest, FromString) {
-    Source &src = mgr.createFromString("test", "xyz");
-    EXPECT_EQ("xyz", readAll(src));
-    EXPECT_EQ("test", src.getName());
 }
 
-TEST_F(SourceManagerTest, FromFile) {
-    Source &src = mgr.createFromFile("SourceManagerTest_FromFile");
-    EXPECT_EQ("abc", readAll(src));
-    EXPECT_EQ(std::string(TEST_INPUT_DIR) + "/SourceManagerTest_FromFile", src.getName());
-}
-
-TEST_F(SourceManagerTest, FromFileErr) {
-    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompScriptFileIoError))).Times(1);
-    Source &src = mgr.createFromFile("SourceManagerTest_Nonexistent");
-    EXPECT_EQ(0, src.read());
-}
-
-TEST_F(SourceManagerTest, NullCharWarnings) {
-    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompNulCharactersIgnored))).Times(2);
-    mgr.createFromString("test", std::string("x\0y\0z", 5));
+void DirectiveProcessor::processInclude() {
+    Source &src = srcStack.top();
+    src.setMark();
+    SourceLocation l = src.getMarkLocation();   //TODO location
+    std::string p = scanner.readDirectiveParam(src);
+    srcStack.push(srcMgr.createFromFile(p, l));
 }
 
 } // namespace comp

@@ -23,55 +23,42 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include <sstream>
-#include "gtest/gtest.h"
-#include "qore/comp/SourceManager.h"
-#include "MockDiagProcessor.h"
+///
+/// \file
+/// \brief Processor of parse directives.
+///
+//------------------------------------------------------------------------------
+#ifndef INCLUDE_QORE_COMP_DIRECTIVEPROCESSOR_H_
+#define INCLUDE_QORE_COMP_DIRECTIVEPROCESSOR_H_
 
-#define QTIF(a)
-#include "test_files.inc"
-#undef QTIF
+#include <stack>
+#include <functional>
+#include "qore/comp/DiagManager.h"
+#include "qore/comp/Scanner.h"
+#include "qore/comp/SourceManager.h"
 
 namespace qore {
 namespace comp {
 
-struct SourceManagerTest : ::testing::Test, DiagManagerHelper {
-    SourceManager mgr{diagMgr, std::string(TEST_INPUT_DIR) + "/"};
+class DirectiveProcessor {
 
-    std::string readAll(Source &src) {
-        std::string s;
-        while (true) {
-            int c = src.read();
-            if (c == 0) {
-                return s;
-            }
-            s.push_back(c);
-        }
-    }
+public:
+    DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr);
+
+    void setSource(Source &src);
+    Token read();
+
+private:
+    void processInclude();
+
+private:
+    DiagManager &diagMgr;
+    SourceManager &srcMgr;
+    Scanner scanner;
+    std::stack<std::reference_wrapper<Source>> srcStack;
 };
-
-TEST_F(SourceManagerTest, FromString) {
-    Source &src = mgr.createFromString("test", "xyz");
-    EXPECT_EQ("xyz", readAll(src));
-    EXPECT_EQ("test", src.getName());
-}
-
-TEST_F(SourceManagerTest, FromFile) {
-    Source &src = mgr.createFromFile("SourceManagerTest_FromFile");
-    EXPECT_EQ("abc", readAll(src));
-    EXPECT_EQ(std::string(TEST_INPUT_DIR) + "/SourceManagerTest_FromFile", src.getName());
-}
-
-TEST_F(SourceManagerTest, FromFileErr) {
-    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompScriptFileIoError))).Times(1);
-    Source &src = mgr.createFromFile("SourceManagerTest_Nonexistent");
-    EXPECT_EQ(0, src.read());
-}
-
-TEST_F(SourceManagerTest, NullCharWarnings) {
-    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompNulCharactersIgnored))).Times(2);
-    mgr.createFromString("test", std::string("x\0y\0z", 5));
-}
 
 } // namespace comp
 } // namespace qore
+
+#endif // INCLUDE_QORE_COMP_DIRECTIVEPROCESSOR_H_
