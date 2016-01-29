@@ -23,46 +23,57 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Scanner implementation.
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SCANNER_H_
-#define INCLUDE_QORE_COMP_SCANNER_H_
-
-#include <unordered_map>
-#include "qore/comp/DiagManager.h"
-#include "qore/comp/IScanner.h"
+#include "../Qtif.h"
+#include "qore/comp/Scanner.h"
 
 namespace qore {
 namespace comp {
 
-/**
- * \brief Implements the IScanner interface.
- */
-class Scanner : public IScanner {
-
-public:
-    /**
-     * \brief Constructs the scanner.
-     * \param diagMgr used for reporting diagnostic messages
-     */
-    Scanner(DiagManager &diagMgr);
-
-    Token read(Source &src) override;
-
-private:
-    TokenType readInternal(Source &src);
-    TokenType readIdentifier(Source &src);
-
-private:
-    DiagManager &diagMgr;
-
-    static const std::unordered_map<std::string, TokenType> Keywords;
+class ScannerTest : public qtif::LineTest {
 };
 
-} //namespace comp
-} //namespace qore
+TEST_P(ScannerTest, Run) {
+    Scanner scanner(diagMgr);
+    while (true) {
+        Token token = scanner.read(getSrc());
+        output << token.type << token.location << ':' << token.length << '\n';
+        if (token.type == TokenType::EndOfFile) {
+            break;
+        }
+    }
+}
 
-#endif /* INCLUDE_QORE_COMP_SCANNER_H_ */
+QTIF_TEST_CASE(ScannerTest, "scanner/detail");
+
+class ScannerTestNoWs : public qtif::LineTest {
+};
+
+TEST_P(ScannerTestNoWs, Run) {
+    Scanner scanner(diagMgr);
+    while (true) {
+        Token token = scanner.read(getSrc());
+        if (token.type != TokenType::None && token.type != TokenType::Whitespace) {
+            output << token.type << token.location << ':' << token.length << '\n';
+        }
+        if (token.type == TokenType::EndOfFile) {
+            break;
+        }
+    }
+}
+
+QTIF_TEST_CASE(ScannerTestNoWs, "scanner/nows-");
+
+TEST(ScannerCoverage, Whitespace) {
+    DiagManager diagMgr;
+    Scanner scanner(diagMgr);
+    std::string str = "\n\r\f\v \t";
+    Source src("", 1, std::vector<char>(str.begin(), str.end()));
+
+    Token t = scanner.read(src);
+    EXPECT_EQ(TokenType::Whitespace, t.type);
+    EXPECT_EQ(6, t.length);
+    EXPECT_EQ(TokenType::EndOfFile, scanner.read(src).type);
+}
+
+} // namespace comp
+} // namespace qore

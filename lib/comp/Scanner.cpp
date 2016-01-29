@@ -38,6 +38,16 @@
 namespace qore {
 namespace comp {
 
+const std::unordered_map<std::string, TokenType> Scanner::Keywords{
+    { "catch",          TokenType::KwCatch },
+    { "else",           TokenType::KwElse },
+    { "if",             TokenType::KwIf },
+    { "my",             TokenType::KwMy },
+    { "print",          TokenType::KwPrint },
+    { "trim",           TokenType::KwTrim },
+    { "try",            TokenType::KwTry },
+};
+
 Scanner::Scanner(DiagManager &diagMgr) : diagMgr(diagMgr) {
     LOG_FUNCTION();
 }
@@ -49,20 +59,19 @@ Token Scanner::read(Source &src) {
     TokenType type = readInternal(src);
 
     LOG("Returning token " << type);
-    return Token{type, src.getMarkLocation(), src.getMarkedLength()};
+    return Token(type, src.getMarkLocation(), src.getMarkedLength());
 }
 
 TokenType Scanner::readInternal(Source &src) {
     LOG_FUNCTION();
     switch (char c = src.read()) {
         case '\0':
-            src.unread();
             return TokenType::EndOfFile;
         case ' ':   case '\t':  case '\n':  case '\v':  case '\f':  case '\r':
             while (isspace(src.peek())) {
                 src.read();
             }
-            return TokenType::WhiteSpace;
+            return TokenType::Whitespace;
         case '+':
             return TokenType::Plus;
         case ';':
@@ -100,30 +109,12 @@ TokenType Scanner::readInternal(Source &src) {
     }
 }
 
-TokenType Scanner::readIdentifier(Source &src, ) {
+TokenType Scanner::readIdentifier(Source &src) {
     while (isalnum(src.peek()) || src.peek() == '_') {
         src.read();
     }
-
-    std::string s = src.getMarkedString();
-
-    //FIXME use something better
-    if (s == "catch") {
-        return TokenType::KwCatch;
-    } else if (s == "else") {
-        return TokenType::KwElse;
-    } else if (s == "if") {
-        return TokenType::KwIf;
-    } else if (s == "my") {
-        return TokenType::KwMy;
-    } else if (s == "print") {
-        return TokenType::KwPrint;
-    } else if (s == "trim") {
-        return TokenType::KwTrim;
-    } else if (s == "try") {
-        return TokenType::KwTry;
-    }
-    return TokenType::Identifier;
+    auto it = Keywords.find(src.getMarkedString());
+    return it == Keywords.end() ? TokenType::Identifier : it->second;
 }
 
 } //namespace comp

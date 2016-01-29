@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 
 TOK(EndOfFile)
-TOK(WhiteSpace)
+TOK(Whitespace)
 TOK(Comment)
 TOK(KwCatch)
 TOK(KwElse)

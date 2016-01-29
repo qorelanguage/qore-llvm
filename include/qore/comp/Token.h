@@ -63,9 +63,24 @@ std::ostream &operator<<(std::ostream &o, TokenType tokenType);
  * \brief Describes a token (lexical element).
  */
 struct Token {
-    TokenType type = TokenType::None;   //!< The type of the token.
+    TokenType type;                     //!< The type of the token.
     SourceLocation location;            //!< Location of the token in the source code.
-    int length = 0;                     //!< Length of the token in characters.
+    int length;                         //!< Length of the token in characters.
+
+    /**
+     * \brief Default constructor.
+     */
+    Token() : type(TokenType::None), length(0) {
+    }
+
+    /**
+     * \brief Constructs a token.
+     * \param type the type of the token
+     * \param location the location of the token
+     * \param length the length of the token.
+     */
+    Token(TokenType type, SourceLocation location, int length) : type(type), location(location), length(length) {
+    }
 };
 
 } //namespace comp
