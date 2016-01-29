@@ -173,7 +173,7 @@ public:
      * \return the marked location
      */
     SourceLocation getMarkLocation() const {
-        return SourceLocation(getId(), mark - data.begin());
+        return SourceLocation(getId(), static_cast<int>(mark - data.begin()));
     }
 
     /**
@@ -189,7 +189,7 @@ public:
      * \return the length of the substring from the mark up to the current location
      */
     int getMarkedLength() const {
-        return ptr - mark;
+        return static_cast<int>(ptr - mark);
     }
 
 private:

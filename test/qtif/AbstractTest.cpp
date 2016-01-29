@@ -50,6 +50,15 @@ std::vector<char> AbstractTest::readFile(const std::string &fileName) {
     if (!fileStream) {
         throw Exception("unable to read input file", 1);
     }
+    for (auto it = data.begin(); it != data.end(); ++it) {
+        if (*it == '\r') {
+            if (it + 1 != data.end() && *(it + 1) == '\n') {
+                data.erase(--it + 1);
+            } else {
+                *it = '\n';
+            }
+        }
+    }
     return data;
 }
 
@@ -60,8 +69,7 @@ int AbstractTest::findSeparator(Reader &reader) {
     while (!reader.eof()) {
         if (reader.read() == separator[posInPattern]) {
             if (++posInPattern == separator.length()) {
-                int patternPos = reader.getPos() - separator.length();
-                reader.skipIf('\r');
+                int patternPos = static_cast<int>(reader.getPos() - separator.length());
                 reader.skipIf('\n');
                 return patternPos;
             }

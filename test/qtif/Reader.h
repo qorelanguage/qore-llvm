@@ -59,7 +59,7 @@ public:
     }
 
     int getPos() const {
-        return it - begin;
+        return static_cast<int>(it - begin);
     }
 
     void skipIf(int c) {
