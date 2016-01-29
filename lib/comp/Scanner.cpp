@@ -93,9 +93,10 @@ TokenType Scanner::readInternal(Source &src) {
             }
             REPORT(ScannerInvalidCharacter) << c;
             return TokenType::None;
-
-/*        case '"':
-            return readString(token);
+        case '"':
+        case '\'':
+            return readString(src, c);
+/*
         case '0':   case '1':   case '2':   case '3':   case '4':
         case '5':   case '6':   case '7':   case '8':   case '9':
             return readInteger(token);*/
@@ -135,6 +136,22 @@ TokenType Scanner::readParseDirective(Source &src) {
     }
     REPORT(PdpUnknownDirective) << src.getMarkedString();
     return TokenType::None;
+}
+
+TokenType Scanner::readString(Source &src, char type) {
+    bool escape = false;
+    while (true) {
+        char c = src.read();
+        if (c == '\0') {
+            REPORT(ScannerUnendedStringLiteral);
+            break;
+        }
+        if (c == type && !escape) {
+            break;
+        }
+        escape = c == '\\' && type == '"' && !escape;
+    }
+    return TokenType::String;
 }
 
 } //namespace comp

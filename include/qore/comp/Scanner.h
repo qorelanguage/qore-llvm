@@ -58,6 +58,7 @@ private:
     TokenType readInternal(Source &src);
     TokenType readIdentifier(Source &src);
     TokenType readParseDirective(Source &src);
+    TokenType readString(Source &src, char type);
 
 private:
     DiagManager &diagMgr;
