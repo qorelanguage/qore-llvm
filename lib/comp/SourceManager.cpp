@@ -23,39 +23,45 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "gtest/gtest.h"
-#include "MockDiagProcessor.h"
-#include "qore/comp/DiagManager.h"
+///
+/// \file
+/// \brief Management of script sources.
+///
+//------------------------------------------------------------------------------
+#include "qore/comp/SourceManager.h"
+#include <fstream>
+#include <iostream>
 
 namespace qore {
 namespace comp {
 
-struct DiagManagerTest : ::testing::Test, DiagManagerHelper {
-};
+Source &SourceManager::create(std::string name, std::vector<char> &&data) {
+    std::vector<int> nulls;
 
-TEST_F(DiagManagerTest, Report) {
-    DiagRecord record;
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::SaveArg<0>(&record));
+    for (auto it = std::find(data.begin(), data.end(), 0); it != data.end(); it = std::find(it, data.end(), 0)) {
+        nulls.push_back(static_cast<int>(it - data.begin()));
+        *it = ' ';
+    }
 
-    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+    int id = sources.size();
+    sources.emplace_back(new Source(std::move(name), id, std::move(data)));
 
-    EXPECT_EQ(DiagId::ParserUnexpectedToken, record.id);
-    EXPECT_STREQ("PARSE-EXCEPTION", record.code);
-    EXPECT_EQ("syntax error, unexpected a, expecting xyz", record.message);
-    EXPECT_EQ(DiagLevel::Error, record.level);
+    for (int offset : nulls) {
+        diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(id, offset));
+    }
+
+    return *sources.back();
 }
 
-TEST_F(DiagManagerTest, BuilderCatchesExceptions) {
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::Throw(std::exception()));
-
-    EXPECT_NO_THROW(diagMgr.report(DiagId::ScannerInvalidCharacter, SourceLocation()) << 'a';);
-}
-
-TEST_F(DiagManagerTest, Disable) {
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).Times(0);
-
-    DisableDiag dd(diagMgr);
-    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+Source &SourceManager::createFromFile(std::string fileName, SourceLocation location) {
+    std::string fullName = includePath + "/" + fileName;
+    std::ifstream fileStream(fullName, std::ios::binary);
+    std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
+    if (!fileStream.good()) {
+        diagMgr.report(DiagId::CompScriptFileIoError, location) << fullName;
+        data.clear();
+    }
+    return create(std::move(fullName), std::move(data));
 }
 
 } // namespace comp

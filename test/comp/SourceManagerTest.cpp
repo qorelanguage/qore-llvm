@@ -23,39 +23,54 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
+#include <sstream>
 #include "gtest/gtest.h"
+#include "qore/comp/SourceManager.h"
 #include "MockDiagProcessor.h"
-#include "qore/comp/DiagManager.h"
+
+#define QTIF(a)
+#include "test_files.inc"
+#undef QTIF
 
 namespace qore {
 namespace comp {
 
-struct DiagManagerTest : ::testing::Test, DiagManagerHelper {
+struct SourceManagerTest : ::testing::Test, DiagManagerHelper {
+    SourceManager mgr{diagMgr, TEST_INPUT_DIR};
+
+    std::string readAll(Source &src) {
+        std::string s;
+        while (true) {
+            int c = src.read();
+            if (c == 0) {
+                return s;
+            }
+            s.push_back(c);
+        }
+    }
 };
 
-TEST_F(DiagManagerTest, Report) {
-    DiagRecord record;
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::SaveArg<0>(&record));
-
-    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
-
-    EXPECT_EQ(DiagId::ParserUnexpectedToken, record.id);
-    EXPECT_STREQ("PARSE-EXCEPTION", record.code);
-    EXPECT_EQ("syntax error, unexpected a, expecting xyz", record.message);
-    EXPECT_EQ(DiagLevel::Error, record.level);
+TEST_F(SourceManagerTest, FromString) {
+    Source &src = mgr.createFromString("test", "xyz");
+    EXPECT_EQ("xyz", readAll(src));
+    EXPECT_EQ("test", src.getName());
 }
 
-TEST_F(DiagManagerTest, BuilderCatchesExceptions) {
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::Throw(std::exception()));
-
-    EXPECT_NO_THROW(diagMgr.report(DiagId::ScannerInvalidCharacter, SourceLocation()) << 'a';);
+TEST_F(SourceManagerTest, FromFile) {
+    Source &src = mgr.createFromFile("SourceManagerTest_FromFile");
+    EXPECT_EQ("abc", readAll(src));
+    EXPECT_EQ(std::string(TEST_INPUT_DIR) + "/SourceManagerTest_FromFile", src.getName());
 }
 
-TEST_F(DiagManagerTest, Disable) {
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).Times(0);
+TEST_F(SourceManagerTest, FromFileErr) {
+    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompScriptFileIoError))).Times(1);
+    Source &src = mgr.createFromFile("SourceManagerTest_Nonexistent");
+    EXPECT_EQ(0, src.read());
+}
 
-    DisableDiag dd(diagMgr);
-    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+TEST_F(SourceManagerTest, NullCharWarnings) {
+    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompNulCharactersIgnored))).Times(2);
+    mgr.createFromString("test", std::string("x\0y\0z", 5));
 }
 
 } // namespace comp

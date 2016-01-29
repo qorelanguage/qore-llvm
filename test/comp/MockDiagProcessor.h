@@ -23,40 +23,38 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "gtest/gtest.h"
-#include "MockDiagProcessor.h"
+///
+/// \file
+/// \brief Mock for IDiagProcessor.
+///
+//------------------------------------------------------------------------------
+#ifndef TEST_COMP_MOCKDIAGPROCESSOR_H_
+#define TEST_COMP_MOCKDIAGPROCESSOR_H_
+
+#include "gmock/gmock.h"
 #include "qore/comp/DiagManager.h"
 
 namespace qore {
 namespace comp {
 
-struct DiagManagerTest : ::testing::Test, DiagManagerHelper {
+class MockDiagProcessor : public IDiagProcessor {
+public:
+    MOCK_METHOD1(process, void(DiagRecord &));
 };
 
-TEST_F(DiagManagerTest, Report) {
-    DiagRecord record;
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::SaveArg<0>(&record));
+struct DiagManagerHelper {
+    DiagManagerHelper() {
+        diagMgr.addProcessor(&mockDiagProcessor);
+    }
+    DiagManager diagMgr;
+    MockDiagProcessor mockDiagProcessor;
+};
 
-    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
-
-    EXPECT_EQ(DiagId::ParserUnexpectedToken, record.id);
-    EXPECT_STREQ("PARSE-EXCEPTION", record.code);
-    EXPECT_EQ("syntax error, unexpected a, expecting xyz", record.message);
-    EXPECT_EQ(DiagLevel::Error, record.level);
-}
-
-TEST_F(DiagManagerTest, BuilderCatchesExceptions) {
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::Throw(std::exception()));
-
-    EXPECT_NO_THROW(diagMgr.report(DiagId::ScannerInvalidCharacter, SourceLocation()) << 'a';);
-}
-
-TEST_F(DiagManagerTest, Disable) {
-    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).Times(0);
-
-    DisableDiag dd(diagMgr);
-    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+MATCHER_P(MatchDiagRecordId, expectedDiagId, "") {
+    return arg.id == expectedDiagId;
 }
 
 } // namespace comp
 } // namespace qore
+
+#endif // TEST_COMP_MOCKDIAGPROCESSOR_H_

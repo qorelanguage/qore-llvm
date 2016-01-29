@@ -3,6 +3,7 @@ add_library(comp STATIC
     DiagRecord.cpp
     Scanner.cpp
     Source.cpp
+    SourceManager.cpp
     Token.cpp
 )
 

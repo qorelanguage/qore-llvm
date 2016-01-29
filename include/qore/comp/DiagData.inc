@@ -24,6 +24,11 @@
 //
 //------------------------------------------------------------------------------
 
+DIAG(CompScriptFileIoError,                     "PARSE-EXCEPTION", Error,
+        "error reading file %s")
+DIAG(CompNulCharactersIgnored,                  "PARSE-WARNING", Warning,
+        "null character(s) ignored")
+
 DIAG(PdpUnendedBlockComment,                    "PARSE-EXCEPTION", Error,
         "open block comment at the end of file")
 DIAG(PdpUnknownDirective,                       "PARSE-EXCEPTION", Error,
