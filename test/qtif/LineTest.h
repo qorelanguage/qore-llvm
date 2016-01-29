@@ -41,6 +41,12 @@ public:
     LineTestOutput &operator<<(const std::string &str);
     LineTestOutput &operator<<(int i);
     LineTestOutput &operator<<(const qore::comp::SourceLocation &loc);
+
+    template<typename T>
+    LineTestOutput &operator<<(const T &t) {
+        return *this << static_cast<std::ostringstream&>(std::ostringstream().flush() << t).str();
+    }
+
     void flush();
 
 private:
@@ -80,20 +86,24 @@ class LineTest : public AbstractTest {
 public:
     LineTest();
     ~LineTest();
+    void SetUp() override;
     void verify() override;
     void parseExpectations(Reader &reader) override;
     void processOutput(const std::string &str);
     void processDiag(qore::comp::DiagRecord &record);
+    qore::comp::Source &getSrc() {
+        return *source;
+    }
 
 protected:
     qore::comp::DiagManager diagMgr;
-//    qore::comp::SourceManager srcMgr;
     LineTestOutput output;
     LineTestDiagProcessor diagProcessor;
 
 private:
     std::vector<std::unique_ptr<class Expectation>> expected;
     std::vector<std::unique_ptr<class Expectation>>::iterator current;
+    std::unique_ptr<qore::comp::Source> source;
 };
 
 } // namespace qtif

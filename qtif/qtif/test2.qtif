@@ -23,7 +23,7 @@ abc
 #$$comment with a dollar
 #$#              lines starting with #$~ use regex for matching:
 #$~[0-9][a-z]*[0-9]$
-#$#              lines starting with #$! expect a diagnostic message the format is 
+#$#              lines starting with #$! expect a diagnostic message, the format is 
 #$#                      #$!ID[@LINE[:COL]][-MSG] 
 #$#              where:
 #$#               - ID is mandatory DiagId
@@ -33,7 +33,7 @@ abc
 #$#              there is currently no way to check code (e.g. PARSE-EXCEPTION) or level (error/warning)
 #$#              since they are defined by DiagId
 #$#              The example below expects that a ScannerInvalidCharacter error with the word 'underscore' in
-#$#              the message eill be reported during before matching the next line:
+#$#              the message will be reported during matching the next line:
 #$!ScannerInvalidCharacter-underscore
 produces error
 #$#

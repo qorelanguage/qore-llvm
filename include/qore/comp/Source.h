@@ -192,6 +192,14 @@ public:
         return static_cast<int>(ptr - mark);
     }
 
+    /**
+     * \brief Converts an offset in the source into a (line, column) pair.
+     * \param offset in the source
+     * \param tabSize size of horizontal tab
+     * \return a (line, column) pair corresponding to the offset or (0, 0) if `offset` is out of bounds
+     */
+    std::pair<int, int> decodeLocation(int offset, int tabSize = 4);
+
 private:
     Source(const Source &) = delete;
     Source(Source &&) = delete;

@@ -124,5 +124,62 @@ TEST_F(SourceTest, getMarkedLength) {
     EXPECT_EQ(3, src.getMarkedLength());
 }
 
+TEST_F(SourceTest, decodeLocation) {
+    EXPECT_EQ(std::make_pair(0, 0), src.decodeLocation(-1));
+    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0));
+    EXPECT_EQ(std::make_pair(1, 2), src.decodeLocation(1));
+    EXPECT_EQ(std::make_pair(1, 3), src.decodeLocation(2));
+    EXPECT_EQ(std::make_pair(2, 1), src.decodeLocation(3));
+    EXPECT_EQ(std::make_pair(2, 2), src.decodeLocation(4));
+    EXPECT_EQ(std::make_pair(2, 3), src.decodeLocation(5));
+    EXPECT_EQ(std::make_pair(0, 0), src.decodeLocation(6));
+}
+
+TEST_F(SourceTest, decodeLocationNewLines) {
+    std::string str{"a\r\nc\nd\re"};
+    Source src{"abc", 123, std::vector<char>(str.begin(), str.end())};
+
+    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0));
+    EXPECT_EQ(std::make_pair(1, 2), src.decodeLocation(1));
+    EXPECT_EQ(std::make_pair(1, 3), src.decodeLocation(2));
+    EXPECT_EQ(std::make_pair(2, 1), src.decodeLocation(3));
+    EXPECT_EQ(std::make_pair(2, 2), src.decodeLocation(4));
+    EXPECT_EQ(std::make_pair(3, 1), src.decodeLocation(5));
+    EXPECT_EQ(std::make_pair(3, 2), src.decodeLocation(6));
+    EXPECT_EQ(std::make_pair(4, 1), src.decodeLocation(7));
+    EXPECT_EQ(std::make_pair(4, 2), src.decodeLocation(8));
+}
+
+TEST_F(SourceTest, decodeLocationTabs) {
+    std::string str{"\ta\taa\taaa\taaaa\ta"};
+    Source src{"abc", 123, std::vector<char>(str.begin(), str.end())};
+
+    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0));
+    EXPECT_EQ(std::make_pair(1, 5), src.decodeLocation(1));
+    EXPECT_EQ(std::make_pair(1, 6), src.decodeLocation(2));
+    EXPECT_EQ(std::make_pair(1, 9), src.decodeLocation(3));
+    EXPECT_EQ(std::make_pair(1, 10), src.decodeLocation(4));
+    EXPECT_EQ(std::make_pair(1, 11), src.decodeLocation(5));
+    EXPECT_EQ(std::make_pair(1, 13), src.decodeLocation(6));
+    EXPECT_EQ(std::make_pair(1, 14), src.decodeLocation(7));
+    EXPECT_EQ(std::make_pair(1, 15), src.decodeLocation(8));
+    EXPECT_EQ(std::make_pair(1, 16), src.decodeLocation(9));
+    EXPECT_EQ(std::make_pair(1, 17), src.decodeLocation(10));
+    EXPECT_EQ(std::make_pair(1, 18), src.decodeLocation(11));
+    EXPECT_EQ(std::make_pair(1, 19), src.decodeLocation(12));
+    EXPECT_EQ(std::make_pair(1, 20), src.decodeLocation(13));
+    EXPECT_EQ(std::make_pair(1, 21), src.decodeLocation(14));
+    EXPECT_EQ(std::make_pair(1, 25), src.decodeLocation(15));
+    EXPECT_EQ(std::make_pair(1, 26), src.decodeLocation(16));
+
+    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0, 2));
+    EXPECT_EQ(std::make_pair(1, 3), src.decodeLocation(1, 2));
+    EXPECT_EQ(std::make_pair(1, 4), src.decodeLocation(2, 2));
+    EXPECT_EQ(std::make_pair(1, 5), src.decodeLocation(3, 2));
+    EXPECT_EQ(std::make_pair(1, 6), src.decodeLocation(4, 2));
+    EXPECT_EQ(std::make_pair(1, 7), src.decodeLocation(5, 2));
+    EXPECT_EQ(std::make_pair(1, 9), src.decodeLocation(6, 2));
+}
+
 } // namespace comp
 } // namespace qore
