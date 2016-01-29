@@ -38,7 +38,7 @@
 namespace qore {
 namespace comp {
 
-const std::unordered_map<std::string, TokenType> Scanner::Keywords{
+const std::unordered_map<std::string, TokenType> Scanner::KeywordsAndDirectives{
     { "catch",          TokenType::KwCatch },
     { "else",           TokenType::KwElse },
     { "if",             TokenType::KwIf },
@@ -46,6 +46,7 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "print",          TokenType::KwPrint },
     { "trim",           TokenType::KwTrim },
     { "try",            TokenType::KwTry },
+    { "%include",       TokenType::PdInclude },
 };
 
 Scanner::Scanner(DiagManager &diagMgr) : diagMgr(diagMgr) {
@@ -86,6 +87,13 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::ParenRight;
         case '=':
             return TokenType::Assign;
+        case '%':
+            if (src.wasFirstOnLine()) {
+                return readParseDirective(src);
+            }
+            REPORT(ScannerInvalidCharacter) << c;
+            return TokenType::None;
+
 /*        case '"':
             return readString(token);
         case '0':   case '1':   case '2':   case '3':   case '4':
@@ -113,8 +121,20 @@ TokenType Scanner::readIdentifier(Source &src) {
     while (isalnum(src.peek()) || src.peek() == '_') {
         src.read();
     }
-    auto it = Keywords.find(src.getMarkedString());
-    return it == Keywords.end() ? TokenType::Identifier : it->second;
+    auto it = KeywordsAndDirectives.find(src.getMarkedString());
+    return it == KeywordsAndDirectives.end() ? TokenType::Identifier : it->second;
+}
+
+TokenType Scanner::readParseDirective(Source &src) {
+    while (isalnum(src.peek()) || src.peek() == '-') {
+        src.read();
+    }
+    auto it = KeywordsAndDirectives.find(src.getMarkedString());
+    if (it != KeywordsAndDirectives.end()) {
+        return it->second;
+    }
+    REPORT(PdpUnknownDirective) << src.getMarkedString();
+    return TokenType::None;
 }
 
 } //namespace comp

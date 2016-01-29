@@ -38,6 +38,8 @@
 namespace qore {
 namespace comp {
 
+//XXX is the IScanner interface needed?
+
 /**
  * \brief Implements the IScanner interface.
  */
@@ -55,11 +57,12 @@ public:
 private:
     TokenType readInternal(Source &src);
     TokenType readIdentifier(Source &src);
+    TokenType readParseDirective(Source &src);
 
 private:
     DiagManager &diagMgr;
 
-    static const std::unordered_map<std::string, TokenType> Keywords;
+    static const std::unordered_map<std::string, TokenType> KeywordsAndDirectives;
 };
 
 } //namespace comp

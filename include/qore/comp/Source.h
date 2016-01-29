@@ -149,15 +149,18 @@ public:
     }
 
     /**
-     * \brief Returns `true` if the next character to be read is the first character on its line.
+     * \brief Returns `true` if the last character read is the first character on its line.
      *
-     * \return `true` if the next character to be read is the first character on its line
+     * The behavior is undefined if no characters were read from the source.
+     * \return `true` if the last character read is the first character on its line
      */
-    bool isFirstOnLine() const {
-        if (ptr == data.begin()) {
+    bool wasFirstOnLine() const {
+        assert(ptr != data.begin());
+        auto p = ptr - 1;
+        if (p == data.begin()) {
             return true;
         }
-        auto p = ptr - 1;
+        --p;
         return *p == '\n' || *p == '\r';
     }
 

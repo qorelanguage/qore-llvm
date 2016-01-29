@@ -32,7 +32,7 @@ DIAG(CompNulCharactersIgnored,                  "PARSE-WARNING", Warning,
 DIAG(PdpUnendedBlockComment,                    "PARSE-EXCEPTION", Error,
         "open block comment at the end of file")
 DIAG(PdpUnknownDirective,                       "PARSE-EXCEPTION", Error,
-        "unknown parse directive %%s")
+        "unknown parse directive %s")
 DIAG(PdpUnexpectedArgument,                     "PARSE-EXCEPTION", Error,
         "unexpected argument of parse directive %%s")
 DIAG(PdpMissingArgument,                        "PARSE-EXCEPTION", Error,

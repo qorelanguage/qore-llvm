@@ -81,18 +81,18 @@ TEST_F(SourceTest, eof) {
 }
 
 TEST_F(SourceTest, isFirstOnLine) {
-    EXPECT_TRUE(src.isFirstOnLine());
     src.read();
-    EXPECT_FALSE(src.isFirstOnLine());
+    EXPECT_TRUE(src.wasFirstOnLine());
     src.read();
-    EXPECT_FALSE(src.isFirstOnLine());
+    EXPECT_FALSE(src.wasFirstOnLine());
     src.read();
-    EXPECT_TRUE(src.isFirstOnLine());
+    EXPECT_FALSE(src.wasFirstOnLine());
     src.read();
-    EXPECT_FALSE(src.isFirstOnLine());
+    EXPECT_TRUE(src.wasFirstOnLine());
     src.read();
-    EXPECT_FALSE(src.isFirstOnLine());
+    EXPECT_FALSE(src.wasFirstOnLine());
     src.read();
+    EXPECT_FALSE(src.wasFirstOnLine());
 }
 
 TEST_F(SourceTest, getMarkLocation) {

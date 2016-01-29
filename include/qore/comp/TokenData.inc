@@ -27,6 +27,7 @@
 TOK(EndOfFile)
 TOK(Whitespace)
 TOK(Comment)
+TOK(PdInclude)
 TOK(KwCatch)
 TOK(KwElse)
 TOK(KwIf)
