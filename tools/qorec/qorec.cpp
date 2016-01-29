@@ -19,7 +19,7 @@ public:
      * \brief Constructs the instance.
      * \param srcMgr used for decoding source locations
      */
-    DiagPrinter(const SourceManager &srcMgr) : srcMgr(srcMgr) {
+    explicit DiagPrinter(const SourceManager &srcMgr) : srcMgr(srcMgr) {
     }
 
     void process(DiagRecord &record) override {

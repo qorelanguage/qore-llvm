@@ -48,7 +48,7 @@ public:
      * \brief Constructs the scanner.
      * \param diagMgr used for reporting diagnostic messages
      */
-    Scanner(DiagManager &diagMgr);
+    explicit Scanner(DiagManager &diagMgr);
 
     /**
      * \brief Reads the next token from the source script.
