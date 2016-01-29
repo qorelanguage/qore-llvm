@@ -59,6 +59,8 @@ private:
     TokenType readIdentifier(Source &src);
     TokenType readParseDirective(Source &src);
     TokenType readString(Source &src, char type);
+    TokenType readLineComment(Source &src);
+    TokenType readBlockComment(Source &src);
 
 private:
     DiagManager &diagMgr;

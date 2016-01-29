@@ -1,0 +1,30 @@
+D/*********/F
+G/*///////*/I
+A/*X
+Y*/B
+"This is /* not a comment
+and neither \" /* is this"
+'This is still /* not a comment
+but \' /* this is
+a comment */
+Quote /* in a comment " has no meaning,
+so this ends the comment: */
+/*
+#$$$
+Identifier@1:1:1
+Comment@1:2:11
+Identifier@1:13:1
+Identifier@2:1:1
+Comment@2:2:11
+Identifier@2:13:1
+Identifier@3:1:1
+Comment@3:2:7
+Identifier@4:4:1
+String@5:1:52
+String@7:1:38
+Comment@8:8:23
+Identifier@10:1:5
+Comment@10:7:62
+#$!PdpUnendedBlockComment@12:1
+Comment@12:1:3
+EndOfFile@13:1:0

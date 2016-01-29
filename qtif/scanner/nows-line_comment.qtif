@@ -1,0 +1,13 @@
+"This is # not a comment
+and neither \" # is this"
+'This is still # not a comment
+but \' # this is'
+aaa # comment
+#bbb#$$$
+String@1:1:50
+String@3:1:37
+Comment@4:8:10
+Identifier@5:1:3
+Comment@5:5:9
+Comment@6:1:4
+EndOfFile@6:5:0

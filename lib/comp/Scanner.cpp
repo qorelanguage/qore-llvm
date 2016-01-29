@@ -93,6 +93,15 @@ TokenType Scanner::readInternal(Source &src) {
             }
             REPORT(ScannerInvalidCharacter) << c;
             return TokenType::None;
+        case '#':
+            return readLineComment(src);
+        case '/':
+            if (src.peek() == '*') {
+                return readBlockComment(src);
+            }
+            REPORT(ScannerInvalidCharacter) << c;
+            return TokenType::None;
+            break;
         case '"':
         case '\'':
             return readString(src, c);
@@ -152,6 +161,29 @@ TokenType Scanner::readString(Source &src, char type) {
         escape = c == '\\' && type == '"' && !escape;
     }
     return TokenType::String;
+}
+
+TokenType Scanner::readLineComment(Source &src) {
+    while (src.peek() != '\r' && src.peek() != '\n' && src.peek() != '\0') {
+        src.read();
+    }
+    return TokenType::Comment;
+}
+
+TokenType Scanner::readBlockComment(Source &src) {
+    src.read();         //consume opening asterisk
+    bool asterisk = false;
+    while (true) {
+        int c = src.read();
+        if (c == '\0') {
+            REPORT(PdpUnendedBlockComment);
+            return TokenType::Comment;
+        }
+        if (c == '/' && asterisk) {
+            return TokenType::Comment;
+        }
+        asterisk = c == '*';
+    }
 }
 
 } //namespace comp
