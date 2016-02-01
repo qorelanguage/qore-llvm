@@ -1,6 +1,5 @@
 #include <iostream>
 #include "qore/common/Logging.h"
-#include "qore/comp/DiagManager.h"
 #include "qore/comp/DirectiveProcessor.h"
 #if QORE_USE_LLVM
 #include "llvm/IR/LLVMContext.h"

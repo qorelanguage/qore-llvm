@@ -33,6 +33,7 @@
 
 #include <unordered_map>
 #include "qore/comp/DiagManager.h"
+#include "qore/comp/Source.h"
 #include "qore/comp/Token.h"
 
 namespace qore {

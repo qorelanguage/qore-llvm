@@ -35,36 +35,10 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include "qore/comp/SourceLocation.h"
 
 namespace qore {
 namespace comp {
-
-/**
- * \brief Represents a location in the source code.
- */
-struct SourceLocation {
-
-public:
-    int sourceId;           //!< Id of the source.
-    int offset;             //!< Offset in the source.
-
-public:
-    /**
-     * \brief Constructs an empty location instance.
-     *
-     * The instance should be filled in later using copy assignment.
-     */
-    SourceLocation() : sourceId(-1), offset(-1) {
-    }
-
-    /**
-     * \brief Constructs a location with given parameters.
-     * \param sourceId the source id
-     * \param offset the offset in the source
-     */
-    SourceLocation(int sourceId, int offset) : sourceId(sourceId), offset(offset) {
-    }
-};
 
 /**
  * \brief Represents the source of a script.

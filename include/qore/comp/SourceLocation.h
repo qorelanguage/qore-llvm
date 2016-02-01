@@ -25,65 +25,43 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the structure of a token (lexical element).
+/// \brief Representation of source locations in Qore scripts.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_TOKEN_H_
-#define INCLUDE_QORE_COMP_TOKEN_H_
-
-#include <ostream>
-#include "qore/comp/SourceLocation.h"
+#ifndef INCLUDE_QORE_COMP_SOURCELOCATION_H_
+#define INCLUDE_QORE_COMP_SOURCELOCATION_H_
 
 namespace qore {
 namespace comp {
 
 /**
- * \brief Token types.
- *
- * \ref TokenData.inc
+ * \brief Represents a location in the source code.
  */
-enum class TokenType {
-    None,           //!< Represents no token. Used for error recovery.
-    #define TOK(N)       N,
-    /// \cond IGNORED_BY_DOXYGEN
-    #include "qore/comp/TokenData.inc"
-    /// \endcond
-    #undef TOK
-};
+struct SourceLocation {
 
-/**
- * \brief Writes the name of the token type to an output stream.
- * \param o the output stream
- * \param tokenType the token type
- * \return the output stream for chaining calls
- */
-std::ostream &operator<<(std::ostream &o, TokenType tokenType);
+public:
+    int sourceId;           //!< Id of the source.
+    int offset;             //!< Offset in the source.
 
-/**
- * \brief Describes a token (lexical element).
- */
-struct Token {
-    TokenType type;                     //!< The type of the token.
-    SourceLocation location;            //!< Location of the token in the source code.
-    int length;                         //!< Length of the token in characters.
-
+public:
     /**
-     * \brief Default constructor.
+     * \brief Constructs an empty location instance.
+     *
+     * The instance should be filled in later using copy assignment.
      */
-    Token() : type(TokenType::None), length(0) {
+    SourceLocation() : sourceId(-1), offset(-1) {
     }
 
     /**
-     * \brief Constructs a token.
-     * \param type the type of the token
-     * \param location the location of the token
-     * \param length the length of the token.
+     * \brief Constructs a location with given parameters.
+     * \param sourceId the source id
+     * \param offset the offset in the source
      */
-    Token(TokenType type, SourceLocation location, int length) : type(type), location(location), length(length) {
+    SourceLocation(int sourceId, int offset) : sourceId(sourceId), offset(offset) {
     }
 };
 
-} //namespace comp
-} //namespace qore
+} // namespace comp
+} // namespace qore
 
-#endif /* INCLUDE_QORE_COMP_TOKEN_H_ */
+#endif // INCLUDE_QORE_COMP_SOURCELOCATION_H_

@@ -28,6 +28,7 @@
 
 #include <memory>
 #include "qore/comp/DiagManager.h"
+#include "qore/comp/Source.h"
 #include "AbstractTest.h"
 
 namespace qtif {
