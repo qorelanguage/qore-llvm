@@ -37,8 +37,7 @@ private:
 class StdinWrapper {
 
 public:
-    StdinWrapper(SourceManager &srcMgr, DirectiveProcessor &dp) : dp(dp), src(srcMgr.createFromString("<stdin>", "")) {
-        dp.setSource(src);
+    StdinWrapper(DiagManager &diagMgr, SourceManager &srcMgr) : src(srcMgr.createFromString("<stdin>", "")), dp(diagMgr, srcMgr, src) {
     }
 
     Token read() {
@@ -58,8 +57,8 @@ public:
     }
 
 private:
-    DirectiveProcessor &dp;
     Source &src;
+    DirectiveProcessor dp;
 };
 
 int main() {
@@ -75,13 +74,11 @@ int main() {
     SourceManager srcMgr(diagMgr);
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
-    DirectiveProcessor dp(diagMgr, srcMgr);
-
-    dp.setSource(srcMgr.createFromString("<noname>", "ab\n%include xyz\n;"));     auto &x = dp;
-    //StdinWrapper wrapper(srcMgr, dp); auto &x = wrapper;
+    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "ab\n%include xyz\n;"));
+//    StdinWrapper dp(diagMgr, srcMgr);
 
     while (true) {
-        Token t = x.read();
+        Token t = dp.read();
         std::cout << t.type << "\n";
         if (t.type == TokenType::EndOfFile) {
             break;

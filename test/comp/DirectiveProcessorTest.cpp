@@ -24,20 +24,23 @@
 //
 //------------------------------------------------------------------------------
 #include "../Qtif.h"
-#include "qore/comp/Scanner.h"
-#include "qore/comp/SourceManager.h"
-#include "MockDiagProcessor.h"
+#include "qore/comp/DirectiveProcessor.h"
+
+#define QTIF(a)
+#include "test_files.inc"
+#undef QTIF
 
 namespace qore {
 namespace comp {
 
-class ScannerTest : public qtif::LineTest {
+class DirectiveProcessorTest : public qtif::LineTest {
 };
 
-TEST_P(ScannerTest, Run) {
-    Scanner scanner(diagMgr);
+TEST_P(DirectiveProcessorTest, Run) {
+    SourceManager srcMgr(diagMgr, TEST_INPUT_DIR "/directives/include/");
+    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
     while (true) {
-        Token token = scanner.read(getSrc());
+        Token token = dp.read();
         output << token.type << token.location << ':' << token.length << '\n';
         if (token.type == TokenType::EndOfFile) {
             break;
@@ -45,19 +48,7 @@ TEST_P(ScannerTest, Run) {
     }
 }
 
-QTIF_TEST_CASE(ScannerTest, "scanner/");
-
-class ScannerCoverageTest : public ::testing::Test, public DiagManagerHelper {
-};
-
-TEST_F(ScannerCoverageTest, InvalidCharacter) {
-    Scanner scanner(diagMgr);
-    SourceManager srcMgr(diagMgr, "");
-    Source &src = srcMgr.createFromString("", "\x7f;");
-
-    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::ScannerInvalidCharacter))).Times(1);
-    EXPECT_EQ(TokenType::Semicolon, scanner.read(src).type);
-}
+QTIF_TEST_CASE(DirectiveProcessorTest, "directives/");
 
 } // namespace comp
 } // namespace qore

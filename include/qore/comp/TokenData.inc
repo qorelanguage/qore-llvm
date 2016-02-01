@@ -25,9 +25,7 @@
 //------------------------------------------------------------------------------
 
 TOK(EndOfFile)
-TOK(Whitespace)
-TOK(Comment)
-TOK(PdInclude)
+TOK(ParseDirective)
 TOK(KwCatch)
 TOK(KwElse)
 TOK(KwIf)

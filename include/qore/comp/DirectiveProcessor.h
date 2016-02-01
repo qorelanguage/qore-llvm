@@ -40,22 +40,62 @@
 namespace qore {
 namespace comp {
 
+/**
+ * \brief Enumeration of all parse directives.
+ */
+enum class DirectiveId {
+    Include,        //!< The `%%include` directive.
+};
+
+/**
+ * \brief Defines the type of arguments of a parse directive.
+ */
+enum class DirectiveArgs {
+    None,           //!< The directive has no arguments.
+    Single          //!< The directive has a single argument consisting of everything until a newline.
+};
+
+/**
+ * \brief Information about a directive.
+ */
+struct DirectiveInfo {
+    DirectiveId id;         //!< The identifier of the directive.
+    DirectiveArgs args;     //!< The type of the arguments.
+};
+
+/**
+ * \brief Parse directive processor.
+ *
+ * Manages a stack of source files, uses a Scanner to recognize tokens in the input and processes parse directives
+ * such as `%%include` and `%%ifdef`.
+ */
 class DirectiveProcessor {
 
 public:
-    DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr);
+    /**
+     * \brief Constructs the object.
+     * \param diagMgr for reporting diagnostic messages
+     * \param srcMgr for loading included source files
+     * \param src the initial source file
+     */
+    DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr, Source &src);
 
-    void setSource(Source &src);
+    /**
+     * \brief Reads the next token from the input, processing parse directives.
+     * \return the next token read from the input
+     */
     Token read();
 
 private:
-    void processInclude();
+    void processDirective(Source &src, SourceLocation location, std::string directive);
 
 private:
     DiagManager &diagMgr;
     SourceManager &srcMgr;
     Scanner scanner;
     std::stack<std::reference_wrapper<Source>> srcStack;
+
+    static const std::unordered_map<std::string, DirectiveInfo> Directives;
 };
 
 } // namespace comp

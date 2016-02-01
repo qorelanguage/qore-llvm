@@ -30,7 +30,6 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/Scanner.h"
 #include "qore/common/Logging.h"
-#include "qore/common/Util.h"
 
 /// \cond IGNORED_BY_DOXYGEN
 #define REPORT(diagId)  diagMgr.report(DiagId::diagId, src.getMarkLocation())
@@ -39,7 +38,7 @@
 namespace qore {
 namespace comp {
 
-const std::unordered_map<std::string, TokenType> Scanner::KeywordsAndDirectives{
+const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "catch",          TokenType::KwCatch },
     { "else",           TokenType::KwElse },
     { "if",             TokenType::KwIf },
@@ -47,7 +46,6 @@ const std::unordered_map<std::string, TokenType> Scanner::KeywordsAndDirectives{
     { "print",          TokenType::KwPrint },
     { "trim",           TokenType::KwTrim },
     { "try",            TokenType::KwTry },
-    { "%include",       TokenType::PdInclude },
 };
 
 Scanner::Scanner(DiagManager &diagMgr) : diagMgr(diagMgr) {
@@ -57,49 +55,17 @@ Scanner::Scanner(DiagManager &diagMgr) : diagMgr(diagMgr) {
 Token Scanner::read(Source &src) {
     LOG_FUNCTION();
 
-    src.setMark();
-    TokenType type = readInternal(src);
-
-    LOG("Returning token " << type);
-    return Token(type, src.getMarkLocation(), src.getMarkedLength());
-}
-
-std::string Scanner::readDirectiveParam(Source &src) {
-    std::string s;
-
-    if (src.peek() != '\0' && !isspace(src.peek())) {
-        //TODO require whitespace between directive name and parameter?
-    }
-
     while (true) {
-        int c = src.read();
+        while (isWhitespace(src.peek()) || isNewline(src.peek())) {
+            src.read();
+        }
 
-        switch (c) {
-            case '#':
-                readLineComment(src);
-                break;
-            case '/':
-                if (src.peek() == '*') {
-                    readBlockComment(src);
-                    s.push_back(' ');
-                } else {
-                    s.push_back(c);
-                }
-                break;
-            case '\'':
-            case '"':
-                s.push_back(c);
-                src.setMark();
-                readString(src, c);
-                s.append(src.getMarkedString());
-                break;
-            case '\0':
-            case '\r':
-            case '\n':
-                return util::trim<>(s, isspace);
-            default:
-                s.push_back(c);
-                break;
+        src.setMark();
+        TokenType type = readInternal(src);
+
+        if (type != TokenType::None) {
+            LOG("Returning token " << type);
+            return Token(type, src.getMarkLocation(), src.getMarkedLength());
         }
     }
 }
@@ -109,11 +75,6 @@ TokenType Scanner::readInternal(Source &src) {
     switch (char c = src.read()) {
         case '\0':
             return TokenType::EndOfFile;
-        case ' ':   case '\t':  case '\n':  case '\v':  case '\f':  case '\r':
-            while (isspace(src.peek())) {
-                src.read();
-            }
-            return TokenType::Whitespace;
         case '+':
             return TokenType::Plus;
         case ';':
@@ -128,23 +89,27 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::ParenRight;
         case '=':
             return TokenType::Assign;
+        case '#':
+            readLineComment(src);
+            return TokenType::None;
+        case '/':
+            if (src.peek() == '*') {
+                readBlockComment(src);
+                return TokenType::None;
+            }
+            REPORT(ScannerInvalidCharacter) << c;
+            return TokenType::None;
         case '%':
             if (src.wasFirstOnLine()) {
                 return readParseDirective(src);
             }
             REPORT(ScannerInvalidCharacter) << c;
             return TokenType::None;
-        case '#':
-            return readLineComment(src);
-        case '/':
-            if (src.peek() == '*') {
-                return readBlockComment(src);
-            }
-            REPORT(ScannerInvalidCharacter) << c;
-            return TokenType::None;
         case '"':
         case '\'':
-            return readString(src, c);
+            src.unread();
+            readString(src);
+            return TokenType::String;
 /*
         case '0':   case '1':   case '2':   case '3':   case '4':
         case '5':   case '6':   case '7':   case '8':   case '9':
@@ -171,23 +136,13 @@ TokenType Scanner::readIdentifier(Source &src) {
     while (isalnum(src.peek()) || src.peek() == '_') {
         src.read();
     }
-    auto it = KeywordsAndDirectives.find(src.getMarkedString());
-    return it == KeywordsAndDirectives.end() ? TokenType::Identifier : it->second;
+    auto it = Keywords.find(src.getMarkedString());
+    return it == Keywords.end() ? TokenType::Identifier : it->second;
 }
 
-TokenType Scanner::readParseDirective(Source &src) {
-    while (isalnum(src.peek()) || src.peek() == '-') {
-        src.read();
-    }
-    auto it = KeywordsAndDirectives.find(src.getMarkedString());
-    if (it != KeywordsAndDirectives.end()) {
-        return it->second;
-    }
-    REPORT(PdpUnknownDirective) << src.getMarkedString();
-    return TokenType::None;
-}
-
-TokenType Scanner::readString(Source &src, char type) {
+void Scanner::readString(Source &src) {
+    int type = src.read();
+    assert(type == '\'' || type == '"');
     bool escape = false;
     while (true) {
         char c = src.read();
@@ -200,30 +155,35 @@ TokenType Scanner::readString(Source &src, char type) {
         }
         escape = c == '\\' && type == '"' && !escape;
     }
-    return TokenType::String;
 }
 
-TokenType Scanner::readLineComment(Source &src) {
-    while (src.peek() != '\r' && src.peek() != '\n' && src.peek() != '\0') {
+void Scanner::readLineComment(Source &src) {
+    while (!isNewline(src.peek()) && src.peek() != '\0') {
         src.read();
     }
-    return TokenType::Comment;
 }
 
-TokenType Scanner::readBlockComment(Source &src) {
+void Scanner::readBlockComment(Source &src) {
     src.read();         //consume opening asterisk
     bool asterisk = false;
     while (true) {
         int c = src.read();
         if (c == '\0') {
-            REPORT(PdpUnendedBlockComment);
-            return TokenType::Comment;
+            REPORT(ScannerUnendedBlockComment);
+            return;
         }
         if (c == '/' && asterisk) {
-            return TokenType::Comment;
+            return;
         }
         asterisk = c == '*';
     }
+}
+
+TokenType Scanner::readParseDirective(Source &src) {
+    while (src.peek() != '\0' && !isNewline(src.peek()) && !isWhitespace(src.peek())) {
+        src.read();
+    }
+    return TokenType::ParseDirective;
 }
 
 } //namespace comp

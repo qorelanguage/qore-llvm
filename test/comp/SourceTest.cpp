@@ -80,7 +80,7 @@ TEST_F(SourceTest, eof) {
     EXPECT_EQ('\0', src.read());
 }
 
-TEST_F(SourceTest, isFirstOnLine) {
+TEST_F(SourceTest, wasFirstOnLine) {
     src.read();
     EXPECT_TRUE(src.wasFirstOnLine());
     src.read();

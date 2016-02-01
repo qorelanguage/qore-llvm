@@ -29,8 +29,6 @@ DIAG(CompScriptFileIoError,                     "PARSE-EXCEPTION", Error,
 DIAG(CompNulCharactersIgnored,                  "PARSE-WARNING", Warning,
         "null character(s) ignored")
 
-DIAG(PdpUnendedBlockComment,                    "PARSE-EXCEPTION", Error,
-        "open block comment at the end of file")
 DIAG(PdpUnknownDirective,                       "PARSE-EXCEPTION", Error,
         "unknown parse directive %s")
 DIAG(PdpUnexpectedArgument,                     "PARSE-EXCEPTION", Error,
@@ -38,6 +36,8 @@ DIAG(PdpUnexpectedArgument,                     "PARSE-EXCEPTION", Error,
 DIAG(PdpMissingArgument,                        "PARSE-EXCEPTION", Error,
         "missing argument of parse directive %%s")
 
+DIAG(ScannerUnendedBlockComment,                "PARSE-EXCEPTION", Error,
+        "open block comment at the end of file")
 DIAG(ScannerInvalidCharacter,                   "PARSE-EXCEPTION", Error,
         "unexpected '%s'")
 DIAG(ScannerInvalidInteger,                     "PARSE-EXCEPTION", Error,

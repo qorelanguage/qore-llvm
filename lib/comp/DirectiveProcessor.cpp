@@ -30,51 +30,92 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/common/Logging.h"
+#include "qore/common/Util.h"
 
 namespace qore {
 namespace comp {
 
-DirectiveProcessor::DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr) : diagMgr(diagMgr), srcMgr(srcMgr),
-    scanner(diagMgr) {
-    LOG_FUNCTION();
-}
+const std::unordered_map<std::string, DirectiveInfo> DirectiveProcessor::Directives{
+    {"%include",            {DirectiveId::Include, DirectiveArgs::Single}},
+};
 
-void DirectiveProcessor::setSource(Source &src) {
-    assert(srcStack.empty());
+DirectiveProcessor::DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr, Source &src) : diagMgr(diagMgr),
+        srcMgr(srcMgr), scanner(diagMgr) {
+    LOG_FUNCTION();
     srcStack.push(src);
 }
 
 Token DirectiveProcessor::read() {
     LOG_FUNCTION();
     assert(!srcStack.empty());
+
     while (true) {
-        Token t = scanner.read(srcStack.top());
-        switch (t.type) {
-            case TokenType::EndOfFile:
-                if (srcStack.size() == 1) {
-                    return t;
-                }
-                srcStack.pop();
-                break;
-            case TokenType::Comment:
-            case TokenType::None:
-            case TokenType::Whitespace:
-                break;
-            case TokenType::PdInclude:
-                processInclude();
-                break;
-            default:
-                return t;
+        Source &src = srcStack.top();
+        Token t = scanner.read(src);
+        if (t.type == TokenType::ParseDirective) {
+            processDirective(src, src.getMarkLocation(), src.getMarkedString());
+        } else if (t.type == TokenType::EndOfFile && srcStack.size() > 1) {
+            srcStack.pop();
+        } else {
+            return t;
         }
     }
 }
 
-void DirectiveProcessor::processInclude() {
-    Source &src = srcStack.top();
-    src.setMark();
-    SourceLocation l = src.getMarkLocation();   //TODO location
-    std::string p = scanner.readDirectiveParam(src);
-    srcStack.push(srcMgr.createFromFile(p, l));
+void DirectiveProcessor::processDirective(Source &src, SourceLocation location, std::string directive) {
+    LOG("Processing directive " << directive);
+
+    std::string arg;
+    while (src.peek() != '\0' && !Scanner::isNewline(src.peek())) {
+        int c = src.read();
+        switch (c) {
+            case '#':
+                scanner.readLineComment(src);
+                break;
+            case '/':
+                if (src.peek() == '*') {
+                    scanner.readBlockComment(src);
+                    arg.push_back(' ');
+                } else {
+                    arg.push_back(c);
+                }
+                break;
+            case '\'':
+            case '"':
+                src.unread();
+                src.setMark();
+                scanner.readString(src);
+                arg.append(src.getMarkedString());
+                break;
+            default:
+                arg.push_back(c);
+                break;
+        }
+    }
+    arg = util::trim<>(arg, Scanner::isWhitespace);
+
+    auto it = Directives.find(directive);
+    if (it == Directives.end()) {
+        diagMgr.report(DiagId::PdpUnknownDirective, location) << directive;
+        return;
+    }
+    if (it->second.args == DirectiveArgs::None && !arg.empty()) {
+        diagMgr.report(DiagId::PdpUnexpectedArgument, location) << directive;
+        return;
+    }
+    if (it->second.args == DirectiveArgs::Single && arg.empty()) {
+        diagMgr.report(DiagId::PdpMissingArgument, location) << directive;
+        return;
+    }
+
+    switch (it->second.id) {
+        case DirectiveId::Include:
+            if ((arg[0] == '"' && arg[arg.length() - 1] == '"') || (arg[0] == '\'' && arg[arg.length() - 1] == '\'')) {
+                arg = arg.substr(1, arg.length() - 2);
+            }
+            srcStack.push(srcMgr.createFromFile(arg, location));
+            break;
+    }
 }
 
 } // namespace comp

@@ -58,19 +58,51 @@ public:
     Token read(Source &src);
 
     /**
-     * \brief Reads a directive parameter - all characters up to a newline skipping any comments.
-     * \param src the source to read characters from
-     * \return  trimmed directive parameter
+     * \brief Reads a string literal from a source.
+     *
+     * Consumes all characters that are part of the string literal up to and including the closing quote.
+     * \param src the source which must be positioned at the opening single or double quote character
      */
-    std::string readDirectiveParam(Source &src);
+    void readString(Source &src);
+
+    /**
+     * \brief Reads a line comment from the source.
+     *
+     * Consumes all characters that are part of the comment, but leaves the terminating new line character.
+     * \param src the source which must be positioned after the '#' character
+     */
+    void readLineComment(Source &src);
+
+    /**
+     * \brief Reads a block comment from the source.
+     *
+     * Consumes all characters that are part of the comment
+     * \param src the source which must be positioned between the the opening '/' and '*' characters
+     */
+    void readBlockComment(Source &src);
+
+    /**
+     * \brief Determines whether a character is considered horizontal whitespace.
+     * \param c the character to test
+     * \return `true` if `c` is either a space or a horizontal tab character
+     */
+    static bool isWhitespace(int c) {
+        return c == ' ' || c == '\t';
+    }
+
+    /**
+     * \brief Determines whether a character is considered a new-line character.
+     * \param c the character to test
+     * \return `true` if `c` is either CR or LF
+     */
+    static bool isNewline(int c) {
+        return c == '\r' || c == '\n';
+    }
 
 private:
     TokenType readInternal(Source &src);
     TokenType readIdentifier(Source &src);
     TokenType readParseDirective(Source &src);
-    TokenType readString(Source &src, char type);
-    TokenType readLineComment(Source &src);
-    TokenType readBlockComment(Source &src);
 
 private:
     Scanner(const Scanner &) = delete;
@@ -81,7 +113,7 @@ private:
 private:
     DiagManager &diagMgr;
 
-    static const std::unordered_map<std::string, TokenType> KeywordsAndDirectives;
+    static const std::unordered_map<std::string, TokenType> Keywords;
 };
 
 } //namespace comp
