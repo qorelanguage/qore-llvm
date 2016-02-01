@@ -102,6 +102,7 @@ public:
 private:
     TokenType readInternal(Source &src);
     TokenType readIdentifier(Source &src);
+    TokenType readInteger(Source &src);
     TokenType readParseDirective(Source &src);
 
 private:

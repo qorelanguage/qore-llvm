@@ -8,6 +8,7 @@ print
 trim
 try
 %abc-xyz
+654
 #$$$
 Identifier@1:1:3
 Plus@2:1:1
@@ -25,4 +26,5 @@ KwPrint@7:1:5
 KwTrim@8:1:4
 KwTry@9:1:3
 ParseDirective@10:1:8
-EndOfFile@11:1:0
+Integer@11:1:3
+EndOfFile@12:1:0
