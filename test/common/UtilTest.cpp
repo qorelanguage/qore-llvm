@@ -25,12 +25,14 @@
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
 #include "qore/common/Util.h"
+#include <cctype>
 
 namespace qore {
+namespace util {
 
-TEST(FatalErrorTest, what) {
-    FatalError err = FATAL_ERROR("msg" << "arg");
-    EXPECT_STREQ("msgarg", err.what());
+TEST(UtilTest, trim) {
+    EXPECT_EQ("a\tb c", trim(" \t\na\tb c\n\r\f", isspace));
 }
 
+} // namespace util
 } // namespace qore

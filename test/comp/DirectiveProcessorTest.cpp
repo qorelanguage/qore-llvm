@@ -23,34 +23,32 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Utility functions
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
+#include "../Qtif.h"
+#include "qore/comp/DirectiveProcessor.h"
 
-#include <functional>
-#include <string>
+#define QTIF(a)
+#include "test_files.inc"
+#undef QTIF
 
 namespace qore {
-namespace util {
+namespace comp {
 
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+class DirectiveProcessorTest : public qtif::LineTest {
+};
+
+TEST_P(DirectiveProcessorTest, Run) {
+    SourceManager srcMgr(diagMgr, TEST_INPUT_DIR "/directives/include/");
+    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
+    while (true) {
+        Token token = dp.read();
+        output << token.type << token.location << ':' << token.length << '\n';
+        if (token.type == TokenType::EndOfFile) {
+            break;
+        }
+    }
 }
 
-} // namespace util
-} // namespace qore
+QTIF_TEST_CASE(DirectiveProcessorTest, "directives/");
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+} // namespace comp
+} // namespace qore

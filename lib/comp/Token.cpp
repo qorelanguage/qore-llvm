@@ -25,32 +25,28 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Utility functions
+/// \brief Token functions.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include <functional>
-#include <string>
+#include "qore/comp/Token.h"
+#include <sstream>
+#include "qore/common/Exceptions.h"
 
 namespace qore {
-namespace util {
+namespace comp {
 
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+std::ostream &operator<<(std::ostream &o, TokenType tokenType) {
+    switch (tokenType) {
+        case TokenType::None:
+            return o << "None";
+        #define TOK(N)       case TokenType::N: return o << #N;
+        /// \cond IGNORED_BY_DOXYGEN
+        #include "qore/comp/TokenData.inc"
+        /// \endcond
+        #undef TOK
+    }
+    QORE_UNREACHABLE("unknown token type " << static_cast<int>(tokenType));
 }
 
-} // namespace util
+} // namespace comp
 } // namespace qore
-
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */

@@ -35,6 +35,7 @@
 #include <string>
 
 namespace qore {
+namespace log {
 
 /**
  * \brief Helper for producing indentation.
@@ -69,7 +70,7 @@ public:
      * \brief Constructor.
      * \param level initial indentation level (can be negative)
      */
-    Indent(int level = 0) : level(level) {
+    explicit Indent(int level = 0) : level(level) {
     }
 
     /**
@@ -132,6 +133,7 @@ inline std::ostream &operator<<(std::ostream &os, const Indent &indent) {
     return os << indent.get();
 }
 
+} // namespace log
 } // namespace qore
 
 #endif // INCLUDE_QORE_COMMON_INDENT_H_

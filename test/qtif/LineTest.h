@@ -27,7 +27,8 @@
 #define TEST_QTIF_LINETEST_H_
 
 #include <memory>
-#include "qore/context/DiagManager.h"
+#include "qore/comp/DiagManager.h"
+#include "qore/comp/Source.h"
 #include "AbstractTest.h"
 
 namespace qtif {
@@ -40,7 +41,13 @@ public:
     LineTestOutput &operator<<(char c);
     LineTestOutput &operator<<(const std::string &str);
     LineTestOutput &operator<<(int i);
-    LineTestOutput &operator<<(const qore::SourceLocation &loc);
+    LineTestOutput &operator<<(const qore::comp::SourceLocation &loc);
+
+    template<typename T>
+    LineTestOutput &operator<<(const T &t) {
+        return *this << static_cast<std::ostringstream&>(std::ostringstream().flush() << t).str();
+    }
+
     void flush();
 
 private:
@@ -48,12 +55,12 @@ private:
     std::string buffer;
 };
 
-class LineTestDiagProcessor : public qore::DiagProcessor {
+class LineTestDiagProcessor : public qore::comp::IDiagProcessor {
 public:
     LineTestDiagProcessor(class LineTest &lineTest) : lineTest(lineTest) {
     }
 
-    void process(qore::DiagRecord &record) override;
+    void process(qore::comp::DiagRecord &record) override;
 
 private:
     class LineTest &lineTest;
@@ -80,20 +87,24 @@ class LineTest : public AbstractTest {
 public:
     LineTest();
     ~LineTest();
+    void SetUp() override;
     void verify() override;
     void parseExpectations(Reader &reader) override;
     void processOutput(const std::string &str);
-    void processDiag(qore::DiagRecord &record);
+    void processDiag(qore::comp::DiagRecord &record);
+    qore::comp::Source &getSrc() {
+        return *source;
+    }
 
 protected:
-    qore::DiagManager diagMgr;
-    qore::SourceManager srcMgr;
+    qore::comp::DiagManager diagMgr;
     LineTestOutput output;
     LineTestDiagProcessor diagProcessor;
 
 private:
     std::vector<std::unique_ptr<class Expectation>> expected;
     std::vector<std::unique_ptr<class Expectation>>::iterator current;
+    std::unique_ptr<qore::comp::Source> source;
 };
 
 } // namespace qtif

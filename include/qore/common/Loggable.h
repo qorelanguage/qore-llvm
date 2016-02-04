@@ -49,6 +49,7 @@
 #endif
 
 namespace qore {
+namespace log {
 
 /**
  * \brief Provides logging support for polymorphic class hierarchies.
@@ -109,6 +110,7 @@ inline std::ostream &operator<<(std::ostream &os, const Loggable *ptr) {
 }
 #endif
 
+} // namespace log
 } // namespace qore
 
 #endif // INCLUDE_QORE_COMMON_LOGGABLE_H_

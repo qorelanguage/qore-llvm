@@ -98,7 +98,7 @@ TEST_P(QtifLineTest, X) {
     for (auto c : getInput()) {
         if (c == '_') {
             c = ' ';
-            diagMgr.report(qore::DiagId::ScannerInvalidCharacter, qore::SourceLocation{}) << "underscore";
+            diagMgr.report(qore::comp::DiagId::ScannerInvalidCharacter, qore::comp::SourceLocation{}) << "underscore";
         }
         output << static_cast<char>(tolower(c));
     }

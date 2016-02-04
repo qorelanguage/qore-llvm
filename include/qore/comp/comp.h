@@ -25,32 +25,20 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Utility functions
+/// \brief Qore compiler namespace.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include <functional>
-#include <string>
+#ifndef INCLUDE_QORE_COMP_H_
+#define INCLUDE_QORE_COMP_H_
 
 namespace qore {
-namespace util {
 
 /**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
+ * \brief The namespace used by the Qore compiler.
  */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+namespace comp {
 }
 
-} // namespace util
-} // namespace qore
+}
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+#endif /* INCLUDE_QORE_COMP_H_ */

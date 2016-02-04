@@ -23,34 +23,23 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Utility functions
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
 
-#include <functional>
-#include <string>
-
-namespace qore {
-namespace util {
-
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
-}
-
-} // namespace util
-} // namespace qore
-
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+TOK(EndOfFile)
+TOK(ParseDirective)
+TOK(KwCatch)
+TOK(KwElse)
+TOK(KwIf)
+TOK(KwMy)
+TOK(KwPrint)
+TOK(KwTrim)
+TOK(KwTry)
+TOK(Identifier)
+TOK(Integer)
+TOK(String)
+TOK(Plus)
+TOK(Semicolon)
+TOK(CurlyLeft)
+TOK(CurlyRight)
+TOK(ParenLeft)
+TOK(ParenRight)
+TOK(Assign)

@@ -31,20 +31,10 @@
 #ifndef INCLUDE_QORE_H_
 #define INCLUDE_QORE_H_
 
-#include <cstdint>
-
 /**
  * \brief The main namespace used by qore.
  */
 namespace qore {
-
-/**
- * \brief Qore integer.
- * \todo make this signed + fix scanner
- * allowed range is [-9223372036854775807, 9223372036854775807], so scanner should accept [0, 9223372036854775807]
- */
-typedef uint64_t qint;
-
 }
 
 #endif /* INCLUDE_QORE_H_ */

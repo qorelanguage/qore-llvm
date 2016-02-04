@@ -23,34 +23,41 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Utility functions
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include <functional>
-#include <string>
+#include "../Qtif.h"
+#include "qore/comp/Scanner.h"
+#include "qore/comp/SourceManager.h"
+#include "MockDiagProcessor.h"
 
 namespace qore {
-namespace util {
+namespace comp {
 
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+class ScannerTest : public qtif::LineTest {
+};
+
+TEST_P(ScannerTest, Run) {
+    Scanner scanner(diagMgr);
+    while (true) {
+        Token token = scanner.read(getSrc());
+        output << token.type << token.location << ':' << token.length << '\n';
+        if (token.type == TokenType::EndOfFile) {
+            break;
+        }
+    }
 }
 
-} // namespace util
-} // namespace qore
+QTIF_TEST_CASE(ScannerTest, "scanner/");
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+class ScannerCoverageTest : public ::testing::Test, public DiagManagerHelper {
+};
+
+TEST_F(ScannerCoverageTest, InvalidCharacter) {
+    Scanner scanner(diagMgr);
+    SourceManager srcMgr(diagMgr, "");
+    Source &src = srcMgr.createFromString("", "\x7f;");
+
+    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::ScannerInvalidCharacter))).Times(1);
+    EXPECT_EQ(TokenType::Semicolon, scanner.read(src).type);
+}
+
+} // namespace comp
+} // namespace qore

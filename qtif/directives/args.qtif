@@ -1,0 +1,10 @@
+%abc
+%include
+%include #
+%include    /*...*/    
+#$$$
+#$!PdpUnknownDirective@1:1
+#$!PdpMissingArgument@2:1
+#$!PdpMissingArgument@3:1
+#$!PdpMissingArgument@4:1
+EndOfFile@5:1:0

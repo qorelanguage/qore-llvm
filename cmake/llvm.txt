@@ -1,0 +1,17 @@
+function(setup_llvm target_name)
+    if(QORE_USE_LLVM)
+        find_package(LLVM REQUIRED CONFIG)
+
+        if(QORE_ENABLE_JIT)
+            llvm_map_components_to_libnames(llvm_libs core bitwriter mcjit native)
+            target_compile_definitions(${target_name} PRIVATE QORE_ENABLE_JIT)
+        else(QORE_ENABLE_JIT)
+            llvm_map_components_to_libnames(llvm_libs core bitwriter analysis)
+        endif(QORE_ENABLE_JIT)
+
+        target_include_directories(${target_name} PRIVATE ${LLVM_INCLUDE_DIRS})
+        target_compile_definitions(${target_name} PRIVATE QORE_USE_LLVM ${LLVM_DEFINITIONS})
+        target_compile_options(${target_name} PRIVATE -fno-rtti)
+        target_link_libraries(${target_name} ${llvm_libs})
+    endif(QORE_USE_LLVM)
+endfunction(setup_llvm)

@@ -23,34 +23,27 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Utility functions
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include <functional>
-#include <string>
+#include <sstream>
+#include "gtest/gtest.h"
+#include "qore/common/Exceptions.h"
+#include "qore/comp/Token.h"
 
 namespace qore {
-namespace util {
+namespace comp {
 
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+TEST(TokenTest, TokenTypeToStream) {
+    EXPECT_EQ("None", static_cast<std::ostringstream&>(std::ostringstream().flush() << TokenType::None).str());
+#define TOK(N)  EXPECT_EQ(#N, static_cast<std::ostringstream&>(std::ostringstream().flush() << TokenType::N).str());
+#include "qore/comp/TokenData.inc"
+#undef TOK
 }
 
-} // namespace util
-} // namespace qore
+#ifdef QORE_COVERAGE
+TEST(TokenTest, TokenTypeIdToStreamErr) {
+    std::ostringstream ss;
+    EXPECT_THROW(ss << static_cast<TokenType>(999), class Unreachable);
+}
+#endif
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+} // namespace comp
+} // namespace qore

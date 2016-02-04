@@ -25,32 +25,44 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Utility functions
+/// \brief Management of script sources.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include <functional>
-#include <string>
+#include "qore/comp/SourceManager.h"
+#include <fstream>
+#include <iostream>
 
 namespace qore {
-namespace util {
+namespace comp {
 
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+Source &SourceManager::create(std::string name, std::vector<char> &&data) {
+    std::vector<int> nulls;
+
+    for (auto it = std::find(data.begin(), data.end(), 0); it != data.end(); it = std::find(it, data.end(), 0)) {
+        nulls.push_back(static_cast<int>(it - data.begin()));
+        *it = ' ';
+    }
+
+    int id = sources.size();
+    sources.emplace_back(new Source(std::move(name), id, std::move(data)));
+
+    for (int offset : nulls) {
+        diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(id, offset));
+    }
+
+    return *sources.back();
 }
 
-} // namespace util
-} // namespace qore
+Source &SourceManager::createFromFile(std::string fileName, SourceLocation location) {
+    std::string fullName = includePath + fileName;
+    std::ifstream fileStream(fullName, std::ios::binary);
+    std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
+    if (!fileStream.good()) {
+        diagMgr.report(DiagId::CompScriptFileIoError, location) << fullName;
+        data.clear();
+    }
+    return create(std::move(fullName), std::move(data));
+}
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+} // namespace comp
+} // namespace qore

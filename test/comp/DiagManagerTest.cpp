@@ -23,34 +23,40 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Utility functions
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include <functional>
-#include <string>
+#include "gtest/gtest.h"
+#include "MockDiagProcessor.h"
+#include "qore/comp/DiagManager.h"
 
 namespace qore {
-namespace util {
+namespace comp {
 
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+struct DiagManagerTest : ::testing::Test, DiagManagerHelper {
+};
+
+TEST_F(DiagManagerTest, Report) {
+    DiagRecord record;
+    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::SaveArg<0>(&record));
+
+    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+
+    EXPECT_EQ(DiagId::ParserUnexpectedToken, record.id);
+    EXPECT_STREQ("PARSE-EXCEPTION", record.code);
+    EXPECT_EQ("syntax error, unexpected a, expecting xyz", record.message);
+    EXPECT_EQ(DiagLevel::Error, record.level);
 }
 
-} // namespace util
-} // namespace qore
+TEST_F(DiagManagerTest, BuilderCatchesExceptions) {
+    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).WillOnce(::testing::Throw(std::exception()));
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+    EXPECT_NO_THROW(diagMgr.report(DiagId::ScannerInvalidCharacter, SourceLocation()) << 'a';);
+}
+
+TEST_F(DiagManagerTest, Disable) {
+    EXPECT_CALL(mockDiagProcessor, process(::testing::_)).Times(0);
+
+    DisableDiag dd(diagMgr);
+    diagMgr.report(DiagId::ParserUnexpectedToken, SourceLocation()) << 'a' << "xyz";
+}
+
+} // namespace comp
+} // namespace qore

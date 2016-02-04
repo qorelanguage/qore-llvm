@@ -25,32 +25,68 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Utility functions
+/// \brief Defines the structure of diagnostic messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
+#ifndef INCLUDE_QORE_COMP_DIAGRECORD_H_
+#define INCLUDE_QORE_COMP_DIAGRECORD_H_
 
-#include <functional>
+#include <ostream>
 #include <string>
+#include "qore/comp/SourceLocation.h"
 
 namespace qore {
-namespace util {
+namespace comp {
 
 /**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
+ * \brief Enumeration of all diagnostic messages.
+ *
+ * \ref DiagData.inc
  */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
-}
+enum class DiagId {
+    #define DIAG(N, C, L, D)        N,
+    /// \cond IGNORED_BY_DOXYGEN
+    #include "qore/comp/DiagData.inc"
+    /// \endcond
+    #undef DIAG
+};
 
-} // namespace util
+/**
+ * \brief Writes diagnostic id to an output stream.
+ * \param o the output stream
+ * \param id the diagnostic id to write
+ * \return the output stream
+ */
+std::ostream &operator<<(std::ostream &o, DiagId id);
+
+/**
+ * \brief Diagnostic levels.
+ */
+enum class DiagLevel {
+    Error,          //!< Error
+    Warning         //!< Warning
+};
+
+/**
+ * \brief Writes diagnostic level to an output stream.
+ * \param o the output stream
+ * \param level the diagnostic level to write
+ * \return the output stream
+ */
+std::ostream &operator<<(std::ostream &o, DiagLevel level);
+
+/**
+ * \brief Represents a diagnostic message.
+ */
+struct DiagRecord {
+    DiagId id;                      //!< Identifier of the diagnostic.
+    const char *code;               //!< Diagnostic code.
+    DiagLevel level;                //!< Diagnostic level.
+    std::string message;            //!< Diagnostic message.
+    SourceLocation location;        //!< Location in the source.
+};
+
+} // namespace comp
 } // namespace qore
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+#endif // INCLUDE_QORE_COMP_DIAGRECORD_H_

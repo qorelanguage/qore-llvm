@@ -1,0 +1,12 @@
+{
+%include ./inc1#comment
+}
+%include /*comment
+        that spans
+        multiple lines*/ "#abc"
+#$$$
+CurlyLeft@1:1:1
+Semicolon@1:1:1
+CurlyRight@3:1:1
+Identifier@1:1:1
+EndOfFile@7:1:0

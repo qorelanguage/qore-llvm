@@ -1,0 +1,4 @@
+option(QORE_LOGGING "Enable log messages" ON)
+option(QORE_COVERAGE "Compile with coverage info" ON)
+option(QORE_USE_LLVM "Generate LLVM IR code" ON)
+option(QORE_ENABLE_JIT "Enable JIT (ignored when QORE_USE_LLVM is OFF)" ON)
