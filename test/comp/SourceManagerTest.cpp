@@ -56,6 +56,12 @@ TEST_F(SourceManagerTest, FromString) {
     EXPECT_EQ("test", src.getName());
 }
 
+TEST_F(SourceManagerTest, Get) {
+    Source &src = mgr.createFromString("test", "xyz");
+    EXPECT_EQ(&src, &mgr.get(src.getId()));
+    EXPECT_THROW(&mgr.get(src.getId() + 1), std::out_of_range);
+}
+
 TEST_F(SourceManagerTest, FromFile) {
     Source &src = mgr.createFromFile("SourceManagerTest_FromFile");
     EXPECT_EQ("abc", readAll(src));
