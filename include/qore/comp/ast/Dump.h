@@ -103,8 +103,11 @@ private:
     }
 
     void doToken(const std::string &name, const Token &token) {
-        std::string lexeme = srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
-        os << indent << "." << name << ": " << token.type << " " << lexeme << "\n";
+        os << indent << "." << name << ": " << token.type;
+        if (token.type != TokenType::None) {
+            os << " " << srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
+        }
+        os << "\n";
     }
 
 private:

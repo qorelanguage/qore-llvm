@@ -1,0 +1,16 @@
+namespace X {
+    public namespace Y;
+#$$$
+#$!ParserUnendedNamespaceDecl@3:1
+-Script
+  .members:
+    -Namespace
+      .location: 1:1
+      .modifiers: -none-
+      .name: Identifier X
+      .members:
+        -Namespace
+          .location: 2:12
+          .modifiers: public
+          .name: Identifier Y
+          .members:

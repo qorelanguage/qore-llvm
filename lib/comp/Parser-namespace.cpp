@@ -84,26 +84,25 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
         report(DiagId::ParserExpectedNamespaceName);
     }
 
-    if (tokenType() == TokenType::Semicolon) {
+    if (tokenType() == TokenType::CurlyLeft) {
         consume();
-        return ns;
-    }
-
-    match(TokenType::CurlyLeft);
-    while (tokenType() != TokenType::CurlyRight) {
-        if (tokenType() == TokenType::EndOfFile) {
-            report(DiagId::ParserUnendedNamespaceDecl);
-            return ns;
+        while (tokenType() != TokenType::CurlyRight) {
+            if (tokenType() == TokenType::EndOfFile) {
+                report(DiagId::ParserUnendedNamespaceDecl);
+                return ns;
+            }
+            ast::NamespaceMember::Ptr nsMember = namespaceMember();
+            if (!nsMember) {
+                report(DiagId::ParserExpectedNamespaceMember);
+                recoverSkipToCurlyRight();
+                return ns;
+            }
+            ns->members.push_back(std::move(nsMember));
         }
-        ast::NamespaceMember::Ptr nsMember = namespaceMember();
-        if (!nsMember) {
-            report(DiagId::ParserExpectedNamespaceMember);
-            recoverSkipToCurlyRight();
-            return ns;
-        }
-        ns->members.push_back(std::move(nsMember));
+        consume();
+    } else {
+        match(TokenType::Semicolon, &Parser::recoverDoNothing);
     }
-    consume();
     return ns;
 }
 

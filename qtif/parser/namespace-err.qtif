@@ -1,0 +1,39 @@
+namespace X {
+    public namespace Y;
+    X;
+    namespace YY{}
+}
+namespace Y
+namespace Z;
+namespace;
+#$$$
+#$!ParserExpectedNamespaceMember@3:5
+#$!ParserUnexpectedToken@7:1-Semicolon
+#$!ParserExpectedNamespaceName@8:10
+-Script
+  .members:
+    -Namespace
+      .location: 1:1
+      .modifiers: -none-
+      .name: Identifier X
+      .members:
+        -Namespace
+          .location: 2:12
+          .modifiers: public
+          .name: Identifier Y
+          .members:
+    -Namespace
+      .location: 6:1
+      .modifiers: -none-
+      .name: Identifier Y
+      .members:
+    -Namespace
+      .location: 7:1
+      .modifiers: -none-
+      .name: Identifier Z
+      .members:
+    -Namespace
+      .location: 8:1
+      .modifiers: -none-
+      .name: None
+      .members:

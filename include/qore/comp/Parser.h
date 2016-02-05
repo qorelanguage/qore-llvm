@@ -101,6 +101,9 @@ private:
         return diagMgr.report(id, token.location);
     }
 
+    void recoverDoNothing() {
+    }
+
     void recoverConsumeToken() {
         consume();
     }
