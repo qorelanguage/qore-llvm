@@ -31,11 +31,8 @@
 #ifndef INCLUDE_QORE_COMP_AST_NAMESPACE_H_
 #define INCLUDE_QORE_COMP_AST_NAMESPACE_H_
 
-#include <string>
 #include "qore/comp/ast/Modifiers.h"
-#include "qore/comp/ast/Node.h"
-#include "qore/comp/ast/Visitor.h"
-#include "qore/comp/Token.h"
+#include "qore/comp/ast/Expression.h"
 
 namespace qore {
 namespace comp {

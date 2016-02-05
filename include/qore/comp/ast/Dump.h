@@ -46,7 +46,7 @@ namespace ast {
 #define TOKEN(name)         doToken(#name, node.name)
 
 template<typename OS>
-class DumpVisitor : public ast::DeclarationVisitor {
+class DumpVisitor : public ast::DeclarationVisitor, public ast::StatementVisitor, public ast::ExpressionVisitor {
 
 public:
     DumpVisitor(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
@@ -54,6 +54,7 @@ public:
 
     NODE(Script, {
             ARRAY(members);
+            ARRAY(statements);
     })
 
     NODE(Namespace, {

@@ -136,6 +136,8 @@ private:
     ast::Namespace::Ptr namespaceDecl(ast::Modifiers mods);
     ast::NamespaceMember::Ptr namespaceMember();
     ast::Modifiers modifiers();
+    ast::Statement::Ptr statement();
+    ast::Expression::Ptr expression();
 
 private:
     DiagManager &diagMgr;

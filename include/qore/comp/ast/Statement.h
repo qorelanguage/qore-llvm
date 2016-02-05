@@ -25,54 +25,35 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief AST nodes related to the whole Qore script.
+/// \brief AST nodes related to statements.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AST_SCRIPT_H_
-#define INCLUDE_QORE_COMP_AST_SCRIPT_H_
+#ifndef INCLUDE_QORE_COMP_AST_STATEMENT_H_
+#define INCLUDE_QORE_COMP_AST_STATEMENT_H_
 
-#include "qore/comp/ast/Namespace.h"
-#include "qore/comp/ast/Statement.h"
+#include "qore/comp/ast/Expression.h"
 
 namespace qore {
 namespace comp {
 namespace ast {
 
 /**
- * \brief Represents a namespace.
+ * \brief Base class for all nodes representing statements.
  */
-class Script {
+class Statement : public Node {
 
 public:
-    std::vector<NamespaceMember::Ptr> members;              //!< The members of the root namespace.
-    std::vector<Statement::Ptr> statements;                 //!< The top level statements.
-
-public:
-    using Ptr = std::unique_ptr<Script>;                    //!< Pointer type.
+    using Ptr = std::unique_ptr<Statement>;                 //!< Pointer type.
 
     /**
-     * \brief Allocates a new node.
-     * \return a unique pointer to the allocated node
-     */
-    static Ptr create() {
-        return Ptr(new Script());
-    }
-
-    /**
-     * \brief Calls visitor's `visit()` method.
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
      * \param visitor the visitor to call
      */
-    void accept(DeclarationVisitor &visitor) {
-        visitor.visit(*this);
-    }
-
-private:
-    Script() {
-    }
+    virtual void accept(StatementVisitor &visitor) = 0;
 };
 
 } // namespace ast
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AST_NAMESPACE_H_
+#endif // INCLUDE_QORE_COMP_AST_STATEMENT_H_

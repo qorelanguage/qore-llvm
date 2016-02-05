@@ -20,3 +20,4 @@ final namespace X {
           .modifiers: -none-
           .name: Identifier YY
           .members:
+  .statements:

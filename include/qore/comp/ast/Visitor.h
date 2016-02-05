@@ -39,6 +39,42 @@ class Script;
 class Namespace;
 
 /**
+ * \brief Interface for expression visitors.
+ */
+class ExpressionVisitor {
+
+public:
+    virtual ~ExpressionVisitor() {}
+
+protected:
+    ExpressionVisitor() = default;
+
+private:
+    ExpressionVisitor(const ExpressionVisitor &) = delete;
+    ExpressionVisitor(ExpressionVisitor &&) = delete;
+    ExpressionVisitor &operator=(const ExpressionVisitor &) = delete;
+    ExpressionVisitor &operator=(ExpressionVisitor &&) = delete;
+};
+
+/**
+ * \brief Interface for statement visitors.
+ */
+class StatementVisitor {
+
+public:
+    virtual ~StatementVisitor() {}
+
+protected:
+    StatementVisitor() = default;
+
+private:
+    StatementVisitor(const StatementVisitor &) = delete;
+    StatementVisitor(StatementVisitor &&) = delete;
+    StatementVisitor &operator=(const StatementVisitor &) = delete;
+    StatementVisitor &operator=(StatementVisitor &&) = delete;
+};
+
+/**
  * \brief Interface for visitors of declarations (namespaces, classes, globals, constants, functions).
  */
 class DeclarationVisitor {
