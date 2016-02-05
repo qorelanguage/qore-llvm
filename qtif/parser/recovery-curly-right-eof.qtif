@@ -2,10 +2,9 @@ namespace X {
     X;
 #$$$
 #$!ParserExpectedNamespaceMember@2:5
--Script
+-Script@1:1-3:1
   .members:
-    -Namespace
-      .location: 1:1
+    -Namespace@1:1-3:1
       .modifiers: -none-
       .name: Identifier X
       .members:

@@ -68,18 +68,27 @@ public:
 public:
     /**
      * \brief Allocates a new node.
+     * \param token the literal token
      * \return a unique pointer to the allocated node
      */
-    static Ptr create() {
-        return Ptr(new LiteralExpression());
+    static Ptr create(Token token) {
+        return Ptr(new LiteralExpression(token));
     }
 
     void accept(ExpressionVisitor &v) override {
         v.visit(*this);
     }
 
+    SourceLocation getStart() const override {
+        return token.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return token.location;
+    }
+
 private:
-    LiteralExpression() {
+    explicit LiteralExpression(Token token) : token(token) {
     }
 };
 

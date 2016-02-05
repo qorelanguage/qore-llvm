@@ -38,16 +38,12 @@ ast::Expression::Ptr Parser::expression() {
 
     switch (tokenType()) {
         case TokenType::Integer: {
-            ast::LiteralExpression::Ptr expr = ast::LiteralExpression::create();
-            expr->token = consume();
-            return expr;
+            return ast::LiteralExpression::create(consume());
         }
         default: {
             //TODO return special error node which will prevent further errors
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());
-            ast::LiteralExpression::Ptr expr = ast::LiteralExpression::create();
-            expr->token = consume();
-            return expr;
+            return ast::LiteralExpression::create(consume());
         }
     }
 }

@@ -39,11 +39,13 @@ namespace comp {
 namespace ast {
 
 /**
- * \brief Represents a namespace.
+ * \brief Represents the whole script, which is the root namespace with possible top level statements.
  */
-class Script {
+class Script : public Node {
 
 public:
+    SourceLocation start;                                   //!< The starting location.
+    SourceLocation end;                                     //!< The ending location.
     std::vector<NamespaceMember::Ptr> members;              //!< The members of the root namespace.
     std::vector<Statement::Ptr> statements;                 //!< The top level statements.
 
@@ -64,6 +66,14 @@ public:
      */
     void accept(DeclarationVisitor &visitor) {
         visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
     }
 
 private:

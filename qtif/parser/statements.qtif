@@ -1,10 +1,10 @@
 ;0;
 #$$$
--Script
+-Script@1:1-2:1
   .members:
   .statements:
-    -EmptyStatement
-    -ExpressionStatement
+    -EmptyStatement@1:1-1:1
+    -ExpressionStatement@1:2-1:3
       .expression:
-        -LiteralExpression
+        -LiteralExpression@1:2-1:2
           .token: Integer 0

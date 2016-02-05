@@ -39,9 +39,8 @@ namespace comp {
 namespace ast {
 
 /// \cond IGNORED_BY_DOXYGEN
-#define NODE(name, body)    void visit(ast::name &node) override { Node n_(*this, #name); body }
-#define ARRAY(name)         { Array a_(*this, #name); for (auto &i : node.name) { i->accept(*this); } }
-#define LOCATION(name)      doLocation(#name, node.name)
+#define NODE(name, body)    void visit(name &node) override { NodeHelper n_(*this, #name, node); body }
+#define ARRAY(name)         { ArrayHelper a_(*this, #name); for (auto &i : node.name) { i->accept(*this); } }
 #define MODIFIERS(name)     doModifiers(#name, node.name)
 #define TOKEN(name)         doToken(#name, node.name)
 #define VISIT(name)         os << indent++ << "." << #name << ":\n"; node.name->accept(*this); --indent
@@ -59,7 +58,6 @@ public:
     })
 
     NODE(Namespace, {
-            LOCATION(location);
             MODIFIERS(modifiers);
             TOKEN(name);
             ARRAY(members);
@@ -77,29 +75,33 @@ public:
     })
 
 private:
-    struct Node {
-        Node(DumpVisitor &dv, const std::string &name) : dv(dv) {
-            dv.os << dv.indent++ << "-" << name << "\n";
+    struct NodeHelper {
+        NodeHelper(DumpVisitor &dv, const std::string &name, Node &node) : dv(dv) {
+            dv.os << dv.indent++ << "-" << name << "@" << dv.decode(node.getStart())
+                    << "-" << dv.decode(node.getEnd()) << "\n";
         }
-        ~Node() {
+        ~NodeHelper() {
             --dv.indent;
         }
         DumpVisitor &dv;
     };
 
-    struct Array {
-        Array(DumpVisitor &dv, const std::string &name) : dv(dv) {
+    struct ArrayHelper {
+        ArrayHelper(DumpVisitor &dv, const std::string &name) : dv(dv) {
             dv.os << dv.indent++ << "." << name << ":\n";
         }
-        ~Array() {
+        ~ArrayHelper() {
             --dv.indent;
         }
         DumpVisitor &dv;
     };
 
-    void doLocation(const std::string &name, const SourceLocation &location) {
+    std::string decode(const SourceLocation &location) {
+        assert(location.sourceId >= 0);
         std::pair<int, int> l = srcMgr.get(location.sourceId).decodeLocation(location.offset);
-        os << indent << "." << name << ": " << l.first << ":" << l.second << "\n";
+        std::ostringstream str;
+        str << l.first << ":" << l.second;
+        return str.str();
     }
 
     void doModifiers(const std::string &name, const ast::Modifiers &mods) {
@@ -130,7 +132,6 @@ private:
 };
 #undef NODE
 #undef ARRAY
-#undef LOCATION
 #undef MODIFIERS
 #undef TOKEN
 #undef VISIT

@@ -59,7 +59,8 @@ public:
 class Namespace : public NamespaceMember {
 
 public:
-    SourceLocation location;                                //!< The location of the `namespace` keyword.
+    SourceLocation start;                                   //!< The location of the `namespace` keyword.
+    SourceLocation end;                                     //!< The location of the closing brace or semicolon.
     Modifiers modifiers;                                    //!< The modifiers.
     Token name;                                             //!< The token with the namespace name.
     std::vector<NamespaceMember::Ptr> members;              //!< The members of the namespace.
@@ -77,6 +78,14 @@ public:
 
     void accept(DeclarationVisitor &visitor) override {
         visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
     }
 
 private:

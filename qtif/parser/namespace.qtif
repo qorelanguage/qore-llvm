@@ -3,20 +3,17 @@ final namespace X {
     namespace YY{}
 }
 #$$$
--Script
+-Script@1:1-5:1
   .members:
-    -Namespace
-      .location: 1:7
+    -Namespace@1:7-4:1
       .modifiers: final
       .name: Identifier X
       .members:
-        -Namespace
-          .location: 2:12
+        -Namespace@2:12-2:23
           .modifiers: public
           .name: Identifier Y
           .members:
-        -Namespace
-          .location: 3:5
+        -Namespace@3:5-3:18
           .modifiers: -none-
           .name: Identifier YY
           .members:

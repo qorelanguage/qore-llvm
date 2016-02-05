@@ -87,13 +87,13 @@ private:
         }
     }
 
-    SourceLocation match(TokenType expected, RecoverStrategy recoverStrategy = &Parser::recoverConsumeToken) {
+    Token match(TokenType expected, RecoverStrategy recoverStrategy = &Parser::recoverConsumeToken) {
         if (tokenType() == expected) {
-            return consume().location;
+            return consume();
         }
         report(DiagId::ParserUnexpectedToken) << util::to_string(token.type) << util::to_string(expected);
         (this->*recoverStrategy)();
-        return token.location;
+        return token;
     }
 
     DiagBuilder report(DiagId id) {

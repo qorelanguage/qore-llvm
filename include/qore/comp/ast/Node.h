@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_AST_NODE_H_
 
 #include <memory>
+#include "qore/comp/SourceLocation.h"
 
 namespace qore {
 namespace comp {
@@ -47,6 +48,18 @@ public:
 
 public:
     virtual ~Node() = default;
+
+    /**
+     * \brief Returns the start location of this node in the source code.
+     * \return the start location
+     */
+    virtual SourceLocation getStart() const = 0;
+
+    /**
+     * \brief Returns the end location of this node in the source code.
+     * \return the end location
+     */
+    virtual SourceLocation getEnd() const = 0;
 
 protected:
     Node() = default;

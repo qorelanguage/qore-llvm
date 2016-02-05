@@ -47,6 +47,8 @@ ast::Script::Ptr Parser::parseScript() {
     LOG_FUNCTION();
 
     ast::Script::Ptr script = ast::Script::create();
+    ensureToken();
+    script->start = token.location;
     while (tokenType() != TokenType::EndOfFile) {
 //        if (tokenType() == TokenType::KwModule) {
 //            //TODO module
@@ -59,6 +61,7 @@ ast::Script::Ptr Parser::parseScript() {
             script->statements.push_back(std::move(statement()));
         }
     }
+    script->end = token.location;
     return script;
 }
 
@@ -75,7 +78,7 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
     LOG_FUNCTION();
     ast::Namespace::Ptr ns = ast::Namespace::create();
 
-    ns->location = match(TokenType::KwNamespace);
+    ns->start = match(TokenType::KwNamespace).location;
     ns->modifiers = mods;
 
     if (tokenType() == TokenType::Identifier) {
@@ -89,19 +92,21 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
         while (tokenType() != TokenType::CurlyRight) {
             if (tokenType() == TokenType::EndOfFile) {
                 report(DiagId::ParserUnendedNamespaceDecl);
+                ns->end = token.location;
                 return ns;
             }
             ast::NamespaceMember::Ptr nsMember = namespaceMember();
             if (!nsMember) {
                 report(DiagId::ParserExpectedNamespaceMember);
                 recoverSkipToCurlyRight();
+                ns->end = token.location;
                 return ns;
             }
             ns->members.push_back(std::move(nsMember));
         }
-        consume();
+        ns->end = consume().location;
     } else {
-        match(TokenType::Semicolon, &Parser::recoverDoNothing);
+        ns->end = match(TokenType::Semicolon, &Parser::recoverDoNothing).location;
     }
     return ns;
 }

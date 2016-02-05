@@ -5,15 +5,13 @@ public public namespace Y {
 }
 #$$$
 #$!ParserModifierGivenTwice@4:8
--Script
+-Script@1:1-6:1
   .members:
-    -Namespace
-      .location: 2:21
+    -Namespace@2:21-3:1
       .modifiers: abstract deprecated private static synchronized
       .name: Identifier X
       .members:
-    -Namespace
-      .location: 4:15
+    -Namespace@4:15-5:1
       .modifiers: public
       .name: Identifier Y
       .members:

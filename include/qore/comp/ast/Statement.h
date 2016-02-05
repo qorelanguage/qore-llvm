@@ -58,23 +58,35 @@ public:
 class EmptyStatement : public Statement {
 
 public:
+    SourceLocation location;                                //!< The location of the semicolon.
+
+public:
     using Ptr = std::unique_ptr<EmptyStatement>;            //!< Pointer type.
 
 public:
     /**
      * \brief Allocates a new node.
+     * \param location the location of the semicolon token
      * \return a unique pointer to the allocated node
      */
-    static Ptr create() {
-        return Ptr(new EmptyStatement());
+    static Ptr create(SourceLocation location) {
+        return Ptr(new EmptyStatement(location));
     }
 
     void accept(StatementVisitor &v) override {
         v.visit(*this);
     }
 
+    SourceLocation getStart() const override {
+        return location;
+    }
+
+    SourceLocation getEnd() const override {
+        return location;
+    }
+
 private:
-    EmptyStatement() {
+    explicit EmptyStatement(SourceLocation location) : location(location) {
     }
 };
 
@@ -85,6 +97,7 @@ class ExpressionStatement : public Statement {
 
 public:
     Expression::Ptr expression;                             //!< The expression.
+    SourceLocation semicolon;                               //!< The location of the semicolon.
 
 public:
     using Ptr = std::unique_ptr<ExpressionStatement>;       //!< Pointer type.
@@ -100,6 +113,14 @@ public:
 
     void accept(StatementVisitor &v) override {
         v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return expression->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return semicolon;
     }
 
 private:
