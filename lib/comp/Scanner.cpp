@@ -39,6 +39,19 @@ namespace qore {
 namespace comp {
 
 const std::unordered_map<std::string, TokenType> Scanner::Keywords{
+    { "abstract",       TokenType::KwAbstract },
+    { "class",          TokenType::KwClass },
+    { "const",          TokenType::KwConst },
+    { "deprecated",     TokenType::KwDeprecated },
+    { "final",          TokenType::KwFinal },
+    { "namespace",      TokenType::KwNamespace },
+    { "our",            TokenType::KwOur },
+    { "private",        TokenType::KwPrivate },
+    { "public",         TokenType::KwPublic },
+    { "static",         TokenType::KwStatic },
+    { "sub",            TokenType::KwSub },
+    { "synchronized",   TokenType::KwSynchronized },
+
     { "catch",          TokenType::KwCatch },
     { "else",           TokenType::KwElse },
     { "if",             TokenType::KwIf },

@@ -23,48 +23,21 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Utility functions
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
-
-#include <algorithm>
-#include <functional>
-#include <string>
+#include "gtest/gtest.h"
+#include "qore/common/Logging.h"
 
 namespace qore {
-namespace util {
+namespace log {
 
-/**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
- */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+class TestLogger : public Logger {
+};
+
+TEST(LoggingTest, setLogger) {
+    TestLogger logger;
+    Logger *orig = LoggerManager::set(&logger);
+    EXPECT_EQ(&logger, LoggerManager::get());
+    LoggerManager::set(orig);
 }
 
-/**
- * \brief Converts a value to a string.
- * \tparam T the type of the value, must support `operator<<` for std::ostream
- * \param t the value to convert
- * \return string representation of the value
- */
-template<typename T>
-std::string to_string(const T &t) {
-    std::ostringstream str;
-    str << t;
-    return str.str();
-}
-
-} // namespace util
+} // namespace log
 } // namespace qore
-
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */

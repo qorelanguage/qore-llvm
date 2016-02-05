@@ -186,9 +186,12 @@ public:
     /**
      * \brief Changes the logger.
      * \param logger the new logger
+     * \return the original logger
      */
-    static void set(Logger *logger) {
+    static Logger *set(Logger *logger) {
+        Logger *orig = currentLogger;
         currentLogger = logger;
+        return orig;
     }
 
 private:

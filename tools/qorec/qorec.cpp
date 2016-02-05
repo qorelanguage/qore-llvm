@@ -33,13 +33,13 @@ private:
 };
 
 
-class StdinWrapper {
+class StdinWrapper : public ITokenStream {
 
 public:
     StdinWrapper(DiagManager &diagMgr, SourceManager &srcMgr) : src(srcMgr.createFromString("<stdin>", "")), dp(diagMgr, srcMgr, src) {
     }
 
-    Token read() {
+    Token read() override {
         while (true) {
             Token t = dp.read();
             if (t.type != TokenType::EndOfFile) {

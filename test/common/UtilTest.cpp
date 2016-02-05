@@ -34,5 +34,9 @@ TEST(UtilTest, trim) {
     EXPECT_EQ("a\tb c", trim(" \t\na\tb c\n\r\f", isspace));
 }
 
+TEST(UtilTest, to_string) {
+    EXPECT_EQ("456", to_string(456));
+}
+
 } // namespace util
 } // namespace qore

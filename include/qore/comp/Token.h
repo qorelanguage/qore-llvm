@@ -83,6 +83,30 @@ struct Token {
     }
 };
 
+/**
+ * \brief a stream of tokens.
+ */
+class ITokenStream {
+
+public:
+    virtual ~ITokenStream() = default;
+
+    /**
+     * \brief Reads the next token from the input, processing parse directives.
+     * \return the next token read from the input
+     */
+    virtual Token read() = 0;
+
+protected:
+    ITokenStream() = default;
+
+private:
+    ITokenStream(const ITokenStream &) = delete;
+    ITokenStream(ITokenStream &&) = delete;
+    ITokenStream &operator=(const ITokenStream &) = delete;
+    ITokenStream &operator=(ITokenStream &&) = delete;
+};
+
 } //namespace comp
 } //namespace qore
 
