@@ -25,47 +25,59 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Utility functions
+/// \brief AST nodes related to namespaces.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_UTIL_H_
-#define INCLUDE_QORE_COMMON_UTIL_H_
+#ifndef INCLUDE_QORE_COMP_AST_NAMESPACE_H_
+#define INCLUDE_QORE_COMP_AST_NAMESPACE_H_
 
-#include <algorithm>
-#include <functional>
-#include <sstream>
 #include <string>
+#include "qore/comp/ast/Modifiers.h"
+#include "qore/comp/ast/Node.h"
+#include "qore/comp/Token.h"
 
 namespace qore {
-namespace util {
+namespace comp {
+namespace ast {
 
 /**
- * \brief Trims leading and trailing characters from a string.
- * \param s the string to trim
- * \param pred a predicate for determining which characters to trim, e.g. isspace
- * \return the trimmed string
+ * \brief Base class for all nodes representing namespace members.
  */
-template<typename Predicate>
-std::string trim(const std::string &s, Predicate pred) {
-    auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
-    auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
-    return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
-}
+class NamespaceMember : public Node {
+
+public:
+    using Ptr = std::unique_ptr<NamespaceMember>;           //!< Pointer type.
+};
 
 /**
- * \brief Converts a value to a string.
- * \tparam T the type of the value, must support `operator<<` for std::ostream
- * \param t the value to convert
- * \return string representation of the value
+ * \brief Represents a namespace.
  */
-template<typename T>
-std::string to_string(const T &t) {
-    std::ostringstream str;
-    str << t;
-    return str.str();
-}
+class Namespace : public NamespaceMember {
 
-} // namespace util
+public:
+    SourceLocation location;                                //!< The location of the `namespace` keyword.
+    Modifiers modifiers;                                    //!< The modifiers.
+    Token name;                                             //!< The token with the namespace name.
+    std::vector<NamespaceMember::Ptr> members;              //!< The members of the namespace.
+
+public:
+    using Ptr = std::unique_ptr<Namespace>;                 //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new Namespace());
+    }
+
+private:
+    Namespace() {
+    }
+};
+
+} // namespace ast
+} // namespace comp
 } // namespace qore
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+#endif // INCLUDE_QORE_COMP_AST_NAMESPACE_H_

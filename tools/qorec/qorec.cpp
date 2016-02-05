@@ -1,6 +1,7 @@
 #include <iostream>
 #include "qore/common/Logging.h"
 #include "qore/comp/DirectiveProcessor.h"
+#include "qore/comp/Parser.h"
 #if QORE_USE_LLVM
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -60,7 +61,17 @@ private:
     DirectiveProcessor dp;
 };
 
+class LogFilter : public qore::log::Logger {
+
+public:
+    virtual bool filter(const std::string &component) {
+        return component.find("Parser") != std::string::npos;
+    }
+};
+
 int main() {
+    LogFilter logFilter;
+    qore::log::LoggerManager::set(&logFilter);
     LOG_FUNCTION();
 
 #if QORE_USE_LLVM
@@ -73,16 +84,11 @@ int main() {
     SourceManager srcMgr(diagMgr);
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "ab\n%include xyz\n;"));
+    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "final namespace X { public namespace Y; namespace YY{}}"));
 //    StdinWrapper dp(diagMgr, srcMgr);
 
-    while (true) {
-        Token t = dp.read();
-        std::cout << t.type << "\n";
-        if (t.type == TokenType::EndOfFile) {
-            break;
-        }
-    }
+    Parser parser(diagMgr, dp);
+    parser.parseScript();
 
     return 0;
 }

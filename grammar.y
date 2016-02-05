@@ -2,14 +2,14 @@
 /////////////////////////////////////////
 // TOP LEVEL && NAMESPACE
 /////////////////////////////////////////
-top_level_commands
-    : top_level_command
-    | top_level_commands top_level_command
+script
+    : script_member
+    | script script_member
     ;
 
-top_level_command
+script_member
     : namespace_member
-    | TOK_MODULE '{' module_decls '}'
+    | KW_MODULE IDENTIFIER '{' module_decls '}'
     | statement
     ;
 
@@ -23,8 +23,8 @@ module_decl
     ;
 
 namespace_decl
-    : modifiers TOK_NAMESPACE IDENTIFIER '{' namespace_body '}'
-    | modifiers TOK_NAMESPACE IDENTIFIER ';'
+    : modifiers KW_NAMESPACE IDENTIFIER '{' namespace_body '}'
+    | modifiers KW_NAMESPACE IDENTIFIER ';'
     ;
 
 namespace_body
@@ -41,16 +41,16 @@ namespace_member
     ;
 
 global_var_decl
-    : modifiers TOK_OUR type name ';'
-    | modifiers TOK_OUR '(' list ')' ';'            //TODO list
+    : modifiers KW_OUR type name ';'
+    | modifiers KW_OUR '(' list ')' ';'            //TODO list
     ;
 
 const_decl
-    : modifiers TOK_CONST name '=' expr ';'
+    : modifiers KW_CONST name '=' expr ';'
     ;
 
 sub_def
-    | modifiers type_opt TOK_SUB name '(' param_list ')' block
+    | modifiers type_opt KW_SUB name '(' param_list ')' block
     | modifiers type_opt name '(' param_list ')' base_constructor_list block
     ;
 
@@ -60,13 +60,13 @@ modifiers
     ;
 
 modifier
-    : TOK_PRIVATE
-    | TOK_STATIC
-    | TOK_SYNCHRONIZED
-    | TOK_DEPRECATED
-    | TOK_PUBLIC
-    | TOK_FINAL	
-    | TOK_ABSTRACT
+    : KW_PRIVATE
+    | KW_STATIC
+    | KW_SYNCHRONIZED
+    | KW_DEPRECATED
+    | KW_PUBLIC
+    | KW_FINAL
+    | KW_ABSTRACT
     ;
 
 /////////////////////////////////////////
@@ -78,7 +78,7 @@ class_def
     ;
 
 inheritance_list
-    : /* empty */ 
+    : /* empty */
     | TOK_INHERITS superclass_list
     ;
 

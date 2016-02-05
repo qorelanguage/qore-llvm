@@ -1,4 +1,4 @@
-set(CPP_CHECK_OPTIONS --enable=all -I include --std=c++11 --suppress=missingIncludeSystem)
+set(CPP_CHECK_OPTIONS --enable=all -I include --std=c++11 --suppress=missingIncludeSystem --inline-suppr)
 set(CPP_CHECK_FILES lib tools)
 add_custom_target(cppcheck
     cppcheck ${CPP_CHECK_OPTIONS} --xml --xml-version=2 ${CPP_CHECK_FILES} 2> ${CMAKE_BINARY_DIR}/cppcheck.xml
