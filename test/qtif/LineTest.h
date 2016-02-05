@@ -29,6 +29,7 @@
 #include <memory>
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/Source.h"
+#include "qore/comp/SourceManager.h"
 #include "AbstractTest.h"
 
 namespace qtif {
@@ -85,7 +86,7 @@ private:
 class LineTest : public AbstractTest {
 
 public:
-    LineTest();
+    LineTest(const std::string &includePath = "/");
     ~LineTest();
     void SetUp() override;
     void verify() override;
@@ -93,18 +94,19 @@ public:
     void processOutput(const std::string &str);
     void processDiag(qore::comp::DiagRecord &record);
     qore::comp::Source &getSrc() {
-        return *source;
+        return srcMgr.get(sourceId);
     }
 
 protected:
     qore::comp::DiagManager diagMgr;
+    qore::comp::SourceManager srcMgr;
     LineTestOutput output;
     LineTestDiagProcessor diagProcessor;
 
 private:
     std::vector<std::unique_ptr<class Expectation>> expected;
     std::vector<std::unique_ptr<class Expectation>>::iterator current;
-    std::unique_ptr<qore::comp::Source> source;
+    int sourceId;
 };
 
 } // namespace qtif

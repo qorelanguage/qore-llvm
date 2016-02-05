@@ -72,6 +72,7 @@ ast::Script::Ptr Parser::parseScript() {
 //    | namespace_body namespace_member
 //    ;
 ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
+    LOG_FUNCTION();
     ast::Namespace::Ptr ns = ast::Namespace::create();
 
     ns->location = match(TokenType::KwNamespace);
@@ -83,7 +84,7 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
         report(DiagId::ParserExpectedNamespaceName);
     }
 
-    if (tokenType() != TokenType::Semicolon) {
+    if (tokenType() == TokenType::Semicolon) {
         consume();
         return ns;
     }

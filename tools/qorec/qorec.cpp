@@ -2,6 +2,7 @@
 #include "qore/common/Logging.h"
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
+#include "qore/comp/ast/Dump.h"
 #if QORE_USE_LLVM
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -88,7 +89,8 @@ int main() {
 //    StdinWrapper dp(diagMgr, srcMgr);
 
     Parser parser(diagMgr, dp);
-    parser.parseScript();
+    ast::Script::Ptr script = parser.parseScript();
+    ast::dump(srcMgr, std::cout, *script);
 
     return 0;
 }

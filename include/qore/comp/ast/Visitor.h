@@ -23,30 +23,53 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "../Qtif.h"
-#include "qore/comp/DirectiveProcessor.h"
+///
+/// \file
+/// \brief AST node visitor.
+///
+//------------------------------------------------------------------------------
+#ifndef INCLUDE_QORE_COMP_AST_VISITOR_H_
+#define INCLUDE_QORE_COMP_AST_VISITOR_H_
 
 namespace qore {
 namespace comp {
+namespace ast {
 
-class DirectiveProcessorTest : public qtif::LineTest {
+class Script;
+class Namespace;
+
+/**
+ * \brief Interface for visitors of declarations (namespaces, classes, globals, constants, functions).
+ */
+class DeclarationVisitor {
+
 public:
-    DirectiveProcessorTest() : LineTest("/directives/include/") {
-    }
+    virtual ~DeclarationVisitor() {}
+
+    /**
+     * \brief Called by a Script AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(Script &node) = 0;
+
+    /**
+     * \brief Called by a Namespace AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(Namespace &node) = 0;
+
+protected:
+    DeclarationVisitor() = default;
+
+private:
+    DeclarationVisitor(const DeclarationVisitor &) = delete;
+    DeclarationVisitor(DeclarationVisitor &&) = delete;
+    DeclarationVisitor &operator=(const DeclarationVisitor &) = delete;
+    DeclarationVisitor &operator=(DeclarationVisitor &&) = delete;
 };
 
-TEST_P(DirectiveProcessorTest, Run) {
-    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
-    while (true) {
-        Token token = dp.read();
-        output << token.type << token.location << ':' << token.length << '\n';
-        if (token.type == TokenType::EndOfFile) {
-            break;
-        }
-    }
-}
-
-QTIF_TEST_CASE(DirectiveProcessorTest, "directives/");
-
+} // namespace ast
 } // namespace comp
 } // namespace qore
+
+#endif // INCLUDE_QORE_COMP_AST_VISITOR_H_

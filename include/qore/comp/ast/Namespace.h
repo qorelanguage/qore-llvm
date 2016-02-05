@@ -34,6 +34,7 @@
 #include <string>
 #include "qore/comp/ast/Modifiers.h"
 #include "qore/comp/ast/Node.h"
+#include "qore/comp/ast/Visitor.h"
 #include "qore/comp/Token.h"
 
 namespace qore {
@@ -47,6 +48,12 @@ class NamespaceMember : public Node {
 
 public:
     using Ptr = std::unique_ptr<NamespaceMember>;           //!< Pointer type.
+
+    /**
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
+     * \param visitor the visitor to call
+     */
+    virtual void accept(DeclarationVisitor &visitor) = 0;
 };
 
 /**
@@ -69,6 +76,10 @@ public:
      */
     static Ptr create() {
         return Ptr(new Namespace());
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
     }
 
 private:

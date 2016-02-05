@@ -56,6 +56,14 @@ public:
         return Ptr(new Script());
     }
 
+    /**
+     * \brief Calls visitor's `visit()` method.
+     * \param visitor the visitor to call
+     */
+    void accept(DeclarationVisitor &visitor) {
+        visitor.visit(*this);
+    }
+
 private:
     Script() {
     }

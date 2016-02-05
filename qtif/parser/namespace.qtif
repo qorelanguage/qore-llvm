@@ -1,0 +1,22 @@
+final namespace X {
+    public namespace Y;
+    namespace YY{}
+}
+#$$$
+-Script
+  .members:
+    -Namespace
+      .location: 1:7
+      .modifiers: final
+      .name: Identifier X
+      .members:
+        -Namespace
+          .location: 2:12
+          .modifiers: public
+          .name: Identifier Y
+          .members:
+        -Namespace
+          .location: 3:5
+          .modifiers: -none-
+          .name: Identifier YY
+          .members:

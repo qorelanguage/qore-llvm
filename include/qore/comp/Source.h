@@ -177,6 +177,17 @@ public:
      */
     std::pair<int, int> decodeLocation(int offset, int tabSize = 4);
 
+    /**
+     * \brief Returns the substring of given length starting at given offset.
+     * \param offset the offset of the first character of the substring
+     * \param length the length of the substring
+     * \return the substring of `length` starting at `offset`
+     */
+    std::string getRange(int offset, int length) const {
+        assert(offset >= 0 && length >= 0 && offset + length < static_cast<int>(data.size()));
+        return std::string(data.begin() + offset, data.begin() + offset + length);
+    }
+
 private:
     Source(const Source &) = delete;
     Source(Source &&) = delete;

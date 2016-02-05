@@ -23,30 +23,25 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "../Qtif.h"
-#include "qore/comp/DirectiveProcessor.h"
+#include "gtest/gtest.h"
+#include "qore/common/Indent.h"
 
 namespace qore {
-namespace comp {
+namespace log {
 
-class DirectiveProcessorTest : public qtif::LineTest {
-public:
-    DirectiveProcessorTest() : LineTest("/directives/include/") {
-    }
-};
+TEST(IndentTest, test) {
+    Indent i(2);
 
-TEST_P(DirectiveProcessorTest, Run) {
-    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
-    while (true) {
-        Token token = dp.read();
-        output << token.type << token.location << ':' << token.length << '\n';
-        if (token.type == TokenType::EndOfFile) {
-            break;
-        }
-    }
+    EXPECT_EQ("    ", i.get());
+    EXPECT_EQ("    ", i--.get());
+    EXPECT_EQ("  ", i.get());
+    EXPECT_EQ("", (--i).get());
+    EXPECT_EQ("", i.get());
+    EXPECT_EQ("", i++.get());
+    EXPECT_EQ("  ", i.get());
+    EXPECT_EQ("    ", (++i).get());
+    EXPECT_EQ("    ", i.get());
 }
 
-QTIF_TEST_CASE(DirectiveProcessorTest, "directives/");
-
-} // namespace comp
+} // namespace log
 } // namespace qore

@@ -25,28 +25,23 @@
 //------------------------------------------------------------------------------
 #include "../Qtif.h"
 #include "qore/comp/DirectiveProcessor.h"
+#include "qore/comp/Parser.h"
+#include "qore/comp/ast/Dump.h"
 
 namespace qore {
 namespace comp {
 
-class DirectiveProcessorTest : public qtif::LineTest {
-public:
-    DirectiveProcessorTest() : LineTest("/directives/include/") {
-    }
+class ParserTest : public qtif::LineTest {
 };
 
-TEST_P(DirectiveProcessorTest, Run) {
+TEST_P(ParserTest, Run) {
     DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
-    while (true) {
-        Token token = dp.read();
-        output << token.type << token.location << ':' << token.length << '\n';
-        if (token.type == TokenType::EndOfFile) {
-            break;
-        }
-    }
+    Parser parser(diagMgr, dp);
+    ast::Script::Ptr script = parser.parseScript();
+    ast::dump(srcMgr, output, *script);
 }
 
-QTIF_TEST_CASE(DirectiveProcessorTest, "directives/");
+QTIF_TEST_CASE(ParserTest, "parser/");
 
 } // namespace comp
 } // namespace qore
