@@ -85,7 +85,7 @@ int main() {
     SourceManager srcMgr(diagMgr);
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "final namespace X { public namespace Y; namespace YY{}}"));
+    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", ";0;"));
 //    StdinWrapper dp(diagMgr, srcMgr);
 
     Parser parser(diagMgr, dp);

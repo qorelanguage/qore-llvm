@@ -132,12 +132,43 @@ private:
         }
     }
 
+    void recoverSkipToSemicolon() {
+        int cnt = 0;
+        DisableDiag dd(diagMgr);
+        while (true) {
+            switch (tokenType()) {
+                case TokenType::EndOfFile:
+                    return;
+                case TokenType::CurlyLeft:
+                    consume();
+                    ++cnt;
+                    break;
+                case TokenType::CurlyRight:
+                    consume();
+                    if (cnt-- == 0) {
+                        return;
+                    }
+                    break;
+                case TokenType::Semicolon:
+                    consume();
+                    if (cnt == 0) {
+                        return;
+                    }
+                    break;
+                default:
+                    consume();
+                    break;
+            }
+        }
+    }
+
 private:
     ast::Namespace::Ptr namespaceDecl(ast::Modifiers mods);
     ast::NamespaceMember::Ptr namespaceMember();
     ast::Modifiers modifiers();
     ast::Statement::Ptr statement();
     ast::Expression::Ptr expression();
+    ast::ExpressionStatement::Ptr expressionStatement();
 
 private:
     DiagManager &diagMgr;

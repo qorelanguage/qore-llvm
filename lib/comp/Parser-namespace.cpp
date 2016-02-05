@@ -55,8 +55,8 @@ ast::Script::Ptr Parser::parseScript() {
         if (nsMember) {
             script->members.push_back(std::move(nsMember));
         } else {
-            //if (were modifiers) -> report error
-            //statement();
+            //TODO if (were modifiers) -> report error
+            script->statements.push_back(std::move(statement()));
         }
     }
     return script;

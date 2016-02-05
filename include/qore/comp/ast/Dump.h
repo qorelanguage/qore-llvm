@@ -44,6 +44,7 @@ namespace ast {
 #define LOCATION(name)      doLocation(#name, node.name)
 #define MODIFIERS(name)     doModifiers(#name, node.name)
 #define TOKEN(name)         doToken(#name, node.name)
+#define VISIT(name)         os << indent++ << "." << #name << ":\n"; node.name->accept(*this); --indent
 
 template<typename OS>
 class DumpVisitor : public ast::DeclarationVisitor, public ast::StatementVisitor, public ast::ExpressionVisitor {
@@ -62,6 +63,17 @@ public:
             MODIFIERS(modifiers);
             TOKEN(name);
             ARRAY(members);
+    })
+
+    NODE(EmptyStatement, {
+    })
+
+    NODE(ExpressionStatement, {
+            VISIT(expression);
+    })
+
+    NODE(LiteralExpression, {
+            TOKEN(token);
     })
 
 private:
@@ -121,6 +133,7 @@ private:
 #undef LOCATION
 #undef MODIFIERS
 #undef TOKEN
+#undef VISIT
 
 template<typename OS, typename N>
 void dump(SourceManager &srcMgr, OS &os, N &n) {

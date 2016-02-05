@@ -35,7 +35,22 @@ namespace comp {
 
 ast::Statement::Ptr Parser::statement() {
     LOG_FUNCTION();
+    switch (tokenType()) {
+        case TokenType::Semicolon:
+            consume();
+            return ast::EmptyStatement::create();
+        default:
+            return expressionStatement();
+    }
     return ast::Statement::Ptr();
+}
+
+ast::ExpressionStatement::Ptr Parser::expressionStatement() {
+    LOG_FUNCTION();
+    ast::ExpressionStatement::Ptr stmt = ast::ExpressionStatement::create();
+    stmt->expression = expression();
+    match(TokenType::Semicolon, &Parser::recoverSkipToSemicolon);
+    return stmt;
 }
 
 } // namespace comp

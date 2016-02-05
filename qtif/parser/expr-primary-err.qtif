@@ -1,0 +1,10 @@
+=;
+#$$$
+#$!ParserExpectedPrimaryExpression@1:1
+-Script
+  .members:
+  .statements:
+    -ExpressionStatement
+      .expression:
+        -LiteralExpression
+          .token: Assign =

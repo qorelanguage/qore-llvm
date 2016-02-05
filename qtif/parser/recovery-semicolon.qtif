@@ -1,0 +1,22 @@
+0 0 if { ; x } y try ;
+1 0 if { ; x } y try }
+2 0 if { ; x } y try
+#$$$
+#$!ParserUnexpectedToken@1:3-Semicolon
+#$!ParserUnexpectedToken@2:3-Semicolon
+#$!ParserUnexpectedToken@3:3-Semicolon
+-Script
+  .members:
+  .statements:
+    -ExpressionStatement
+      .expression:
+        -LiteralExpression
+          .token: Integer 0
+    -ExpressionStatement
+      .expression:
+        -LiteralExpression
+          .token: Integer 1
+    -ExpressionStatement
+      .expression:
+        -LiteralExpression
+          .token: Integer 2

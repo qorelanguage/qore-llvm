@@ -37,6 +37,9 @@ namespace ast {
 
 class Script;
 class Namespace;
+class EmptyStatement;
+class ExpressionStatement;
+class LiteralExpression;
 
 /**
  * \brief Interface for expression visitors.
@@ -45,6 +48,12 @@ class ExpressionVisitor {
 
 public:
     virtual ~ExpressionVisitor() {}
+
+    /**
+     * \brief Called by a LiteralExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(LiteralExpression &node) = 0;
 
 protected:
     ExpressionVisitor() = default;
@@ -63,6 +72,18 @@ class StatementVisitor {
 
 public:
     virtual ~StatementVisitor() {}
+
+    /**
+     * \brief Called by an EmptyStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(EmptyStatement &node) = 0;
+
+    /**
+     * \brief Called by an ExpressionStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ExpressionStatement &node) = 0;
 
 protected:
     StatementVisitor() = default;

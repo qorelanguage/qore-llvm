@@ -54,6 +54,35 @@ public:
     virtual void accept(ExpressionVisitor &visitor) = 0;
 };
 
+/**
+ * \brief Represents a literal.
+ */
+class LiteralExpression : public Expression {
+
+public:
+    Token token;                                            //!< The token.
+
+public:
+    using Ptr = std::unique_ptr<LiteralExpression>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new LiteralExpression());
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+private:
+    LiteralExpression() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

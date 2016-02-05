@@ -35,7 +35,21 @@ namespace comp {
 
 ast::Expression::Ptr Parser::expression() {
     LOG_FUNCTION();
-    return ast::Expression::Ptr();
+
+    switch (tokenType()) {
+        case TokenType::Integer: {
+            ast::LiteralExpression::Ptr expr = ast::LiteralExpression::create();
+            expr->token = consume();
+            return expr;
+        }
+        default: {
+            //TODO return special error node which will prevent further errors
+            report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());
+            ast::LiteralExpression::Ptr expr = ast::LiteralExpression::create();
+            expr->token = consume();
+            return expr;
+        }
+    }
 }
 
 } // namespace comp

@@ -155,7 +155,7 @@ statements
 statement
     : ';'
     | block
-    | exp_n ';'
+    | expr ';'
     | TOK_TRY statement TOK_CATCH '(' type IDENTIFIER ')' statement
     | TOK_RETHROW ';'
     | TOK_THROW expr ';'

@@ -52,6 +52,61 @@ public:
     virtual void accept(StatementVisitor &visitor) = 0;
 };
 
+/**
+ * \brief Represents an empty statement.
+ */
+class EmptyStatement : public Statement {
+
+public:
+    using Ptr = std::unique_ptr<EmptyStatement>;            //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new EmptyStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+private:
+    EmptyStatement() {
+    }
+};
+
+/**
+ * \brief Represents an expression statement.
+ */
+class ExpressionStatement : public Statement {
+
+public:
+    Expression::Ptr expression;                             //!< The expression.
+
+public:
+    using Ptr = std::unique_ptr<ExpressionStatement>;       //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new ExpressionStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+private:
+    ExpressionStatement() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

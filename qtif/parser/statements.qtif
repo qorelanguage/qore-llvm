@@ -1,0 +1,10 @@
+;0;
+#$$$
+-Script
+  .members:
+  .statements:
+    -EmptyStatement
+    -ExpressionStatement
+      .expression:
+        -LiteralExpression
+          .token: Integer 0
