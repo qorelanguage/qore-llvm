@@ -29,6 +29,7 @@
 namespace qore {
 namespace log {
 
+#ifdef QORE_LOGGING
 class TestLogger : public Logger {
 };
 
@@ -38,6 +39,7 @@ TEST(LoggingTest, setLogger) {
     EXPECT_EQ(&logger, LoggerManager::get());
     LoggerManager::set(orig);
 }
+#endif
 
 } // namespace log
 } // namespace qore

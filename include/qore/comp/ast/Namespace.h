@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_AST_NAMESPACE_H_
 #define INCLUDE_QORE_COMP_AST_NAMESPACE_H_
 
+#include <vector>
 #include "qore/comp/ast/Modifiers.h"
 #include "qore/comp/ast/Expression.h"
 

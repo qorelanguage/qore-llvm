@@ -62,6 +62,7 @@ private:
     DirectiveProcessor dp;
 };
 
+#ifdef QORE_LOGGING
 class LogFilter : public qore::log::Logger {
 
 public:
@@ -69,10 +70,13 @@ public:
         return component.find("Parser") != std::string::npos;
     }
 };
+#endif
 
 int main() {
+#ifdef QORE_LOGGING
     LogFilter logFilter;
     qore::log::LoggerManager::set(&logFilter);
+#endif
     LOG_FUNCTION();
 
 #if QORE_USE_LLVM
