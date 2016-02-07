@@ -100,11 +100,21 @@ public:
         return c == '\r' || c == '\n';
     }
 
+    /**
+     * \brief Determines whether a character is considered a hexadecimal digit.
+     * \param c the character to test
+     * \return `true` if `c` is 0-9, a-f or A-F
+     */
+    static bool isHexDigit(int c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
 private:
     TokenType readInternal(Source &src);
     TokenType readIdentifier(Source &src);
-    TokenType readInteger(Source &src);
     TokenType readParseDirective(Source &src);
+    TokenType readHexLiteral(Source &src);
+    TokenType handleDigit(Source &src);
 
 private:
     Scanner(const Scanner &) = delete;

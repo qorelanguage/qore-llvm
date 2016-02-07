@@ -167,8 +167,9 @@ private:
     ast::NamespaceMember::Ptr namespaceMember();
     ast::Modifiers modifiers();
     ast::Statement::Ptr statement();
-    ast::Expression::Ptr expression();
     ast::ExpressionStatement::Ptr expressionStatement();
+    ast::Expression::Ptr expression();
+    ast::Expression::Ptr primaryExpr();
 
 private:
     DiagManager &diagMgr;

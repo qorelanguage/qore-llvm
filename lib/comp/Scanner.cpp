@@ -43,14 +43,19 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "class",          TokenType::KwClass },
     { "const",          TokenType::KwConst },
     { "deprecated",     TokenType::KwDeprecated },
+    { "False",          TokenType::KwFalse },
     { "final",          TokenType::KwFinal },
     { "namespace",      TokenType::KwNamespace },
+    { "NOTHING",        TokenType::KwNothing },
+    { "NULL",           TokenType::KwNull },
     { "our",            TokenType::KwOur },
     { "private",        TokenType::KwPrivate },
     { "public",         TokenType::KwPublic },
+    { "self",           TokenType::KwSelf },
     { "static",         TokenType::KwStatic },
     { "sub",            TokenType::KwSub },
     { "synchronized",   TokenType::KwSynchronized },
+    { "True",           TokenType::KwTrue },
 
     { "catch",          TokenType::KwCatch },
     { "else",           TokenType::KwElse },
@@ -123,9 +128,11 @@ TokenType Scanner::readInternal(Source &src) {
             src.unread();
             readString(src);
             return TokenType::String;
-        case '0':   case '1':   case '2':   case '3':   case '4':
+        case '0':
+            return src.peek() == 'x' ? readHexLiteral(src) : handleDigit(src);
+        case '1':   case '2':   case '3':   case '4':
         case '5':   case '6':   case '7':   case '8':   case '9':
-            return readInteger(src);
+            return handleDigit(src);
         case 'a':   case 'b':   case 'c':   case 'd':   case 'e':
         case 'f':   case 'g':   case 'h':   case 'i':   case 'j':
         case 'k':   case 'l':   case 'm':   case 'n':   case 'o':
@@ -150,13 +157,6 @@ TokenType Scanner::readIdentifier(Source &src) {
     }
     auto it = Keywords.find(src.getMarkedString());
     return it == Keywords.end() ? TokenType::Identifier : it->second;
-}
-
-TokenType Scanner::readInteger(Source &src) {
-    while (isdigit(src.peek())) {
-        src.read();
-    }
-    return TokenType::Integer;
 }
 
 void Scanner::readString(Source &src) {
@@ -204,6 +204,25 @@ TokenType Scanner::readParseDirective(Source &src) {
     }
     return TokenType::ParseDirective;
 }
+
+TokenType Scanner::readHexLiteral(Source &src) {
+    src.read(); //consume 'x'
+    while (isHexDigit(src.peek())) {
+        src.read();
+    }
+    if (src.getMarkedLength() < 3) {
+        REPORT(ScannerInvalidHexLiteral);
+    }
+    return TokenType::Integer;
+}
+
+TokenType Scanner::handleDigit(Source &src) {
+    while (isdigit(src.peek())) {
+        src.read();
+    }
+    return TokenType::Integer;
+}
+
 
 } //namespace comp
 } //namespace qore

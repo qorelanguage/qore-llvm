@@ -36,10 +36,20 @@ namespace comp {
 ast::Expression::Ptr Parser::expression() {
     LOG_FUNCTION();
 
+    return primaryExpr();
+}
+
+ast::Expression::Ptr Parser::primaryExpr() {
+    LOG_FUNCTION();
+
     switch (tokenType()) {
-        case TokenType::Integer: {
+        case TokenType::KwFalse:
+        case TokenType::KwNothing:
+        case TokenType::KwNull:
+        case TokenType::KwSelf:
+        case TokenType::KwTrue:
+        case TokenType::Integer:
             return ast::LiteralExpression::create(consume());
-        }
         default: {
             //TODO return special error node which will prevent further errors
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());

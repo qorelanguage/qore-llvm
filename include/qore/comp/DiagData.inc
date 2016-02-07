@@ -46,6 +46,8 @@ DIAG(ScannerInvalidInteger,                     "PARSE-EXCEPTION", Error,
         "integers must be in the range %s (MININT) to %s (MAXINT)")
 DIAG(ScannerUnendedStringLiteral,               "PARSE-EXCEPTION", Error,
         "unended string literal")
+DIAG(ScannerInvalidHexLiteral,                  "PARSE-EXCEPTION", Error,
+        "invalid hexadecimal literal")
 
 DIAG(ParserUnexpectedToken,                     "PARSE-EXCEPTION", Error,
         "syntax error, unexpected %s, expecting %s")
