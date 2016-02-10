@@ -116,7 +116,7 @@ ast::Expression::Ptr Parser::primaryExpr() {
             match(TokenType::ParenLeft);
             cast->expression = expression();
             cast->end = match(TokenType::ParenRight).location;
-            return cast;
+            return std::move(cast);
         }
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());
