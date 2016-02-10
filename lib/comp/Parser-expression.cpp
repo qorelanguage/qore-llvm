@@ -56,44 +56,61 @@ ast::Expression::Ptr Parser::primaryExpr() {
         case TokenType::KwTrue:
         case TokenType::Integer:
             return ast::LiteralExpression::create(consume());
-        case TokenType::Identifier:
-            return ast::NameExpression::create(name());
-        case TokenType::ParenLeft:
-            return parenExpr();
-        case TokenType::CurlyLeft:
-            return curlyExpr();
+        case TokenType::KwAbstract:
+        case TokenType::KwDeprecated:
+        case TokenType::KwFinal:
+        case TokenType::KwPrivate:
+        case TokenType::KwPublic:
+        case TokenType::KwStatic:
+        case TokenType::KwSynchronized: {
+            ast::Modifiers mods = modifiers();
+            if (tokenType() == TokenType::KwSub) {
+                return sub(mods, ast::ImplicitType::create());
+            }
+            return sub(mods, type());
+        }
+        case TokenType::KwSub:
+            return sub(ast::Modifiers(), ast::ImplicitType::create());
+        case TokenType::Asterisk: {
+            ast::Type::Ptr t = type();
+            if (tokenType() == TokenType::KwSub) {
+                return sub(ast::Modifiers(), std::move(t));
+            }
+            return ast::VarDeclExpression::create(std::move(t), match(TokenType::Identifier));
+        }
+        case TokenType::Identifier: {
+            ast::Name n = name();
+            if (tokenType() == TokenType::KwSub) {
+                return sub(ast::Modifiers(), ast::NameType::create(std::move(n)));
+            }
+            if (tokenType() == TokenType::Identifier) {
+                return ast::VarDeclExpression::create(ast::NameType::create(std::move(n)), consume());
+            }
+            return ast::NameExpression::create(std::move(n));
+        }
+        case TokenType::ParenLeft: {
+            Token lParen = match(TokenType::ParenLeft);
+            if (tokenType() == TokenType::ParenRight) {
+                return ast::ListExpression::create(lParen, ast::ListExpression::Data(), consume());
+            }
+            ast::Expression::Ptr expr = expression();
+            if (tokenType() == TokenType::Colon) {
+                return hash(lParen, std::move(expr));
+            }
+            match(TokenType::ParenRight);
+            return expr;
+        }
+        case TokenType::CurlyLeft: {
+            Token lCurly = match(TokenType::CurlyLeft);
+            if (tokenType() == TokenType::CurlyRight) {
+                return ast::HashExpression::create(lCurly, ast::HashExpression::Data(), consume());
+            }
+            return hash(lCurly, expression());
+        }
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());
             return ast::ErrorExpression::create(consume());
     }
-}
-
-//primary_expr
-//    | '(' expr ')'
-//    | '(' hash ')'
-//    | '(' ')'
-ast::Expression::Ptr Parser::parenExpr() {
-    Token lParen = match(TokenType::ParenLeft);
-    if (tokenType() == TokenType::ParenRight) {
-        return ast::ListExpression::create(lParen, ast::ListExpression::Data(), consume());
-    }
-    ast::Expression::Ptr expr = expression();
-    if (tokenType() == TokenType::Colon) {
-        return hash(lParen, std::move(expr));
-    }
-    match(TokenType::ParenRight);
-    return expr;
-}
-
-//primary_expr
-//    | '{' '}'
-//    | '{' hash '}'
-ast::Expression::Ptr Parser::curlyExpr() {
-    Token lCurly = match(TokenType::CurlyLeft);
-    if (tokenType() == TokenType::CurlyRight) {
-        return ast::HashExpression::create(lCurly, ast::HashExpression::Data(), consume());
-    }
-    return hash(lCurly, expression());
 }
 
 //hash
@@ -127,6 +144,16 @@ ast::Expression::Ptr Parser::hash(Token openToken, ast::Expression::Ptr expr) {
     return ast::HashExpression::create(openToken, std::move(data), match(end));
 }
 
+//primary_expr
+//    | modifiers type KwSub param_list block
+//    | modifiers KwSub param_list block
+ast::Expression::Ptr Parser::sub(ast::Modifiers mods, ast::Type::Ptr type) {
+    match(TokenType::KwSub);
+    QORE_UNREACHABLE("Not implemented");
+//    paramList();
+//    block();
+}
+
 //name
 //    : IDENTIFIER
 //    | IDENTIFIER '::' name
@@ -139,6 +166,18 @@ ast::Name Parser::name() {
         name.tokens.push_back(match(TokenType::Identifier));
     }
     return name;
+}
+
+//type
+//    : name
+//    | '*' name
+//    ;
+ast::Type::Ptr Parser::type() {
+    if (tokenType() == TokenType::Asterisk) {
+        SourceLocation l = consume().location;
+        return ast::AsteriskType::create(l, name());
+    }
+    return ast::NameType::create(name());
 }
 
 } // namespace comp

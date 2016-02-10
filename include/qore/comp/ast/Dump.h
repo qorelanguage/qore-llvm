@@ -48,7 +48,7 @@ namespace ast {
 #define VISIT(name)         os << indent++ << "." << #name << ":\n"; node.name->accept(*this); --indent
 
 template<typename OS>
-class DumpVisitor : public ast::DeclarationVisitor, public ast::StatementVisitor, public ast::ExpressionVisitor {
+class DumpVisitor : public DeclarationVisitor, public StatementVisitor, public ExpressionVisitor, public TypeVisitor {
 
 public:
     DumpVisitor(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
@@ -96,6 +96,22 @@ public:
             TOKEN(endToken);
     })
 
+    NODE(VarDeclExpression, {
+            VISIT(type);
+            TOKEN(name);
+    })
+
+    NODE(NameType, {
+            NAME(name);
+    })
+
+    NODE(AsteriskType, {
+            NAME(name);
+    })
+
+    NODE(ImplicitType, {
+    })
+
 private:
     struct NodeHelper {
         NodeHelper(DumpVisitor &dv, const std::string &name, Node &node) : dv(dv) {
@@ -126,16 +142,16 @@ private:
         return str.str();
     }
 
-    void doModifiers(const std::string &name, const ast::Modifiers &mods) {
+    void doModifiers(const std::string &name, const Modifiers &mods) {
         os << indent << "." << name << ":";
         if (mods.isEmpty()) os << " -none-";
-        if (mods.contains(ast::Modifier::Abstract)) os << " abstract";
-        if (mods.contains(ast::Modifier::Deprecated)) os << " deprecated";
-        if (mods.contains(ast::Modifier::Final)) os << " final";
-        if (mods.contains(ast::Modifier::Private)) os << " private";
-        if (mods.contains(ast::Modifier::Public)) os << " public";
-        if (mods.contains(ast::Modifier::Static)) os << " static";
-        if (mods.contains(ast::Modifier::Synchronized)) os << " synchronized";
+        if (mods.contains(Modifier::Abstract)) os << " abstract";
+        if (mods.contains(Modifier::Deprecated)) os << " deprecated";
+        if (mods.contains(Modifier::Final)) os << " final";
+        if (mods.contains(Modifier::Private)) os << " private";
+        if (mods.contains(Modifier::Public)) os << " public";
+        if (mods.contains(Modifier::Static)) os << " static";
+        if (mods.contains(Modifier::Synchronized)) os << " synchronized";
         os << "\n";
     }
 

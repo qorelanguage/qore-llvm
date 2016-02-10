@@ -32,8 +32,8 @@
 #define INCLUDE_QORE_COMP_AST_EXPRESSION_H_
 
 #include <cassert>
-#include "qore/comp/ast/Name.h"
 #include "qore/comp/ast/Node.h"
+#include "qore/comp/ast/Type.h"
 #include "qore/comp/ast/Visitor.h"
 
 namespace qore {
@@ -157,11 +157,11 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return name.tokens[0].location;
+        return name.getStart();
     }
 
     SourceLocation getEnd() const override {
-        return name.tokens[name.tokens.size() - 1].location;
+        return name.getEnd();
     }
 
 private:
@@ -260,6 +260,46 @@ public:
 private:
     explicit HashExpression(Token startToken, Data data, Token endToken) : startToken(startToken),
             data(std::move(data)), endToken(endToken) {
+    }
+};
+
+/**
+ * \brief Represents a variable declaration.
+ */
+class VarDeclExpression : public Expression {
+
+public:
+    Type::Ptr type;                                         //!< The type.
+    Token name;                                             //!< The name.
+
+public:
+    using Ptr = std::unique_ptr<VarDeclExpression>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param type the type
+     * \param name the name
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Type::Ptr type, Token name) {
+        return Ptr(new VarDeclExpression(std::move(type), name));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return type->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return name.location;
+    }
+
+private:
+    explicit VarDeclExpression(Type::Ptr type, Token name) : type(std::move(type)), name(name) {
     }
 };
 

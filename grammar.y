@@ -50,8 +50,10 @@ X       : namespace_decl
         ;
 
     sub_def
-        | modifiers type_opt KW_SUB name '(' param_list ')' block
-        | modifiers type_opt name '(' param_list ')' base_constructor_list block
+        | modifiers type KW_SUB name param_list block
+        | modifiers KW_SUB name param_list block
+        | modifiers type name param_list base_constructor_list block
+        | modifiers name param_list base_constructor_list block
         ;
 
 X   modifiers
@@ -102,8 +104,10 @@ X       ;
         ;
 
     inline_methoddef
-        | modifiers type_opt IDENTIFIER '(' param_list ')' base_constructor_list block
-        | modifiers type_opt IDENTIFIER '(' param_list ')' ';'
+        | modifiers type IDENTIFIER param_list block
+        | modifiers IDENTIFIER param_list base_constructor_list block
+        | modifiers type IDENTIFIER param_list ';'
+        | modifiers IDENTIFIER param_list ';'
         ;
 
     base_constructor_list
@@ -342,27 +346,28 @@ X       | expr ';'
 
     primary_expr
 X       : name
+X       | type IDENTIFIER
+X       | modifiers type KW_SUB param_list block
+X       | modifiers KW_SUB param_list block
 X       | '(' expr ')'
 X       | '(' hash ')'
 X       | '(' ')'
 X       | '{' '}'
 X       | '{' hash '}'
-        | type IDENTIFIER
         | BACKQUOTE
         | IMPLICIT_ARG_REF
         | IMPLICIT_ELEMENT
-X       | KwSelf
-X       | KwNothing
-X       | KwNull
-X       | KwTrue
-X       | KwFalse
+X       | KW_SELF
+X       | KW_NOTHING
+X       | KW_NULL
+X       | KW_TRUE
+X       | KW_FALSE
         | QFLOAT
 X       | INTEGER
         | DATETIME
         | NUMBER
         | BINARY
         | string
-    //lambda:       modifiers type_opt TOK_SUB '(' param_list ')' block
         ;
 
     string
@@ -434,26 +439,18 @@ X       : IDENTIFIER
 X       | IDENTIFIER '::' name
 X       ;
 
-    type
-        : IDENTIFIER
-        | SCOPED_REF
-        | '*' IDENTIFIER
-        | '*' SCOPED_REF
-        ;
-
-    type_opt
-        : /* empty */           //this is possible only as return type of a function/closure/method and means 'nothing'
-        | type
-        ;
+X   type
+X       : name
+X       | '*' name
+X       ;
 
     param_list
-        : /* empty */
-        | params
+        : '(' ')'
+        | '(' params ')'
         ;
 
     params
         : param
-        | param ','
         | param ',' params
         ;
 

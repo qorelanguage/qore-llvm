@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_AST_NAME_H_
 #define INCLUDE_QORE_COMP_AST_NAME_H_
 
+#include <cassert>
 #include "qore/comp/Token.h"
 
 namespace qore {
@@ -56,6 +57,24 @@ public:
      * \brief Default move-assignment.
      */
     Name &operator=(Name &&) = default;
+
+    /**
+     * \brief Returns the start location of the name in the source code.
+     * \return the start location
+     */
+    SourceLocation getStart() const {
+        assert(!tokens.empty());
+        return tokens[0].location;
+    }
+
+    /**
+     * \brief Returns the end location of the name the source code.
+     * \return the end location
+     */
+    SourceLocation getEnd() const {
+        assert(!tokens.empty());
+        return tokens[tokens.size() - 1].location;
+    }
 
 private:
     Name(const Name &) = delete;

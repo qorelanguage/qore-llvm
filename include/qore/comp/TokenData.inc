@@ -44,6 +44,7 @@ TOK(KwSub)
 TOK(KwSynchronized)
 TOK(KwTrue)
 
+TOK(Asterisk)
 TOK(Colon)
 TOK(Comma)
 TOK(CurlyLeft)

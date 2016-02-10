@@ -176,10 +176,10 @@ private:
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
     ast::Expression::Ptr primaryExpr();
-    ast::Expression::Ptr parenExpr();
-    ast::Expression::Ptr curlyExpr();
     ast::Expression::Ptr hash(Token openToken, ast::Expression::Ptr expr);
+    ast::Expression::Ptr sub(ast::Modifiers mods, ast::Type::Ptr type);
     ast::Name name();
+    ast::Type::Ptr type();
 
 private:
     DiagManager &diagMgr;

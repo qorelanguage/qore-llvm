@@ -109,6 +109,8 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::Assign;
         case ',':
             return TokenType::Comma;
+        case '*':
+            return TokenType::Asterisk;
         case '#':
             readLineComment(src);
             return TokenType::None;
