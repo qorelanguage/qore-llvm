@@ -107,6 +107,17 @@ ast::Expression::Ptr Parser::primaryExpr() {
             }
             return hash(lCurly, expression());
         }
+        case TokenType::KwCast: {
+            ast::CastExpression::Ptr cast = ast::CastExpression::create();
+            cast->start = consume().location;
+            match(TokenType::AngleLeft);
+            cast->type = type();
+            match(TokenType::AngleRight);
+            match(TokenType::ParenLeft);
+            cast->expression = expression();
+            cast->end = match(TokenType::ParenRight).location;
+            return cast;
+        }
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());
             return ast::ErrorExpression::create(consume());

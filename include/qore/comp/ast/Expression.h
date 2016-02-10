@@ -303,6 +303,46 @@ private:
     }
 };
 
+/**
+ * \brief Represents a cast expression.
+ */
+class CastExpression : public Expression {
+
+public:
+    SourceLocation start;                                   //!< The starting location.
+    Type::Ptr type;                                         //!< The type.
+    Expression::Ptr expression;                             //!< The expression.
+    SourceLocation end;                                     //!< The ending location.
+
+public:
+    using Ptr = std::unique_ptr<CastExpression>;            //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new CastExpression());
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    CastExpression() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

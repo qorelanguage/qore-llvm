@@ -103,6 +103,11 @@ public:
             TOKEN(name);
     })
 
+    NODE(CastExpression, {
+            VISIT(type);
+            VISIT(expression);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

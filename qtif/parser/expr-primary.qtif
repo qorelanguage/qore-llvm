@@ -8,8 +8,9 @@ NULL;
 self;
 ();
 (True);
+cast<*a::b>({});
 #$$$
--Script@1:1-11:1
+-Script@1:1-12:1
   .members:
   .statements:
     -ExpressionStatement@1:1-1:2
@@ -52,3 +53,12 @@ self;
       .expression:
         -LiteralExpression@10:2-10:2
           .token: KwTrue True
+    -ExpressionStatement@11:1-11:16
+      .expression:
+        -CastExpression@11:1-11:15
+          .type:
+            -AsteriskType@11:6-11:10
+              .name: a::b
+          .expression:
+            -HashExpression@11:13-11:14
+              .data:

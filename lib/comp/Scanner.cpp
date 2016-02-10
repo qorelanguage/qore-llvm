@@ -40,6 +40,7 @@ namespace comp {
 
 const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "abstract",       TokenType::KwAbstract },
+    { "cast",           TokenType::KwCast },
     { "class",          TokenType::KwClass },
     { "const",          TokenType::KwConst },
     { "deprecated",     TokenType::KwDeprecated },
@@ -131,6 +132,10 @@ TokenType Scanner::readInternal(Source &src) {
                 return readParseDirective(src);
             }
             return TokenType::Percent;
+        case '<':
+            return TokenType::AngleLeft;
+        case '>':
+            return TokenType::AngleRight;
         case '"':
         case '\'':
             src.unread();

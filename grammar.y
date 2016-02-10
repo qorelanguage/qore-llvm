@@ -338,7 +338,6 @@ X       | expr ';'
         | postfix_expr '(' arg_list ')'
         | postfix_expr '[' expr ']'
         | postfix_expr '{' expr '}'
-    //    | QORE_CAST '(' expr ')'
         | postfix_expr '.' member_accessor
         | postfix_expr P_INCREMENT
         | postfix_expr P_DECREMENT
@@ -354,6 +353,7 @@ X       | '(' hash ')'
 X       | '(' ')'
 X       | '{' '}'
 X       | '{' hash '}'
+X       | KW_CAST '<' type '>' '(' expr ')'
         | BACKQUOTE
         | IMPLICIT_ARG_REF
         | IMPLICIT_ELEMENT
