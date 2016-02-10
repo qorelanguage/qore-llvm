@@ -6,5 +6,5 @@
   .statements:
     -ExpressionStatement@1:1-1:2
       .expression:
-        -LiteralExpression@1:1-1:1
+        -ErrorExpression@1:1-1:1
           .token: Assign =

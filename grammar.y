@@ -54,20 +54,20 @@ X       : namespace_decl
         | modifiers type_opt name '(' param_list ')' base_constructor_list block
         ;
 
-X    modifiers
-X        : /* empty */
-X        | modifiers modifier
-X        ;
+X   modifiers
+X       : /* empty */
+X       | modifiers modifier
+X       ;
 
-X    modifier
-X        : KW_PRIVATE
-X        | KW_STATIC
-X        | KW_SYNCHRONIZED
-X        | KW_DEPRECATED
-X        | KW_PUBLIC
-X        | KW_FINAL
-X        | KW_ABSTRACT
-X        ;
+X   modifier
+X       : KW_PRIVATE
+X       | KW_STATIC
+X       | KW_SYNCHRONIZED
+X       | KW_DEPRECATED
+X       | KW_PUBLIC
+X       | KW_FINAL
+X       | KW_ABSTRACT
+X       ;
 
     /////////////////////////////////////////
     // CLASSES
@@ -342,11 +342,11 @@ X       | expr ';'
 
     primary_expr
 X       : name
-        | '(' expr ')'
-        | '(' hash ')'
-        | '(' ')'
-        | '{' '}'
-        | '{' hash '}'
+X       | '(' expr ')'
+X       | '(' hash ')'
+X       | '(' ')'
+X       | '{' '}'
+X       | '{' hash '}'
         | type IDENTIFIER
         | BACKQUOTE
         | IMPLICIT_ARG_REF
@@ -370,15 +370,15 @@ X       | INTEGER
         | QUOTED_WORD string
         ;
 
-    hash
-        : hash_element
-        | hash ',' hash_element
-        | hash ','
-        ;
+X   hash
+X       : hash_element
+X       | hash ',' hash_element
+X       | hash ','
+X       ;
 
-    hash_element
-        : expr ':' expr
-        ;
+X   hash_element
+X       : expr ':' assignment_expr
+X       ;
 
     unary_operator:
         : TOK_ELEMENTS

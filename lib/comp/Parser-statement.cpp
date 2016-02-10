@@ -47,8 +47,9 @@ ast::Statement::Ptr Parser::statement() {
 ast::ExpressionStatement::Ptr Parser::expressionStatement() {
     LOG_FUNCTION();
     ast::ExpressionStatement::Ptr stmt = ast::ExpressionStatement::create();
+    stmt->start = location();
     stmt->expression = expression();
-    stmt->semicolon = match(TokenType::Semicolon, &Parser::recoverSkipToSemicolon).location;
+    stmt->end = match(TokenType::Semicolon, &Parser::recoverSkipToSemicolon).location;
     return stmt;
 }
 

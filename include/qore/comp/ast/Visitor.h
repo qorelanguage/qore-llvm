@@ -39,8 +39,11 @@ class Script;
 class Namespace;
 class EmptyStatement;
 class ExpressionStatement;
+class ErrorExpression;
 class LiteralExpression;
 class NameExpression;
+class ListExpression;
+class HashExpression;
 
 /**
  * \brief Interface for expression visitors.
@@ -49,6 +52,12 @@ class ExpressionVisitor {
 
 public:
     virtual ~ExpressionVisitor() {}
+
+    /**
+     * \brief Called by an ErrorExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ErrorExpression &node) = 0;
 
     /**
      * \brief Called by a LiteralExpression AST node.
@@ -61,6 +70,18 @@ public:
      * \param node the node being visited
      */
     virtual void visit(NameExpression &node) = 0;
+
+    /**
+     * \brief Called by a ListExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ListExpression &node) = 0;
+
+    /**
+     * \brief Called by a HashExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(HashExpression &node) = 0;
 
 protected:
     ExpressionVisitor() = default;

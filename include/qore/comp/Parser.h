@@ -73,6 +73,11 @@ private:
         return token.type;
     }
 
+    SourceLocation location() {
+        ensureToken();
+        return token.location;
+    }
+
     Token consume() {
         assert(hasToken);
         hasToken = false;
@@ -169,7 +174,11 @@ private:
     ast::Statement::Ptr statement();
     ast::ExpressionStatement::Ptr expressionStatement();
     ast::Expression::Ptr expression();
+    ast::Expression::Ptr assignmentExpr();
     ast::Expression::Ptr primaryExpr();
+    ast::Expression::Ptr parenExpr();
+    ast::Expression::Ptr curlyExpr();
+    ast::Expression::Ptr hash(Token openToken, ast::Expression::Ptr expr);
     ast::Name name();
 
 private:

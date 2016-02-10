@@ -6,8 +6,10 @@ True;
 NOTHING;
 NULL;
 self;
+();
+(True);
 #$$$
--Script@1:1-9:1
+-Script@1:1-11:1
   .members:
   .statements:
     -ExpressionStatement@1:1-1:2
@@ -42,3 +44,13 @@ self;
       .expression:
         -LiteralExpression@8:1-8:1
           .token: KwSelf self
+    -ExpressionStatement@9:1-9:3
+      .expression:
+        -ListExpression@9:1-9:2
+          .startToken: ParenLeft (
+          .data:
+          .endToken: ParenRight )
+    -ExpressionStatement@10:1-10:7
+      .expression:
+        -LiteralExpression@10:2-10:2
+          .token: KwTrue True

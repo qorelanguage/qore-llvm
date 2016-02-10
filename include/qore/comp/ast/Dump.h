@@ -40,7 +40,8 @@ namespace ast {
 
 /// \cond IGNORED_BY_DOXYGEN
 #define NODE(name, body)    void visit(name &node) override { NodeHelper n_(*this, #name, node); body }
-#define ARRAY(name)         { ArrayHelper a_(*this, #name); for (auto &i : node.name) { i->accept(*this); } }
+#define ARRAY(name, body)   { ArrayHelper a_(*this, #name); for (auto &i : node.name) { body } }
+#define NODE_ARRAY(name)    ARRAY(name, i->accept(*this);)
 #define MODIFIERS(name)     doModifiers(#name, node.name)
 #define TOKEN(name)         doToken(#name, node.name)
 #define NAME(name)          doName(#name, node.name)
@@ -54,14 +55,14 @@ public:
     }
 
     NODE(Script, {
-            ARRAY(members);
-            ARRAY(statements);
+            NODE_ARRAY(members);
+            NODE_ARRAY(statements);
     })
 
     NODE(Namespace, {
             MODIFIERS(modifiers);
             TOKEN(name);
-            ARRAY(members);
+            NODE_ARRAY(members);
     })
 
     NODE(EmptyStatement, {
@@ -71,12 +72,28 @@ public:
             VISIT(expression);
     })
 
+    NODE(ErrorExpression, {
+            TOKEN(token);
+    })
+
     NODE(LiteralExpression, {
             TOKEN(token);
     })
 
     NODE(NameExpression, {
             NAME(name);
+    })
+
+    NODE(ListExpression, {
+            TOKEN(startToken);
+            NODE_ARRAY(data);
+            TOKEN(endToken);
+    })
+
+    NODE(HashExpression, {
+            TOKEN(startToken);
+            ARRAY(data, i.first->accept(*this); i.second->accept(*this););
+            TOKEN(endToken);
     })
 
 private:

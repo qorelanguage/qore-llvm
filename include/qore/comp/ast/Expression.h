@@ -56,6 +56,44 @@ public:
 };
 
 /**
+ * \brief Represents an error expression - used for error recovery.
+ */
+class ErrorExpression : public Expression {
+
+public:
+    Token token;                                            //!< The token.
+
+public:
+    using Ptr = std::unique_ptr<ErrorExpression>;           //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param token the token
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Token token) {
+        return Ptr(new ErrorExpression(token));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return token.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return token.location;
+    }
+
+private:
+    explicit ErrorExpression(Token token) : token(token) {
+    }
+};
+
+/**
  * \brief Represents a literal.
  */
 class LiteralExpression : public Expression {
@@ -129,6 +167,99 @@ public:
 private:
     explicit NameExpression(Name name) : name(std::move(name)) {
         assert(!this->name.tokens.empty());
+    }
+};
+
+/**
+ * \brief Represents a list expression.
+ */
+class ListExpression : public Expression {
+
+public:
+    using Data = std::vector<Expression::Ptr>;              //!< The type of the container.
+
+public:
+    Token startToken;                                       //!< The opening bracket.
+    Data data;                                              //!< The values.
+    Token endToken;                                         //!< The closing bracket.
+
+public:
+    using Ptr = std::unique_ptr<ListExpression>;            //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param startToken the opening bracket
+     * \param data the elements of the list
+     * \param endToken the closing bracket
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Token startToken, Data data, Token endToken) {
+        return Ptr(new ListExpression(startToken, std::move(data), endToken));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return startToken.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return endToken.location;
+    }
+
+private:
+    explicit ListExpression(Token startToken, Data data, Token endToken) : startToken(startToken),
+            data(std::move(data)), endToken(endToken) {
+    }
+};
+
+/**
+ * \brief Represents a list expression.
+ */
+class HashExpression : public Expression {
+
+public:
+    using Element = std::pair<Expression::Ptr, Expression::Ptr>;    //!< The element tuple (key, value).
+    using Data = std::vector<Element>;                      //!< The type of the container.
+
+public:
+    Token startToken;                                       //!< The opening bracket.
+    Data data;                                              //!< The values.
+    Token endToken;                                         //!< The closing bracket.
+
+public:
+    using Ptr = std::unique_ptr<HashExpression>;            //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param startToken the opening bracket
+     * \param data the elements of the hash
+     * \param endToken the closing bracket
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Token startToken, Data data, Token endToken) {
+        return Ptr(new HashExpression(startToken, std::move(data), endToken));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return startToken.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return endToken.location;
+    }
+
+private:
+    explicit HashExpression(Token startToken, Data data, Token endToken) : startToken(startToken),
+            data(std::move(data)), endToken(endToken) {
     }
 };
 

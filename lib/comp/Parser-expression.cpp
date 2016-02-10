@@ -36,6 +36,12 @@ namespace comp {
 ast::Expression::Ptr Parser::expression() {
     LOG_FUNCTION();
 
+    return assignmentExpr();
+}
+
+ast::Expression::Ptr Parser::assignmentExpr() {
+    LOG_FUNCTION();
+
     return primaryExpr();
 }
 
@@ -52,11 +58,73 @@ ast::Expression::Ptr Parser::primaryExpr() {
             return ast::LiteralExpression::create(consume());
         case TokenType::Identifier:
             return ast::NameExpression::create(name());
+        case TokenType::ParenLeft:
+            return parenExpr();
+        case TokenType::CurlyLeft:
+            return curlyExpr();
         default:
-            //TODO return special error node which will prevent further errors
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());
-            return ast::LiteralExpression::create(consume());
+            return ast::ErrorExpression::create(consume());
     }
+}
+
+//primary_expr
+//    | '(' expr ')'
+//    | '(' hash ')'
+//    | '(' ')'
+ast::Expression::Ptr Parser::parenExpr() {
+    Token lParen = match(TokenType::ParenLeft);
+    if (tokenType() == TokenType::ParenRight) {
+        return ast::ListExpression::create(lParen, ast::ListExpression::Data(), consume());
+    }
+    ast::Expression::Ptr expr = expression();
+    if (tokenType() == TokenType::Colon) {
+        return hash(lParen, std::move(expr));
+    }
+    match(TokenType::ParenRight);
+    return expr;
+}
+
+//primary_expr
+//    | '{' '}'
+//    | '{' hash '}'
+ast::Expression::Ptr Parser::curlyExpr() {
+    Token lCurly = match(TokenType::CurlyLeft);
+    if (tokenType() == TokenType::CurlyRight) {
+        return ast::HashExpression::create(lCurly, ast::HashExpression::Data(), consume());
+    }
+    return hash(lCurly, expression());
+}
+
+//hash
+//    : hash_element
+//    | hash ',' hash_element
+//    | hash ','
+//    ;
+//
+//hash_element
+//    : expr ':' assignment_expr
+//    ;
+ast::Expression::Ptr Parser::hash(Token openToken, ast::Expression::Ptr expr) {
+
+    ast::HashExpression::Data data;
+    TokenType end = openToken.type == TokenType::ParenLeft ? TokenType::ParenRight : TokenType::CurlyRight;
+
+    while (true) {
+        match(TokenType::Colon);
+        ast::Expression::Ptr value = assignmentExpr();
+        data.emplace_back(std::move(expr), std::move(value));
+
+        if (tokenType() != TokenType::Comma) {
+            break;
+        }
+        consume();
+        if (tokenType() == end) {
+            break;
+        }
+        expr = expression();
+    }
+    return ast::HashExpression::create(openToken, std::move(data), match(end));
 }
 
 //name

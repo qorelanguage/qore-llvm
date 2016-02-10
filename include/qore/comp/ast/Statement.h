@@ -96,8 +96,9 @@ private:
 class ExpressionStatement : public Statement {
 
 public:
+    SourceLocation start;                                   //!< The starting location.
     Expression::Ptr expression;                             //!< The expression.
-    SourceLocation semicolon;                               //!< The location of the semicolon.
+    SourceLocation end;                                     //!< The location of the semicolon.
 
 public:
     using Ptr = std::unique_ptr<ExpressionStatement>;       //!< Pointer type.
@@ -116,11 +117,11 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return expression->getStart();
+        return start;
     }
 
     SourceLocation getEnd() const override {
-        return semicolon;
+        return end;
     }
 
 private:

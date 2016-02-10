@@ -107,6 +107,8 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::ParenRight;
         case '=':
             return TokenType::Assign;
+        case ',':
+            return TokenType::Comma;
         case '#':
             readLineComment(src);
             return TokenType::None;
@@ -115,8 +117,7 @@ TokenType Scanner::readInternal(Source &src) {
                 src.read();
                 return TokenType::DoubleColon;
             }
-            REPORT(ScannerInvalidCharacter) << c;
-            return TokenType::None;
+            return TokenType::Colon;
         case '/':
             if (src.peek() == '*') {
                 readBlockComment(src);
