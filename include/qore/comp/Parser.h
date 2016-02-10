@@ -170,6 +170,7 @@ private:
     ast::ExpressionStatement::Ptr expressionStatement();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr primaryExpr();
+    ast::Name name();
 
 private:
     DiagManager &diagMgr;

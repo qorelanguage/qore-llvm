@@ -25,53 +25,45 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Parser implementation - expressions
+/// \brief Defines the Name structure.
 ///
 //------------------------------------------------------------------------------
-#include "qore/comp/Parser.h"
+#ifndef INCLUDE_QORE_COMP_AST_NAME_H_
+#define INCLUDE_QORE_COMP_AST_NAME_H_
+
+#include "qore/comp/Token.h"
 
 namespace qore {
 namespace comp {
+namespace ast {
 
-ast::Expression::Ptr Parser::expression() {
-    LOG_FUNCTION();
+/**
+ * \brief Describes a name, which is a nonempty sequence of identifiers.
+ */
+class Name {
 
-    return primaryExpr();
-}
+public:
+    std::vector<Token> tokens;                              //!< The identifiers of the name.
 
-ast::Expression::Ptr Parser::primaryExpr() {
-    LOG_FUNCTION();
+    Name() = default;
 
-    switch (tokenType()) {
-        case TokenType::KwFalse:
-        case TokenType::KwNothing:
-        case TokenType::KwNull:
-        case TokenType::KwSelf:
-        case TokenType::KwTrue:
-        case TokenType::Integer:
-            return ast::LiteralExpression::create(consume());
-        case TokenType::Identifier:
-            return ast::NameExpression::create(name());
-        default:
-            //TODO return special error node which will prevent further errors
-            report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());
-            return ast::LiteralExpression::create(consume());
-    }
-}
+    /**
+     * \brief Default move-constructor.
+     */
+    Name(Name &&) = default;
 
-//name
-//    : IDENTIFIER
-//    | IDENTIFIER '::' name
-//    ;
-ast::Name Parser::name() {
-    ast::Name name;
-    name.tokens.push_back(match(TokenType::Identifier));
-    while (tokenType() == TokenType::DoubleColon) {
-        consume();
-        name.tokens.push_back(match(TokenType::Identifier));
-    }
-    return name;
-}
+    /**
+     * \brief Default move-assignment.
+     */
+    Name &operator=(Name &&) = default;
 
+private:
+    Name(const Name &) = delete;
+    Name &operator=(const Name &) = delete;
+};
+
+} // namespace ast
 } // namespace comp
 } // namespace qore
+
+#endif // INCLUDE_QORE_COMP_AST_NAME_H_

@@ -43,6 +43,7 @@ namespace ast {
 #define ARRAY(name)         { ArrayHelper a_(*this, #name); for (auto &i : node.name) { i->accept(*this); } }
 #define MODIFIERS(name)     doModifiers(#name, node.name)
 #define TOKEN(name)         doToken(#name, node.name)
+#define NAME(name)          doName(#name, node.name)
 #define VISIT(name)         os << indent++ << "." << #name << ":\n"; node.name->accept(*this); --indent
 
 template<typename OS>
@@ -72,6 +73,10 @@ public:
 
     NODE(LiteralExpression, {
             TOKEN(token);
+    })
+
+    NODE(NameExpression, {
+            NAME(name);
     })
 
 private:
@@ -120,9 +125,27 @@ private:
     void doToken(const std::string &name, const Token &token) {
         os << indent << "." << name << ": " << token.type;
         if (token.type != TokenType::None) {
-            os << " " << srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
+            os << " " << lexeme(token);
         }
         os << "\n";
+    }
+
+    void doName(const std::string &fieldName, const Name &name) {
+        os << indent << "." << fieldName << ": ";
+        bool first = true;
+        for (const Token &token : name.tokens) {
+            if (first) {
+                first = false;
+            } else {
+                os << "::";
+            }
+            os << lexeme(token);
+        }
+        os << "\n";
+    }
+
+    std::string lexeme(const Token &token) {
+        return srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
     }
 
 private:
@@ -135,6 +158,7 @@ private:
 #undef MODIFIERS
 #undef TOKEN
 #undef VISIT
+#undef NAME
 
 template<typename OS, typename N>
 void dump(SourceManager &srcMgr, OS &os, N &n) {

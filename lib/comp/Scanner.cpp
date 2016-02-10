@@ -110,6 +110,13 @@ TokenType Scanner::readInternal(Source &src) {
         case '#':
             readLineComment(src);
             return TokenType::None;
+        case ':':
+            if (src.peek() == ':') {
+                src.read();
+                return TokenType::DoubleColon;
+            }
+            REPORT(ScannerInvalidCharacter) << c;
+            return TokenType::None;
         case '/':
             if (src.peek() == '*') {
                 readBlockComment(src);

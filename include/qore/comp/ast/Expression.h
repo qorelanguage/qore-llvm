@@ -31,9 +31,10 @@
 #ifndef INCLUDE_QORE_COMP_AST_EXPRESSION_H_
 #define INCLUDE_QORE_COMP_AST_EXPRESSION_H_
 
+#include <cassert>
+#include "qore/comp/ast/Name.h"
 #include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Visitor.h"
-#include "qore/comp/Token.h"
 
 namespace qore {
 namespace comp {
@@ -89,6 +90,45 @@ public:
 
 private:
     explicit LiteralExpression(Token token) : token(token) {
+    }
+};
+
+/**
+ * \brief Represents a name.
+ */
+class NameExpression : public Expression {
+
+public:
+    Name name;                                              //!< The name.
+
+public:
+    using Ptr = std::unique_ptr<NameExpression>;            //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param name the name
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Name name) {
+        return Ptr(new NameExpression(std::move(name)));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return name.tokens[0].location;
+    }
+
+    SourceLocation getEnd() const override {
+        return name.tokens[name.tokens.size() - 1].location;
+    }
+
+private:
+    explicit NameExpression(Name name) : name(std::move(name)) {
+        assert(!this->name.tokens.empty());
     }
 };
 

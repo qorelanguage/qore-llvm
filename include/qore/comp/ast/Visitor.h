@@ -40,6 +40,7 @@ class Namespace;
 class EmptyStatement;
 class ExpressionStatement;
 class LiteralExpression;
+class NameExpression;
 
 /**
  * \brief Interface for expression visitors.
@@ -54,6 +55,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(LiteralExpression &node) = 0;
+
+    /**
+     * \brief Called by a NameExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(NameExpression &node) = 0;
 
 protected:
     ExpressionVisitor() = default;
