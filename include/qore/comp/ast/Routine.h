@@ -25,67 +25,66 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the Name structure.
+/// \brief Defines the Routine AST node.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AST_NAME_H_
-#define INCLUDE_QORE_COMP_AST_NAME_H_
+#ifndef INCLUDE_QORE_COMP_AST_ROUTINE_H_
+#define INCLUDE_QORE_COMP_AST_ROUTINE_H_
 
-#include <cassert>
-#include "qore/comp/Token.h"
+#include <tuple>
+#include "qore/comp/ast/Statement.h"
 
 namespace qore {
 namespace comp {
 namespace ast {
 
 /**
- * \brief Describes a name, which is a sequence of identifiers separated by double colons.
- *
- * The name is nonempty except in instances of Routine that represent nameless callable units - closures,
- * constructors, destructors etc.
+ * \brief Represents a routine - function, method, constructor, etc.
  */
-class Name {
+class Routine : public Node {
 
 public:
-    std::vector<Token> tokens;                              //!< The identifiers of the name.
-
-    Name() = default;
-
     /**
-     * \brief Default move-constructor.
+     * \brief The type of one element of the parameter list: a triplet (type, name, default value (may be nullptr)).
      */
-    Name(Name &&) = default;
+    using Param = std::tuple<Type::Ptr, Token, Expression::Ptr>;
 
-    /**
-     * \brief Default move-assignment.
-     */
-    Name &operator=(Name &&) = default;
+public:
+    Modifiers modifiers;                                    //!< The modifiers.
+    Type::Ptr type;                                         //!< The return type.
+    Name name;                                              //!< The name, may be empty.
+    std::vector<Param> params;                              //!< The parameters.
+    CompoundStatement::Ptr body;                            //!< The body of the routine, nullptr for abstract methods.
+    SourceLocation semicolon;                               //!< The location of semicolon (if body is nullptr)
+//TODO base constructor invocation list
 
+public:
+    using Ptr = std::unique_ptr<Routine>;                   //!< Pointer type.
+
+public:
     /**
-     * \brief Returns the start location of the name in the source code.
-     * \return the start location
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
      */
-    SourceLocation getStart() const {
-        assert(!tokens.empty());
-        return tokens[0].location;
+    static Ptr create() {
+        return Ptr(new Routine());
     }
 
-    /**
-     * \brief Returns the end location of the name the source code.
-     * \return the end location
-     */
-    SourceLocation getEnd() const {
-        assert(!tokens.empty());
-        return tokens[tokens.size() - 1].location;
+    SourceLocation getStart() const override {
+        return type->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return body ? body->getEnd() : semicolon;
     }
 
 private:
-    Name(const Name &) = delete;
-    Name &operator=(const Name &) = delete;
+    Routine() {
+    }
 };
 
 } // namespace ast
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AST_NAME_H_
+#endif // INCLUDE_QORE_COMP_AST_ROUTINE_H_

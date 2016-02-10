@@ -52,7 +52,7 @@ X       : namespace_decl
     sub_def
         | modifiers type KW_SUB name param_list block
         | modifiers KW_SUB name param_list block
-        | modifiers type name param_list base_constructor_list block
+        | modifiers type name param_list block
         | modifiers name param_list base_constructor_list block
         ;
 
@@ -147,18 +147,18 @@ X       ;
     /////////////////////////////////////////
     // STATEMENTS
     /////////////////////////////////////////
-    block
-        : '{' statements '}'
-        ;
+X   block
+X       : '{' statements '}'
+X       ;
 
-    statements
-        : /* empty */
-        | statements statement
-        ;
+X   statements
+X       : /* empty */
+X       | statements statement
+X       ;
 
     statement
 X       : ';'
-        | block
+X       | block
 X       | expr ';'
         | TOK_TRY statement TOK_CATCH '(' type IDENTIFIER ')' statement
         | TOK_RETHROW ';'
@@ -444,17 +444,17 @@ X       : name
 X       | '*' name
 X       ;
 
-    param_list
-        : '(' ')'
-        | '(' params ')'
-        ;
+X   param_list
+X       : '(' ')'
+X       | '(' params ')'
+X       ;
 
-    params
-        : param
-        | param ',' params
-        ;
+X   params
+X       : param
+X       | param ',' params
+X       ;
 
-    param
-        : type IDENTIFIER
-        | type IDENTIFIER '=' expr
-        ;
+X   param
+X       : type IDENTIFIER
+X       | type IDENTIFIER '=' expr
+X       ;

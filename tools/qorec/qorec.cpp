@@ -34,7 +34,7 @@ private:
     const SourceManager &srcMgr;
 };
 
-
+/// \cond NoDoxygen
 class StdinWrapper : public ITokenStream {
 
 public:
@@ -61,12 +61,16 @@ private:
     Source &src;
     DirectiveProcessor dp;
 };
+/// \endcond NoDoxygen
 
 #ifdef QORE_LOGGING
+/**
+ * \brief Logging filter
+ */
 class LogFilter : public qore::log::Logger {
 
 public:
-    virtual bool filter(const std::string &component) {
+    bool filter(const std::string &component) override {
         return component.find("Parser") != std::string::npos;
     }
 };
@@ -89,7 +93,7 @@ int main() {
     SourceManager srcMgr(diagMgr);
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", ";0;"));
+    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "(*a::b sub(int i = 5, *hash h) { 0; });a;"));
 //    StdinWrapper dp(diagMgr, srcMgr);
 
     Parser parser(diagMgr, dp);

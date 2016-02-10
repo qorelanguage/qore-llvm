@@ -25,46 +25,58 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Parser implementation - statements
+/// \brief Defines the ClosureExpression AST node.
 ///
 //------------------------------------------------------------------------------
-#include "qore/comp/Parser.h"
+#ifndef INCLUDE_QORE_COMP_AST_CLOSURE_H_
+#define INCLUDE_QORE_COMP_AST_CLOSURE_H_
+
+#include "qore/comp/ast/Routine.h"
 
 namespace qore {
 namespace comp {
+namespace ast {
 
-ast::Statement::Ptr Parser::statement() {
-    LOG_FUNCTION();
-    switch (tokenType()) {
-        case TokenType::Semicolon:
-            return ast::EmptyStatement::create(consume().location);
-        case TokenType::CurlyLeft:
-            return compoundStmt();
-        default:
-            return expressionStmt();
+/**
+ * \brief Represents a closure - a routine that is also an expression.
+ */
+class ClosureExpression : public Expression {
+
+public:
+    Routine::Ptr routine;                                   //!< The closure routine.
+
+public:
+    using Ptr = std::unique_ptr<ClosureExpression>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param routine the closure routine
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Routine::Ptr routine) {
+        return Ptr(new ClosureExpression(std::move(routine)));
     }
-    return ast::Statement::Ptr();
-}
 
-ast::ExpressionStatement::Ptr Parser::expressionStmt() {
-    LOG_FUNCTION();
-    ast::ExpressionStatement::Ptr stmt = ast::ExpressionStatement::create();
-    stmt->start = location();
-    stmt->expression = expression();
-    stmt->end = match(TokenType::Semicolon, &Parser::recoverSkipToSemicolon).location;
-    return stmt;
-}
-
-ast::CompoundStatement::Ptr Parser::compoundStmt() {
-    LOG_FUNCTION();
-    ast::CompoundStatement::Ptr block = ast::CompoundStatement::create();
-    block->start = match(TokenType::CurlyLeft).location;
-    while (tokenType() != TokenType::CurlyRight && tokenType() != TokenType::EndOfFile) {
-        block->statements.push_back(statement());
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
     }
-    block->end = match(TokenType::CurlyRight).location;
-    return block;
-}
 
+    SourceLocation getStart() const override {
+        return routine->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return routine->getEnd();
+    }
+
+private:
+    explicit ClosureExpression(Routine::Ptr routine) : routine(std::move(routine)) {
+    }
+};
+
+} // namespace ast
 } // namespace comp
 } // namespace qore
+
+#endif // INCLUDE_QORE_COMP_AST_CLOSURE_H_

@@ -33,6 +33,7 @@
 
 #include "qore/common/Util.h"
 #include "qore/comp/ast/Script.h"
+#include "qore/comp/ast/Closure.h"
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/Token.h"
 
@@ -92,7 +93,7 @@ private:
         }
     }
 
-    Token match(TokenType expected, RecoverStrategy recoverStrategy = &Parser::recoverConsumeToken) {
+    Token match(TokenType expected, RecoverStrategy recoverStrategy = &Parser::recoverDoNothing) {
         if (tokenType() == expected) {
             return consume();
         }
@@ -172,12 +173,14 @@ private:
     ast::NamespaceMember::Ptr namespaceMember();
     ast::Modifiers modifiers();
     ast::Statement::Ptr statement();
-    ast::ExpressionStatement::Ptr expressionStatement();
+    ast::ExpressionStatement::Ptr expressionStmt();
+    ast::CompoundStatement::Ptr compoundStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
     ast::Expression::Ptr primaryExpr();
     ast::Expression::Ptr hash(Token openToken, ast::Expression::Ptr expr);
-    ast::Expression::Ptr sub(ast::Modifiers mods, ast::Type::Ptr type);
+    ast::ClosureExpression::Ptr closure(ast::Modifiers mods, ast::Type::Ptr type);
+    std::vector<ast::Routine::Param> paramList();
     ast::Name name();
     ast::Type::Ptr type();
 

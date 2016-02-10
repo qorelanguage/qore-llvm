@@ -1,0 +1,112 @@
+(sub(){});
+(private final sub(){});
+(public a::b sub(){});
+(*a::b sub(){});
+(a::b sub(){});
+(sub(a::b i){});
+(sub(*a::b i = 5, hash h = {}){});
+#$$$
+-Script@1:1-8:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:10
+      .expression:
+        -ClosureExpression@1:2-1:8
+          .routine:
+            .modifiers: -none-
+            .type:
+              -ImplicitType@1:2-1:2
+            .name: -none-
+            .params:
+            .body:
+              -CompoundStatement@1:7-1:8
+                .statements:
+    -ExpressionStatement@2:1-2:24
+      .expression:
+        -ClosureExpression@2:16-2:22
+          .routine:
+            .modifiers: final private
+            .type:
+              -ImplicitType@2:16-2:16
+            .name: -none-
+            .params:
+            .body:
+              -CompoundStatement@2:21-2:22
+                .statements:
+    -ExpressionStatement@3:1-3:22
+      .expression:
+        -ClosureExpression@3:9-3:20
+          .routine:
+            .modifiers: public
+            .type:
+              -NameType@3:9-3:12
+                .name: a::b
+            .name: -none-
+            .params:
+            .body:
+              -CompoundStatement@3:19-3:20
+                .statements:
+    -ExpressionStatement@4:1-4:16
+      .expression:
+        -ClosureExpression@4:2-4:14
+          .routine:
+            .modifiers: -none-
+            .type:
+              -AsteriskType@4:2-4:6
+                .name: a::b
+            .name: -none-
+            .params:
+            .body:
+              -CompoundStatement@4:13-4:14
+                .statements:
+    -ExpressionStatement@5:1-5:15
+      .expression:
+        -ClosureExpression@5:2-5:13
+          .routine:
+            .modifiers: -none-
+            .type:
+              -NameType@5:2-5:5
+                .name: a::b
+            .name: -none-
+            .params:
+            .body:
+              -CompoundStatement@5:12-5:13
+                .statements:
+    -ExpressionStatement@6:1-6:16
+      .expression:
+        -ClosureExpression@6:2-6:14
+          .routine:
+            .modifiers: -none-
+            .type:
+              -ImplicitType@6:2-6:2
+            .name: -none-
+            .params:
+              -NameType@6:6-6:9
+                .name: a::b
+              -Identifier i
+              -no default-
+            .body:
+              -CompoundStatement@6:13-6:14
+                .statements:
+    -ExpressionStatement@7:1-7:34
+      .expression:
+        -ClosureExpression@7:2-7:32
+          .routine:
+            .modifiers: -none-
+            .type:
+              -ImplicitType@7:2-7:2
+            .name: -none-
+            .params:
+              -AsteriskType@7:6-7:10
+                .name: a::b
+              -Identifier i
+              -LiteralExpression@7:16-7:16
+                .token: Integer 5
+              -NameType@7:19-7:19
+                .name: hash
+              -Identifier h
+              -HashExpression@7:28-7:29
+                .data:
+            .body:
+              -CompoundStatement@7:31-7:32
+                .statements:

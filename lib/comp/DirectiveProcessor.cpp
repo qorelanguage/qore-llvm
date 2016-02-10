@@ -99,10 +99,10 @@ void DirectiveProcessor::processDirective(Source &src, SourceLocation location, 
         diagMgr.report(DiagId::PdpUnknownDirective, location) << directive;
         return;
     }
-    if (it->second.args == DirectiveArgs::None && !arg.empty()) {
-        diagMgr.report(DiagId::PdpUnexpectedArgument, location) << directive;
-        return;
-    }
+//    if (it->second.args == DirectiveArgs::None && !arg.empty()) {
+//        diagMgr.report(DiagId::PdpUnexpectedArgument, location) << directive;
+//        return;
+//    }
     if (it->second.args == DirectiveArgs::Single && arg.empty()) {
         diagMgr.report(DiagId::PdpMissingArgument, location) << directive;
         return;

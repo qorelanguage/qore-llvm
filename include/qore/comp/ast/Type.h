@@ -146,10 +146,11 @@ public:
 public:
     /**
      * \brief Allocates a new node.
+     * \param location the (implied) location in the source code
      * \return a unique pointer to the allocated node
      */
-    static Ptr create() {
-        return Ptr(new ImplicitType());
+    static Ptr create(SourceLocation location) {
+        return Ptr(new ImplicitType(location));
     }
 
     void accept(TypeVisitor &v) override {
@@ -165,7 +166,7 @@ public:
     }
 
 private:
-    ImplicitType() {
+    explicit ImplicitType(SourceLocation location) : location(location) {
     }
 };
 

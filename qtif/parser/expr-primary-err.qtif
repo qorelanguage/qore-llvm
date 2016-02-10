@@ -7,4 +7,4 @@
     -ExpressionStatement@1:1-1:2
       .expression:
         -ErrorExpression@1:1-1:1
-          .token: Assign =
+          .token: Equals =

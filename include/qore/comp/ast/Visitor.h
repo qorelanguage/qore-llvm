@@ -39,12 +39,14 @@ class Script;
 class Namespace;
 class EmptyStatement;
 class ExpressionStatement;
+class CompoundStatement;
 class ErrorExpression;
 class LiteralExpression;
 class NameExpression;
 class ListExpression;
 class HashExpression;
 class VarDeclExpression;
+class ClosureExpression;
 class NameType;
 class AsteriskType;
 class ImplicitType;
@@ -93,6 +95,12 @@ public:
      */
     virtual void visit(VarDeclExpression &node) = 0;
 
+    /**
+     * \brief Called by a ClosureExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ClosureExpression &node) = 0;
+
 protected:
     ExpressionVisitor() = default;
 
@@ -122,6 +130,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(ExpressionStatement &node) = 0;
+
+    /**
+     * \brief Called by a CompoundStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(CompoundStatement &node) = 0;
 
 protected:
     StatementVisitor() = default;

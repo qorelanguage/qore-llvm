@@ -129,6 +129,45 @@ private:
     }
 };
 
+/**
+ * \brief Represents a block.
+ */
+class CompoundStatement : public Statement {
+
+public:
+    SourceLocation start;                                   //!< The location of the opening curly brace.
+    SourceLocation end;                                     //!< The location of the closing curly brace.
+    std::vector<Statement::Ptr> statements;                 //!< The statements in the block.
+
+public:
+    using Ptr = std::unique_ptr<CompoundStatement>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new CompoundStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    explicit CompoundStatement() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

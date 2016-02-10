@@ -106,7 +106,7 @@ TokenType Scanner::readInternal(Source &src) {
         case ')':
             return TokenType::ParenRight;
         case '=':
-            return TokenType::Assign;
+            return TokenType::Equals;
         case ',':
             return TokenType::Comma;
         case '*':
@@ -125,14 +125,12 @@ TokenType Scanner::readInternal(Source &src) {
                 readBlockComment(src);
                 return TokenType::None;
             }
-            REPORT(ScannerInvalidCharacter) << c;
-            return TokenType::None;
+            return TokenType::Slash;
         case '%':
             if (src.wasFirstOnLine()) {
                 return readParseDirective(src);
             }
-            REPORT(ScannerInvalidCharacter) << c;
-            return TokenType::None;
+            return TokenType::Percent;
         case '"':
         case '\'':
             src.unread();

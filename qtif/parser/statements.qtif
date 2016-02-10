@@ -1,4 +1,4 @@
-;0;
+;0;{}{;}
 #$$$
 -Script@1:1-2:1
   .members:
@@ -8,3 +8,8 @@
       .expression:
         -LiteralExpression@1:2-1:2
           .token: Integer 0
+    -CompoundStatement@1:4-1:5
+      .statements:
+    -CompoundStatement@1:6-1:8
+      .statements:
+        -EmptyStatement@1:7-1:7

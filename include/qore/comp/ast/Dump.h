@@ -42,10 +42,12 @@ namespace ast {
 #define NODE(name, body)    void visit(name &node) override { NodeHelper n_(*this, #name, node); body }
 #define ARRAY(name, body)   { ArrayHelper a_(*this, #name); for (auto &i : node.name) { body } }
 #define NODE_ARRAY(name)    ARRAY(name, i->accept(*this);)
-#define MODIFIERS(name)     doModifiers(#name, node.name)
-#define TOKEN(name)         doToken(#name, node.name)
-#define NAME(name)          doName(#name, node.name)
-#define VISIT(name)         os << indent++ << "." << #name << ":\n"; node.name->accept(*this); --indent
+#define FIELD(name, sep)    os << indent << "." << name << ":" sep
+#define VISIT(name)         FIELD(#name, "\n"); ++indent; node.name->accept(*this); --indent
+#define MODIFIERS(name)     FIELD(#name, ""); doModifiers(node.name)
+#define TOKEN(name)         FIELD(#name, " "); doToken(node.name)
+#define NAME(name)          FIELD(#name, " "); doName(node.name)
+#define VISIT_DIRECT(name)  FIELD(#name, "\n"); ++indent; visit(*node.name); --indent
 
 template<typename OS>
 class DumpVisitor : public DeclarationVisitor, public StatementVisitor, public ExpressionVisitor, public TypeVisitor {
@@ -72,6 +74,10 @@ public:
             VISIT(expression);
     })
 
+    NODE(CompoundStatement, {
+            NODE_ARRAY(statements);
+    })
+
     NODE(ErrorExpression, {
             TOKEN(token);
     })
@@ -85,20 +91,20 @@ public:
     })
 
     NODE(ListExpression, {
-            TOKEN(startToken);
             NODE_ARRAY(data);
-            TOKEN(endToken);
     })
 
     NODE(HashExpression, {
-            TOKEN(startToken);
             ARRAY(data, i.first->accept(*this); i.second->accept(*this););
-            TOKEN(endToken);
     })
 
     NODE(VarDeclExpression, {
             VISIT(type);
             TOKEN(name);
+    })
+
+    NODE(ClosureExpression, {
+            VISIT_DIRECT(routine);
     })
 
     NODE(NameType, {
@@ -111,6 +117,18 @@ public:
 
     NODE(ImplicitType, {
     })
+
+    void visit(Routine &node) {
+        MODIFIERS(modifiers);
+        VISIT(type);
+        NAME(name);
+        ARRAY(params,
+                std::get<0>(i)->accept(*this);
+                os << indent << "-"; doToken(std::get<1>(i));
+                if (std::get<2>(i)) std::get<2>(i)->accept(*this); else os << indent << "-no default-\n";
+        );
+        VISIT(body);
+    }
 
 private:
     struct NodeHelper {
@@ -142,8 +160,7 @@ private:
         return str.str();
     }
 
-    void doModifiers(const std::string &name, const Modifiers &mods) {
-        os << indent << "." << name << ":";
+    void doModifiers(const Modifiers &mods) {
         if (mods.isEmpty()) os << " -none-";
         if (mods.contains(Modifier::Abstract)) os << " abstract";
         if (mods.contains(Modifier::Deprecated)) os << " deprecated";
@@ -155,24 +172,23 @@ private:
         os << "\n";
     }
 
-    void doToken(const std::string &name, const Token &token) {
-        os << indent << "." << name << ": " << token.type;
+    void doToken(const Token &token) {
+        os << token.type;
         if (token.type != TokenType::None) {
             os << " " << lexeme(token);
         }
         os << "\n";
     }
 
-    void doName(const std::string &fieldName, const Name &name) {
-        os << indent << "." << fieldName << ": ";
-        bool first = true;
-        for (const Token &token : name.tokens) {
-            if (first) {
-                first = false;
-            } else {
-                os << "::";
+    void doName(const Name &name) {
+        if (name.tokens.empty()) {
+            os << "-none-";
+        } else {
+            auto it = name.tokens.begin();
+            os << lexeme(*it++);
+            while (it != name.tokens.end()) {
+                os << "::" << lexeme(*it++);
             }
-            os << lexeme(token);
         }
         os << "\n";
     }
@@ -186,12 +202,16 @@ private:
     OS &os;
     qore::log::Indent indent;
 };
+
 #undef NODE
 #undef ARRAY
+#undef NODE_ARRAY
+#undef FIELD
+#undef VISIT
 #undef MODIFIERS
 #undef TOKEN
-#undef VISIT
 #undef NAME
+#undef VISIT_DIRECT
 
 template<typename OS, typename N>
 void dump(SourceManager &srcMgr, OS &os, N &n) {

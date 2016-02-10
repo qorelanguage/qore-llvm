@@ -65,23 +65,23 @@ ast::Expression::Ptr Parser::primaryExpr() {
         case TokenType::KwSynchronized: {
             ast::Modifiers mods = modifiers();
             if (tokenType() == TokenType::KwSub) {
-                return sub(mods, ast::ImplicitType::create());
+                return closure(mods, ast::ImplicitType::create(location()));
             }
-            return sub(mods, type());
+            return closure(mods, type());
         }
         case TokenType::KwSub:
-            return sub(ast::Modifiers(), ast::ImplicitType::create());
+            return closure(ast::Modifiers(), ast::ImplicitType::create(location()));
         case TokenType::Asterisk: {
             ast::Type::Ptr t = type();
             if (tokenType() == TokenType::KwSub) {
-                return sub(ast::Modifiers(), std::move(t));
+                return closure(ast::Modifiers(), std::move(t));
             }
             return ast::VarDeclExpression::create(std::move(t), match(TokenType::Identifier));
         }
         case TokenType::Identifier: {
             ast::Name n = name();
             if (tokenType() == TokenType::KwSub) {
-                return sub(ast::Modifiers(), ast::NameType::create(std::move(n)));
+                return closure(ast::Modifiers(), ast::NameType::create(std::move(n)));
             }
             if (tokenType() == TokenType::Identifier) {
                 return ast::VarDeclExpression::create(ast::NameType::create(std::move(n)), consume());
@@ -123,6 +123,7 @@ ast::Expression::Ptr Parser::primaryExpr() {
 //    : expr ':' assignment_expr
 //    ;
 ast::Expression::Ptr Parser::hash(Token openToken, ast::Expression::Ptr expr) {
+    LOG_FUNCTION();
 
     ast::HashExpression::Data data;
     TokenType end = openToken.type == TokenType::ParenLeft ? TokenType::ParenRight : TokenType::CurlyRight;
@@ -147,11 +148,53 @@ ast::Expression::Ptr Parser::hash(Token openToken, ast::Expression::Ptr expr) {
 //primary_expr
 //    | modifiers type KwSub param_list block
 //    | modifiers KwSub param_list block
-ast::Expression::Ptr Parser::sub(ast::Modifiers mods, ast::Type::Ptr type) {
+ast::ClosureExpression::Ptr Parser::closure(ast::Modifiers mods, ast::Type::Ptr type) {
+    LOG_FUNCTION();
     match(TokenType::KwSub);
-    QORE_UNREACHABLE("Not implemented");
-//    paramList();
-//    block();
+    ast::Routine::Ptr r = ast::Routine::create();
+    r->modifiers = mods;
+    r->type = std::move(type);
+    r->params = paramList();
+    r->body = compoundStmt();
+    return ast::ClosureExpression::create(std::move(r));
+}
+
+//param_list
+//    : '(' ')'
+//    | '(' params ')'
+//    ;
+//
+//params
+//    : param
+//    | param ',' params
+//    ;
+//
+//param
+//    : type IDENTIFIER
+//    | type IDENTIFIER '=' expr
+//    ;
+std::vector<ast::Routine::Param> Parser::paramList() {
+    LOG_FUNCTION();
+    std::vector<ast::Routine::Param> params;
+    match(TokenType::ParenLeft);
+    if (tokenType() != TokenType::ParenRight && tokenType() != TokenType::EndOfFile) {
+        while (true) {
+            ast::Type::Ptr t = type();
+            Token id = match(TokenType::Identifier);
+            ast::Expression::Ptr expr;
+            if (tokenType() == TokenType::Equals) {
+                consume();
+                expr = expression();
+            }
+            params.emplace_back(std::move(t), id, std::move(expr));
+            if (tokenType() != TokenType::Comma) {
+                break;
+            }
+            consume();
+        }
+    }
+    match(TokenType::ParenRight);
+    return params;
 }
 
 //name
@@ -159,6 +202,7 @@ ast::Expression::Ptr Parser::sub(ast::Modifiers mods, ast::Type::Ptr type) {
 //    | IDENTIFIER '::' name
 //    ;
 ast::Name Parser::name() {
+    LOG_FUNCTION();
     ast::Name name;
     name.tokens.push_back(match(TokenType::Identifier));
     while (tokenType() == TokenType::DoubleColon) {
@@ -173,6 +217,7 @@ ast::Name Parser::name() {
 //    | '*' name
 //    ;
 ast::Type::Ptr Parser::type() {
+    LOG_FUNCTION();
     if (tokenType() == TokenType::Asterisk) {
         SourceLocation l = consume().location;
         return ast::AsteriskType::create(l, name());
