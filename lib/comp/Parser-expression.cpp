@@ -162,50 +162,7 @@ ast::Expression::Ptr Parser::hash(Token openToken, ast::Expression::Ptr expr) {
 ast::ClosureExpression::Ptr Parser::closure(ast::Modifiers mods, ast::Type::Ptr type) {
     LOG_FUNCTION();
     match(TokenType::KwSub);
-    ast::Routine::Ptr r = ast::Routine::create();
-    r->modifiers = mods;
-    r->type = std::move(type);
-    r->params = paramList();
-    r->body = compoundStmt();
-    return ast::ClosureExpression::create(std::move(r));
-}
-
-//param_list
-//    : '(' ')'
-//    | '(' params ')'
-//    ;
-//
-//params
-//    : param
-//    | param ',' params
-//    ;
-//
-//param
-//    : type IDENTIFIER
-//    | type IDENTIFIER '=' expr
-//    ;
-std::vector<ast::Routine::Param> Parser::paramList() {
-    LOG_FUNCTION();
-    std::vector<ast::Routine::Param> params;
-    match(TokenType::ParenLeft);
-    if (tokenType() != TokenType::ParenRight && tokenType() != TokenType::EndOfFile) {
-        while (true) {
-            ast::Type::Ptr t = type();
-            Token id = match(TokenType::Identifier);
-            ast::Expression::Ptr expr;
-            if (tokenType() == TokenType::Equals) {
-                consume();
-                expr = expression();
-            }
-            params.emplace_back(std::move(t), id, std::move(expr));
-            if (tokenType() != TokenType::Comma) {
-                break;
-            }
-            consume();
-        }
-    }
-    match(TokenType::ParenRight);
-    return params;
+    return ast::ClosureExpression::create(routine(mods, std::move(type), ast::Name()));
 }
 
 //name

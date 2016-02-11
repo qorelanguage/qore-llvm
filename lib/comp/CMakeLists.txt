@@ -4,6 +4,8 @@ add_library(comp STATIC
     DirectiveProcessor.cpp
     Parser-expression.cpp
     Parser-namespace.cpp
+    Parser-recovery.cpp
+    Parser-routine.cpp
     Parser-statement.cpp
     Scanner.cpp
     Source.cpp

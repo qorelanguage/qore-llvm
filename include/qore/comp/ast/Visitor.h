@@ -37,6 +37,7 @@ namespace ast {
 
 class Script;
 class Namespace;
+class Function;
 class EmptyStatement;
 class ExpressionStatement;
 class CompoundStatement;
@@ -173,6 +174,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(Namespace &node) = 0;
+
+    /**
+     * \brief Called by a Function AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(Function &node) = 0;
 
 protected:
     DeclarationVisitor() = default;

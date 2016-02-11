@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_TOKEN_H_
 #define INCLUDE_QORE_COMP_TOKEN_H_
 
+#include <deque>
 #include <ostream>
 #include "qore/comp/SourceLocation.h"
 
@@ -105,6 +106,53 @@ private:
     ITokenStream(ITokenStream &&) = delete;
     ITokenStream &operator=(const ITokenStream &) = delete;
     ITokenStream &operator=(ITokenStream &&) = delete;
+};
+
+/**
+ * \brief Helper class for 'returning' tokens into a token stream.
+ */
+class TokenQueue {
+
+public:
+    /**
+     * \brief Constructor.
+     * \param src the underlying token stream
+     */
+    explicit TokenQueue(ITokenStream &src) : src(src) {
+    }
+
+    /**
+     * \brief Reads the next token from the input.
+     * \return the next token read from the input
+     */
+    Token read() {
+        if (queue.empty()) {
+            return src.read();
+        }
+        Token token = queue.front();
+        queue.pop_front();
+        return token;
+    }
+
+    /**
+     * \brief Unreads tokens returning them to the token stream.
+     * \param begin the start iterator of the tokens to return
+     * \param end the end iterator of the tokens to return
+     */
+    template<typename Iterator>
+    void unread(Iterator begin, Iterator end) {
+        queue.insert(queue.begin(), begin, end);
+    }
+
+private:
+    TokenQueue(const TokenQueue &) = delete;
+    TokenQueue(TokenQueue &&) = delete;
+    TokenQueue &operator=(const TokenQueue &) = delete;
+    TokenQueue &operator=(TokenQueue &&) = delete;
+
+private:
+    ITokenStream &src;
+    std::deque<Token> queue;
 };
 
 } //namespace comp

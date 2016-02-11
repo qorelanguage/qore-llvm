@@ -53,11 +53,10 @@ ast::Script::Ptr Parser::parseScript() {
 //        if (tokenType() == TokenType::KwModule) {
 //            //TODO module
 //        }
-        ast::NamespaceMember::Ptr nsMember = namespaceMember();
+        ast::NamespaceMember::Ptr nsMember = namespaceMember(true);
         if (nsMember) {
             script->members.push_back(std::move(nsMember));
         } else {
-            //TODO if (were modifiers) -> report error
             script->statements.push_back(std::move(statement()));
         }
     }
@@ -95,8 +94,9 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
                 ns->end = token.location;
                 return ns;
             }
-            ast::NamespaceMember::Ptr nsMember = namespaceMember();
+            ast::NamespaceMember::Ptr nsMember = namespaceMember(false);
             if (!nsMember) {
+                ensureToken();
                 report(DiagId::ParserExpectedNamespaceMember);
                 recoverSkipToCurlyRight();
                 ns->end = token.location;
@@ -118,11 +118,14 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
 //    | sub_def
 //    | class_def
 //    ;
-ast::NamespaceMember::Ptr Parser::namespaceMember() {
+ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
     LOG_FUNCTION();
+    Recorder recorder(*this);
     ast::Modifiers mods = modifiers();
+    ast::Type::Ptr t;
     switch (tokenType()) {
         case TokenType::KwNamespace:
+            recorder.stop();
             return namespaceDecl(mods);
         case TokenType::KwOur:
             //TODO return globalVarDecl(mods);
@@ -131,11 +134,72 @@ ast::NamespaceMember::Ptr Parser::namespaceMember() {
         case TokenType::KwClass:
             //TODO return classDecl(mods);
         case TokenType::KwSub:
-            //TODO return subDef(mods, noType);
+            t = ast::ImplicitType::create(location());
+            consume();
+            if (tokenType() == TokenType::Identifier) {
+                return ast::Function::create(routine(mods, std::move(t), name()));
+            }
+            //no name after the sub keyword -> must be a closure
+            break;
+        case TokenType::Asterisk:
+            t = type();
+            if (tokenType() == TokenType::KwSub) {
+                consume();
+                if (tokenType() == TokenType::Identifier) {
+                    return ast::Function::create(routine(mods, std::move(t), name()));
+                }
+                //no name after the sub keyword -> must be a closure
+            } else if (tokenType() == TokenType::Identifier) {
+                //identifier after type -> either variable declaration or function without the sub keyword
+                ast::Name n = name();
+                if (tokenType() == TokenType::ParenLeft) {
+                    return ast::Function::create(routine(mods, std::move(t), std::move(n)));
+                }
+                //must be a variable declaration
+            }
+            break;
+        case TokenType::Identifier: {
+            //might be:
+            // (1) return type of a function with the sub keyword
+            // (2) return type of a closure
+            // (3) return type of a function without the sub keyword
+            // (4) variable declaration
+            // (5) method invocation
+            // (6) a function name (with implicit return type)
+            // (7) variable access
+            SourceLocation start = location();
+            ast::Name nOrT = name();
+
+            if (tokenType() == TokenType::KwSub) {              //(1) or (2)
+                consume();
+                if (tokenType() == TokenType::Identifier) {     //(1) - function with the sub keyword and type
+                    return ast::Function::create(routine(mods, ast::NameType::create(std::move(nOrT)), name()));
+                }
+                //no name after the sub keyword -> must be a closure (2)
+            } else if (tokenType() == TokenType::Identifier) {  // (3) or (4)
+                ast::Name n = name();
+                if (tokenType() == TokenType::ParenLeft) {      // (3) - function without the sub keyword, with type
+                    return ast::Function::create(routine(mods, ast::NameType::create(std::move(nOrT)), std::move(n)));
+                }
+                //two names not followed by '(' -> variable declaration (4)
+            } else if (tokenType() == TokenType::ParenLeft) {   // (5) or (6)
+                if (!topLevel) {
+                    //method invocation (5) is not allowed here
+                    //must be a function with implicit type without the sub keyword (6)
+                    return ast::Function::create(routine(mods, ast::ImplicitType::create(start), std::move(nOrT)));
+                }
+                //we can't tell unless we look at the token after the matching ')'
+                //for now we don't allow typeless subless top level functions and assume (5)
+            } else {
+                //must be variable access (7)
+            }
+            break;
+        }
         default:
-            //TODO ast::Type::Ptr type = typeOpt();
-            return /*type ? subDef(mods, type) :*/ ast::NamespaceMember::Ptr();
+            break;
     }
+    recorder.rewind();
+    return nullptr;
 }
 
 //modifiers

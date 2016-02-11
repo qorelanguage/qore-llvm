@@ -33,7 +33,7 @@
 
 #include <vector>
 #include "qore/comp/ast/Modifiers.h"
-#include "qore/comp/ast/Expression.h"
+#include "qore/comp/ast/Routine.h"
 
 namespace qore {
 namespace comp {
@@ -91,6 +91,43 @@ public:
 
 private:
     Namespace() {
+    }
+};
+
+/**
+ * \brief Represents a function.
+ */
+class Function : public NamespaceMember {
+
+public:
+    Routine::Ptr routine;                                   //!< The function.
+
+public:
+    using Ptr = std::unique_ptr<Function>;                  //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \param routine the routine
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Routine::Ptr routine) {
+        return Ptr(new Function(std::move(routine)));
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return routine->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return routine->getEnd();
+    }
+
+private:
+    explicit Function(Routine::Ptr routine) : routine(std::move(routine)) {
     }
 };
 

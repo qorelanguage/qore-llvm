@@ -36,7 +36,7 @@ X       ;
 X       : namespace_decl
         | global_var_decl
         | const_decl
-        | sub_def
+X       | sub_def
         | class_def
         ;
 
@@ -49,12 +49,12 @@ X       : namespace_decl
         : modifiers KW_CONST name '=' expr ';'
         ;
 
-    sub_def
-        | modifiers type KW_SUB name param_list block
-        | modifiers KW_SUB name param_list block
-        | modifiers type name param_list block
-        | modifiers name param_list base_constructor_list block
-        ;
+X   sub_def
+X       | modifiers type KW_SUB name param_list block
+X       | modifiers KW_SUB name param_list block
+X       | modifiers type name param_list block
+X       | modifiers name param_list block               //not allowed at top level
+X       ;
 
 X   modifiers
 X       : /* empty */

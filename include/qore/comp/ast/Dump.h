@@ -67,6 +67,10 @@ public:
             NODE_ARRAY(members);
     })
 
+    NODE(Function, {
+            VISIT_DIRECT(routine);
+    })
+
     NODE(EmptyStatement, {
     })
 

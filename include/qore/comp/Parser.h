@@ -51,7 +51,7 @@ public:
      * \param diagMgr used for reporting diagnostic messages
      * \param src the source of tokens
      */
-    Parser(DiagManager &diagMgr, ITokenStream &src) : diagMgr(diagMgr), src(src), hasToken(false) {
+    Parser(DiagManager &diagMgr, ITokenStream &src) : diagMgr(diagMgr), src(src), hasToken(false), recorder(nullptr) {
     }
 
     /**
@@ -83,6 +83,9 @@ private:
         assert(hasToken);
         hasToken = false;
         LOG("Consuming " << token.type);
+        if (recorder) {
+            recorder->tokens.push_back(token);
+        }
         return token;
     }
 
@@ -107,70 +110,44 @@ private:
         return diagMgr.report(id, token.location);
     }
 
-    void recoverDoNothing() {
-    }
+    void recoverDoNothing() {}
+    void recoverSkipToCurlyRight();
+    void recoverSkipToSemicolon();
 
-    void recoverConsumeToken() {
-        consume();
-    }
-
-    void recoverSkipToCurlyRight() {
-        int cnt = 0;
-        DisableDiag dd(diagMgr);
-        while (true) {
-            switch (tokenType()) {
-                case TokenType::EndOfFile:
-                    return;
-                case TokenType::CurlyLeft:
-                    consume();
-                    ++cnt;
-                    break;
-                case TokenType::CurlyRight:
-                    consume();
-                    if (cnt-- == 0) {
-                        return;
-                    }
-                    break;
-                default:
-                    consume();
-                    break;
-            }
+private:
+    class Recorder {
+    public:
+        explicit Recorder(Parser &parser) : parser(parser) {
+            assert(parser.recorder == nullptr);
+            parser.recorder = this;
         }
-    }
 
-    void recoverSkipToSemicolon() {
-        int cnt = 0;
-        DisableDiag dd(diagMgr);
-        while (true) {
-            switch (tokenType()) {
-                case TokenType::EndOfFile:
-                    return;
-                case TokenType::CurlyLeft:
-                    consume();
-                    ++cnt;
-                    break;
-                case TokenType::CurlyRight:
-                    consume();
-                    if (cnt-- == 0) {
-                        return;
-                    }
-                    break;
-                case TokenType::Semicolon:
-                    consume();
-                    if (cnt == 0) {
-                        return;
-                    }
-                    break;
-                default:
-                    consume();
-                    break;
-            }
+        ~Recorder() {
+            assert(parser.recorder == this || parser.recorder == nullptr);
+            parser.recorder = nullptr;
         }
-    }
+
+        void stop() {
+            assert(parser.recorder == this);
+            parser.recorder = nullptr;
+        }
+
+        void rewind() {
+            assert(parser.recorder == this);
+            if (parser.hasToken) {
+                parser.consume();
+            }
+            parser.recorder = nullptr;
+            parser.src.unread(tokens.begin(), tokens.end());
+        }
+
+        Parser &parser;
+        std::vector<Token> tokens;
+    };
 
 private:
     ast::Namespace::Ptr namespaceDecl(ast::Modifiers mods);
-    ast::NamespaceMember::Ptr namespaceMember();
+    ast::NamespaceMember::Ptr namespaceMember(bool tepLevel);
     ast::Modifiers modifiers();
     ast::Statement::Ptr statement();
     ast::ExpressionStatement::Ptr expressionStmt();
@@ -183,12 +160,14 @@ private:
     std::vector<ast::Routine::Param> paramList();
     ast::Name name();
     ast::Type::Ptr type();
+    ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name name , bool allowSuperCtors = false);
 
 private:
     DiagManager &diagMgr;
-    ITokenStream &src;
+    TokenQueue src;
     Token token;
     bool hasToken;
+    Recorder *recorder;
 };
 
 } // namespace comp
