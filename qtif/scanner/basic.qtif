@@ -1,5 +1,5 @@
 abc
-+;{}()=/%
++;{}()=/%+++-
 catch
 else
 if
@@ -20,6 +20,9 @@ ParenRight@2:6:1
 Equals@2:7:1
 Slash@2:8:1
 Percent@2:9:1
+DoublePlus@2:10:2
+Plus@2:12:1
+Minus@2:13:1
 KwCatch@3:1:5
 KwElse@4:1:4
 KwIf@5:1:2

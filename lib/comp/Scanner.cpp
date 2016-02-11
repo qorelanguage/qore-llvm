@@ -95,7 +95,17 @@ TokenType Scanner::readInternal(Source &src) {
         case '\0':
             return TokenType::EndOfFile;
         case '+':
+            if (src.peek() == '+') {
+                src.read();
+                return TokenType::DoublePlus;
+            }
             return TokenType::Plus;
+        case '-':
+            if (src.peek() == '-') {
+                src.read();
+                return TokenType::DoubleMinus;
+            }
+            return TokenType::Minus;
         case ';':
             return TokenType::Semicolon;
         case '{':

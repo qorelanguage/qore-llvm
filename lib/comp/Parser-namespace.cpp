@@ -188,8 +188,9 @@ ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
                     //must be a function with implicit type without the sub keyword (6)
                     return ast::Function::create(routine(mods, ast::ImplicitType::create(start), std::move(nOrT)));
                 }
-                //we can't tell unless we look at the token after the matching ')'
-                //for now we don't allow typeless subless top level functions and assume (5)
+                //we can't tell unless we look at the token after the matching ')' and if it is a '{',
+                //we still don't know (function body vs. member access)
+                //so we don't allow typeless subless top level functions and assume (5)
             } else {
                 //must be variable access (7)
             }

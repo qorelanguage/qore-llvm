@@ -48,6 +48,7 @@ namespace ast {
 #define TOKEN(name)         FIELD(#name, " "); doToken(node.name)
 #define NAME(name)          FIELD(#name, " "); doName(node.name)
 #define VISIT_DIRECT(name)  FIELD(#name, "\n"); ++indent; visit(*node.name); --indent
+#define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
 class DumpVisitor : public DeclarationVisitor, public StatementVisitor, public ExpressionVisitor, public TypeVisitor {
@@ -115,6 +116,12 @@ public:
     NODE(CallExpression, {
             VISIT(calee);
             VISIT_DIRECT(argList);
+    })
+
+    NODE(UnaryExpression, {
+            VISIT(expr);
+            TOKEN(op);
+            BOOL(postfix);
     })
 
     NODE(ClosureExpression, {
@@ -230,6 +237,7 @@ private:
 #undef TOKEN
 #undef NAME
 #undef VISIT_DIRECT
+#undef BOOL
 
 template<typename OS, typename N>
 void dump(SourceManager &srcMgr, OS &os, N &n) {

@@ -425,6 +425,48 @@ private:
     }
 };
 
+/**
+ * \brief Represents a unary expression.
+ */
+class UnaryExpression : public Expression {
+
+public:
+    Expression::Ptr expr;                                   //!< The subexpression.
+    Token op;                                               //!< The operator.
+    bool postfix;                                           //!< True if `op` is a postfix operator.
+
+public:
+    using Ptr = std::unique_ptr<UnaryExpression>;           //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param expr the subexpression
+     * \param op the operator
+     * \param postfix true if `op` is a postfix operator
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr expr, Token op, bool postfix) {
+        return Ptr(new UnaryExpression(std::move(expr), op, postfix));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return postfix ? expr->getStart() : op.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return postfix ? op.location : expr->getEnd();
+    }
+
+private:
+    UnaryExpression(Expression::Ptr expr, Token op, bool postfix) : expr(std::move(expr)), op(op), postfix(postfix) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

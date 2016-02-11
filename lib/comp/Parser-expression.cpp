@@ -53,6 +53,10 @@ ast::Expression::Ptr Parser::postfixExpr() {
             case TokenType::ParenLeft:
                 e = ast::CallExpression::create(std::move(e), argList());
                 break;
+            case TokenType::DoubleMinus:
+            case TokenType::DoublePlus:
+                e = ast::UnaryExpression::create(std::move(e), consume(), true);
+                break;
             default:
                 return e;
         }
