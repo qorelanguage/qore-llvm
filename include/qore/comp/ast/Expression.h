@@ -343,6 +343,88 @@ private:
     }
 };
 
+/**
+ * \brief Represents a list of arguments.
+ */
+class ArgList : public Node {
+
+public:
+    using Data = std::vector<Expression::Ptr>;              //!< The type of the container.
+
+public:
+    Token startToken;                                       //!< The opening bracket.
+    Data data;                                              //!< The values.
+    Token endToken;                                         //!< The closing bracket.
+
+public:
+    using Ptr = std::unique_ptr<ArgList>;                   //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param startToken the opening bracket
+     * \param data the elements of the list
+     * \param endToken the closing bracket
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Token startToken, Data data, Token endToken) {
+        return Ptr(new ArgList(startToken, std::move(data), endToken));
+    }
+
+    SourceLocation getStart() const override {
+        return startToken.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return endToken.location;
+    }
+
+private:
+    ArgList(Token startToken, Data data, Token endToken) : startToken(startToken),
+            data(std::move(data)), endToken(endToken) {
+    }
+};
+
+/**
+ * \brief Represents a function or method invocation expression.
+ */
+class CallExpression : public Expression {
+
+public:
+    Expression::Ptr calee;                                  //!< The function to be called.
+    ArgList::Ptr argList;                                   //!< The list of arguments.
+
+public:
+    using Ptr = std::unique_ptr<CallExpression>;            //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param calee the function to be called
+     * \param argList the list of arguments
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr calee, ArgList::Ptr argList) {
+        return Ptr(new CallExpression(std::move(calee), std::move(argList)));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return calee->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return argList->getEnd();
+    }
+
+private:
+    CallExpression(Expression::Ptr calee, ArgList::Ptr argList) : calee(std::move(calee)), argList(std::move(argList)) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

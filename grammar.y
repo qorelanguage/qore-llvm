@@ -335,8 +335,8 @@ X       | expr ';'
         ;
 
     postfix_expr
-        : primary_expr
-        | postfix_expr arg_list
+X       : primary_expr
+X       | postfix_expr arg_list
         | postfix_expr '[' expr ']'
         | postfix_expr '{' expr '}'
         | postfix_expr '.' member_accessor

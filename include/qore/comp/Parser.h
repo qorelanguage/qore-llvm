@@ -154,6 +154,7 @@ private:
     ast::CompoundStatement::Ptr compoundStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
+    ast::Expression::Ptr postfixExpr();
     ast::Expression::Ptr primaryExpr();
     ast::Expression::Ptr hash(Token openToken, ast::Expression::Ptr expr);
     ast::Expression::Ptr list(Token openToken, ast::Expression::Ptr expr);
@@ -162,6 +163,7 @@ private:
     ast::Name name();
     ast::Type::Ptr type();
     ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name name , bool allowSuperCtors = false);
+    ast::ArgList::Ptr argList();
 
 private:
     DiagManager &diagMgr;

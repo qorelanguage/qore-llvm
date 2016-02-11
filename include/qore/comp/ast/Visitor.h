@@ -48,6 +48,7 @@ class ListExpression;
 class HashExpression;
 class VarDeclExpression;
 class CastExpression;
+class CallExpression;
 class ClosureExpression;
 class NameType;
 class AsteriskType;
@@ -102,6 +103,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(CastExpression &node) = 0;
+
+    /**
+     * \brief Called by a CallExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(CallExpression &node) = 0;
 
     /**
      * \brief Called by a ClosureExpression AST node.

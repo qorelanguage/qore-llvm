@@ -42,7 +42,21 @@ ast::Expression::Ptr Parser::expression() {
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
 
-    return primaryExpr();
+    return postfixExpr();
+}
+
+ast::Expression::Ptr Parser::postfixExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = primaryExpr();
+    while (true) {
+        switch (tokenType()) {
+            case TokenType::ParenLeft:
+                e = ast::CallExpression::create(std::move(e), argList());
+                break;
+            default:
+                return e;
+        }
+    }
 }
 
 ast::Expression::Ptr Parser::primaryExpr() {
@@ -212,6 +226,21 @@ ast::Type::Ptr Parser::type() {
         return ast::AsteriskType::create(l, name());
     }
     return ast::NameType::create(name());
+}
+
+ast::ArgList::Ptr Parser::argList() {
+    LOG_FUNCTION();
+
+    ast::ArgList::Data data;
+    Token openToken = match(TokenType::ParenLeft);
+    if (tokenType() != TokenType::ParenRight) {
+        data.emplace_back(expression());
+        while (tokenType() == TokenType::Comma) {
+            consume();
+            data.emplace_back(expression());
+        }
+    }
+    return ast::ArgList::create(openToken, std::move(data), match(TokenType::ParenRight));
 }
 
 } // namespace comp

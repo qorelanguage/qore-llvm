@@ -112,6 +112,11 @@ public:
             VISIT(expression);
     })
 
+    NODE(CallExpression, {
+            VISIT(calee);
+            VISIT_DIRECT(argList);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })
@@ -137,6 +142,10 @@ public:
                 if (std::get<2>(i)) std::get<2>(i)->accept(*this); else os << indent << "-no default-\n";
         );
         VISIT(body);
+    }
+
+    void visit(ArgList &node) {
+        NODE_ARRAY(data);
     }
 
 private:
