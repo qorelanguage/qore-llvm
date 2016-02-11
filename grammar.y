@@ -121,7 +121,7 @@ X       ;
         ;
 
     base_constructor
-        : name '(' arg_list ')'
+        : name arg_list
         ;
 
     member_list
@@ -132,7 +132,7 @@ X       ;
     member
         | modifiers type IDENTIFIER ';'
         | modifiers type IDENTIFIER '=' expr ';'
-        | modifiers type IDENTIFIER '(' arg_list ')' ';'
+        | modifiers type IDENTIFIER arg_list ';'
         | const_decl        /* unscoped only */
         ;
 
@@ -223,26 +223,27 @@ X       | expr ';'
         | expr
         ;
 
+
     arg_list
-        : expr_opt
+        : '(' ')'
+        | '(' expr_list ')'
+        ;
+
+    expr_list
+        : expr
+        | expr_list ',' expr
         ;
 
     expr
-        : list_expr
-        | TOK_UNSHIFT list_expr
-        | TOK_PUSH list_expr
-        | TOK_SPLICE list_expr
-        | TOK_EXTRACT list_expr
-        | TOK_MAP list_expr
-        | TOK_FOLDR list_expr
-        | TOK_FOLDL list_expr
-        | TOK_SELECT list_expr
-        ;
-
-    list_expr
         : assignment_expr
-        | assignment_expr ','
-        | list_expr ',' assignment_expr
+        | TOK_UNSHIFT expr_list
+        | TOK_PUSH expr_list
+        | TOK_SPLICE expr_list
+        | TOK_EXTRACT expr_list
+        | TOK_MAP expr_list
+        | TOK_FOLDR expr_list
+        | TOK_FOLDL expr_list
+        | TOK_SELECT expr_list
         ;
 
     assignment_expr
@@ -330,12 +331,12 @@ X       | expr ';'
         | P_INCREMENT unary_expr
         | P_DECREMENT unary_expr
         | unary_operator unary_expr
-        | TOK_NEW name '(' arg_list ')'
+        | TOK_NEW name arg_list
         ;
 
     postfix_expr
         : primary_expr
-        | postfix_expr '(' arg_list ')'
+        | postfix_expr arg_list
         | postfix_expr '[' expr ']'
         | postfix_expr '{' expr '}'
         | postfix_expr '.' member_accessor
@@ -349,6 +350,8 @@ X       | type IDENTIFIER
 X       | modifiers type KW_SUB param_list block
 X       | modifiers KW_SUB param_list block
 X       | '(' expr ')'
+X       | '(' expr_list ',' ')'
+X       | '(' expr_list ')'
 X       | '(' hash ')'
 X       | '(' ')'
 X       | '{' '}'
@@ -382,7 +385,7 @@ X       | hash ','
 X       ;
 
 X   hash_element
-X       : expr ':' assignment_expr
+X       : expr ':' expr
 X       ;
 
     unary_operator:

@@ -97,6 +97,9 @@ ast::Expression::Ptr Parser::primaryExpr() {
             if (tokenType() == TokenType::Colon) {
                 return hash(lParen, std::move(expr));
             }
+            if (tokenType() == TokenType::Comma) {
+                return list(lParen, std::move(expr));
+            }
             match(TokenType::ParenRight);
             return expr;
         }
@@ -141,8 +144,7 @@ ast::Expression::Ptr Parser::hash(Token openToken, ast::Expression::Ptr expr) {
 
     while (true) {
         match(TokenType::Colon);
-        ast::Expression::Ptr value = assignmentExpr();
-        data.emplace_back(std::move(expr), std::move(value));
+        data.emplace_back(std::move(expr), expression());
 
         if (tokenType() != TokenType::Comma) {
             break;
@@ -154,6 +156,25 @@ ast::Expression::Ptr Parser::hash(Token openToken, ast::Expression::Ptr expr) {
         expr = expression();
     }
     return ast::HashExpression::create(openToken, std::move(data), match(end));
+}
+
+//primary_expr
+//    | '(' expr_list ',' ')'
+//    | '(' expr_list ')'
+ast::Expression::Ptr Parser::list(Token openToken, ast::Expression::Ptr expr) {
+    LOG_FUNCTION();
+
+    ast::ListExpression::Data data;
+    data.emplace_back(std::move(expr));
+    while (tokenType() == TokenType::Comma) {
+        consume();
+
+        if (tokenType() == TokenType::ParenRight) {
+            break;
+        }
+        data.emplace_back(expression());
+    }
+    return ast::ListExpression::create(openToken, std::move(data), match(TokenType::ParenRight));
 }
 
 //primary_expr

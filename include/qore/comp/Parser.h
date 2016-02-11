@@ -156,6 +156,7 @@ private:
     ast::Expression::Ptr assignmentExpr();
     ast::Expression::Ptr primaryExpr();
     ast::Expression::Ptr hash(Token openToken, ast::Expression::Ptr expr);
+    ast::Expression::Ptr list(Token openToken, ast::Expression::Ptr expr);
     ast::ClosureExpression::Ptr closure(ast::Modifiers mods, ast::Type::Ptr type);
     std::vector<ast::Routine::Param> paramList();
     ast::Name name();
