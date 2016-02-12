@@ -33,10 +33,41 @@
 namespace qore {
 namespace comp {
 
+//expr
+//    : assignment_expr
+//    | TOK_UNSHIFT expr_list
+//    | TOK_PUSH expr_list
+//    | TOK_SPLICE expr_list
+//    | TOK_EXTRACT expr_list
+//    | TOK_MAP expr_list
+//    | TOK_FOLDR expr_list
+//    | TOK_FOLDL expr_list
+//    | TOK_SELECT expr_list
+//    ;
 ast::Expression::Ptr Parser::expression() {
     LOG_FUNCTION();
 
-    return assignmentExpr();
+    switch (tokenType()) {
+        case TokenType::KwUnshift:
+        case TokenType::KwPush:
+        case TokenType::KwSplice:
+        case TokenType::KwExtract:
+        case TokenType::KwMap:
+        case TokenType::KwFoldr:
+        case TokenType::KwFoldl:
+        case TokenType::KwSelect: {
+            Token t = consume();
+            ast::ListExpression::Data data;
+            data.emplace_back(expression());
+            while (tokenType() == TokenType::Comma) {
+                consume();
+                data.emplace_back(expression());
+            }
+            return ast::ListOperationExpression::create(t, std::move(data));
+        }
+        default:
+            return assignmentExpr();
+    }
 }
 
 //assignment_expr

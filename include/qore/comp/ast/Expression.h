@@ -762,6 +762,47 @@ private:
     }
 };
 
+/**
+ * \brief Represents a list operation.
+ */
+class ListOperationExpression : public Expression {
+
+public:
+    Token op;                                               //!< The operator.
+    ListExpression::Data args;                              //!< The arguments.
+
+public:
+    using Ptr = std::unique_ptr<ListOperationExpression>;   //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param op the operator
+     * \param args the arguments
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Token op, ListExpression::Data args) {
+        return Ptr(new ListOperationExpression(op, std::move(args)));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return op.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return args.back()->getEnd();
+    }
+
+private:
+    ListOperationExpression(Token op, ListExpression::Data args) : op(op), args(std::move(args)) {
+        assert(!this->args.empty());
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

@@ -57,6 +57,7 @@ class BinaryExpression;
 class InstanceofExpression;
 class ConditionalExpression;
 class AssignmentExpression;
+class ListOperationExpression;
 class ClosureExpression;
 class NameType;
 class AsteriskType;
@@ -165,6 +166,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(AssignmentExpression &node) = 0;
+
+    /**
+     * \brief Called by an ListOperationExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ListOperationExpression &node) = 0;
 
     /**
      * \brief Called by a ClosureExpression AST node.

@@ -223,7 +223,6 @@ X       | expr ';'
         | expr
         ;
 
-
 X   arg_list
 X       : '(' ')'
 X       | '(' expr_list ')'
@@ -234,17 +233,17 @@ X       : expr
 X       | expr_list ',' expr
 X       ;
 
-    expr
-        : assignment_expr
-        | TOK_UNSHIFT expr_list
-        | TOK_PUSH expr_list
-        | TOK_SPLICE expr_list
-        | TOK_EXTRACT expr_list
-        | TOK_MAP expr_list
-        | TOK_FOLDR expr_list
-        | TOK_FOLDL expr_list
-        | TOK_SELECT expr_list
-        ;
+X   expr
+X       : assignment_expr
+X       | TOK_UNSHIFT expr_list
+X       | TOK_PUSH expr_list
+X       | TOK_SPLICE expr_list
+X       | TOK_EXTRACT expr_list
+X       | TOK_MAP expr_list
+X       | TOK_FOLDR expr_list
+X       | TOK_FOLDL expr_list
+X       | TOK_SELECT expr_list
+X       ;
 
 X   assignment_expr
 X       : cond_expr
@@ -297,7 +296,7 @@ X       : relational_expr
 X       | and_expr '&' relational_expr
 X       ;
 
-    relational_expr
+X   relational_expr
 X       : exists_expr
 X       | relational_expr '>' exists_expr
 X       | relational_expr '<' exists_expr
@@ -309,12 +308,12 @@ X       | relational_expr '<=>' exists_expr
 X       | relational_expr '==' exists_expr
 X       | relational_expr '===' exists_expr
 X       | relational_expr '!==' exists_expr
-        | relational_expr '=~' REGEX
-        | relational_expr '!~' REGEX
-        | relational_expr '=~' REGEX_SUBST
-        | relational_expr '=~' REGEX_TRANS
-        | relational_expr '=~' REGEX_EXTRACT
-        ;
+X       | relational_expr '=~' REGEX
+X       | relational_expr '!~' REGEX
+X       | relational_expr '=~' REGEX_SUBST
+X       | relational_expr '=~' REGEX_TRANS
+X       | relational_expr '=~' REGEX_EXTRACT
+X       ;
 
 X   exists_expr
 X       : instanceof_expr

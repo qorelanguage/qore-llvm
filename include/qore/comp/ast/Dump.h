@@ -163,6 +163,11 @@ public:
             VISIT(right);
     })
 
+    NODE(ListOperationExpression, {
+            TOKEN(op);
+            NODE_ARRAY(args);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

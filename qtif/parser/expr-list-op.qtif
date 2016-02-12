@@ -1,0 +1,19 @@
+push l1, unshift l2, x;
+#$$$
+-Script@1:1-2:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:23
+      .expression:
+        -ListOperationExpression@1:1-1:22
+          .op: KwPush push
+          .args:
+            -NameExpression@1:6-1:6
+              .name: l1
+            -ListOperationExpression@1:10-1:22
+              .op: KwUnshift unshift
+              .args:
+                -NameExpression@1:18-1:18
+                  .name: l2
+                -NameExpression@1:22-1:22
+                  .name: x
