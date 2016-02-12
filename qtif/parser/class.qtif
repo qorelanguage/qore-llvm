@@ -3,8 +3,14 @@ class C {}
 class C inherits A::B;
 class C inherits public A::B, X;
 class C inherits A::B, private X;
+class C {
+    public static *X::Y f() {}
+    X::Y f();
+    private f();
+    f() : x(a), y() {}
+}
 #$$$
--Script@1:1-6:1
+-Script@1:1-12:1
   .members:
     -Class@1:8-1:15
       .modifiers: public
@@ -36,4 +42,50 @@ class C inherits A::B, private X;
         -A::B
         -X private
       .members:
+    -Class@6:1-11:1
+      .modifiers: -none-
+      .name: C
+      .inherits:
+      .members:
+        -Method@7:19-7:30
+          .routine:
+            .modifiers: public static
+            .type:
+              -AsteriskType@7:19-7:23
+                .name: X::Y
+            .name: f
+            .params:
+            .body:
+              -CompoundStatement@7:29-7:30
+                .statements:
+        -Method@8:5-8:13
+          .routine:
+            .modifiers: -none-
+            .type:
+              -NameType@8:5-8:8
+                .name: X::Y
+            .name: f
+            .params:
+        -Method@9:13-9:16
+          .routine:
+            .modifiers: private
+            .type:
+              -ImplicitType@9:13-9:13
+            .name: f
+            .params:
+        -Method@10:5-10:22
+          .routine:
+            .modifiers: -none-
+            .type:
+              -ImplicitType@10:5-10:5
+            .name: f
+            .params:
+            .baseCtors:
+              -x
+                -NameExpression@10:13-10:13
+                  .name: a
+              -y
+            .body:
+              -CompoundStatement@10:21-10:22
+                .statements:
   .statements:

@@ -96,6 +96,43 @@ private:
     }
 };
 
+/**
+ * \brief Represents a method (including special methods such as constructors).
+ */
+class Method : public ClassMember {
+
+public:
+    Routine::Ptr routine;                                   //!< The method.
+
+public:
+    using Ptr = std::unique_ptr<Method>;                    //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \param routine the routine
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Routine::Ptr routine) {
+        return Ptr(new Method(std::move(routine)));
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return routine->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return routine->getEnd();
+    }
+
+private:
+    explicit Method(Routine::Ptr routine) : routine(std::move(routine)) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

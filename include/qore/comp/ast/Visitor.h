@@ -40,6 +40,7 @@ class Namespace;
 class Class;
 class NamespaceConstant;
 class Function;
+class Method;
 class EmptyStatement;
 class ExpressionStatement;
 class CompoundStatement;
@@ -264,6 +265,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(Function &node) = 0;
+
+    /**
+     * \brief Called by a Method AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(Method &node) = 0;
 
 protected:
     DeclarationVisitor() = default;

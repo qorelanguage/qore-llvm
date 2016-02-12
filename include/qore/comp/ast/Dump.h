@@ -39,10 +39,15 @@ namespace comp {
 namespace ast {
 
 /// \cond IGNORED_BY_DOXYGEN
-#define NODE(name, body)    void visit(name &node) override { NodeHelper n_(*this, #name, node); body }
-#define ARRAY(name, body)   { ArrayHelper a_(*this, #name); for (auto &i : node.name) { body } }
-#define NODE_ARRAY(name)    ARRAY(name, i->accept(*this);)
+#define NODE(name, body)    void visit(name &node) override { \
+                                os << indent++ << "-" << #name << "@" << decode(node.getStart())  \
+                                   << "-" << decode(node.getEnd()) << "\n"; \
+                                body \
+                                --indent; \
+                            }
 #define FIELD(name, sep)    os << indent << "." << name << ":" sep
+#define ARRAY(name, body)   FIELD(#name, "\n"); ++indent; for (auto &i : node.name) { body } --indent
+#define NODE_ARRAY(name)    ARRAY(name, i->accept(*this);)
 #define VISIT(name)         FIELD(#name, "\n"); ++indent; node.name->accept(*this); --indent
 #define MODIFIERS(name)     FIELD(#name, ""); doModifiers(node.name); os << "\n"
 #define TOKEN(name)         FIELD(#name, " "); doToken(node.name)
@@ -82,6 +87,10 @@ public:
     })
 
     NODE(Function, {
+            VISIT_DIRECT(routine);
+    })
+
+    NODE(Method, {
             VISIT_DIRECT(routine);
     })
 
@@ -205,35 +214,21 @@ public:
                 os << indent << "-"; doToken(std::get<1>(i));
                 if (std::get<2>(i)) std::get<2>(i)->accept(*this); else os << indent << "-no default-\n";
         );
-        VISIT(body);
+        if (!node.baseCtors.empty()) {
+            ARRAY(baseCtors, os << indent++ << "-"; doName(i.first); os << "\n"; visit(*i.second); --indent; );
+        }
+        if (node.body) {
+            VISIT(body);
+        }
     }
 
     void visit(ArgList &node) {
-        NODE_ARRAY(data);
+        for (auto &i : node.data) {
+            i->accept(*this);
+        }
     }
 
 private:
-    struct NodeHelper {
-        NodeHelper(DumpVisitor &dv, const std::string &name, Node &node) : dv(dv) {
-            dv.os << dv.indent++ << "-" << name << "@" << dv.decode(node.getStart())
-                    << "-" << dv.decode(node.getEnd()) << "\n";
-        }
-        ~NodeHelper() {
-            --dv.indent;
-        }
-        DumpVisitor &dv;
-    };
-
-    struct ArrayHelper {
-        ArrayHelper(DumpVisitor &dv, const std::string &name) : dv(dv) {
-            dv.os << dv.indent++ << "." << name << ":\n";
-        }
-        ~ArrayHelper() {
-            --dv.indent;
-        }
-        DumpVisitor &dv;
-    };
-
     std::string decode(const SourceLocation &location) {
         assert(location.sourceId >= 0);
         std::pair<int, int> l = srcMgr.get(location.sourceId).decodeLocation(location.offset);
@@ -284,9 +279,9 @@ private:
 };
 
 #undef NODE
+#undef FIELD
 #undef ARRAY
 #undef NODE_ARRAY
-#undef FIELD
 #undef VISIT
 #undef MODIFIERS
 #undef TOKEN

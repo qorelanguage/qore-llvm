@@ -151,6 +151,7 @@ private:
     ast::NamespaceMember::Ptr namespaceMember(bool tepLevel);
     ast::Modifiers modifiers();
     ast::Class::Ptr classDecl(ast::Modifiers mods);
+    ast::ClassMember::Ptr classMember();
     ast::Statement::Ptr statement();
     ast::ExpressionStatement::Ptr expressionStmt();
     ast::CompoundStatement::Ptr compoundStmt();
@@ -178,7 +179,7 @@ private:
     std::vector<ast::Routine::Param> paramList();
     ast::Name name();
     ast::Type::Ptr type();
-    ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name name , bool allowSuperCtors = false);
+    ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name name , bool method = false);
     ast::ArgList::Ptr argList();
 
 private:

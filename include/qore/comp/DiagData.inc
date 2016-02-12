@@ -65,3 +65,5 @@ DIAG(ParserUnendedNamespaceDecl,                "PARSE-EXCEPTION", Error,
         "unended namespace declaration")
 DIAG(ParserInvalidMemberAccess,                 "PARSE-EXCEPTION", Error,
         "syntax error, unexpected %s, expecting identifier or '('")
+DIAG(ParserExpectedClassMember,                 "PARSE-EXCEPTION", Error,
+        "expected class member")

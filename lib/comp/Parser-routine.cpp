@@ -33,13 +33,26 @@
 namespace qore {
 namespace comp {
 
-ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name name, bool allowSuperCtors) {
+ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name rName, bool method) {
     LOG_FUNCTION();
     ast::Routine::Ptr r = ast::Routine::create();
     r->modifiers = mods;
     r->type = std::move(type);
-    r->name = std::move(name);
+    r->name = std::move(rName);
     r->params = paramList();
+    if (method) {
+        if (tokenType() == TokenType::Colon) {
+            do {
+                consume();
+                ast::Name n = name();
+                r->baseCtors.emplace_back(std::move(n), argList());
+            } while (tokenType() == TokenType::Comma);
+        }
+        if (tokenType() == TokenType::Semicolon) {
+            r->semicolon = consume().location;
+            return r;
+        }
+    }
     r->body = compoundStmt();
     return r;
 }

@@ -10,7 +10,6 @@ new A::B(x).y;
             -NewExpression@1:1-1:11
               .name: A::B
               .argList:
-                .data:
-                  -NameExpression@1:10-1:10
-                    .name: x
+                -NameExpression@1:10-1:10
+                  .name: x
           .token: Identifier y

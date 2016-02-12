@@ -49,14 +49,19 @@ public:
      */
     using Param = std::tuple<Type::Ptr, Token, Expression::Ptr>;
 
+    /**
+     * \brief The type of one element of the base constructor invocation list.
+     */
+    using BaseCtorInvocation = std::pair<Name, ArgList::Ptr>;
+
 public:
     Modifiers modifiers;                                    //!< The modifiers.
     Type::Ptr type;                                         //!< The return type.
     Name name;                                              //!< The name, may be empty.
     std::vector<Param> params;                              //!< The parameters.
+    std::vector<BaseCtorInvocation> baseCtors;              //!< The base constructor invocation list.
     CompoundStatement::Ptr body;                            //!< The body of the routine, nullptr for abstract methods.
     SourceLocation semicolon;                               //!< The location of semicolon (if body is nullptr)
-//TODO base constructor invocation list
 
 public:
     using Ptr = std::unique_ptr<Routine>;                   //!< Pointer type.

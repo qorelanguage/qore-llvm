@@ -41,26 +41,53 @@ ast::Class::Ptr Parser::classDecl(ast::Modifiers mods) {
     c->modifiers = mods;
     c->name = name();
     if (tokenType() == TokenType::KwInherits) {
-        consume();
-        ast::Modifiers m = modifiers();
-        c->inherits.emplace_back(m, name());
-        while (tokenType() == TokenType::Comma) {
+        do {
             consume();
             ast::Modifiers m = modifiers();
             c->inherits.emplace_back(m, name());
-        }
+        } while (tokenType() == TokenType::Comma);
     }
     if (tokenType() == TokenType::CurlyLeft) {
         consume();
         while (tokenType() != TokenType::CurlyRight && tokenType() != TokenType::EndOfFile) {
-            break;
-//            c->members.push_back(classMember());
+            ast::ClassMember::Ptr member = classMember();
+            if (member) {
+                c->members.push_back(std::move(member));
+            } else {
+                recoverSkipToCurlyRight();
+            }
         }
         c->end = match(TokenType::CurlyRight).location;
     } else {
         c->end = match(TokenType::Semicolon, &Parser::recoverDoNothing).location;
     }
     return c;
+}
+
+ast::ClassMember::Ptr Parser::classMember() {
+    LOG_FUNCTION();
+    ast::Modifiers mods = modifiers();
+    ast::Type::Ptr t;
+    ast::Name n;
+    switch (tokenType()) {
+        case TokenType::Asterisk:
+            t = type();
+            n = name();
+            break;
+        case TokenType::Identifier:
+            n = name();
+            if (tokenType() == TokenType::Identifier) {
+                t = ast::NameType::create(std::move(n));
+                n = name();
+            } else {
+                t = ast::ImplicitType::create(n.tokens.front().location);
+            }
+            break;
+        default:
+            report(DiagId::ParserExpectedClassMember);
+            return ast::ClassMember::Ptr();
+    }
+    return ast::Method::create(routine(mods, std::move(t), std::move(n), true));
 }
 
 } // namespace comp

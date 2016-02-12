@@ -92,25 +92,25 @@ X       ;
 
     class_member
         : modifiers '{' member_list '}'
-        | modifiers type IDENTIFIER param_list block
-        | modifiers IDENTIFIER param_list base_constructor_list block
-        | modifiers type IDENTIFIER param_list ';'
-        | modifiers IDENTIFIER param_list ';'
+X       | modifiers type IDENTIFIER param_list block
+X       | modifiers IDENTIFIER param_list base_constructor_list block
+X       | modifiers type IDENTIFIER param_list ';'
+X       | modifiers IDENTIFIER param_list ';'
         ;
 
-    base_constructor_list
-        : /* empty */
-        | ':' base_constructors
-        ;
+X   base_constructor_list
+X       : /* empty */
+X       | ':' base_constructors
+X       ;
 
-    base_constructors
-        : base_constructor
-        | base_constructors ',' base_constructor
-        ;
+X   base_constructors
+X       : base_constructor
+X       | base_constructors ',' base_constructor
+X       ;
 
-    base_constructor
-        : name arg_list
-        ;
+X   base_constructor
+X       : name arg_list
+X       ;
 
     member_list
         : /* empty */
