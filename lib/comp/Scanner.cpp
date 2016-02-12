@@ -169,6 +169,16 @@ TokenType Scanner::readInternal(Source &src) {
                 return TokenType::ExclamationEquals;
             }
             return TokenType::Exclamation;
+        case '?':
+            if (src.peek() == '?') {
+                src.read();
+                return TokenType::DoubleQuestion;
+            }
+            if (src.peek() == '*') {
+                src.read();
+                return TokenType::QuestionAsterisk;
+            }
+            return TokenType::Question;
         case '~':
             return TokenType::Tilde;
         case '\\':

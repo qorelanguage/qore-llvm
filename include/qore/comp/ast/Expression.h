@@ -676,6 +676,49 @@ private:
     }
 };
 
+/**
+ * \brief Represents a conditional expression.
+ */
+class ConditionalExpression : public Expression {
+
+public:
+    Expression::Ptr condition;                              //!< The condition subexpression.
+    Expression::Ptr exprTrue;                               //!< The subexpression to evaluate if condition is true.
+    Expression::Ptr exprFalse;                              //!< The subexpression to evaluate if condition is false.
+
+public:
+    using Ptr = std::unique_ptr<ConditionalExpression>;     //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param condition the condition subexpression
+     * \param exprTrue the subexpression to evaluate if condition is true
+     * \param exprFalse the subexpression to evaluate if condition is false
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr condition, Expression::Ptr exprTrue, Expression::Ptr exprFalse) {
+        return Ptr(new ConditionalExpression(std::move(condition), std::move(exprTrue), std::move(exprFalse)));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return condition->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return exprFalse->getEnd();
+    }
+
+private:
+    ConditionalExpression(Expression::Ptr condition, Expression::Ptr exprTrue, Expression::Ptr exprFalse)
+        : condition(std::move(condition)), exprTrue(std::move(exprTrue)), exprFalse(std::move(exprFalse)) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

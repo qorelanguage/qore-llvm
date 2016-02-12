@@ -42,7 +42,38 @@ ast::Expression::Ptr Parser::expression() {
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
 
-    return logOrExpr();
+    return condExpr();
+}
+
+//cond_expr
+//    : coalescing_expr
+//    | coalescing_expr '?' expr ':' cond_expr
+//    ;
+ast::Expression::Ptr Parser::condExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = coalescingExpr();
+    if (tokenType() == TokenType::Question) {
+        consume();
+        ast::Expression::Ptr e1 = expression();
+        match(TokenType::Colon);
+        return ast::ConditionalExpression::create(std::move(e), std::move(e1), condExpr());
+    }
+    return e;
+}
+
+//coalescing_expr:
+//    : log_or_expr
+//    | log_or_expr '??' coalescing_expr
+//    | log_or_expr '?*' coalescing_expr
+//    ;
+ast::Expression::Ptr Parser::coalescingExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = logOrExpr();
+    if (tokenType() == TokenType::DoubleQuestion || tokenType() == TokenType::QuestionAsterisk) {
+        Token t = consume();
+        return ast::BinaryExpression::create(std::move(e), t, coalescingExpr());
+    }
+    return e;
 }
 
 //log_or_expr

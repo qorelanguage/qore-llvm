@@ -251,16 +251,16 @@ X       ;
         | cond_expr assignment_operator assignment_expression
         ;
 
-    cond_expr
-        : coalescing_expr
-        | coalescing_expr '?' expr ':' cond_expr
-        ;
+X   cond_expr
+X       : coalescing_expr
+X       | coalescing_expr '?' expr ':' cond_expr
+X       ;
 
-    coalescing_expr:
-        : log_or_expr
-        | log_or_expr NULL_COALESCING coalescing_expr
-        | log_or_expr VALUE_COALESCING coalescing_expr
-        ;
+X   coalescing_expr:
+X       : log_or_expr
+X       | log_or_expr '??' coalescing_expr
+X       | log_or_expr '?*' coalescing_expr
+X       ;
 
 X   log_or_expr
 X       : log_and_expr

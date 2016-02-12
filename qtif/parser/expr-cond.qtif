@@ -1,0 +1,59 @@
+x ?? y ?? z;
+a?b:c?d:e;
+x ?* y || z;
+#$$$
+-Script@1:1-4:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:12
+      .expression:
+        -BinaryExpression@1:1-1:11
+          .left:
+            -NameExpression@1:1-1:1
+              .name: x
+          .op: DoubleQuestion ??
+          .right:
+            -BinaryExpression@1:6-1:11
+              .left:
+                -NameExpression@1:6-1:6
+                  .name: y
+              .op: DoubleQuestion ??
+              .right:
+                -NameExpression@1:11-1:11
+                  .name: z
+    -ExpressionStatement@2:1-2:10
+      .expression:
+        -ConditionalExpression@2:1-2:9
+          .condition:
+            -NameExpression@2:1-2:1
+              .name: a
+          .exprTrue:
+            -NameExpression@2:3-2:3
+              .name: b
+          .exprFalse:
+            -ConditionalExpression@2:5-2:9
+              .condition:
+                -NameExpression@2:5-2:5
+                  .name: c
+              .exprTrue:
+                -NameExpression@2:7-2:7
+                  .name: d
+              .exprFalse:
+                -NameExpression@2:9-2:9
+                  .name: e
+    -ExpressionStatement@3:1-3:12
+      .expression:
+        -BinaryExpression@3:1-3:11
+          .left:
+            -NameExpression@3:1-3:1
+              .name: x
+          .op: QuestionAsterisk ?*
+          .right:
+            -BinaryExpression@3:6-3:11
+              .left:
+                -NameExpression@3:6-3:6
+                  .name: y
+              .op: DoubleVerticalBar ||
+              .right:
+                -NameExpression@3:11-3:11
+                  .name: z

@@ -151,6 +151,12 @@ public:
             NAME(name);
     })
 
+    NODE(ConditionalExpression, {
+            VISIT(condition);
+            VISIT(exprTrue);
+            VISIT(exprFalse);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

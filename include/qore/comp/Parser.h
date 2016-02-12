@@ -154,6 +154,8 @@ private:
     ast::CompoundStatement::Ptr compoundStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
+    ast::Expression::Ptr condExpr();
+    ast::Expression::Ptr coalescingExpr();
     ast::Expression::Ptr logOrExpr();
     ast::Expression::Ptr logAndExpr();
     ast::Expression::Ptr orExpr();
