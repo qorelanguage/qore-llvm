@@ -68,6 +68,12 @@ public:
             NODE_ARRAY(members);
     })
 
+    NODE(NamespaceConstant, {
+            MODIFIERS(modifiers);
+            NAME(name);
+            VISIT(initializer);
+    })
+
     NODE(Function, {
             VISIT_DIRECT(routine);
     })

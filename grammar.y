@@ -35,8 +35,11 @@ X       ;
     namespace_member
 X       : namespace_decl
         | global_var_decl
-        | const_decl
-X       | sub_def
+X       | modifiers KW_CONST name '=' expr ';'
+X       | modifiers type KW_SUB name param_list block
+X       | modifiers KW_SUB name param_list block
+X       | modifiers type name param_list block
+X       | modifiers name param_list block               //not allowed at top level
         | class_def
         ;
 
@@ -44,17 +47,6 @@ X       | sub_def
         : modifiers KW_OUR type name ';'
         | modifiers KW_OUR '(' list ')' ';'            //TODO list
         ;
-
-    const_decl
-        : modifiers KW_CONST name '=' expr ';'
-        ;
-
-X   sub_def
-X       | modifiers type KW_SUB name param_list block
-X       | modifiers KW_SUB name param_list block
-X       | modifiers type name param_list block
-X       | modifiers name param_list block               //not allowed at top level
-X       ;
 
 X   modifiers
 X       : /* empty */
@@ -133,7 +125,7 @@ X       ;
         | modifiers type IDENTIFIER ';'
         | modifiers type IDENTIFIER '=' expr ';'
         | modifiers type IDENTIFIER arg_list ';'
-        | const_decl        /* unscoped only */
+        | modifiers KW_CONST IDENTIFIER '=' expr ';'
         ;
 
 

@@ -114,8 +114,11 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
 //namespace_member
 //    : namespace_decl
 //    | global_var_decl
-//    | const_decl
-//    | sub_def
+//    | modifiers KW_CONST name '=' expr ';'
+//    | modifiers type KW_SUB name param_list block
+//    | modifiers KW_SUB name param_list block
+//    | modifiers type name param_list block
+//    | modifiers name param_list block
 //    | class_def
 //    ;
 ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
@@ -127,10 +130,17 @@ ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
         case TokenType::KwNamespace:
             recorder.stop();
             return namespaceDecl(mods);
-        case TokenType::KwOur:
-            //TODO return globalVarDecl(mods);
-        case TokenType::KwConst:
-            //TODO return constDecl(mods);
+//TODO case TokenType::KwOur:
+        case TokenType::KwConst: {
+            ast::NamespaceConstant::Ptr c = ast::NamespaceConstant::create();
+            c->start = consume().location;
+            c->modifiers = mods;
+            c->name = name();
+            match(TokenType::Equals);
+            c->initializer = expression();
+            c->end = match(TokenType::Semicolon).location;
+            return c;
+        }
         case TokenType::KwClass:
             //TODO return classDecl(mods);
         case TokenType::KwSub:

@@ -131,6 +131,46 @@ private:
     }
 };
 
+/**
+ * \brief Represents a constant.
+ */
+class NamespaceConstant : public NamespaceMember {
+
+public:
+    SourceLocation start;                                   //!< The starting location.
+    Modifiers modifiers;                                    //!< The modifiers.
+    Name name;                                              //!< The name.
+    Expression::Ptr initializer;                            //!< The initializer expression.
+    SourceLocation end;                                     //!< The ending location.
+
+public:
+    using Ptr = std::unique_ptr<NamespaceConstant>;         //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new NamespaceConstant());
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    NamespaceConstant() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore
