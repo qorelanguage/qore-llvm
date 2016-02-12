@@ -42,9 +42,55 @@ ast::Expression::Ptr Parser::expression() {
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
 
-    return postfixExpr();
+    return prefixExpr();
 }
 
+//prefix_expr
+//    : postfix_expr
+//    | '+' prefix_expr
+//    | '-' prefix_expr
+//    | '~' prefix_expr
+//    | '!' prefix_expr
+//    | '\\' prefix_expr
+//    | '++' prefix_expr
+//    | '--' prefix_expr
+//    | KW_ELEMENTS prefix_expr
+//    | KW_KEYS prefix_expr
+//    | KW_SHIFT prefix_expr
+//    | KW_POP prefix_expr
+//    | KW_CHOMP prefix_expr
+//    | KW_TRIM prefix_expr
+//    | KW_BACKGROUND prefix_expr
+//    | KW_DELETE prefix_expr
+//    | KW_REMOVE prefix_expr
+//    | KW_NEW name arg_list
+//    ;
+ast::Expression::Ptr Parser::prefixExpr() {
+    LOG_FUNCTION();
+    Token t;
+    switch (tokenType()) {
+        case TokenType::Plus:
+        case TokenType::Minus:
+        case TokenType::Tilde:
+        case TokenType::Exclamation:
+        case TokenType::Backslash:
+        case TokenType::DoublePlus:
+        case TokenType::DoubleMinus:
+        case TokenType::KwElements:
+        case TokenType::KwKeys:
+        case TokenType::KwShift:
+        case TokenType::KwPop:
+        case TokenType::KwChomp:
+        case TokenType::KwTrim:
+        case TokenType::KwBackground:
+        case TokenType::KwDelete:
+        case TokenType::KwRemove:
+            t = consume();
+            return ast::UnaryExpression::create(prefixExpr(), t, false);
+        default:
+            return postfixExpr();
+    }
+}
 
 //postfix_expr
 //    : primary_expr

@@ -154,6 +154,7 @@ private:
     ast::CompoundStatement::Ptr compoundStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
+    ast::Expression::Ptr prefixExpr();
     ast::Expression::Ptr postfixExpr();
     ast::Expression::Ptr primaryExpr();
     ast::Expression::Ptr hash(Token openToken, ast::Expression::Ptr expr);

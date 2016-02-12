@@ -40,22 +40,31 @@ namespace comp {
 
 const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "abstract",       TokenType::KwAbstract },
+    { "background",     TokenType::KwBackground },
     { "cast",           TokenType::KwCast },
+    { "chomp",          TokenType::KwChomp },
     { "class",          TokenType::KwClass },
     { "const",          TokenType::KwConst },
+    { "delete",         TokenType::KwDelete },
     { "deprecated",     TokenType::KwDeprecated },
+    { "elements",       TokenType::KwElements },
     { "False",          TokenType::KwFalse },
     { "final",          TokenType::KwFinal },
+    { "keys",           TokenType::KwKeys },
     { "namespace",      TokenType::KwNamespace },
     { "NOTHING",        TokenType::KwNothing },
     { "NULL",           TokenType::KwNull },
     { "our",            TokenType::KwOur },
+    { "pop",            TokenType::KwPop },
     { "private",        TokenType::KwPrivate },
     { "public",         TokenType::KwPublic },
+    { "remove",         TokenType::KwRemove },
     { "self",           TokenType::KwSelf },
+    { "shift",          TokenType::KwShift },
     { "static",         TokenType::KwStatic },
     { "sub",            TokenType::KwSub },
     { "synchronized",   TokenType::KwSynchronized },
+    { "trim",           TokenType::KwTrim },
     { "True",           TokenType::KwTrue },
 
     { "catch",          TokenType::KwCatch },
@@ -63,7 +72,6 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "if",             TokenType::KwIf },
     { "my",             TokenType::KwMy },
     { "print",          TokenType::KwPrint },
-    { "trim",           TokenType::KwTrim },
     { "try",            TokenType::KwTry },
 };
 
@@ -126,6 +134,12 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::Equals;
         case ',':
             return TokenType::Comma;
+        case '!':
+            return TokenType::Exclamation;
+        case '~':
+            return TokenType::Tilde;
+        case '\\':
+            return TokenType::Backslash;
         case '*':
             return TokenType::Asterisk;
         case '#':

@@ -320,18 +320,31 @@ X       ;
         ;
 
     mult_expr
-        : unary_expr
-        | mult_expr '*' unary_expr
-        | mult_expr '/' unary_expr
-        | mult_expr '%' unary_expr
+        : prefix_expr
+        | mult_expr '*' prefix_expr
+        | mult_expr '/' prefix_expr
+        | mult_expr '%' prefix_expr
         ;
 
-    unary_expr
-        : postfix_expr
-        | P_INCREMENT unary_expr
-        | P_DECREMENT unary_expr
-        | unary_operator unary_expr
-        | TOK_NEW name arg_list
+    prefix_expr
+X       : postfix_expr
+X       | '+' prefix_expr
+X       | '-' prefix_expr
+X       | '~' prefix_expr
+X       | '!' prefix_expr
+X       | '\' prefix_expr
+X       | '++' prefix_expr
+X       | '--' prefix_expr
+X       | KW_ELEMENTS prefix_expr
+X       | KW_KEYS prefix_expr
+X       | KW_SHIFT prefix_expr
+X       | KW_POP prefix_expr
+X       | KW_CHOMP prefix_expr
+X       | KW_TRIM prefix_expr
+X       | KW_BACKGROUND prefix_expr
+X       | KW_DELETE prefix_expr
+X       | KW_REMOVE prefix_expr
+        | KW_NEW name arg_list
         ;
 
     postfix_expr
@@ -342,8 +355,8 @@ X       | postfix_expr '{' expr '}'
 X       | postfix_expr '.' IDENTIFIER
         | postfix_expr '.' literal      //anything that can be converted to string
 X       | postfix_expr '.' '(' expr ')'
-X       | postfix_expr P_INCREMENT
-X       | postfix_expr P_DECREMENT
+X       | postfix_expr '++'
+X       | postfix_expr '--'
         ;
 
     primary_expr
@@ -389,23 +402,6 @@ X       ;
 X   hash_element
 X       : expr ':' expr
 X       ;
-
-    unary_operator:
-        : TOK_ELEMENTS
-        | TOK_KEYS
-        | TOK_SHIFT
-        | TOK_POP
-        | TOK_CHOMP
-        | TOK_TRIM
-        | TOK_BACKGROUND
-        | TOK_DELETE
-        | TOK_REMOVE
-        | '-'
-        | '+'
-        | '~'
-        | '!'
-        | '\\'
-        ;
 
     relational_operator
         : '>'
