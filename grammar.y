@@ -307,24 +307,24 @@ X       ;
         | instanceof_expr TOK_INSTANCEOF name
         ;
 
-    shift_expr
-        : add_expr
-        | shift_expr SHIFT_LEFT add_expr
-        | shift_expr SHIFT_RIGHT add_expr
-        ;
+X   shift_expr
+X       : add_expr
+X       | shift_expr '<<' add_expr
+X       | shift_expr '>>' add_expr
+X       ;
 
-    add_expr
-        : mult_expr
-        | add_expr '+' mult_expr
-        | add_expr '-' mult_expr
-        ;
+X   add_expr
+X       : mult_expr
+X       | add_expr '+' mult_expr
+X       | add_expr '-' mult_expr
+X       ;
 
-    mult_expr
-        : prefix_expr
-        | mult_expr '*' prefix_expr
-        | mult_expr '/' prefix_expr
-        | mult_expr '%' prefix_expr
-        ;
+X   mult_expr
+X       : prefix_expr
+X       | mult_expr '*' prefix_expr
+X       | mult_expr '/' prefix_expr
+X       | mult_expr '%' prefix_expr
+X       ;
 
 X   prefix_expr
 X       : postfix_expr

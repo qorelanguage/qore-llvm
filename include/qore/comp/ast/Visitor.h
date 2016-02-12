@@ -53,6 +53,7 @@ class UnaryExpression;
 class IndexExpression;
 class AccessExpression;
 class NewExpression;
+class BinaryExpression;
 class ClosureExpression;
 class NameType;
 class AsteriskType;
@@ -137,6 +138,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(NewExpression &node) = 0;
+
+    /**
+     * \brief Called by a BinaryExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(BinaryExpression &node) = 0;
 
     /**
      * \brief Called by a ClosureExpression AST node.

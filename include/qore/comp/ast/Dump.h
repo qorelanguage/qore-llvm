@@ -140,6 +140,12 @@ public:
             VISIT_DIRECT(argList);
     })
 
+    NODE(BinaryExpression, {
+            VISIT(left);
+            TOKEN(op);
+            VISIT(right);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

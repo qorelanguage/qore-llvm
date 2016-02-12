@@ -1,0 +1,44 @@
+x+y*z;
+a-b<<c/d;
+#$$$
+-Script@1:1-3:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:6
+      .expression:
+        -BinaryExpression@1:1-1:5
+          .left:
+            -NameExpression@1:1-1:1
+              .name: x
+          .op: Plus +
+          .right:
+            -BinaryExpression@1:3-1:5
+              .left:
+                -NameExpression@1:3-1:3
+                  .name: y
+              .op: Asterisk *
+              .right:
+                -NameExpression@1:5-1:5
+                  .name: z
+    -ExpressionStatement@2:1-2:9
+      .expression:
+        -BinaryExpression@2:1-2:8
+          .left:
+            -BinaryExpression@2:1-2:3
+              .left:
+                -NameExpression@2:1-2:1
+                  .name: a
+              .op: Minus -
+              .right:
+                -NameExpression@2:3-2:3
+                  .name: b
+          .op: DoubleAngleLeft <<
+          .right:
+            -BinaryExpression@2:6-2:8
+              .left:
+                -NameExpression@2:6-2:6
+                  .name: c
+              .op: Slash /
+              .right:
+                -NameExpression@2:8-2:8
+                  .name: d

@@ -164,8 +164,16 @@ TokenType Scanner::readInternal(Source &src) {
             }
             return TokenType::Percent;
         case '<':
+            if (src.peek() == '<') {
+                src.read();
+                return TokenType::DoubleAngleLeft;
+            }
             return TokenType::AngleLeft;
         case '>':
+            if (src.peek() == '>') {
+                src.read();
+                return TokenType::DoubleAngleRight;
+            }
             return TokenType::AngleRight;
         case '"':
         case '\'':

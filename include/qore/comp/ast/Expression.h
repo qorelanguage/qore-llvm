@@ -593,6 +593,49 @@ private:
     }
 };
 
+/**
+ * \brief Represents a binary expression.
+ */
+class BinaryExpression : public Expression {
+
+public:
+    Expression::Ptr left;                                   //!< The left subexpression.
+    Token op;                                               //!< The operator.
+    Expression::Ptr right;                                  //!< The right subexpression.
+
+public:
+    using Ptr = std::unique_ptr<BinaryExpression>;           //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param left the left subexpression
+     * \param op the operator
+     * \param right the right subexpression
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr left, Token op, Expression::Ptr right) {
+        return Ptr(new BinaryExpression(std::move(left), op, std::move(right)));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return left->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return right->getEnd();
+    }
+
+private:
+    BinaryExpression(Expression::Ptr left, Token op, Expression::Ptr right) : left(std::move(left)), op(op),
+            right(std::move(right)) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

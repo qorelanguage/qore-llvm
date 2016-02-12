@@ -1,5 +1,5 @@
 abc
-+;{}()=/%+++-!\~
++;{}()=/%+++-!\~>>>
 catch
 else
 if
@@ -26,6 +26,8 @@ Minus@2:13:1
 Exclamation@2:14:1
 Backslash@2:15:1
 Tilde@2:16:1
+DoubleAngleRight@2:17:2
+AngleRight@2:19:1
 KwCatch@3:1:5
 KwElse@4:1:4
 KwIf@5:1:2

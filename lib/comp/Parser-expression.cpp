@@ -42,7 +42,53 @@ ast::Expression::Ptr Parser::expression() {
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
 
-    return prefixExpr();
+    return shiftExpr();
+}
+
+//shift_expr
+//    : add_expr
+//    | shift_expr SHIFT_LEFT add_expr
+//    | shift_expr SHIFT_RIGHT add_expr
+//    ;
+ast::Expression::Ptr Parser::shiftExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = addExpr();
+    while (tokenType() == TokenType::DoubleAngleLeft || tokenType() == TokenType::DoubleAngleRight) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, addExpr());
+    }
+    return e;
+}
+
+//add_expr
+//    : mult_expr
+//    | add_expr '+' mult_expr
+//    | add_expr '-' mult_expr
+//    ;
+ast::Expression::Ptr Parser::addExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = multExpr();
+    while (tokenType() == TokenType::Plus || tokenType() == TokenType::Minus) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, multExpr());
+    }
+    return e;
+}
+
+//mult_expr
+//    : prefix_expr
+//    | mult_expr '*' prefix_expr
+//    | mult_expr '/' prefix_expr
+//    | mult_expr '%' prefix_expr
+//    ;
+ast::Expression::Ptr Parser::multExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = prefixExpr();
+    while (tokenType() == TokenType::Asterisk || tokenType() == TokenType::Slash || tokenType() == TokenType::Percent) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, prefixExpr());
+    }
+    return e;
 }
 
 //prefix_expr
