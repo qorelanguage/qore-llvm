@@ -100,6 +100,7 @@ Token Scanner::read(Source &src) {
     }
 }
 
+//TODO binary, number, float, absolute/relative date
 TokenType Scanner::readInternal(Source &src) {
     LOG_FUNCTION();
     switch (char c = src.read()) {
@@ -141,6 +142,23 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::SquareRight;
         case '.':
             return TokenType::Dot;
+        case '$':
+            if (src.peek() == '$') {
+                src.read();
+                return TokenType::DoubleDollar;
+            }
+            if (src.peek() == '#') {
+                src.read();
+                return TokenType::DollarHash;
+            }
+            while (isdigit(src.peek())) {
+                src.read();
+            }
+            if (src.getMarkedLength() < 2) {
+                REPORT(ScannerInvalidCharacter) << c;
+                return TokenType::None;
+            }
+            return TokenType::ImplicitArg;
         case '^':
             if (src.peek() == '=') {
                 src.read();
@@ -278,6 +296,10 @@ TokenType Scanner::readInternal(Source &src) {
             src.unread();
             readString(src);
             return TokenType::String;
+        case '`':
+            src.unread();
+            readString(src);
+            return TokenType::BackquotedString;
         case '0':
             return src.peek() == 'x' ? readHexLiteral(src) : handleDigit(src);
         case '1':   case '2':   case '3':   case '4':
@@ -311,7 +333,7 @@ TokenType Scanner::readIdentifier(Source &src) {
 
 void Scanner::readString(Source &src) {
     int type = src.read();
-    assert(type == '\'' || type == '"');
+    assert(type == '\'' || type == '"' || type == '`');
     bool escape = false;
     while (true) {
         char c = src.read();

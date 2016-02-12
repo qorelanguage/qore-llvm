@@ -9,8 +9,9 @@ self;
 ();
 (True);
 cast<*a::b>({});
+"a" 'b' "c";
 #$$$
--Script@1:1-12:1
+-Script@1:1-13:1
   .members:
   .statements:
     -ExpressionStatement@1:1-1:2
@@ -62,3 +63,19 @@ cast<*a::b>({});
           .expression:
             -HashExpression@11:13-11:14
               .data:
+    -ExpressionStatement@12:1-12:12
+      .expression:
+        -BinaryExpression@12:1-12:9
+          .left:
+            -BinaryExpression@12:1-12:5
+              .left:
+                -LiteralExpression@12:1-12:1
+                  .token: String "a"
+              .op: Plus 
+              .right:
+                -LiteralExpression@12:5-12:5
+                  .token: String 'b'
+          .op: Plus 
+          .right:
+            -LiteralExpression@12:9-12:9
+              .token: String "c"

@@ -1,0 +1,12 @@
+$0
+$1234
+$$$#
+$a
+#$$$
+ImplicitArg@1:1:2
+ImplicitArg@2:1:5
+DoubleDollar@3:1:2
+DollarHash@3:3:2
+#$!ScannerInvalidCharacter@4:1
+Identifier@4:2:1
+EndOfFile@5:1:0

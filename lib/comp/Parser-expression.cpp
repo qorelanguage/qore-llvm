@@ -345,9 +345,7 @@ ast::Expression::Ptr Parser::prefixExpr() {
 //    | postfix_expr arg_list
 //    | postfix_expr '[' expr ']'
 //    | postfix_expr '{' expr '}'
-//    | postfix_expr '.' IDENTIFIER
-//    | postfix_expr '.' literal      //anything that can be converted to string
-//    | postfix_expr '.' '(' expr ')'
+//    | postfix_expr '.' primary_expr
 //    | postfix_expr P_INCREMENT
 //    | postfix_expr P_DECREMENT
 //    ;
@@ -379,7 +377,7 @@ ast::Expression::Ptr Parser::postfixExpr() {
                 } else if (tokenType() == TokenType::Identifier) {
                     e = ast::AccessExpression::create(std::move(e), consume());
                 } else {
-                    //TODO e."abc", e.3, etc.
+                    //TODO original grammar allowed any (primary) expression
                     report(DiagId::ParserInvalidMemberAccess) << util::to_string(tokenType());
                 }
                 break;
@@ -403,6 +401,15 @@ ast::Expression::Ptr Parser::primaryExpr() {
         case TokenType::KwSelf:
         case TokenType::KwTrue:
         case TokenType::Integer:
+        case TokenType::BackquotedString:
+        case TokenType::ImplicitArg:
+        case TokenType::DoubleDollar:
+        case TokenType::DollarHash:
+        case TokenType::Float:
+        case TokenType::AbsoluteDate:
+        case TokenType::RelativeDate:
+        case TokenType::Number:
+        case TokenType::Binary:
             return ast::LiteralExpression::create(consume());
         case TokenType::KwAbstract:
         case TokenType::KwDeprecated:
@@ -473,6 +480,17 @@ ast::Expression::Ptr Parser::primaryExpr() {
             Token t = consume();
             ast::Name n = name();
             return ast::NewExpression::create(t.location, std::move(n), argList());
+        }
+        case TokenType::String: {
+            ast::Expression::Ptr e = ast::LiteralExpression::create(consume());
+            while (tokenType() == TokenType::String) {
+                Token op;
+                op.location = location();
+                op.length = 0;
+                op.type = TokenType::Plus;
+                e = ast::BinaryExpression::create(std::move(e), op, ast::LiteralExpression::create(consume()));
+            }
+            return e;
         }
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());

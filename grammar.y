@@ -370,14 +370,12 @@ X       : primary_expr
 X       | postfix_expr arg_list
 X       | postfix_expr '[' expr ']'
 X       | postfix_expr '{' expr '}'
-X       | postfix_expr '.' IDENTIFIER
-        | postfix_expr '.' literal      //anything that can be converted to string
-X       | postfix_expr '.' '(' expr ')'
+X       | postfix_expr '.' primary_expr
 X       | postfix_expr '++'
 X       | postfix_expr '--'
         ;
 
-    primary_expr
+X   primary_expr
 X       : name
 X       | type IDENTIFIER
 X       | modifiers type KW_SUB param_list block
@@ -391,26 +389,27 @@ X       | '{' '}'
 X       | '{' hash '}'
 X       | KW_CAST '<' type '>' '(' expr ')'
 X       | KW_NEW name arg_list
-        | BACKQUOTE
-        | IMPLICIT_ARG_REF
-        | IMPLICIT_ELEMENT
+X       | BACKQUOTE
+X       | IMPLICIT_ARG_REF
+X       | IMPLICIT_ELEMENT
 X       | KW_SELF
 X       | KW_NOTHING
 X       | KW_NULL
 X       | KW_TRUE
 X       | KW_FALSE
-        | QFLOAT
+X       | QFLOAT
 X       | INTEGER
-        | DATETIME
-        | NUMBER
-        | BINARY
-        | string
-        ;
+X       | ABSOLUTE_DATE
+X       | RELATIVE_DATE
+X       | NUMBER
+X       | BINARY
+X       | string
+X       ;
 
-    string
-        : QUOTED_WORD
-        | QUOTED_WORD string
-        ;
+X   string
+X       : STRING
+X       | STRING string
+X       ;
 
 X   hash
 X       : hash_element
