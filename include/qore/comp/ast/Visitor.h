@@ -37,6 +37,7 @@ namespace ast {
 
 class Script;
 class Namespace;
+class Class;
 class NamespaceConstant;
 class Function;
 class EmptyStatement;
@@ -245,6 +246,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(Namespace &node) = 0;
+
+    /**
+     * \brief Called by a Class AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(Class &node) = 0;
 
     /**
      * \brief Called by a NamespaceConstant AST node.

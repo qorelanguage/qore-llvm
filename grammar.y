@@ -40,7 +40,7 @@ X       | modifiers type KW_SUB name param_list block
 X       | modifiers KW_SUB name param_list block
 X       | modifiers type name param_list block
 X       | modifiers name param_list block               //not allowed at top level
-        | class_def
+X       | class_def
         ;
 
     global_var_decl
@@ -66,36 +66,32 @@ X       ;
     /////////////////////////////////////////
     // CLASSES
     /////////////////////////////////////////
-    class_def
-        : modifiers TOK_CLASS name inheritance_list '{' class_body '}'
-        | modifiers TOK_CLASS name inheritance_list ';'
-        ;
+X   class_def
+X       : modifiers TOK_CLASS name inheritance_list '{' class_body '}'
+X       | modifiers TOK_CLASS name inheritance_list ';'
+X       ;
 
-    inheritance_list
-        : /* empty */
-        | TOK_INHERITS superclass_list
-        ;
+X   inheritance_list
+X       : /* empty */
+X       | TOK_INHERITS superclass_list
+X       ;
 
-    superclass_list
-        : superclass
-        | superclass_list ',' superclass
-        ;
+X   superclass_list
+X       : superclass
+X       | superclass_list ',' superclass
+X       ;
 
-    superclass
-        : modifiers name
-        ;
+X   superclass
+X       : modifiers name
+X       ;
 
-    class_body
-        : /* empty */
-        | class_body class_member
-        ;
+X   class_body
+X       : /* empty */
+X       | class_body class_member
+X       ;
 
     class_member
-        : inline_methoddef
-        | modifiers '{' member_list '}'
-        ;
-
-    inline_methoddef
+        : modifiers '{' member_list '}'
         | modifiers type IDENTIFIER param_list block
         | modifiers IDENTIFIER param_list base_constructor_list block
         | modifiers type IDENTIFIER param_list ';'

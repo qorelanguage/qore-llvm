@@ -81,7 +81,7 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
     ns->modifiers = mods;
 
     if (tokenType() == TokenType::Identifier) {
-        ns->name = consume();
+        ns->name = consume();       //XXX shouldn't we allow names here?
     } else {
         report(DiagId::ParserExpectedNamespaceName);
     }
@@ -142,7 +142,7 @@ ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
             return c;
         }
         case TokenType::KwClass:
-            //TODO return classDecl(mods);
+            return classDecl(mods);
         case TokenType::KwSub:
             t = ast::ImplicitType::create(location());
             consume();

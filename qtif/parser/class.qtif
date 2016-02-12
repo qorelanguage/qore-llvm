@@ -1,0 +1,39 @@
+public class C;
+class C {}
+class C inherits A::B;
+class C inherits public A::B, X;
+class C inherits A::B, private X;
+#$$$
+-Script@1:1-6:1
+  .members:
+    -Class@1:8-1:15
+      .modifiers: public
+      .name: C
+      .inherits:
+      .members:
+    -Class@2:1-2:10
+      .modifiers: -none-
+      .name: C
+      .inherits:
+      .members:
+    -Class@3:1-3:22
+      .modifiers: -none-
+      .name: C
+      .inherits:
+        -A::B
+      .members:
+    -Class@4:1-4:32
+      .modifiers: -none-
+      .name: C
+      .inherits:
+        -A::B public
+        -X
+      .members:
+    -Class@5:1-5:33
+      .modifiers: -none-
+      .name: C
+      .inherits:
+        -A::B
+        -X private
+      .members:
+  .statements:

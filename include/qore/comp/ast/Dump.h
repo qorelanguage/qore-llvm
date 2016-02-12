@@ -44,9 +44,9 @@ namespace ast {
 #define NODE_ARRAY(name)    ARRAY(name, i->accept(*this);)
 #define FIELD(name, sep)    os << indent << "." << name << ":" sep
 #define VISIT(name)         FIELD(#name, "\n"); ++indent; node.name->accept(*this); --indent
-#define MODIFIERS(name)     FIELD(#name, ""); doModifiers(node.name)
+#define MODIFIERS(name)     FIELD(#name, ""); doModifiers(node.name); os << "\n"
 #define TOKEN(name)         FIELD(#name, " "); doToken(node.name)
-#define NAME(name)          FIELD(#name, " "); doName(node.name)
+#define NAME(name)          FIELD(#name, " "); doName(node.name); os << "\n"
 #define VISIT_DIRECT(name)  FIELD(#name, "\n"); ++indent; visit(*node.name); --indent
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
@@ -65,6 +65,13 @@ public:
     NODE(Namespace, {
             MODIFIERS(modifiers);
             TOKEN(name);
+            NODE_ARRAY(members);
+    })
+
+    NODE(Class, {
+            MODIFIERS(modifiers);
+            NAME(name);
+            ARRAY(inherits, os << indent << "-"; doName(i.second); doModifiers(i.first, false); os << "\n"; );
             NODE_ARRAY(members);
     })
 
@@ -235,8 +242,8 @@ private:
         return str.str();
     }
 
-    void doModifiers(const Modifiers &mods) {
-        if (mods.isEmpty()) os << " -none-";
+    void doModifiers(const Modifiers &mods, bool printEmpty = true) {
+        if (mods.isEmpty() && printEmpty) os << " -none-";
         if (mods.contains(Modifier::Abstract)) os << " abstract";
         if (mods.contains(Modifier::Deprecated)) os << " deprecated";
         if (mods.contains(Modifier::Final)) os << " final";
@@ -244,7 +251,6 @@ private:
         if (mods.contains(Modifier::Public)) os << " public";
         if (mods.contains(Modifier::Static)) os << " static";
         if (mods.contains(Modifier::Synchronized)) os << " synchronized";
-        os << "\n";
     }
 
     void doToken(const Token &token) {
@@ -265,7 +271,6 @@ private:
                 os << "::" << lexeme(*it++);
             }
         }
-        os << "\n";
     }
 
     std::string lexeme(const Token &token) {

@@ -2,6 +2,7 @@ add_library(comp STATIC
     DiagManager.cpp
     DiagRecord.cpp
     DirectiveProcessor.cpp
+    Parser-class.cpp
     Parser-expression.cpp
     Parser-namespace.cpp
     Parser-recovery.cpp

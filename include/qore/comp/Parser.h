@@ -33,6 +33,7 @@
 
 #include "qore/common/Util.h"
 #include "qore/comp/ast/Script.h"
+#include "qore/comp/ast/Class.h"
 #include "qore/comp/ast/Closure.h"
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/Token.h"
@@ -149,6 +150,7 @@ private:
     ast::Namespace::Ptr namespaceDecl(ast::Modifiers mods);
     ast::NamespaceMember::Ptr namespaceMember(bool tepLevel);
     ast::Modifiers modifiers();
+    ast::Class::Ptr classDecl(ast::Modifiers mods);
     ast::Statement::Ptr statement();
     ast::ExpressionStatement::Ptr expressionStmt();
     ast::CompoundStatement::Ptr compoundStmt();

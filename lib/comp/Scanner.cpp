@@ -54,6 +54,7 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "final",          TokenType::KwFinal },
     { "foldl",          TokenType::KwFoldl },
     { "foldr",          TokenType::KwFoldr },
+    { "inherits",       TokenType::KwInherits },
     { "instanceof",     TokenType::KwInstanceof },
     { "keys",           TokenType::KwKeys },
     { "map",            TokenType::KwMap },
