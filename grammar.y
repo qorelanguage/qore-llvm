@@ -288,13 +288,22 @@ X       ;
         ;
 
     relational_expr
-        : exists_expr
-        | relational_expr relational_operator exists_expr
-        | relational_expr REGEX_MATCH REGEX
-        | relational_expr REGEX_NMATCH REGEX
-        | relational_expr REGEX_MATCH REGEX_SUBST
-        | relational_expr REGEX_MATCH REGEX_TRANS
-        | relational_expr REGEX_MATCH REGEX_EXTRACT
+X       : exists_expr
+X       | relational_expr '>' exists_expr
+X       | relational_expr '<' exists_expr
+X       | relational_expr '!=' exists_expr
+X       | relational_expr '<>' exists_expr
+X       | relational_expr '<=' exists_expr
+X       | relational_expr '>=' exists_expr
+X       | relational_expr '<=>' exists_expr
+X       | relational_expr '==' exists_expr
+X       | relational_expr '===' exists_expr
+X       | relational_expr '!==' exists_expr
+        | relational_expr '=~' REGEX
+        | relational_expr '!~' REGEX
+        | relational_expr '=~' REGEX_SUBST
+        | relational_expr '=~' REGEX_TRANS
+        | relational_expr '=~' REGEX_EXTRACT
         ;
 
 X   exists_expr
@@ -402,18 +411,6 @@ X       ;
 X   hash_element
 X       : expr ':' expr
 X       ;
-
-    relational_operator
-        : '>'
-        | '<'
-        | LOGICAL_NE
-        | LOGICAL_LE
-        | LOGICAL_GE
-        | LOGICAL_CMP
-        | LOGICAL_EQ
-        | ABSOLUTE_EQ
-        | ABSOLUTE_NE
-        ;
 
     assignment_operator
         : PLUS_EQUALS

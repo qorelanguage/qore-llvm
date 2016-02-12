@@ -42,7 +42,51 @@ ast::Expression::Ptr Parser::expression() {
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
 
-    return existsExpr();
+    return relationalExpr();
+}
+
+//relational_expr
+//    : exists_expr
+//    | relational_expr '>' exists_expr
+//    | relational_expr '<' exists_expr
+//    | relational_expr '!=' exists_expr
+//    | relational_expr '<>' exists_expr
+//    | relational_expr '<=' exists_expr
+//    | relational_expr '>=' exists_expr
+//    | relational_expr '<=>' exists_expr
+//    | relational_expr '==' exists_expr
+//    | relational_expr '===' exists_expr
+//    | relational_expr '!==' exists_expr
+//    | relational_expr '=~' REGEX
+//    | relational_expr '!~' REGEX
+//    | relational_expr '=~' REGEX_SUBST
+//    | relational_expr '=~' REGEX_TRANS
+//    | relational_expr '=~' REGEX_EXTRACT
+//    ;
+ast::Expression::Ptr Parser::relationalExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = existsExpr();
+    while (true) {
+        switch (tokenType()) {
+            case TokenType::AngleLeft:
+            case TokenType::AngleRight:
+            case TokenType::ExclamationEquals:
+            case TokenType::AngleLeftAngleRight:
+            case TokenType::AngleLeftEquals:
+            case TokenType::AngleRightEquals:
+            case TokenType::AngleLeftEqualsAngleRight:
+            case TokenType::DoubleEquals:
+            case TokenType::TripleEquals:
+            case TokenType::ExclamationDoubleEquals: {
+                Token t = consume();
+                e = ast::BinaryExpression::create(std::move(e), t, existsExpr());
+                break;
+            }
+            //TODO regular expressions
+            default:
+                return e;
+        }
+    }
 }
 
 //exists_expr

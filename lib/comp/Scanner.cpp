@@ -134,10 +134,26 @@ TokenType Scanner::readInternal(Source &src) {
         case '.':
             return TokenType::Dot;
         case '=':
+            if (src.peek() == '=') {
+                src.read();
+                if (src.peek() == '=') {
+                    src.read();
+                    return TokenType::TripleEquals;
+                }
+                return TokenType::DoubleEquals;
+            }
             return TokenType::Equals;
         case ',':
             return TokenType::Comma;
         case '!':
+            if (src.peek() == '=') {
+                src.read();
+                if (src.peek() == '=') {
+                    src.read();
+                    return TokenType::ExclamationDoubleEquals;
+                }
+                return TokenType::ExclamationEquals;
+            }
             return TokenType::Exclamation;
         case '~':
             return TokenType::Tilde;
@@ -170,11 +186,27 @@ TokenType Scanner::readInternal(Source &src) {
                 src.read();
                 return TokenType::DoubleAngleLeft;
             }
+            if (src.peek() == '>') {
+                src.read();
+                return TokenType::AngleLeftAngleRight;
+            }
+            if (src.peek() == '=') {
+                src.read();
+                if (src.peek() == '>') {
+                    src.read();
+                    return TokenType::AngleLeftEqualsAngleRight;
+                }
+                return TokenType::AngleLeftEquals;
+            }
             return TokenType::AngleLeft;
         case '>':
             if (src.peek() == '>') {
                 src.read();
                 return TokenType::DoubleAngleRight;
+            }
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::AngleRightEquals;
             }
             return TokenType::AngleRight;
         case '"':
