@@ -133,6 +133,20 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::SquareRight;
         case '.':
             return TokenType::Dot;
+        case '^':
+            return TokenType::Caret;
+        case '&':
+            if (src.peek() == '&') {
+                src.read();
+                return TokenType::DoubleAmpersand;
+            }
+            return TokenType::Ampersand;
+        case '|':
+            if (src.peek() == '|') {
+                src.read();
+                return TokenType::DoubleVerticalBar;
+            }
+            return TokenType::VerticalBar;
         case '=':
             if (src.peek() == '=') {
                 src.read();

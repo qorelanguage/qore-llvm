@@ -262,30 +262,30 @@ X       ;
         | log_or_expr VALUE_COALESCING coalescing_expr
         ;
 
-    log_or_expr
-        : log_and_expr
-        | log_or_expr LOGICAL_OR log_and_expr
-        ;
+X   log_or_expr
+X       : log_and_expr
+X       | log_or_expr '||' log_and_expr
+X       ;
 
-    log_and_expr
-        : or_expr
-        | log_and_expr LOGICAL_AND or_expr
-        ;
+X   log_and_expr
+X       : or_expr
+X       | log_and_expr '&&' or_expr
+X       ;
 
-    or_expr
-        : xor_expr
-        | or_expr '|' xor_expr
-        ;
+X   or_expr
+x       : xor_expr
+X       | or_expr '|' xor_expr
+X       ;
 
-    xor_expr
-        : and_expr
-        | xor_expr '^' and_expr
-        ;
+X   xor_expr
+X       : and_expr
+X       | xor_expr '^' and_expr
+X       ;
 
-    and_expr
-        : relational_expr
-        | and_expr '&' relational_expr
-        ;
+X   and_expr
+X       : relational_expr
+X       | and_expr '&' relational_expr
+X       ;
 
     relational_expr
 X       : exists_expr

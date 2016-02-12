@@ -42,7 +42,77 @@ ast::Expression::Ptr Parser::expression() {
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
 
-    return relationalExpr();
+    return logOrExpr();
+}
+
+//log_or_expr
+//    : log_and_expr
+//    | log_or_expr '||' log_and_expr
+//    ;
+ast::Expression::Ptr Parser::logOrExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = logAndExpr();
+    while (tokenType() == TokenType::DoubleVerticalBar) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, logAndExpr());
+    }
+    return e;
+}
+
+//log_and_expr
+//    : or_expr
+//    | log_and_expr '&&' or_expr
+//    ;
+ast::Expression::Ptr Parser::logAndExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = orExpr();
+    while (tokenType() == TokenType::DoubleAmpersand) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, orExpr());
+    }
+    return e;
+}
+
+//or_expr
+//    : xor_expr
+//    | or_expr '|' xor_expr
+//    ;
+ast::Expression::Ptr Parser::orExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = xorExpr();
+    while (tokenType() == TokenType::VerticalBar) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, xorExpr());
+    }
+    return e;
+}
+
+//xor_expr
+//    : and_expr
+//    | xor_expr '^' and_expr
+//    ;
+ast::Expression::Ptr Parser::xorExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = andExpr();
+    while (tokenType() == TokenType::Caret) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, andExpr());
+    }
+    return e;
+}
+
+//and_expr
+//    : relational_expr
+//    | and_expr '&' relational_expr
+//    ;
+ast::Expression::Ptr Parser::andExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = relationalExpr();
+    while (tokenType() == TokenType::Ampersand) {
+        Token t = consume();
+        e = ast::BinaryExpression::create(std::move(e), t, relationalExpr());
+    }
+    return e;
 }
 
 //relational_expr
