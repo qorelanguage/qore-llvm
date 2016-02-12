@@ -139,7 +139,7 @@ ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
             match(TokenType::Equals);
             c->initializer = expression();
             c->end = match(TokenType::Semicolon).location;
-            return c;
+            return std::move(c);
         }
         case TokenType::KwClass:
             return classDecl(mods);
