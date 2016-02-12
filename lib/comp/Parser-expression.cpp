@@ -39,10 +39,41 @@ ast::Expression::Ptr Parser::expression() {
     return assignmentExpr();
 }
 
+//assignment_expr
+//    : cond_expr
+//    | cond_expr '=' assignment_expression
+//    | cond_expr '+=' assignment_expression
+//    | cond_expr '-=' assignment_expression
+//    | cond_expr '*=' assignment_expression
+//    | cond_expr '/=' assignment_expression
+//    | cond_expr '%=' assignment_expression
+//    | cond_expr '&=' assignment_expression
+//    | cond_expr '^=' assignment_expression
+//    | cond_expr '|=' assignment_expression
+//    | cond_expr '<<=' assignment_expression
+//    | cond_expr '>>=' assignment_expression
+//    ;
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
-
-    return condExpr();
+    ast::Expression::Ptr e = condExpr();
+    switch (tokenType()) {
+        case TokenType::Equals:
+        case TokenType::PlusEquals:
+        case TokenType::MinusEquals:
+        case TokenType::AsteriskEquals:
+        case TokenType::SlashEquals:
+        case TokenType::PercentEquals:
+        case TokenType::AmpersandEquals:
+        case TokenType::CaretEquals:
+        case TokenType::VerticalBarEquals:
+        case TokenType::DoubleAngleLeftEquals:
+        case TokenType::DoubleAngleRightEquals: {
+            Token t = consume();
+            return ast::AssignmentExpression::create(std::move(e), t, assignmentExpr());
+        }
+        default:
+            return e;
+    }
 }
 
 //cond_expr

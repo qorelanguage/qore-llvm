@@ -10,6 +10,7 @@ try
 %abc-xyz
 654
 <=<=>>====!==!=!
++=-=*=/=%=&=^=|=<<=>>=
 #$$$
 Identifier@1:1:3
 Plus@2:1:1
@@ -45,4 +46,14 @@ TripleEquals@12:8:3
 ExclamationDoubleEquals@12:11:3
 ExclamationEquals@12:14:2
 Exclamation@12:16:1
-EndOfFile@13:1:0
+PlusEquals@13:1:2
+MinusEquals@13:3:2
+AsteriskEquals@13:5:2
+SlashEquals@13:7:2
+PercentEquals@13:9:2
+AmpersandEquals@13:11:2
+CaretEquals@13:13:2
+VerticalBarEquals@13:15:2
+DoubleAngleLeftEquals@13:17:3
+DoubleAngleRightEquals@13:20:3
+EndOfFile@14:1:0

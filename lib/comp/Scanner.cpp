@@ -110,11 +110,19 @@ TokenType Scanner::readInternal(Source &src) {
                 src.read();
                 return TokenType::DoublePlus;
             }
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::PlusEquals;
+            }
             return TokenType::Plus;
         case '-':
             if (src.peek() == '-') {
                 src.read();
                 return TokenType::DoubleMinus;
+            }
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::MinusEquals;
             }
             return TokenType::Minus;
         case ';':
@@ -134,17 +142,29 @@ TokenType Scanner::readInternal(Source &src) {
         case '.':
             return TokenType::Dot;
         case '^':
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::CaretEquals;
+            }
             return TokenType::Caret;
         case '&':
             if (src.peek() == '&') {
                 src.read();
                 return TokenType::DoubleAmpersand;
             }
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::AmpersandEquals;
+            }
             return TokenType::Ampersand;
         case '|':
             if (src.peek() == '|') {
                 src.read();
                 return TokenType::DoubleVerticalBar;
+            }
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::VerticalBarEquals;
             }
             return TokenType::VerticalBar;
         case '=':
@@ -184,6 +204,10 @@ TokenType Scanner::readInternal(Source &src) {
         case '\\':
             return TokenType::Backslash;
         case '*':
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::AsteriskEquals;
+            }
             return TokenType::Asterisk;
         case '#':
             readLineComment(src);
@@ -199,15 +223,27 @@ TokenType Scanner::readInternal(Source &src) {
                 readBlockComment(src);
                 return TokenType::None;
             }
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::SlashEquals;
+            }
             return TokenType::Slash;
         case '%':
             if (src.wasFirstOnLine()) {
                 return readParseDirective(src);
             }
+            if (src.peek() == '=') {
+                src.read();
+                return TokenType::PercentEquals;
+            }
             return TokenType::Percent;
         case '<':
             if (src.peek() == '<') {
                 src.read();
+                if (src.peek() == '=') {
+                    src.read();
+                    return TokenType::DoubleAngleLeftEquals;
+                }
                 return TokenType::DoubleAngleLeft;
             }
             if (src.peek() == '>') {
@@ -226,6 +262,10 @@ TokenType Scanner::readInternal(Source &src) {
         case '>':
             if (src.peek() == '>') {
                 src.read();
+                if (src.peek() == '=') {
+                    src.read();
+                    return TokenType::DoubleAngleRightEquals;
+                }
                 return TokenType::DoubleAngleRight;
             }
             if (src.peek() == '=') {

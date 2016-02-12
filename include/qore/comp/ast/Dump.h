@@ -157,6 +157,12 @@ public:
             VISIT(exprFalse);
     })
 
+    NODE(AssignmentExpression, {
+            VISIT(left);
+            TOKEN(op);
+            VISIT(right);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

@@ -246,10 +246,20 @@ X       ;
         | TOK_SELECT expr_list
         ;
 
-    assignment_expr
-        : cond_expr
-        | cond_expr assignment_operator assignment_expression
-        ;
+X   assignment_expr
+X       : cond_expr
+X       | cond_expr '=' assignment_expression
+X       | cond_expr '+=' assignment_expression
+X       | cond_expr '-=' assignment_expression
+X       | cond_expr '&=' assignment_expression
+X       | cond_expr '|=' assignment_expression
+X       | cond_expr '%=' assignment_expression
+X       | cond_expr '*=' assignment_expression
+X       | cond_expr '/=' assignment_expression
+X       | cond_expr '^=' assignment_expression
+X       | cond_expr '<<=' assignment_expression
+X       | cond_expr '>>=' assignment_expression
+X       ;
 
 X   cond_expr
 X       : coalescing_expr
@@ -411,20 +421,6 @@ X       ;
 X   hash_element
 X       : expr ':' expr
 X       ;
-
-    assignment_operator
-        : PLUS_EQUALS
-        | MINUS_EQUALS
-        | AND_EQUALS
-        | OR_EQUALS
-        | MODULA_EQUALS
-        | MULTIPLY_EQUALS
-        | DIVIDE_EQUALS
-        | XOR_EQUALS
-        | SHIFT_LEFT_EQUALS
-        | SHIFT_RIGHT_EQUALS
-        | '='
-        ;
 
 X   name
 X       : IDENTIFIER
