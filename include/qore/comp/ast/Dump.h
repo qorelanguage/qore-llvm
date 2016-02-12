@@ -146,6 +146,11 @@ public:
             VISIT(right);
     })
 
+    NODE(InstanceofExpression, {
+            VISIT(expr);
+            NAME(name);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

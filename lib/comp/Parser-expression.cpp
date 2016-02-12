@@ -42,7 +42,34 @@ ast::Expression::Ptr Parser::expression() {
 ast::Expression::Ptr Parser::assignmentExpr() {
     LOG_FUNCTION();
 
-    return shiftExpr();
+    return existsExpr();
+}
+
+//exists_expr
+//    : instanceof_expr
+//    | KW_EXISTS exists_expr
+//    ;
+ast::Expression::Ptr Parser::existsExpr() {
+    LOG_FUNCTION();
+    if (tokenType() == TokenType::KwExists) {
+        Token t = consume();
+        return ast::UnaryExpression::create(existsExpr(), t, false);
+    }
+    return instanceofExpr();
+}
+
+//instanceof_expr
+//    : shift_expr
+//    | instanceof_expr KW_INSTANCEOF name
+//    ;
+ast::Expression::Ptr Parser::instanceofExpr() {
+    LOG_FUNCTION();
+    ast::Expression::Ptr e = shiftExpr();
+    while (tokenType() == TokenType::KwInstanceof) {
+        consume();
+        e = ast::InstanceofExpression::create(std::move(e), name());
+    }
+    return e;
 }
 
 //shift_expr

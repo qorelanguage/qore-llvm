@@ -636,6 +636,46 @@ private:
     }
 };
 
+/**
+ * \brief Represents an instanceof expression.
+ */
+class InstanceofExpression : public Expression {
+
+public:
+    Expression::Ptr expr;                                   //!< The subexpression.
+    Name name;                                              //!< The class name.
+
+public:
+    using Ptr = std::unique_ptr<InstanceofExpression>;      //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param expr the subexpression
+     * \param name the class name
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr expr, Name name) {
+        return Ptr(new InstanceofExpression(std::move(expr), std::move(name)));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return expr->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return name.getEnd();
+    }
+
+private:
+    InstanceofExpression(Expression::Ptr expr, Name name) : expr(std::move(expr)), name(std::move(name)) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

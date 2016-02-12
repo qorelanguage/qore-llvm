@@ -297,15 +297,15 @@ X       ;
         | relational_expr REGEX_MATCH REGEX_EXTRACT
         ;
 
-    exists_expr
-        : instanceof_expr
-        | TOK_EXISTS exists_expr
-        ;
+X   exists_expr
+X       : instanceof_expr
+X       | KW_EXISTS exists_expr
+X       ;
 
-    instanceof_expr
-        : shift_expr
-        | instanceof_expr TOK_INSTANCEOF name
-        ;
+X   instanceof_expr
+X       : shift_expr
+X       | instanceof_expr KW_INSTANCEOF name
+X       ;
 
 X   shift_expr
 X       : add_expr

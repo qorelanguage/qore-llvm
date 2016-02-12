@@ -1,0 +1,23 @@
+exists exists a instanceof A::B instanceof C::D;
+#$$$
+-Script@1:1-2:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:48
+      .expression:
+        -UnaryExpression@1:1-1:47
+          .expr:
+            -UnaryExpression@1:8-1:47
+              .expr:
+                -InstanceofExpression@1:15-1:47
+                  .expr:
+                    -InstanceofExpression@1:15-1:31
+                      .expr:
+                        -NameExpression@1:15-1:15
+                          .name: a
+                      .name: A::B
+                  .name: C::D
+              .op: KwExists exists
+              .postfix: false
+          .op: KwExists exists
+          .postfix: false

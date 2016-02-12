@@ -154,6 +154,8 @@ private:
     ast::CompoundStatement::Ptr compoundStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
+    ast::Expression::Ptr existsExpr();
+    ast::Expression::Ptr instanceofExpr();
     ast::Expression::Ptr shiftExpr();
     ast::Expression::Ptr addExpr();
     ast::Expression::Ptr multExpr();
