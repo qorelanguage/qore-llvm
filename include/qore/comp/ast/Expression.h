@@ -550,6 +550,49 @@ private:
     }
 };
 
+/**
+ * \brief Represents an instance creation expression.
+ */
+class NewExpression : public Expression {
+
+public:
+    SourceLocation location;                                //!< The location of the new keyword.
+    Name name;                                              //!< The class name.
+    ArgList::Ptr argList;                                   //!< The list of arguments.
+
+public:
+    using Ptr = std::unique_ptr<NewExpression>;             //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param location the location of the new keyword
+     * \param name the class name
+     * \param argList the list of arguments
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(SourceLocation location, Name name, ArgList::Ptr argList) {
+        return Ptr(new NewExpression(location, std::move(name), std::move(argList)));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return location;
+    }
+
+    SourceLocation getEnd() const override {
+        return argList->getEnd();
+    }
+
+private:
+    NewExpression(SourceLocation location, Name name, ArgList::Ptr argList) : location(location),
+            name(std::move(name)), argList(std::move(argList)) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

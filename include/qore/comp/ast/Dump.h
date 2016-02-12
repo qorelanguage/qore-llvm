@@ -135,6 +135,11 @@ public:
             TOKEN(token);
     })
 
+    NODE(NewExpression, {
+            NAME(name);
+            VISIT_DIRECT(argList);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

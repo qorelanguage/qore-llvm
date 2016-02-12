@@ -326,7 +326,7 @@ X       ;
         | mult_expr '%' prefix_expr
         ;
 
-    prefix_expr
+X   prefix_expr
 X       : postfix_expr
 X       | '+' prefix_expr
 X       | '-' prefix_expr
@@ -344,8 +344,7 @@ X       | KW_TRIM prefix_expr
 X       | KW_BACKGROUND prefix_expr
 X       | KW_DELETE prefix_expr
 X       | KW_REMOVE prefix_expr
-        | KW_NEW name arg_list
-        ;
+X       ;
 
     postfix_expr
 X       : primary_expr
@@ -372,6 +371,7 @@ X       | '(' ')'
 X       | '{' '}'
 X       | '{' hash '}'
 X       | KW_CAST '<' type '>' '(' expr ')'
+X       | KW_NEW name arg_list
         | BACKQUOTE
         | IMPLICIT_ARG_REF
         | IMPLICIT_ELEMENT

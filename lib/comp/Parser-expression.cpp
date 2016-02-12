@@ -63,7 +63,6 @@ ast::Expression::Ptr Parser::assignmentExpr() {
 //    | KW_BACKGROUND prefix_expr
 //    | KW_DELETE prefix_expr
 //    | KW_REMOVE prefix_expr
-//    | KW_NEW name arg_list
 //    ;
 ast::Expression::Ptr Parser::prefixExpr() {
     LOG_FUNCTION();
@@ -220,6 +219,11 @@ ast::Expression::Ptr Parser::primaryExpr() {
             cast->expression = expression();
             cast->end = match(TokenType::ParenRight).location;
             return std::move(cast);
+        }
+        case TokenType::KwNew: {
+            Token t = consume();
+            ast::Name n = name();
+            return ast::NewExpression::create(t.location, std::move(n), argList());
         }
         default:
             report(DiagId::ParserExpectedPrimaryExpression) << util::to_string(tokenType());

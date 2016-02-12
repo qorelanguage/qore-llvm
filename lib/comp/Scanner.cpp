@@ -51,6 +51,7 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "False",          TokenType::KwFalse },
     { "final",          TokenType::KwFinal },
     { "keys",           TokenType::KwKeys },
+    { "new",            TokenType::KwNew },
     { "namespace",      TokenType::KwNamespace },
     { "NOTHING",        TokenType::KwNothing },
     { "NULL",           TokenType::KwNull },
