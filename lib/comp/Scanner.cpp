@@ -116,6 +116,12 @@ TokenType Scanner::readInternal(Source &src) {
             return TokenType::ParenLeft;
         case ')':
             return TokenType::ParenRight;
+        case '[':
+            return TokenType::SquareLeft;
+        case ']':
+            return TokenType::SquareRight;
+        case '.':
+            return TokenType::Dot;
         case '=':
             return TokenType::Equals;
         case ',':

@@ -224,15 +224,15 @@ X       | expr ';'
         ;
 
 
-    arg_list
-        : '(' ')'
-        | '(' expr_list ')'
-        ;
+X   arg_list
+X       : '(' ')'
+X       | '(' expr_list ')'
+X       ;
 
-    expr_list
-        : expr
-        | expr_list ',' expr
-        ;
+X   expr_list
+X       : expr
+X       | expr_list ',' expr
+X       ;
 
     expr
         : assignment_expr
@@ -337,11 +337,13 @@ X       | expr ';'
     postfix_expr
 X       : primary_expr
 X       | postfix_expr arg_list
-        | postfix_expr '[' expr ']'
-        | postfix_expr '{' expr '}'
-        | postfix_expr '.' member_accessor
-        | postfix_expr P_INCREMENT
-        | postfix_expr P_DECREMENT
+X       | postfix_expr '[' expr ']'
+X       | postfix_expr '{' expr '}'
+X       | postfix_expr '.' IDENTIFIER
+        | postfix_expr '.' literal      //anything that can be converted to string
+X       | postfix_expr '.' '(' expr ')'
+X       | postfix_expr P_INCREMENT
+X       | postfix_expr P_DECREMENT
         ;
 
     primary_expr
@@ -429,12 +431,6 @@ X       ;
         | SHIFT_LEFT_EQUALS
         | SHIFT_RIGHT_EQUALS
         | '='
-        ;
-
-    member_accessor
-        : IDENTIFIER
-        | literal                //anything that can be converted to string
-        | '(' expr ')'
         ;
 
 X   name

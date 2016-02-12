@@ -124,6 +124,17 @@ public:
             BOOL(postfix);
     })
 
+    NODE(IndexExpression, {
+            VISIT(left);
+            VISIT(right);
+            TOKEN(endToken);
+    })
+
+    NODE(AccessExpression, {
+            VISIT(expr);
+            TOKEN(token);
+    })
+
     NODE(ClosureExpression, {
             VISIT_DIRECT(routine);
     })

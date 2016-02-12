@@ -467,6 +467,89 @@ private:
     }
 };
 
+/**
+ * \brief Represents an index expression (e.(e), e[e], e{e}).
+ */
+class IndexExpression : public Expression {
+
+public:
+    Expression::Ptr left;                                   //!< The left subexpression.
+    Expression::Ptr right;                                  //!< The right subexpression.
+    Token endToken;                                         //!< The closing bracket.
+
+public:
+    using Ptr = std::unique_ptr<IndexExpression>;           //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param left the left subexpression
+     * \param right the right subexpression
+     * \param endToken the closing bracket
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr left, Expression::Ptr right, Token endToken) {
+        return Ptr(new IndexExpression(std::move(left), std::move(right), endToken));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return left->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return endToken.location;
+    }
+
+private:
+    IndexExpression(Expression::Ptr left, Expression::Ptr right, Token endToken) : left(std::move(left)),
+            right(std::move(right)), endToken(endToken) {
+    }
+};
+
+/**
+ * \brief Represents a member access expression (e."x", e.x, e.3, ...).
+ */
+class AccessExpression : public Expression {
+
+public:
+    Expression::Ptr expr;                                   //!< The subexpression.
+    Token token;                                            //!< The token after the dot.
+
+public:
+    using Ptr = std::unique_ptr<AccessExpression>;          //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param expr the subexpression
+     * \param token the token after the dot
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr expr, Token token) {
+        return Ptr(new AccessExpression(std::move(expr), token));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return expr->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return token.location;
+    }
+
+private:
+    AccessExpression(Expression::Ptr expr, Token token) : expr(std::move(expr)), token(token) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

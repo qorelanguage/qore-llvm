@@ -45,13 +45,49 @@ ast::Expression::Ptr Parser::assignmentExpr() {
     return postfixExpr();
 }
 
+
+//postfix_expr
+//    : primary_expr
+//    | postfix_expr arg_list
+//    | postfix_expr '[' expr ']'
+//    | postfix_expr '{' expr '}'
+//    | postfix_expr '.' IDENTIFIER
+//    | postfix_expr '.' literal      //anything that can be converted to string
+//    | postfix_expr '.' '(' expr ')'
+//    | postfix_expr P_INCREMENT
+//    | postfix_expr P_DECREMENT
+//    ;
 ast::Expression::Ptr Parser::postfixExpr() {
     LOG_FUNCTION();
     ast::Expression::Ptr e = primaryExpr();
+    ast::Expression::Ptr index;
     while (true) {
         switch (tokenType()) {
             case TokenType::ParenLeft:
                 e = ast::CallExpression::create(std::move(e), argList());
+                break;
+            case TokenType::SquareLeft:
+                consume();
+                index = expression();
+                e = ast::IndexExpression::create(std::move(e), std::move(index), match(TokenType::SquareRight));
+                break;
+            case TokenType::CurlyLeft:
+                consume();
+                index = expression();
+                e = ast::IndexExpression::create(std::move(e), std::move(index), match(TokenType::CurlyRight));
+                break;
+            case TokenType::Dot:
+                consume();
+                if (tokenType() == TokenType::ParenLeft) {
+                    consume();
+                    index = expression();
+                    e = ast::IndexExpression::create(std::move(e), std::move(index), match(TokenType::ParenRight));
+                } else if (tokenType() == TokenType::Identifier) {
+                    e = ast::AccessExpression::create(std::move(e), consume());
+                } else {
+                    //TODO e."abc", e.3, etc.
+                    report(DiagId::ParserInvalidMemberAccess) << util::to_string(tokenType());
+                }
                 break;
             case TokenType::DoubleMinus:
             case TokenType::DoublePlus:
@@ -232,6 +268,14 @@ ast::Type::Ptr Parser::type() {
     return ast::NameType::create(name());
 }
 
+//arg_list
+//    : '(' ')'
+//    | '(' expr_list ')'
+//    ;
+//expr_list
+//    : expr
+//    | expr_list ',' expr
+//    ;
 ast::ArgList::Ptr Parser::argList() {
     LOG_FUNCTION();
 

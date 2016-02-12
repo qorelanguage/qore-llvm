@@ -50,6 +50,8 @@ class VarDeclExpression;
 class CastExpression;
 class CallExpression;
 class UnaryExpression;
+class IndexExpression;
+class AccessExpression;
 class ClosureExpression;
 class NameType;
 class AsteriskType;
@@ -116,6 +118,18 @@ public:
      * \param node the node being visited
      */
     virtual void visit(UnaryExpression &node) = 0;
+
+    /**
+     * \brief Called by an IndexExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(IndexExpression &node) = 0;
+
+    /**
+     * \brief Called by an AccessExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(AccessExpression &node) = 0;
 
     /**
      * \brief Called by a ClosureExpression AST node.
