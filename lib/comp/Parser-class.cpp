@@ -122,7 +122,7 @@ ast::ClassMember::Ptr Parser::classMemberList(ast::Modifiers groupMods) {
         }
     }
     group->end = match(TokenType::CurlyRight).location;
-    return group;
+    return std::move(group);
 }
 
 ast::Constant::Ptr Parser::constant(ast::Modifiers mods) {
