@@ -156,6 +156,11 @@ private:
     ast::Statement::Ptr statement();
     ast::ExpressionStatement::Ptr expressionStmt();
     ast::CompoundStatement::Ptr compoundStmt();
+    ast::ReturnStatement::Ptr returnStmt();
+    ast::IfStatement::Ptr ifStmt();
+    ast::TryStatement::Ptr tryStmt();
+    ast::ForeachStatement::Ptr foreachStmt();
+    ast::ThrowStatement::Ptr throwStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
     ast::Expression::Ptr condExpr();

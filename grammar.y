@@ -148,22 +148,22 @@ X       ;
 X       : ';'
 X       | block
 X       | expr ';'
-        | TOK_TRY statement TOK_CATCH '(' type IDENTIFIER ')' statement
-        | TOK_RETHROW ';'
-        | TOK_THROW expr ';'
+X       | TOK_TRY statement TOK_CATCH '(' type IDENTIFIER ')' statement
+X       | TOK_RETHROW ';'
+X       | TOK_THROW expr ';'
         | TOK_ON_EXIT statement
         | TOK_ON_SUCCESS statement
         | TOK_ON_ERROR statement
-        | TOK_IF '(' expr ')' statement %prec IFX
-        | TOK_IF '(' expr ')' statement TOK_ELSE statement
+X       | TOK_IF '(' expr ')' statement
+X       | TOK_IF '(' expr ')' statement TOK_ELSE statement
         | TOK_WHILE '(' expr ')' statement
         | TOK_DO statement TOK_WHILE '(' expr ')' ';'
         | TOK_FOR '(' expr_opt ';' expr_opt ';' expr_opt ')' statement
-        | TOK_FOREACH expr TOK_IN expr statement
-        | TOK_RETURN expr_opt ';'
-        | TOK_THREAD_EXIT ';'
-        | TOK_BREAK ';'
-        | TOK_CONTINUE ';'
+X       | TOK_FOREACH expr TOK_IN '(' expr ')' statement
+X       | TOK_RETURN expr_opt ';'
+X       | TOK_THREAD_EXIT ';'
+X       | TOK_BREAK ';'
+X       | TOK_CONTINUE ';'
         | TOK_SWITCH '(' expr ')' '{' case_block '}'
         ;
 
@@ -185,6 +185,10 @@ X       | expr ';'
         | TOK_DEFAULT ':' statements
         ;
 
+X   expr_opt
+X       : /* empty */
+X       | expr
+X       ;
 
 
 
@@ -206,11 +210,6 @@ X       | expr ';'
     /////////////////////////////////////////
     // EXPRESSIONS
     /////////////////////////////////////////
-    expr_opt
-        : /* empty */
-        | expr
-        ;
-
 X   arg_list
 X       : '(' ')'
 X       | '(' expr_list ')'

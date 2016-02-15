@@ -40,6 +40,25 @@ ast::Statement::Ptr Parser::statement() {
             return ast::EmptyStatement::create(consume().location);
         case TokenType::CurlyLeft:
             return compoundStmt();
+        case TokenType::KwReturn:
+            return returnStmt();
+        case TokenType::KwIf:
+            return ifStmt();
+        case TokenType::KwTry:
+            return tryStmt();
+        case TokenType::KwForeach:
+            return foreachStmt();
+        case TokenType::KwThrow:
+            return throwStmt();
+        case TokenType::KwRethrow:
+        case TokenType::KwThreadExit:
+        case TokenType::KwBreak:
+        case TokenType::KwContinue: {
+            ast::SimpleStatement::Ptr stmt = ast::SimpleStatement::create();
+            stmt->keyword = consume();
+            stmt->end = match(TokenType::Semicolon).location;
+            return stmt;
+        }
         default:
             return expressionStmt();
     }
@@ -64,6 +83,76 @@ ast::CompoundStatement::Ptr Parser::compoundStmt() {
     }
     block->end = match(TokenType::CurlyRight).location;
     return block;
+}
+
+ast::ReturnStatement::Ptr Parser::returnStmt() {
+    LOG_FUNCTION();
+    ast::ReturnStatement::Ptr stmt = ast::ReturnStatement::create();
+    stmt->start = match(TokenType::KwReturn).location;
+    if (tokenType() != TokenType::Semicolon) {
+        stmt->expression = expression();
+    }
+    stmt->end = match(TokenType::Semicolon, &Parser::recoverSkipToSemicolon).location;
+    return stmt;
+}
+
+ast::IfStatement::Ptr Parser::ifStmt() {
+    LOG_FUNCTION();
+    ast::IfStatement::Ptr stmt = ast::IfStatement::create();
+    stmt->start = match(TokenType::KwIf).location;
+    match(TokenType::ParenLeft);
+    stmt->condition = expression();
+    match(TokenType::ParenRight);
+    stmt->stmtTrue = statement();
+    if (tokenType() == TokenType::KwElse) {
+        consume();
+        stmt->stmtFalse = statement();
+    }
+    return stmt;
+}
+
+ast::TryStatement::Ptr Parser::tryStmt() {
+    LOG_FUNCTION();
+    ast::TryStatement::Ptr stmt = ast::TryStatement::create();
+    stmt->start = match(TokenType::KwTry).location;
+    stmt->stmtTry = statement();
+    match(TokenType::KwCatch);
+    match(TokenType::ParenLeft);
+    stmt->exceptionType = type();
+    stmt->exceptionName = match(TokenType::Identifier);
+    match(TokenType::ParenRight);
+    stmt->stmtCatch = statement();
+    return stmt;
+}
+
+ast::ForeachStatement::Ptr Parser::foreachStmt() {
+    LOG_FUNCTION();
+    ast::ForeachStatement::Ptr stmt = ast::ForeachStatement::create();
+    stmt->start = match(TokenType::KwForeach).location;
+    stmt->varType = type();
+    stmt->varName = match(TokenType::Identifier);
+    match(TokenType::KwIn);
+    match(TokenType::ParenLeft);        //XXX needed because '{' would be interpreted as IndexExpression
+    stmt->expr = expression();
+    match(TokenType::ParenRight);
+    stmt->stmt = statement();
+    return stmt;
+}
+
+ast::ThrowStatement::Ptr Parser::throwStmt() {
+    LOG_FUNCTION();
+    ast::ThrowStatement::Ptr stmt = ast::ThrowStatement::create();
+    stmt->start = match(TokenType::KwThrow).location;
+    while (true) {
+        stmt->exprList.push_back(expression());
+        if (tokenType() == TokenType::Comma) {
+            consume();
+        } else {
+            break;
+        }
+    }
+    stmt->end = match(TokenType::Semicolon).location;
+    return stmt;
 }
 
 } // namespace comp

@@ -47,6 +47,12 @@ class Field;
 class EmptyStatement;
 class ExpressionStatement;
 class CompoundStatement;
+class ReturnStatement;
+class IfStatement;
+class TryStatement;
+class ForeachStatement;
+class ThrowStatement;
+class SimpleStatement;
 class ErrorExpression;
 class LiteralExpression;
 class NameExpression;
@@ -220,6 +226,42 @@ public:
      * \param node the node being visited
      */
     virtual void visit(CompoundStatement &node) = 0;
+
+    /**
+     * \brief Called by a ReturnStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ReturnStatement &node) = 0;
+
+    /**
+     * \brief Called by an IfStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(IfStatement &node) = 0;
+
+    /**
+     * \brief Called by a TryStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(TryStatement &node) = 0;
+
+    /**
+     * \brief Called by a ForeachStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ForeachStatement &node) = 0;
+
+    /**
+     * \brief Called by a ThrowStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ThrowStatement &node) = 0;
+
+    /**
+     * \brief Called by a SimpleStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(SimpleStatement &node) = 0;
 
 protected:
     StatementVisitor() = default;

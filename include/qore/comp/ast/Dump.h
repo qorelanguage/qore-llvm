@@ -124,6 +124,42 @@ public:
             NODE_ARRAY(statements);
     })
 
+    NODE(ReturnStatement, {
+            if (node.expression) {
+                VISIT(expression);
+            }
+    })
+
+    NODE(IfStatement, {
+            VISIT(condition);
+            VISIT(stmtTrue);
+            if (node.stmtFalse) {
+                VISIT(stmtFalse);
+            }
+    })
+
+    NODE(TryStatement, {
+            VISIT(stmtTry);
+            VISIT(exceptionType);
+            TOKEN(exceptionName);
+            VISIT(stmtCatch);
+    })
+
+    NODE(ForeachStatement, {
+            VISIT(varType);
+            TOKEN(varName);
+            VISIT(expr);
+            VISIT(stmt);
+    })
+
+    NODE(ThrowStatement, {
+            NODE_ARRAY(exprList);
+    })
+
+    NODE(SimpleStatement, {
+            TOKEN(keyword);
+    })
+
     NODE(ErrorExpression, {
             TOKEN(token);
     })
