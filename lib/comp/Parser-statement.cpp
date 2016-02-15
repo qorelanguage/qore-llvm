@@ -57,7 +57,7 @@ ast::Statement::Ptr Parser::statement() {
             ast::SimpleStatement::Ptr stmt = ast::SimpleStatement::create();
             stmt->keyword = consume();
             stmt->end = match(TokenType::Semicolon).location;
-            return stmt;
+            return std::move(stmt);
         }
         default:
             return expressionStmt();
