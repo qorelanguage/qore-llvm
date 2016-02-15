@@ -41,9 +41,9 @@ public:
     StdinWrapper(DiagManager &diagMgr, SourceManager &srcMgr) : src(srcMgr.createFromString("<stdin>", "")), dp(diagMgr, srcMgr, src) {
     }
 
-    Token read() override {
+    Token read(Mode mode) override {
         while (true) {
-            Token t = dp.read();
+            Token t = dp.read(mode);
             if (t.type != TokenType::EndOfFile) {
                 return t;
             }
