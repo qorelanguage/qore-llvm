@@ -151,14 +151,14 @@ X       | expr ';'
 X       | TOK_TRY statement TOK_CATCH '(' type IDENTIFIER ')' statement
 X       | TOK_RETHROW ';'
 X       | TOK_THROW expr ';'
-        | TOK_ON_EXIT statement
-        | TOK_ON_SUCCESS statement
-        | TOK_ON_ERROR statement
+X       | TOK_ON_EXIT statement
+X       | TOK_ON_SUCCESS statement
+X       | TOK_ON_ERROR statement
 X       | TOK_IF '(' expr ')' statement
 X       | TOK_IF '(' expr ')' statement TOK_ELSE statement
-        | TOK_WHILE '(' expr ')' statement
-        | TOK_DO statement TOK_WHILE '(' expr ')' ';'
-        | TOK_FOR '(' expr_opt ';' expr_opt ';' expr_opt ')' statement
+X       | TOK_WHILE '(' expr ')' statement
+X       | TOK_DO statement TOK_WHILE '(' expr ')' ';'
+X       | TOK_FOR '(' expr_opt ';' expr_opt ';' expr_opt ')' statement
 X       | TOK_FOREACH expr TOK_IN '(' expr ')' statement
 X       | TOK_RETURN expr_opt ';'
 X       | TOK_THREAD_EXIT ';'

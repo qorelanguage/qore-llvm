@@ -161,6 +161,9 @@ private:
     ast::TryStatement::Ptr tryStmt();
     ast::ForeachStatement::Ptr foreachStmt();
     ast::ThrowStatement::Ptr throwStmt();
+    ast::WhileStatement::Ptr whileStmt();
+    ast::DoWhileStatement::Ptr doWhileStmt();
+    ast::ForStatement::Ptr forStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
     ast::Expression::Ptr condExpr();

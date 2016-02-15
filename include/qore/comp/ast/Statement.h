@@ -406,6 +406,164 @@ private:
     }
 };
 
+/**
+ * \brief Represents a scope guard statement such as on_error or on_exit.
+ */
+class ScopeGuardStatement : public Statement {
+
+public:
+    Token keyword;                                          //!< The keyword.
+    Statement::Ptr stmt;                                    //!< The statement.
+
+public:
+    using Ptr = std::unique_ptr<ScopeGuardStatement>;       //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new ScopeGuardStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return keyword.location;
+    }
+
+    SourceLocation getEnd() const override {
+        return stmt->getEnd();
+    }
+
+private:
+    ScopeGuardStatement() {
+    }
+};
+
+/**
+ * \brief Represents a while statement.
+ */
+class WhileStatement : public Statement {
+
+public:
+    SourceLocation start;                                   //!< The location of the 'while' keyword.
+    Expression::Ptr expr;                                   //!< The condition.
+    Statement::Ptr stmt;                                    //!< The body of the loop.
+
+public:
+    using Ptr = std::unique_ptr<WhileStatement>;            //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new WhileStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return stmt->getEnd();
+    }
+
+private:
+    WhileStatement() {
+    }
+};
+
+/**
+ * \brief Represents a do-while statement.
+ */
+class DoWhileStatement : public Statement {
+
+public:
+    SourceLocation start;                                   //!< The location of the 'do' keyword.
+    Statement::Ptr stmt;                                    //!< The body of the loop.
+    Expression::Ptr expr;                                   //!< The condition.
+    SourceLocation end;                                     //!< The location of the semicolon keyword.
+
+public:
+    using Ptr = std::unique_ptr<DoWhileStatement>;          //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new DoWhileStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    DoWhileStatement() {
+    }
+};
+
+/**
+ * \brief Represents a for statement.
+ */
+class ForStatement : public Statement {
+
+public:
+    SourceLocation start;                                   //!< The location of the 'for' keyword.
+    Expression::Ptr init;                                   //!< The initialization expression.
+    Expression::Ptr condition;                              //!< The condition.
+    Expression::Ptr update;                                 //!< The update expression.
+    Statement::Ptr stmt;                                    //!< The body of the loop.
+
+public:
+    using Ptr = std::unique_ptr<ForStatement>;              //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new ForStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return stmt->getEnd();
+    }
+
+private:
+    ForStatement() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

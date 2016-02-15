@@ -59,6 +59,20 @@ ast::Statement::Ptr Parser::statement() {
             stmt->end = match(TokenType::Semicolon).location;
             return std::move(stmt);
         }
+        case TokenType::KwOnError:
+        case TokenType::KwOnExit:
+        case TokenType::KwOnSuccess: {
+            ast::ScopeGuardStatement::Ptr stmt = ast::ScopeGuardStatement::create();
+            stmt->keyword = consume();
+            stmt->stmt = statement();
+            return std::move(stmt);
+        }
+        case TokenType::KwWhile:
+            return whileStmt();
+        case TokenType::KwDo:
+            return doWhileStmt();
+        case TokenType::KwFor:
+            return forStmt();
         default:
             return expressionStmt();
     }
@@ -152,6 +166,51 @@ ast::ThrowStatement::Ptr Parser::throwStmt() {
         }
     }
     stmt->end = match(TokenType::Semicolon).location;
+    return stmt;
+}
+
+ast::WhileStatement::Ptr Parser::whileStmt() {
+    LOG_FUNCTION();
+    ast::WhileStatement::Ptr stmt = ast::WhileStatement::create();
+    stmt->start = match(TokenType::KwWhile).location;
+    match(TokenType::ParenLeft);
+    stmt->expr = expression();
+    match(TokenType::ParenRight);
+    stmt->stmt = statement();
+    return stmt;
+}
+
+ast::DoWhileStatement::Ptr Parser::doWhileStmt() {
+    LOG_FUNCTION();
+    ast::DoWhileStatement::Ptr stmt = ast::DoWhileStatement::create();
+    stmt->start = match(TokenType::KwDo).location;
+    stmt->stmt = statement();
+    match(TokenType::KwWhile);
+    match(TokenType::ParenLeft);
+    stmt->expr = expression();
+    match(TokenType::ParenRight);
+    stmt->end = match(TokenType::Semicolon).location;
+    return stmt;
+}
+
+ast::ForStatement::Ptr Parser::forStmt() {
+    LOG_FUNCTION();
+    ast::ForStatement::Ptr stmt = ast::ForStatement::create();
+    stmt->start = match(TokenType::KwFor).location;
+    match(TokenType::ParenLeft);
+    if (tokenType() != TokenType::Semicolon) {
+        stmt->init = expression();
+    }
+    match(TokenType::Semicolon);
+    if (tokenType() != TokenType::Semicolon) {
+        stmt->condition = expression();
+    }
+    match(TokenType::Semicolon);
+    if (tokenType() != TokenType::ParenRight) {
+        stmt->update = expression();
+    }
+    match(TokenType::ParenRight);
+    stmt->stmt = statement();
     return stmt;
 }
 

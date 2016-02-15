@@ -53,6 +53,10 @@ class TryStatement;
 class ForeachStatement;
 class ThrowStatement;
 class SimpleStatement;
+class ScopeGuardStatement;
+class WhileStatement;
+class DoWhileStatement;
+class ForStatement;
 class ErrorExpression;
 class LiteralExpression;
 class NameExpression;
@@ -262,6 +266,30 @@ public:
      * \param node the node being visited
      */
     virtual void visit(SimpleStatement &node) = 0;
+
+    /**
+     * \brief Called by a ScopeGuardStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ScopeGuardStatement &node) = 0;
+
+    /**
+     * \brief Called by a WhileStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(WhileStatement &node) = 0;
+
+    /**
+     * \brief Called by a DoWhileStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(DoWhileStatement &node) = 0;
+
+    /**
+     * \brief Called by a ForStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ForStatement &node) = 0;
 
 protected:
     StatementVisitor() = default;

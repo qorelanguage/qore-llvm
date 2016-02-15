@@ -160,6 +160,34 @@ public:
             TOKEN(keyword);
     })
 
+    NODE(ScopeGuardStatement, {
+            TOKEN(keyword);
+            VISIT(stmt);
+    })
+
+    NODE(WhileStatement, {
+            VISIT(expr);
+            VISIT(stmt);
+    })
+
+    NODE(DoWhileStatement, {
+            VISIT(stmt);
+            VISIT(expr);
+    })
+
+    NODE(ForStatement, {
+            if (node.init) {
+                VISIT(init);
+            }
+            if (node.condition) {
+                VISIT(condition);
+            }
+            if (node.update) {
+                VISIT(update);
+            }
+            VISIT(stmt);
+    })
+
     NODE(ErrorExpression, {
             TOKEN(token);
     })

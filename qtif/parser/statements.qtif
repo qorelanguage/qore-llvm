@@ -1,10 +1,13 @@
 ;0;{}{;}
 if (1) if(2) break; else {}
 try foreach int i in ({}) throw i; catch (hash ex) return "";
-return;
-throw "", x;
+while (1) return;
+on_success throw "", x;
+do {} while (x);
+for(;;);
+for(a;b;c);
 #$$$
--Script@1:1-6:1
+-Script@1:1-9:1
   .members:
   .statements:
     -EmptyStatement@1:1-1:1
@@ -56,10 +59,40 @@ throw "", x;
           .expression:
             -LiteralExpression@3:59-3:59
               .token: String ""
-    -ReturnStatement@4:1-4:7
-    -ThrowStatement@5:1-5:12
-      .exprList:
-        -LiteralExpression@5:7-5:7
-          .token: String ""
-        -NameExpression@5:11-5:11
+    -WhileStatement@4:1-4:17
+      .expr:
+        -LiteralExpression@4:8-4:8
+          .token: Integer 1
+      .stmt:
+        -ReturnStatement@4:11-4:17
+    -ScopeGuardStatement@5:1-5:23
+      .keyword: KwOnSuccess on_success
+      .stmt:
+        -ThrowStatement@5:12-5:23
+          .exprList:
+            -LiteralExpression@5:18-5:18
+              .token: String ""
+            -NameExpression@5:22-5:22
+              .name: x
+    -DoWhileStatement@6:1-6:16
+      .stmt:
+        -CompoundStatement@6:4-6:5
+          .statements:
+      .expr:
+        -NameExpression@6:14-6:14
           .name: x
+    -ForStatement@7:1-7:8
+      .stmt:
+        -EmptyStatement@7:8-7:8
+    -ForStatement@8:1-8:11
+      .init:
+        -NameExpression@8:5-8:5
+          .name: a
+      .condition:
+        -NameExpression@8:7-8:7
+          .name: b
+      .update:
+        -NameExpression@8:9-8:9
+          .name: c
+      .stmt:
+        -EmptyStatement@8:11-8:11

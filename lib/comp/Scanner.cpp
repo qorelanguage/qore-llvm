@@ -50,6 +50,7 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "continue",       TokenType::KwContinue },
     { "delete",         TokenType::KwDelete },
     { "deprecated",     TokenType::KwDeprecated },
+    { "do",             TokenType::KwDo },
     { "elements",       TokenType::KwElements },
     { "else",           TokenType::KwElse },
     { "exists",         TokenType::KwExists },
@@ -58,6 +59,7 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "final",          TokenType::KwFinal },
     { "foldl",          TokenType::KwFoldl },
     { "foldr",          TokenType::KwFoldr },
+    { "for",            TokenType::KwFor },
     { "foreach",        TokenType::KwForeach },
     { "if",             TokenType::KwIf },
     { "in",             TokenType::KwIn },
@@ -69,6 +71,9 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "namespace",      TokenType::KwNamespace },
     { "NOTHING",        TokenType::KwNothing },
     { "NULL",           TokenType::KwNull },
+    { "on_error",       TokenType::KwOnError },
+    { "on_exit",        TokenType::KwOnExit },
+    { "on_success",     TokenType::KwOnSuccess },
     { "our",            TokenType::KwOur },
     { "pop",            TokenType::KwPop },
     { "private",        TokenType::KwPrivate },
@@ -90,6 +95,7 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "True",           TokenType::KwTrue },
     { "try",            TokenType::KwTry },
     { "unshift",        TokenType::KwUnshift },
+    { "while",          TokenType::KwWhile },
 
     { "my",             TokenType::KwMy },
 };
