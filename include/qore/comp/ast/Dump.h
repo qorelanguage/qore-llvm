@@ -81,17 +81,36 @@ public:
     })
 
     NODE(NamespaceConstant, {
-            MODIFIERS(modifiers);
-            NAME(name);
-            VISIT(initializer);
+            visit(*node.constant);
     })
 
     NODE(Function, {
-            VISIT_DIRECT(routine);
+            visit(*node.routine);
     })
 
     NODE(Method, {
-            VISIT_DIRECT(routine);
+            visit(*node.routine);
+    })
+
+    NODE(ClassConstant, {
+            visit(*node.constant);
+    })
+
+    NODE(MemberGroup, {
+            MODIFIERS(modifiers);
+            NODE_ARRAY(members);
+    })
+
+    NODE(Field, {
+            MODIFIERS(modifiers);
+            VISIT(type);
+            TOKEN(name);
+            if (node.exprInit) {
+                VISIT(exprInit);
+            }
+            if (node.argListInit) {
+                VISIT_DIRECT(argListInit);
+            }
     })
 
     NODE(EmptyStatement, {
@@ -191,7 +210,7 @@ public:
     })
 
     NODE(ClosureExpression, {
-            VISIT_DIRECT(routine);
+            visit(*node.routine);
     })
 
     NODE(NameType, {
@@ -204,6 +223,12 @@ public:
 
     NODE(ImplicitType, {
     })
+
+    void visit(Constant &node) {
+        MODIFIERS(modifiers);
+        NAME(name);
+        VISIT(initializer);
+    }
 
     void visit(Routine &node) {
         MODIFIERS(modifiers);

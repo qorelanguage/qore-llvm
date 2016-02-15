@@ -90,13 +90,13 @@ X       : /* empty */
 X       | class_body class_member
 X       ;
 
-    class_member
-        : modifiers '{' member_list '}'
+X   class_member
+X       : modifiers '{' member_list '}'
 X       | modifiers type IDENTIFIER param_list block
 X       | modifiers IDENTIFIER param_list base_constructor_list block
 X       | modifiers type IDENTIFIER param_list ';'
 X       | modifiers IDENTIFIER param_list ';'
-        ;
+X       ;
 
 X   base_constructor_list
 X       : /* empty */
@@ -112,17 +112,17 @@ X   base_constructor
 X       : name arg_list
 X       ;
 
-    member_list
-        : /* empty */
-        | member_list member
-        ;
+X   member_list
+X       : /* empty */
+X       | member_list member
+X       ;
 
-    member
-        | modifiers type IDENTIFIER ';'
-        | modifiers type IDENTIFIER '=' expr ';'
-        | modifiers type IDENTIFIER arg_list ';'
-        | modifiers KW_CONST IDENTIFIER '=' expr ';'
-        ;
+X   member
+X       | modifiers type IDENTIFIER ';'
+X       | modifiers type IDENTIFIER '=' expr ';'
+X       | modifiers type IDENTIFIER arg_list ';'
+X       | modifiers KW_CONST IDENTIFIER '=' expr ';'
+X       ;
 
 
 

@@ -99,8 +99,7 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
                 ensureToken();
                 report(DiagId::ParserExpectedNamespaceMember);
                 recoverSkipToCurlyRight();
-                ns->end = token.location;
-                return ns;
+                break;
             }
             ns->members.push_back(std::move(nsMember));
         }
@@ -132,14 +131,7 @@ ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
             return namespaceDecl(mods);
 //TODO case TokenType::KwOur:
         case TokenType::KwConst: {
-            ast::NamespaceConstant::Ptr c = ast::NamespaceConstant::create();
-            c->start = consume().location;
-            c->modifiers = mods;
-            c->name = name();
-            match(TokenType::Equals);
-            c->initializer = expression();
-            c->end = match(TokenType::Semicolon).location;
-            return std::move(c);
+            return ast::NamespaceConstant::create(constant(mods));
         }
         case TokenType::KwClass:
             return classDecl(mods);

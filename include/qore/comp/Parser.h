@@ -152,6 +152,7 @@ private:
     ast::Modifiers modifiers();
     ast::Class::Ptr classDecl(ast::Modifiers mods);
     ast::ClassMember::Ptr classMember();
+    ast::ClassMember::Ptr classMemberList(ast::Modifiers mods);
     ast::Statement::Ptr statement();
     ast::ExpressionStatement::Ptr expressionStmt();
     ast::CompoundStatement::Ptr compoundStmt();
@@ -181,6 +182,7 @@ private:
     ast::Type::Ptr type();
     ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name name , bool method = false);
     ast::ArgList::Ptr argList();
+    ast::Constant::Ptr constant(ast::Modifiers mods);
 
 private:
     DiagManager &diagMgr;

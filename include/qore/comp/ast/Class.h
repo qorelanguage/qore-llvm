@@ -133,6 +133,125 @@ private:
     }
 };
 
+/**
+ * \brief Represents a constant definition in a class.
+ */
+class ClassConstant : public ClassMember {
+
+public:
+    Constant::Ptr constant;                                 //!< The constant.
+
+public:
+    using Ptr = std::unique_ptr<ClassConstant>;             //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \param constant the constant
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Constant::Ptr constant) {
+        return Ptr(new ClassConstant(std::move(constant)));
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return constant->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return constant->getEnd();
+    }
+
+private:
+    explicit ClassConstant(Constant::Ptr constant) : constant(std::move(constant)) {
+    }
+};
+
+/**
+ * \brief Represents a group of members in a class.
+ */
+class MemberGroup : public ClassMember {
+
+public:
+    SourceLocation start;                                   //!< The location of the opening brace.
+    SourceLocation end;                                     //!< The location of the closing brace.
+    Modifiers modifiers;                                    //!< The modifiers of the whole group.
+    std::vector<ClassMember::Ptr> members;                  //!< The members of the group.
+
+public:
+    using Ptr = std::unique_ptr<MemberGroup>;               //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new MemberGroup());
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    MemberGroup() {
+    }
+};
+
+/**
+ * \brief Represents a field definition in a class.
+ *
+ * At most one of the exprInit and argListInit can be used.
+ */
+class Field : public ClassMember {
+
+public:
+    Modifiers modifiers;                                    //!< The modifiers.
+    Type::Ptr type;                                         //!< The type of the field.
+    Token name;                                             //!< The name of the field.
+    SourceLocation end;                                     //!< The location of the semicolon.
+    Expression::Ptr exprInit;                               //!< The expression initializer.
+    ArgList::Ptr argListInit;                               //!< The argList initializer.
+
+public:
+    using Ptr = std::unique_ptr<Field>;                     //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new Field());
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return type->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    Field() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

@@ -25,67 +25,57 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Parser implementation - recovery methods
+/// \brief AST node related to constants.
 ///
 //------------------------------------------------------------------------------
-#include "qore/comp/Parser.h"
+#ifndef INCLUDE_QORE_COMP_AST_CONST_H_
+#define INCLUDE_QORE_COMP_AST_CONST_H_
+
+#include "qore/comp/ast/Modifiers.h"
+#include "qore/comp/ast/Expression.h"
 
 namespace qore {
 namespace comp {
+namespace ast {
 
-void Parser::recoverSkipToCurlyRight() {
-    int cnt = 0;
-    DisableDiag dd(diagMgr);
-    while (true) {
-        switch (tokenType()) {
-            case TokenType::EndOfFile:
-                return;
-            case TokenType::CurlyLeft:
-                consume();
-                ++cnt;
-                break;
-            case TokenType::CurlyRight:
-                if (cnt-- == 0) {
-                    return;
-                }
-                consume();
-                break;
-            default:
-                consume();
-                break;
-        }
+/**
+ * \brief Represents a constant.
+ */
+class Constant : public Node {
+
+public:
+    SourceLocation start;                                   //!< The starting location.
+    Modifiers modifiers;                                    //!< The modifiers.
+    Name name;                                              //!< The name.
+    Expression::Ptr initializer;                            //!< The initializer expression.
+    SourceLocation end;                                     //!< The ending location.
+
+public:
+    using Ptr = std::unique_ptr<Constant>;                  //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new Constant());
     }
-}
 
-void Parser::recoverSkipToSemicolon() {
-    int cnt = 0;
-    DisableDiag dd(diagMgr);
-    while (true) {
-        switch (tokenType()) {
-            case TokenType::EndOfFile:
-                return;
-            case TokenType::CurlyLeft:
-                consume();
-                ++cnt;
-                break;
-            case TokenType::CurlyRight:
-                consume();
-                if (cnt-- == 0) {
-                    return;
-                }
-                break;
-            case TokenType::Semicolon:
-                consume();
-                if (cnt == 0) {
-                    return;
-                }
-                break;
-            default:
-                consume();
-                break;
-        }
+    SourceLocation getStart() const override {
+        return start;
     }
-}
 
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    Constant() {
+    }
+};
+
+} // namespace ast
 } // namespace comp
 } // namespace qore
+
+#endif // INCLUDE_QORE_COMP_AST_CONST_H_

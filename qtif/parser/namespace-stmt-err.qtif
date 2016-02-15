@@ -12,14 +12,13 @@ namespace n {
       .name: Identifier n
       .members:
         -Function@2:5-2:13
-          .routine:
-            .modifiers: -none-
-            .type:
-              -ImplicitType@2:5-2:5
-            .name: f
-            .params:
-            .body:
-              -CompoundStatement@2:12-2:13
-                .statements:
+          .modifiers: -none-
+          .type:
+            -ImplicitType@2:5-2:5
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@2:12-2:13
+              .statements:
   .statements:
     -EmptyStatement@5:1-5:1

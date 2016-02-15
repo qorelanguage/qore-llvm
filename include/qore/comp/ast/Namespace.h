@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_AST_NAMESPACE_H_
 
 #include <vector>
-#include "qore/comp/ast/Modifiers.h"
+#include "qore/comp/ast/Const.h"
 #include "qore/comp/ast/Routine.h"
 
 namespace qore {
@@ -132,26 +132,23 @@ private:
 };
 
 /**
- * \brief Represents a constant.
+ * \brief Represents a constant definition in a namespace.
  */
 class NamespaceConstant : public NamespaceMember {
 
 public:
-    SourceLocation start;                                   //!< The starting location.
-    Modifiers modifiers;                                    //!< The modifiers.
-    Name name;                                              //!< The name.
-    Expression::Ptr initializer;                            //!< The initializer expression.
-    SourceLocation end;                                     //!< The ending location.
+    Constant::Ptr constant;                                 //!< The constant.
 
 public:
     using Ptr = std::unique_ptr<NamespaceConstant>;         //!< Pointer type.
 
     /**
      * \brief Allocates a new node.
+     * \param constant the constant
      * \return a unique pointer to the allocated node
      */
-    static Ptr create() {
-        return Ptr(new NamespaceConstant());
+    static Ptr create(Constant::Ptr constant) {
+        return Ptr(new NamespaceConstant(std::move(constant)));
     }
 
     void accept(DeclarationVisitor &visitor) override {
@@ -159,15 +156,15 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return start;
+        return constant->getStart();
     }
 
     SourceLocation getEnd() const override {
-        return end;
+        return constant->getEnd();
     }
 
 private:
-    NamespaceConstant() {
+    explicit NamespaceConstant(Constant::Ptr constant) : constant(std::move(constant)) {
     }
 };
 

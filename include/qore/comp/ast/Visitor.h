@@ -41,6 +41,9 @@ class Class;
 class NamespaceConstant;
 class Function;
 class Method;
+class ClassConstant;
+class MemberGroup;
+class Field;
 class EmptyStatement;
 class ExpressionStatement;
 class CompoundStatement;
@@ -271,6 +274,24 @@ public:
      * \param node the node being visited
      */
     virtual void visit(Method &node) = 0;
+
+    /**
+     * \brief Called by a ClassConstant AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(ClassConstant &node) = 0;
+
+    /**
+     * \brief Called by a MemberGroup AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(MemberGroup &node) = 0;
+
+    /**
+     * \brief Called by a Field AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(Field &node) = 0;
 
 protected:
     DeclarationVisitor() = default;

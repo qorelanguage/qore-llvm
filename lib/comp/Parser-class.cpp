@@ -49,15 +49,17 @@ ast::Class::Ptr Parser::classDecl(ast::Modifiers mods) {
     }
     if (tokenType() == TokenType::CurlyLeft) {
         consume();
-        while (tokenType() != TokenType::CurlyRight && tokenType() != TokenType::EndOfFile) {
+        while (tokenType() != TokenType::CurlyRight) {
             ast::ClassMember::Ptr member = classMember();
             if (member) {
                 c->members.push_back(std::move(member));
             } else {
+                report(DiagId::ParserExpectedClassMember);
                 recoverSkipToCurlyRight();
+                break;
             }
         }
-        c->end = match(TokenType::CurlyRight).location;
+        c->end = consume().location;
     } else {
         c->end = match(TokenType::Semicolon, &Parser::recoverDoNothing).location;
     }
@@ -70,6 +72,11 @@ ast::ClassMember::Ptr Parser::classMember() {
     ast::Type::Ptr t;
     ast::Name n;
     switch (tokenType()) {
+        case TokenType::CurlyLeft:
+            if (mods.isEmpty()) {
+                return ast::ClassMember::Ptr();
+            }
+            return classMemberList(mods);
         case TokenType::Asterisk:
             t = type();
             n = name();
@@ -84,10 +91,49 @@ ast::ClassMember::Ptr Parser::classMember() {
             }
             break;
         default:
-            report(DiagId::ParserExpectedClassMember);
             return ast::ClassMember::Ptr();
     }
     return ast::Method::create(routine(mods, std::move(t), std::move(n), true));
+}
+
+ast::ClassMember::Ptr Parser::classMemberList(ast::Modifiers groupMods) {
+    LOG_FUNCTION();
+    ast::MemberGroup::Ptr group = ast::MemberGroup::create();
+    group->start = match(TokenType::CurlyLeft).location;
+    group->modifiers = groupMods;
+
+    while (tokenType() != TokenType::CurlyRight) {
+        ast::Modifiers mods = modifiers();
+        if (tokenType() == TokenType::KwConst) {
+            group->members.push_back(ast::ClassConstant::create(constant(mods)));
+        } else {
+            ast::Field::Ptr f = ast::Field::create();
+            f->modifiers = mods;
+            f->type = type();
+            f->name = match(TokenType::Identifier);
+            if (tokenType() == TokenType::Equals) {
+                consume();
+                f->exprInit = expression();
+            } else if (tokenType() == TokenType::ParenLeft) {
+                f->argListInit = argList();
+            }
+            f->end = match(TokenType::Semicolon).location;
+            group->members.push_back(std::move(f));
+        }
+    }
+    group->end = match(TokenType::CurlyRight).location;
+    return group;
+}
+
+ast::Constant::Ptr Parser::constant(ast::Modifiers mods) {
+    ast::Constant::Ptr c = ast::Constant::create();
+    c->start = match(TokenType::KwConst).location;
+    c->modifiers = mods;
+    c->name = name();
+    match(TokenType::Equals);
+    c->initializer = expression();
+    c->end = match(TokenType::Semicolon).location;
+    return c;
 }
 
 } // namespace comp
