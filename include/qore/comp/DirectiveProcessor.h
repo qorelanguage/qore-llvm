@@ -80,7 +80,7 @@ public:
      */
     DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr, Source &src);
 
-    Token read() override;
+    Token read(Mode mode) override;
 
 private:
     void processDirective(Source &src, SourceLocation location, std::string directive);

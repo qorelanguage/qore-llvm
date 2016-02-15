@@ -90,13 +90,24 @@ struct Token {
 class ITokenStream {
 
 public:
+    /**
+     * \brief Determines the types of tokens that are expected in the input.
+     */
+    enum class Mode {
+        Normal,                     //!< Only normal tokens are allowed.
+        NormalOrSimpleRegex,        //!< Normal tokens or a regex starting with a '/' are allowed.
+        Regex                       //!< Only regexes (s///, x//, t///, m//, //) are allowed.
+    };
+
+public:
     virtual ~ITokenStream() = default;
 
     /**
      * \brief Reads the next token from the input, processing parse directives.
+     * \param mode determines the type of tokens expected
      * \return the next token read from the input
      */
-    virtual Token read() = 0;
+    virtual Token read(Mode mode) = 0;
 
 protected:
     ITokenStream() = default;
@@ -123,11 +134,12 @@ public:
 
     /**
      * \brief Reads the next token from the input.
+     * \param mode determines the type of tokens expected
      * \return the next token read from the input
      */
-    Token read() {
+    Token read(ITokenStream::Mode mode) {
         if (queue.empty()) {
-            return src.read();
+            return src.read(mode);
         }
         Token token = queue.front();
         queue.pop_front();

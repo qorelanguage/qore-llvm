@@ -92,7 +92,7 @@ private:
 
     void ensureToken() {
         if (!hasToken) {
-            token = src.read();
+            token = src.read(ITokenStream::Mode::Normal);
             hasToken = true;
         }
     }

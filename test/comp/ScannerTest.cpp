@@ -37,7 +37,7 @@ class ScannerTest : public qtif::LineTest {
 TEST_P(ScannerTest, Run) {
     Scanner scanner(diagMgr);
     while (true) {
-        Token token = scanner.read(getSrc());
+        Token token = scanner.read(getSrc(), ITokenStream::Mode::Normal);
         output << token.type << token.location << ':' << token.length << '\n';
         if (token.type == TokenType::EndOfFile) {
             break;
@@ -45,7 +45,39 @@ TEST_P(ScannerTest, Run) {
     }
 }
 
-QTIF_TEST_CASE(ScannerTest, "scanner/");
+QTIF_TEST_CASE(ScannerTest, "scanner/([^/]*$)|(mode/normal)");
+
+class ScannerModeSimpleRegexTest : public qtif::LineTest {
+};
+
+TEST_P(ScannerModeSimpleRegexTest, Run) {
+    Scanner scanner(diagMgr);
+    while (true) {
+        Token token = scanner.read(getSrc(), ITokenStream::Mode::NormalOrSimpleRegex);
+        output << token.type << token.location << ':' << token.length << '\n';
+        if (token.type == TokenType::EndOfFile) {
+            break;
+        }
+    }
+}
+
+QTIF_TEST_CASE(ScannerModeSimpleRegexTest, "scanner/mode/simple_regex");
+
+class ScannerModeRegexTest : public qtif::LineTest {
+};
+
+TEST_P(ScannerModeRegexTest, Run) {
+    Scanner scanner(diagMgr);
+    while (true) {
+        Token token = scanner.read(getSrc(), ITokenStream::Mode::Regex);
+        output << token.type << token.location << ':' << token.length << '\n';
+        if (token.type == TokenType::EndOfFile) {
+            break;
+        }
+    }
+}
+
+QTIF_TEST_CASE(ScannerModeRegexTest, "scanner/mode/regex");
 
 class ScannerCoverageTest : public ::testing::Test, public DiagManagerHelper {
 };
@@ -56,7 +88,7 @@ TEST_F(ScannerCoverageTest, InvalidCharacter) {
     Source &src = srcMgr.createFromString("", "\x7f;");
 
     EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::ScannerInvalidCharacter))).Times(1);
-    EXPECT_EQ(TokenType::Semicolon, scanner.read(src).type);
+    EXPECT_EQ(TokenType::Semicolon, scanner.read(src, ITokenStream::Mode::Normal).type);
 }
 
 } // namespace comp

@@ -38,7 +38,7 @@ public:
 TEST_P(DirectiveProcessorTest, Run) {
     DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
     while (true) {
-        Token token = dp.read();
+        Token token = dp.read(ITokenStream::Mode::Normal);
         output << token.type << token.location << ':' << token.length << '\n';
         if (token.type == TokenType::EndOfFile) {
             break;

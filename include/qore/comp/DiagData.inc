@@ -48,6 +48,8 @@ DIAG(ScannerUnendedStringLiteral,               "PARSE-EXCEPTION", Error,
         "unended string literal")
 DIAG(ScannerInvalidHexLiteral,                  "PARSE-EXCEPTION", Error,
         "invalid hexadecimal literal")
+DIAG(ScannerExpectedRegularExpression,          "PARSE-EXCEPTION", Error,
+        "expected regular expression")
 
 DIAG(ParserUnexpectedToken,                     "PARSE-EXCEPTION", Error,
         "syntax error, unexpected %s, expecting %s")

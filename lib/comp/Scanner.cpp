@@ -108,7 +108,7 @@ Scanner::Scanner(DiagManager &diagMgr) : diagMgr(diagMgr) {
     LOG_FUNCTION();
 }
 
-Token Scanner::read(Source &src) {
+Token Scanner::read(Source &src, ITokenStream::Mode mode) {
     LOG_FUNCTION();
 
     while (true) {
@@ -117,7 +117,12 @@ Token Scanner::read(Source &src) {
         }
 
         src.setMark();
-        TokenType type = readInternal(src);
+        TokenType type;
+        if (mode == ITokenStream::Mode::Regex) {
+            type = readRegex(src);
+        } else {
+            type = readInternal(src, mode == ITokenStream::Mode::NormalOrSimpleRegex);
+        }
 
         if (type != TokenType::None) {
             LOG("Returning token " << type);
@@ -127,7 +132,7 @@ Token Scanner::read(Source &src) {
 }
 
 //TODO binary, number, float, absolute/relative date
-TokenType Scanner::readInternal(Source &src) {
+TokenType Scanner::readInternal(Source &src, bool regex) {
     LOG_FUNCTION();
     switch (char c = src.read()) {
         case '\0':
@@ -220,6 +225,10 @@ TokenType Scanner::readInternal(Source &src) {
                 }
                 return TokenType::DoubleEquals;
             }
+            if (src.peek() == '~') {
+                src.read();
+                return TokenType::EqualsTilde;
+            }
             return TokenType::Equals;
         case ',':
             return TokenType::Comma;
@@ -231,6 +240,10 @@ TokenType Scanner::readInternal(Source &src) {
                     return TokenType::ExclamationDoubleEquals;
                 }
                 return TokenType::ExclamationEquals;
+            }
+            if (src.peek() == '~') {
+                src.read();
+                return TokenType::ExclamationTilde;
             }
             return TokenType::Exclamation;
         case '?':
@@ -263,6 +276,9 @@ TokenType Scanner::readInternal(Source &src) {
             }
             return TokenType::Colon;
         case '/':
+            if (regex) {
+                return readSimpleRegex(src);
+            }
             if (src.peek() == '*') {
                 readBlockComment(src);
                 return TokenType::None;
@@ -421,6 +437,64 @@ TokenType Scanner::handleDigit(Source &src) {
     return TokenType::Integer;
 }
 
+TokenType Scanner::readSimpleRegex(Source &src, int parts) {
+    bool escape = false;
+    while (true) {
+        int c = src.read();
+        if (c == 0) {
+            REPORT(ScannerExpectedRegularExpression);
+            return TokenType::EndOfFile;
+        }
+        if (c == '/' && !escape) {
+            if (!--parts) {
+                break;
+            }
+        }
+        escape = !escape && c == '\\';
+    }
+    while (isRegexModifier(src.peek())) {
+        src.read();
+    }
+    return TokenType::Regex;
+}
+
+TokenType Scanner::readRegex(Source &src) {
+    int parts;
+    switch (src.read()) {
+        case 0:
+            REPORT(ScannerExpectedRegularExpression);
+            return TokenType::EndOfFile;
+        case '/':
+            return readSimpleRegex(src, 1);
+        case 'm':
+        case 'x':
+            parts = 1;
+            break;
+        case 's':
+            parts = 2;
+            break;
+        case 't':
+            if (src.peek() == 'r') {
+                src.read();
+                parts = 2;
+                break;
+            } else if (src.peek() == '/') {
+                src.read();
+                REPORT(ScannerExpectedRegularExpression);
+                return readSimpleRegex(src, 2);
+            }
+            parts = 0;
+            break;
+        default:
+            parts = 0;
+            break;
+    }
+    if (parts == 0 || src.read() != '/') {
+        REPORT(ScannerExpectedRegularExpression);
+        return TokenType::Regex;
+    }
+    return readSimpleRegex(src, parts);
+}
 
 } //namespace comp
 } //namespace qore
