@@ -188,6 +188,32 @@ public:
             VISIT(stmt);
     })
 
+    NODE(SwitchStatement, {
+            VISIT(expr);
+            ARRAY(body,
+                    os << indent++ << "-" << lexeme(i->keyword);
+                    if (i->op.type != TokenType::None) {
+                        os << " " << lexeme(i->op);
+                    }
+                    os << ":\n";
+                    if (i->expr) {
+                        FIELD("expr", "\n");
+                        ++indent;
+                        i->expr->accept(*this);
+                        --indent;
+                    }
+                    if (!i->statements.empty()) {
+                        FIELD("statements", "\n");
+                        ++indent;
+                        for (auto &s : i->statements) {
+                            s->accept(*this);
+                        }
+                        --indent;
+                    }
+                    --indent;
+            );
+    })
+
     NODE(ErrorExpression, {
             TOKEN(token);
     })

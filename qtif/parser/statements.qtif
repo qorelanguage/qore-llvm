@@ -6,8 +6,15 @@ on_success throw "", x;
 do {} while (x);
 for(;;);
 for(a;b;c);
+switch (x) {
+    case 1:
+    case == 2:
+    case > 3:
+        ;
+    default:
+}
 #$$$
--Script@1:1-9:1
+-Script@1:1-16:1
   .members:
   .statements:
     -EmptyStatement@1:1-1:1
@@ -96,3 +103,23 @@ for(a;b;c);
           .name: c
       .stmt:
         -EmptyStatement@8:11-8:11
+    -SwitchStatement@9:1-15:1
+      .expr:
+        -NameExpression@9:9-9:9
+          .name: x
+      .body:
+        -case:
+          .expr:
+            -LiteralExpression@10:10-10:10
+              .token: Integer 1
+        -case ==:
+          .expr:
+            -LiteralExpression@11:13-11:13
+              .token: Integer 2
+        -case >:
+          .expr:
+            -LiteralExpression@12:12-12:12
+              .token: Integer 3
+          .statements:
+            -EmptyStatement@13:9-13:9
+        -default:

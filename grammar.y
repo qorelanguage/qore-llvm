@@ -144,46 +144,46 @@ X       : /* empty */
 X       | statements statement
 X       ;
 
-    statement
+X   statement
 X       : ';'
 X       | block
 X       | expr ';'
-X       | TOK_TRY statement TOK_CATCH '(' type IDENTIFIER ')' statement
-X       | TOK_RETHROW ';'
-X       | TOK_THROW expr ';'
-X       | TOK_ON_EXIT statement
-X       | TOK_ON_SUCCESS statement
-X       | TOK_ON_ERROR statement
-X       | TOK_IF '(' expr ')' statement
-X       | TOK_IF '(' expr ')' statement TOK_ELSE statement
-X       | TOK_WHILE '(' expr ')' statement
-X       | TOK_DO statement TOK_WHILE '(' expr ')' ';'
-X       | TOK_FOR '(' expr_opt ';' expr_opt ';' expr_opt ')' statement
-X       | TOK_FOREACH expr TOK_IN '(' expr ')' statement
-X       | TOK_RETURN expr_opt ';'
-X       | TOK_THREAD_EXIT ';'
-X       | TOK_BREAK ';'
-X       | TOK_CONTINUE ';'
-        | TOK_SWITCH '(' expr ')' '{' case_block '}'
-        ;
+X       | KW_TRY statement KW_CATCH '(' type IDENTIFIER ')' statement
+X       | KW_RETHROW ';'
+X       | KW_THROW expr_list ';'
+X       | KW_ON_EXIT statement
+X       | KW_ON_SUCCESS statement
+X       | KW_ON_ERROR statement
+X       | KW_IF '(' expr ')' statement
+X       | KW_IF '(' expr ')' statement KW_ELSE statement
+X       | KW_WHILE '(' expr ')' statement
+X       | KW_DO statement KW_WHILE '(' expr ')' ';'
+X       | KW_FOR '(' expr_opt ';' expr_opt ';' expr_opt ')' statement
+X       | KW_FOREACH expr KW_IN '(' expr ')' statement
+X       | KW_RETURN expr_opt ';'
+X       | KW_THREAD_EXIT ';'
+X       | KW_BREAK ';'
+X       | KW_CONTINUE ';'
+X       | KW_SWITCH '(' expr ')' '{' case_block '}'
+X       ;
 
-    case_block
-        : case_code
-        | case_block case_code
-        ;
+X   case_block
+X       : case_code
+X       | case_block case_code
+X       ;
 
-    case_code
-        : TOK_CASE LOGICAL_GE expr ':' statements
-        | TOK_CASE LOGICAL_LE expr ':' statements
-        | TOK_CASE LOGICAL_EQ expr ':' statements
-        | TOK_CASE '<' expr ':' statements
-        | TOK_CASE '>' expr ':' statements
-        | TOK_CASE REGEX_MATCH REGEX ':' statements
-        | TOK_CASE REGEX_NMATCH REGEX ':' statements
-        | TOK_CASE REGEX ':' statements
-        | TOK_CASE expr ':' statements
-        | TOK_DEFAULT ':' statements
-        ;
+X   case_code
+X       : KW_CASE '>=' expr ':' statements
+X       | KW_CASE '<' expr ':' statements
+X       | KW_CASE '==' expr ':' statements
+X       | KW_CASE '<' expr ':' statements
+X       | KW_CASE '>' expr ':' statements
+X       | KW_CASE '=~' REGEX ':' statements
+X       | KW_CASE '!~' REGEX ':' statements
+X       | KW_CASE REGEX ':' statements
+X       | KW_CASE expr ':' statements
+X       | KW_DEFAULT ':' statements
+X       ;
 
 X   expr_opt
 X       : /* empty */

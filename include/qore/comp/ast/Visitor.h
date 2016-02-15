@@ -57,6 +57,7 @@ class ScopeGuardStatement;
 class WhileStatement;
 class DoWhileStatement;
 class ForStatement;
+class SwitchStatement;
 class ErrorExpression;
 class LiteralExpression;
 class NameExpression;
@@ -290,6 +291,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(ForStatement &node) = 0;
+
+    /**
+     * \brief Called by a SwitchStatement AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(SwitchStatement &node) = 0;
 
 protected:
     StatementVisitor() = default;

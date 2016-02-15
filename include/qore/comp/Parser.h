@@ -164,6 +164,7 @@ private:
     ast::WhileStatement::Ptr whileStmt();
     ast::DoWhileStatement::Ptr doWhileStmt();
     ast::ForStatement::Ptr forStmt();
+    ast::SwitchStatement::Ptr switchStmt();
     ast::Expression::Ptr expression();
     ast::Expression::Ptr assignmentExpr();
     ast::Expression::Ptr condExpr();

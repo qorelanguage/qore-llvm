@@ -564,6 +564,71 @@ private:
     }
 };
 
+/**
+ * \brief Represents a switch statement.
+ */
+class SwitchStatement : public Statement {
+
+public:
+    /**
+     * \brief A case block.
+     */
+    class CaseBlock {
+    public:
+        Token keyword;                                      //!< The 'case' or  'default' keyword.
+        Token op;                                           //!< The optional operator.
+        Expression::Ptr expr;                               //!< The optional expression.
+        std::vector<Statement::Ptr> statements;             //!< The statements.
+    public:
+        using Ptr = std::unique_ptr<CaseBlock>;             //!< Pointer type.
+    public:
+        /**
+         * \brief Allocates a new instance.
+         * \return a unique pointer to the allocated instance
+         */
+        static Ptr create() {
+            return Ptr(new CaseBlock());
+        }
+    private:
+        CaseBlock() {
+        }
+    };
+
+public:
+    SourceLocation start;                                   //!< The location of the 'switch' keyword.
+    Expression::Ptr expr;                                   //!< The expression.
+    std::vector<CaseBlock::Ptr> body;                       //!< The body of the switch statement.
+    SourceLocation end;                                     //!< The location of the closing brace.
+
+public:
+    using Ptr = std::unique_ptr<SwitchStatement>;           //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new SwitchStatement());
+    }
+
+    void accept(StatementVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    SwitchStatement() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

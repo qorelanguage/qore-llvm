@@ -73,6 +73,8 @@ ast::Statement::Ptr Parser::statement() {
             return doWhileStmt();
         case TokenType::KwFor:
             return forStmt();
+        case TokenType::KwSwitch:
+            return switchStmt();
         default:
             return expressionStmt();
     }
@@ -211,6 +213,50 @@ ast::ForStatement::Ptr Parser::forStmt() {
     }
     match(TokenType::ParenRight);
     stmt->stmt = statement();
+    return stmt;
+}
+
+ast::SwitchStatement::Ptr Parser::switchStmt() {
+    LOG_FUNCTION();
+    ast::SwitchStatement::Ptr stmt = ast::SwitchStatement::create();
+    stmt->start = match(TokenType::KwSwitch).location;
+    match(TokenType::ParenLeft);
+    stmt->expr = expression();
+    match(TokenType::ParenRight);
+    match(TokenType::CurlyLeft);
+    while (tokenType() != TokenType::CurlyRight) {
+        ast::SwitchStatement::CaseBlock::Ptr caseBlock = ast::SwitchStatement::CaseBlock::create();
+        if (tokenType() == TokenType::KwCase) {
+            caseBlock->keyword = consume();
+            switch (tokenType()) {
+                case TokenType::AngleLeft:
+                case TokenType::AngleRight:
+                case TokenType::AngleLeftEquals:
+                case TokenType::AngleRightEquals:
+                case TokenType::DoubleEquals:
+                    caseBlock->op = consume();
+                    caseBlock->expr = expression();
+                    break;
+                //TODO regular expressions
+                default:
+                    caseBlock->expr = expression();
+                    break;
+            }
+        } else if (tokenType() == TokenType::KwDefault) {
+            caseBlock->keyword = consume();
+        } else {
+            report(DiagId::ParserExpectedCaseOrDefault);
+            recoverSkipToCurlyRight();
+            break;
+        }
+        match(TokenType::Colon);
+        while (tokenType() != TokenType::KwDefault && tokenType() != TokenType::KwCase
+                && tokenType() != TokenType::CurlyRight) {
+            caseBlock->statements.push_back(statement());
+        }
+        stmt->body.push_back(std::move(caseBlock));
+    }
+    stmt->end = consume().location;
     return stmt;
 }
 
