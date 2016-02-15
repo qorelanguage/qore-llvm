@@ -3,11 +3,13 @@ final namespace X {
     namespace YY{}
     private const X = 1;
     final class A::B;
+    private our int i;
 }
+our hash h;
 #$$$
--Script@1:1-7:1
+-Script@1:1-9:1
   .members:
-    -Namespace@1:7-6:1
+    -Namespace@1:7-7:1
       .modifiers: final
       .name: Identifier X
       .members:
@@ -30,4 +32,16 @@ final namespace X {
           .name: A::B
           .inherits:
           .members:
+        -GlobalVariable@6:13-6:22
+          .modifiers: private
+          .type:
+            -NameType@6:17-6:17
+              .name: int
+          .name: i
+    -GlobalVariable@8:1-8:11
+      .modifiers: -none-
+      .type:
+        -NameType@8:5-8:5
+          .name: hash
+      .name: h
   .statements:

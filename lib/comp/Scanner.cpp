@@ -69,6 +69,7 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
     { "instanceof",     TokenType::KwInstanceof },
     { "keys",           TokenType::KwKeys },
     { "map",            TokenType::KwMap },
+    { "module",         TokenType::KwModule },
     { "new",            TokenType::KwNew },
     { "namespace",      TokenType::KwNamespace },
     { "NOTHING",        TokenType::KwNothing },

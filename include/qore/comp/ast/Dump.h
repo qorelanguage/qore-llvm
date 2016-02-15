@@ -84,6 +84,12 @@ public:
             visit(*node.constant);
     })
 
+    NODE(GlobalVariable, {
+            MODIFIERS(modifiers);
+            VISIT(type);
+            NAME(name);
+    })
+
     NODE(Function, {
             visit(*node.routine);
     })

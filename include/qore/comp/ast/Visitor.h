@@ -39,6 +39,7 @@ class Script;
 class Namespace;
 class Class;
 class NamespaceConstant;
+class GlobalVariable;
 class Function;
 class Method;
 class ClassConstant;
@@ -339,6 +340,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(NamespaceConstant &node) = 0;
+
+    /**
+     * \brief Called by a GlobalVariable AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(GlobalVariable &node) = 0;
 
     /**
      * \brief Called by a Function AST node.

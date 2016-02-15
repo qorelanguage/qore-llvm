@@ -7,20 +7,20 @@ X       : script_member
 X       | script script_member
 X       ;
 
-    script_member
+X   script_member
 X       : namespace_member
-        | KW_MODULE IDENTIFIER '{' module_decls '}'
+X       | KW_MODULE IDENTIFIER '{' module_decls '}'
 X       | statement
-        ;
+X       ;
 
-    module_decls
-        : module_decl
-        | module_decls module_decl
-        ;
+X   module_decls
+X       : module_decl
+X       | module_decls module_decl
+X       ;
 
-    module_decl
-        : IDENTIFIER '=' expr ';'
-        ;
+X   module_decl
+X       : IDENTIFIER '=' expr ';'
+X       ;
 
 X   namespace_decl
 X       : modifiers KW_NAMESPACE IDENTIFIER '{' namespace_body '}'
@@ -32,21 +32,20 @@ X       : /* empty */
 X       | namespace_body namespace_member
 X       ;
 
-    namespace_member
+X   namespace_member
 X       : namespace_decl
-        | global_var_decl
+X       | global_var_decl
 X       | modifiers KW_CONST name '=' expr ';'
 X       | modifiers type KW_SUB name param_list block
 X       | modifiers KW_SUB name param_list block
 X       | modifiers type name param_list block
 X       | modifiers name param_list block               //not allowed at top level
 X       | class_def
-        ;
+X       ;
 
-    global_var_decl
-        : modifiers KW_OUR type name ';'
-        | modifiers KW_OUR '(' list ')' ';'            //TODO list
-        ;
+X   global_var_decl
+X       : modifiers KW_OUR type name ';'
+X       ;
 
 X   modifiers
 X       : /* empty */

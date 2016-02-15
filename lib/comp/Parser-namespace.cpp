@@ -50,9 +50,16 @@ ast::Script::Ptr Parser::parseScript() {
     ensureToken();
     script->start = token.location;
     while (tokenType() != TokenType::EndOfFile) {
-//        if (tokenType() == TokenType::KwModule) {
-//            //TODO module
-//        }
+        if (tokenType() == TokenType::KwModule) {
+            //TODO module
+            consume();
+            match(TokenType::Identifier);
+            match(TokenType::CurlyLeft);
+            recoverSkipToCurlyRight();
+            report(DiagId::ParserModuleIgnored);
+            consume();
+            continue;
+        }
         ast::NamespaceMember::Ptr nsMember = namespaceMember(true);
         if (nsMember) {
             script->members.push_back(std::move(nsMember));
@@ -129,10 +136,17 @@ ast::NamespaceMember::Ptr Parser::namespaceMember(bool topLevel) {
         case TokenType::KwNamespace:
             recorder.stop();
             return namespaceDecl(mods);
-//TODO case TokenType::KwOur:
-        case TokenType::KwConst: {
-            return ast::NamespaceConstant::create(constant(mods));
+        case TokenType::KwOur: {
+            ast::GlobalVariable::Ptr gv = ast::GlobalVariable::create();
+            gv->start = consume().location;
+            gv->modifiers = mods;
+            gv->type = type();
+            gv->name = name();
+            gv->end = match(TokenType::Semicolon).location;
+            return std::move(gv);
         }
+        case TokenType::KwConst:
+            return ast::NamespaceConstant::create(constant(mods));
         case TokenType::KwClass:
             return classDecl(mods);
         case TokenType::KwSub:

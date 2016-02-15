@@ -168,6 +168,46 @@ private:
     }
 };
 
+/**
+ * \brief Represents a global variable declaration.
+ */
+class GlobalVariable : public NamespaceMember {
+
+public:
+    SourceLocation start;                                   //!< The location of the 'our' keyword.
+    Modifiers modifiers;                                    //!< The modifiers.
+    Type::Ptr type;                                         //!< The type of the variable.
+    Name name;                                              //!< The name of the variable.
+    SourceLocation end;                                     //!< The location of the semicolon.
+
+public:
+    using Ptr = std::unique_ptr<GlobalVariable>;            //!< Pointer type.
+
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new GlobalVariable());
+    }
+
+    void accept(DeclarationVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    GlobalVariable() {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore
