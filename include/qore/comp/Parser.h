@@ -124,8 +124,7 @@ private:
         }
 
         ~Recorder() {
-            assert(parser.recorder == this || parser.recorder == nullptr);
-            parser.recorder = nullptr;
+            assert(parser.recorder == nullptr);
         }
 
         void stop() {
@@ -148,7 +147,7 @@ private:
 
 private:
     ast::Namespace::Ptr namespaceDecl(ast::Modifiers mods);
-    ast::NamespaceMember::Ptr namespaceMember(bool tepLevel);
+    ast::NamespaceMember::Ptr namespaceMember(bool topLevel);
     ast::Modifiers modifiers();
     ast::Class::Ptr classDecl(ast::Modifiers mods);
     ast::ClassMember::Ptr classMember();
