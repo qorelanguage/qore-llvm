@@ -398,7 +398,8 @@ ast::Expression::Ptr Parser::postfixExpr() {
                     consume();
                     index = expression();
                     e = ast::IndexExpression::create(std::move(e), std::move(index), match(TokenType::ParenRight));
-                } else if (tokenType() == TokenType::Identifier) {
+                } else if (tokenType() == TokenType::Identifier || tokenType() == TokenType::DollarHash
+                        || tokenType() == TokenType::ImplicitArg || tokenType() == TokenType::String) {
                     e = ast::AccessExpression::create(std::move(e), consume());
                 } else {
                     //TODO original grammar allowed any (primary) expression

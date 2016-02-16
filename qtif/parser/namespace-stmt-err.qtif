@@ -9,7 +9,7 @@ namespace n {
   .members:
     -Namespace@1:1-4:1
       .modifiers: -none-
-      .name: Identifier n
+      .name: n
       .members:
         -Function@2:5-2:13
           .modifiers: -none-

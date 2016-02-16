@@ -11,7 +11,7 @@ f(*a::b i = 5, hash h = {}){}
   .members:
     -Namespace@1:1-8:1
       .modifiers: -none-
-      .name: Identifier n
+      .name: n
       .members:
         -Function@1:14-1:18
           .modifiers: -none-

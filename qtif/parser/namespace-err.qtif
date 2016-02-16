@@ -14,22 +14,22 @@ namespace;
   .members:
     -Namespace@1:1-5:1
       .modifiers: -none-
-      .name: Identifier X
+      .name: X
       .members:
         -Namespace@2:12-2:23
           .modifiers: public
-          .name: Identifier Y
+          .name: Y
           .members:
     -Namespace@6:1-7:1
       .modifiers: -none-
-      .name: Identifier Y
+      .name: Y
       .members:
     -Namespace@7:1-7:12
       .modifiers: -none-
-      .name: Identifier Z
+      .name: Z
       .members:
     -Namespace@8:1-8:10
       .modifiers: -none-
-      .name: None
+      .name: -none-
       .members:
   .statements:

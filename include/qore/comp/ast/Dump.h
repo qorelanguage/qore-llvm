@@ -69,7 +69,7 @@ public:
 
     NODE(Namespace, {
             MODIFIERS(modifiers);
-            TOKEN(name);
+            NAME(name);
             NODE_ARRAY(members);
     })
 

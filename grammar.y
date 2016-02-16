@@ -336,14 +336,14 @@ X       | KW_BACKGROUND prefix_expr
 X       | KW_DELETE prefix_expr
 X       | KW_REMOVE prefix_expr
 X       | KW_EXISTS instanceof_expr
-X       | TOK_UNSHIFT expr_list
-X       | TOK_PUSH expr_list
-X       | TOK_SPLICE expr_list
-X       | TOK_EXTRACT expr_list
-X       | TOK_MAP expr_list
-X       | TOK_FOLDR expr_list
-X       | TOK_FOLDL expr_list
-X       | TOK_SELECT expr_list
+X       | KW_UNSHIFT expr_list
+X       | KW_PUSH expr_list
+X       | KW_SPLICE expr_list
+X       | KW_EXTRACT expr_list
+X       | KW_MAP expr_list
+X       | KW_FOLDR expr_list
+X       | KW_FOLDL expr_list
+X       | KW_SELECT expr_list
 X       ;
 
     postfix_expr

@@ -88,7 +88,7 @@ ast::Namespace::Ptr Parser::namespaceDecl(ast::Modifiers mods) {
     ns->modifiers = mods;
 
     if (tokenType() == TokenType::Identifier) {
-        ns->name = consume();       //XXX shouldn't we allow names here?
+        ns->name = name();
     } else {
         report(DiagId::ParserExpectedNamespaceName);
     }

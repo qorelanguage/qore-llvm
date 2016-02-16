@@ -1,5 +1,5 @@
 final namespace X {
-    public namespace Y;
+    public namespace Y::Z;
     namespace YY{}
     private const X = 1;
     final class A::B;
@@ -11,15 +11,15 @@ our hash h;
   .members:
     -Namespace@1:7-7:1
       .modifiers: final
-      .name: Identifier X
+      .name: X
       .members:
-        -Namespace@2:12-2:23
+        -Namespace@2:12-2:26
           .modifiers: public
-          .name: Identifier Y
+          .name: Y::Z
           .members:
         -Namespace@3:5-3:18
           .modifiers: -none-
-          .name: Identifier YY
+          .name: YY
           .members:
         -NamespaceConstant@4:13-4:24
           .modifiers: private

@@ -63,7 +63,7 @@ public:
     SourceLocation start;                                   //!< The location of the `namespace` keyword.
     SourceLocation end;                                     //!< The location of the closing brace or semicolon.
     Modifiers modifiers;                                    //!< The modifiers.
-    Token name;                                             //!< The token with the namespace name.
+    Name name;                                              //!< The name of the namespace.
     std::vector<NamespaceMember::Ptr> members;              //!< The members of the namespace.
 
 public:

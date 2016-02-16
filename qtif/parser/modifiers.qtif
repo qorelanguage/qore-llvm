@@ -9,10 +9,10 @@ public public namespace Y {
   .members:
     -Namespace@2:21-3:1
       .modifiers: abstract deprecated private static synchronized
-      .name: Identifier X
+      .name: X
       .members:
     -Namespace@4:15-5:1
       .modifiers: public
-      .name: Identifier Y
+      .name: Y
       .members:
   .statements:
