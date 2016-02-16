@@ -31,7 +31,9 @@
 #ifndef INCLUDE_QORE_COMMON_UTIL_H_
 #define INCLUDE_QORE_COMMON_UTIL_H_
 
+#include <algorithm>
 #include <functional>
+#include <sstream>
 #include <string>
 
 namespace qore {
@@ -48,6 +50,19 @@ std::string trim(const std::string &s, Predicate pred) {
     auto wsfront = std::find_if_not(s.begin(), s.end(), pred);
     auto wsback = std::find_if_not(s.rbegin(), s.rend(), pred).base();
     return wsback <= wsfront ? std::string() : std::string(wsfront, wsback);
+}
+
+/**
+ * \brief Converts a value to a string.
+ * \tparam T the type of the value, must support `operator<<` for std::ostream
+ * \param t the value to convert
+ * \return string representation of the value
+ */
+template<typename T>
+std::string to_string(const T &t) {
+    std::ostringstream str;
+    str << t;
+    return str.str();
 }
 
 } // namespace util

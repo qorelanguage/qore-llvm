@@ -46,6 +46,10 @@ DIAG(ScannerInvalidInteger,                     "PARSE-EXCEPTION", Error,
         "integers must be in the range %s (MININT) to %s (MAXINT)")
 DIAG(ScannerUnendedStringLiteral,               "PARSE-EXCEPTION", Error,
         "unended string literal")
+DIAG(ScannerInvalidHexLiteral,                  "PARSE-EXCEPTION", Error,
+        "invalid hexadecimal literal")
+DIAG(ScannerExpectedRegularExpression,          "PARSE-EXCEPTION", Error,
+        "expected regular expression")
 
 DIAG(ParserUnexpectedToken,                     "PARSE-EXCEPTION", Error,
         "syntax error, unexpected %s, expecting %s")
@@ -53,3 +57,19 @@ DIAG(ParserExpectedPrimaryExpression,           "PARSE-EXCEPTION", Error,
         "unexpected %s, expecting primary expression")
 DIAG(ParserExpectedVariableName,                "PARSE-EXCEPTION", Error,
         "unexpected %s, expecting variable name")
+DIAG(ParserModifierGivenTwice,                  "PARSE-EXCEPTION", Error,
+        "modifier '%s' given twice")
+DIAG(ParserExpectedNamespaceName,               "PARSE-EXCEPTION", Error,
+        "expected namespace name")
+DIAG(ParserExpectedNamespaceMember,             "PARSE-EXCEPTION", Error,
+        "expected namespace member")
+DIAG(ParserUnendedNamespaceDecl,                "PARSE-EXCEPTION", Error,
+        "unended namespace declaration")
+DIAG(ParserInvalidMemberAccess,                 "PARSE-EXCEPTION", Error,
+        "syntax error, unexpected %s, expecting identifier or '('")
+DIAG(ParserExpectedClassMember,                 "PARSE-EXCEPTION", Error,
+        "expected class member")
+DIAG(ParserExpectedCaseOrDefault,               "PARSE-EXCEPTION", Error,
+        "expected 'case' or 'default'")
+DIAG(ParserModuleIgnored,                       "PARSE-WARNING", Warning,
+        "module declaration ignored")

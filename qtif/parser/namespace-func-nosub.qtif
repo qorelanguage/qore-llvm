@@ -1,0 +1,96 @@
+namespace n {f(){}
+private final f(){}
+public a::b f(){}
+*a::b f(){}
+a::b f(){}
+f(a::b i){}
+f(*a::b i = 5, hash h = {}){}
+}
+#$$$
+-Script@1:1-9:1
+  .members:
+    -Namespace@1:1-8:1
+      .modifiers: -none-
+      .name: n
+      .members:
+        -Function@1:14-1:18
+          .modifiers: -none-
+          .type:
+            -ImplicitType@1:14-1:14
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@1:17-1:18
+              .statements:
+        -Function@2:15-2:19
+          .modifiers: final private
+          .type:
+            -ImplicitType@2:15-2:15
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@2:18-2:19
+              .statements:
+        -Function@3:8-3:17
+          .modifiers: public
+          .type:
+            -NameType@3:8-3:11
+              .name: a::b
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@3:16-3:17
+              .statements:
+        -Function@4:1-4:11
+          .modifiers: -none-
+          .type:
+            -AsteriskType@4:1-4:5
+              .name: a::b
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@4:10-4:11
+              .statements:
+        -Function@5:1-5:10
+          .modifiers: -none-
+          .type:
+            -NameType@5:1-5:4
+              .name: a::b
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@5:9-5:10
+              .statements:
+        -Function@6:1-6:11
+          .modifiers: -none-
+          .type:
+            -ImplicitType@6:1-6:1
+          .name: f
+          .params:
+            -NameType@6:3-6:6
+              .name: a::b
+            -Identifier i
+            -no default-
+          .body:
+            -CompoundStatement@6:10-6:11
+              .statements:
+        -Function@7:1-7:29
+          .modifiers: -none-
+          .type:
+            -ImplicitType@7:1-7:1
+          .name: f
+          .params:
+            -AsteriskType@7:3-7:7
+              .name: a::b
+            -Identifier i
+            -LiteralExpression@7:13-7:13
+              .token: Integer 5
+            -NameType@7:16-7:16
+              .name: hash
+            -Identifier h
+            -HashExpression@7:25-7:26
+              .data:
+          .body:
+            -CompoundStatement@7:28-7:29
+              .statements:
+  .statements:

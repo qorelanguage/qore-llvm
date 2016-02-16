@@ -1,0 +1,81 @@
+0;
+x;
+a::b::c;
+False;
+True;
+NOTHING;
+NULL;
+self;
+();
+(True);
+cast<*a::b>({});
+"a" 'b' "c";
+#$$$
+-Script@1:1-13:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:2
+      .expression:
+        -LiteralExpression@1:1-1:1
+          .token: Integer 0
+    -ExpressionStatement@2:1-2:2
+      .expression:
+        -NameExpression@2:1-2:1
+          .name: x
+    -ExpressionStatement@3:1-3:8
+      .expression:
+        -NameExpression@3:1-3:7
+          .name: a::b::c
+    -ExpressionStatement@4:1-4:6
+      .expression:
+        -LiteralExpression@4:1-4:1
+          .token: KwFalse False
+    -ExpressionStatement@5:1-5:5
+      .expression:
+        -LiteralExpression@5:1-5:1
+          .token: KwTrue True
+    -ExpressionStatement@6:1-6:8
+      .expression:
+        -LiteralExpression@6:1-6:1
+          .token: KwNothing NOTHING
+    -ExpressionStatement@7:1-7:5
+      .expression:
+        -LiteralExpression@7:1-7:1
+          .token: KwNull NULL
+    -ExpressionStatement@8:1-8:5
+      .expression:
+        -LiteralExpression@8:1-8:1
+          .token: KwSelf self
+    -ExpressionStatement@9:1-9:3
+      .expression:
+        -ListExpression@9:1-9:2
+          .data:
+    -ExpressionStatement@10:1-10:7
+      .expression:
+        -LiteralExpression@10:2-10:2
+          .token: KwTrue True
+    -ExpressionStatement@11:1-11:16
+      .expression:
+        -CastExpression@11:1-11:15
+          .type:
+            -AsteriskType@11:6-11:10
+              .name: a::b
+          .expression:
+            -HashExpression@11:13-11:14
+              .data:
+    -ExpressionStatement@12:1-12:12
+      .expression:
+        -BinaryExpression@12:1-12:9
+          .left:
+            -BinaryExpression@12:1-12:5
+              .left:
+                -LiteralExpression@12:1-12:1
+                  .token: String "a"
+              .op: Plus 
+              .right:
+                -LiteralExpression@12:5-12:5
+                  .token: String 'b'
+          .op: Plus 
+          .right:
+            -LiteralExpression@12:9-12:9
+              .token: String "c"

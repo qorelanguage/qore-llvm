@@ -59,7 +59,7 @@ std::pair<int, int> Source::decodeLocation(int offset, int tabSize) {
         }
     }
 
-    //XXX line offsets can be cached
+    //FIXME line offsets need to be cached
     return std::make_pair(line, column);
 }
 

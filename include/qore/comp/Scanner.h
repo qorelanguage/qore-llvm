@@ -54,9 +54,10 @@ public:
     /**
      * \brief Reads the next token from the source script.
      * \param src the source to read characters from
+     * \param mode determines the type of tokens expected
      * \return the token read from the source
      */
-    Token read(Source &src);
+    Token read(Source &src, ITokenStream::Mode mode);
 
     /**
      * \brief Reads a string literal from a source.
@@ -100,11 +101,32 @@ public:
         return c == '\r' || c == '\n';
     }
 
+    /**
+     * \brief Determines whether a character is considered a hexadecimal digit.
+     * \param c the character to test
+     * \return `true` if `c` is 0-9, a-f or A-F
+     */
+    static bool isHexDigit(int c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
+    /**
+     * \brief Determines whether a character is considered a modifier for a regular expression.
+     * \param c the character to test
+     * \return `true` if `c` is 'g', 'i', 's', 'x' or 'm'
+     */
+    static bool isRegexModifier(char c) {
+        return c == 'g' || c == 'i' || c == 's' || c == 'x' || c == 'm';
+    }
+
 private:
-    TokenType readInternal(Source &src);
+    TokenType readInternal(Source &src, bool readRegex);
     TokenType readIdentifier(Source &src);
-    TokenType readInteger(Source &src);
     TokenType readParseDirective(Source &src);
+    TokenType readHexLiteral(Source &src);
+    TokenType handleDigit(Source &src);
+    TokenType readSimpleRegex(Source &src, int parts = 1);
+    TokenType readRegex(Source &src);
 
 private:
     Scanner(const Scanner &) = delete;

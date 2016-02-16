@@ -1,0 +1,47 @@
+++--x;
+-trim +s;
+++a++;
+#$$$
+-Script@1:1-4:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:6
+      .expression:
+        -UnaryExpression@1:1-1:5
+          .expr:
+            -UnaryExpression@1:3-1:5
+              .expr:
+                -NameExpression@1:5-1:5
+                  .name: x
+              .op: DoubleMinus --
+              .postfix: false
+          .op: DoublePlus ++
+          .postfix: false
+    -ExpressionStatement@2:1-2:9
+      .expression:
+        -UnaryExpression@2:1-2:8
+          .expr:
+            -UnaryExpression@2:2-2:8
+              .expr:
+                -UnaryExpression@2:7-2:8
+                  .expr:
+                    -NameExpression@2:8-2:8
+                      .name: s
+                  .op: Plus +
+                  .postfix: false
+              .op: KwTrim trim
+              .postfix: false
+          .op: Minus -
+          .postfix: false
+    -ExpressionStatement@3:1-3:6
+      .expression:
+        -UnaryExpression@3:1-3:4
+          .expr:
+            -UnaryExpression@3:3-3:4
+              .expr:
+                -NameExpression@3:3-3:3
+                  .name: a
+              .op: DoublePlus ++
+              .postfix: true
+          .op: DoublePlus ++
+          .postfix: false

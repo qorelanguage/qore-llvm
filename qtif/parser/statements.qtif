@@ -1,0 +1,125 @@
+;0;{}{;}
+if (1) if(2) break; else {}
+try foreach int i in ({}) throw i; catch (hash ex) return "";
+while (1) return;
+on_success throw "", x;
+do {} while (x);
+for(;;);
+for(a;b;c);
+switch (x) {
+    case 1:
+    case == 2:
+    case > 3:
+        ;
+    default:
+}
+#$$$
+-Script@1:1-16:1
+  .members:
+  .statements:
+    -EmptyStatement@1:1-1:1
+    -ExpressionStatement@1:2-1:3
+      .expression:
+        -LiteralExpression@1:2-1:2
+          .token: Integer 0
+    -CompoundStatement@1:4-1:5
+      .statements:
+    -CompoundStatement@1:6-1:8
+      .statements:
+        -EmptyStatement@1:7-1:7
+    -IfStatement@2:1-2:27
+      .condition:
+        -LiteralExpression@2:5-2:5
+          .token: Integer 1
+      .stmtTrue:
+        -IfStatement@2:8-2:27
+          .condition:
+            -LiteralExpression@2:11-2:11
+              .token: Integer 2
+          .stmtTrue:
+            -SimpleStatement@2:14-2:19
+              .keyword: KwBreak break
+          .stmtFalse:
+            -CompoundStatement@2:26-2:27
+              .statements:
+    -TryStatement@3:1-3:61
+      .stmtTry:
+        -ForeachStatement@3:5-3:34
+          .varType:
+            -NameType@3:13-3:13
+              .name: int
+          .varName: Identifier i
+          .expr:
+            -HashExpression@3:23-3:24
+              .data:
+          .stmt:
+            -ThrowStatement@3:27-3:34
+              .exprList:
+                -NameExpression@3:33-3:33
+                  .name: i
+      .exceptionType:
+        -NameType@3:43-3:43
+          .name: hash
+      .exceptionName: Identifier ex
+      .stmtCatch:
+        -ReturnStatement@3:52-3:61
+          .expression:
+            -LiteralExpression@3:59-3:59
+              .token: String ""
+    -WhileStatement@4:1-4:17
+      .expr:
+        -LiteralExpression@4:8-4:8
+          .token: Integer 1
+      .stmt:
+        -ReturnStatement@4:11-4:17
+    -ScopeGuardStatement@5:1-5:23
+      .keyword: KwOnSuccess on_success
+      .stmt:
+        -ThrowStatement@5:12-5:23
+          .exprList:
+            -LiteralExpression@5:18-5:18
+              .token: String ""
+            -NameExpression@5:22-5:22
+              .name: x
+    -DoWhileStatement@6:1-6:16
+      .stmt:
+        -CompoundStatement@6:4-6:5
+          .statements:
+      .expr:
+        -NameExpression@6:14-6:14
+          .name: x
+    -ForStatement@7:1-7:8
+      .stmt:
+        -EmptyStatement@7:8-7:8
+    -ForStatement@8:1-8:11
+      .init:
+        -NameExpression@8:5-8:5
+          .name: a
+      .condition:
+        -NameExpression@8:7-8:7
+          .name: b
+      .update:
+        -NameExpression@8:9-8:9
+          .name: c
+      .stmt:
+        -EmptyStatement@8:11-8:11
+    -SwitchStatement@9:1-15:1
+      .expr:
+        -NameExpression@9:9-9:9
+          .name: x
+      .body:
+        -case:
+          .expr:
+            -LiteralExpression@10:10-10:10
+              .token: Integer 1
+        -case ==:
+          .expr:
+            -LiteralExpression@11:13-11:13
+              .token: Integer 2
+        -case >:
+          .expr:
+            -LiteralExpression@12:12-12:12
+              .token: Integer 3
+          .statements:
+            -EmptyStatement@13:9-13:9
+        -default:

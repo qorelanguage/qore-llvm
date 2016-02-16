@@ -1,0 +1,15 @@
+new A::B(x).y;
+#$$$
+-Script@1:1-2:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:14
+      .expression:
+        -AccessExpression@1:1-1:13
+          .expr:
+            -NewExpression@1:1-1:11
+              .name: A::B
+              .argList:
+                -NameExpression@1:10-1:10
+                  .name: x
+          .token: Identifier y

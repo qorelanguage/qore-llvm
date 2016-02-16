@@ -69,7 +69,7 @@ struct DirectiveInfo {
  * Manages a stack of source files, uses a Scanner to recognize tokens in the input and processes parse directives
  * such as `%%include` and `%%ifdef`.
  */
-class DirectiveProcessor {
+class DirectiveProcessor : public ITokenStream {
 
 public:
     /**
@@ -80,11 +80,7 @@ public:
      */
     DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr, Source &src);
 
-    /**
-     * \brief Reads the next token from the input, processing parse directives.
-     * \return the next token read from the input
-     */
-    Token read();
+    Token read(Mode mode) override;
 
 private:
     void processDirective(Source &src, SourceLocation location, std::string directive);

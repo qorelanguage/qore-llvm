@@ -38,6 +38,11 @@ TEST(TokenTest, TokenTypeToStream) {
 #undef TOK
 }
 
+TEST(TokenTest, DefaultCtor) {
+    Token t;
+    EXPECT_EQ(TokenType::None, t.type);
+}
+
 #ifdef QORE_COVERAGE
 TEST(TokenTest, TokenTypeIdToStreamErr) {
     std::ostringstream ss;

@@ -26,21 +26,19 @@
 #include "../Qtif.h"
 #include "qore/comp/DirectiveProcessor.h"
 
-#define QTIF(a)
-#include "test_files.inc"
-#undef QTIF
-
 namespace qore {
 namespace comp {
 
 class DirectiveProcessorTest : public qtif::LineTest {
+public:
+    DirectiveProcessorTest() : LineTest("/directives/include/") {
+    }
 };
 
 TEST_P(DirectiveProcessorTest, Run) {
-    SourceManager srcMgr(diagMgr, TEST_INPUT_DIR "/directives/include/");
     DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
     while (true) {
-        Token token = dp.read();
+        Token token = dp.read(ITokenStream::Mode::Normal);
         output << token.type << token.location << ':' << token.length << '\n';
         if (token.type == TokenType::EndOfFile) {
             break;

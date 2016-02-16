@@ -5,6 +5,7 @@ b"
 "\\"
 ''
 '\'
+`\`
 "#$$$
 String@1:1:3
 String@2:1:5
@@ -12,6 +13,7 @@ String@4:1:4
 String@5:1:4
 String@6:1:2
 String@7:1:3
-#$!ScannerUnendedStringLiteral@8:1
-String@8:1:1
-EndOfFile@8:2:0
+BackquotedString@8:1:3
+#$!ScannerUnendedStringLiteral@9:1
+String@9:1:1
+EndOfFile@9:2:0

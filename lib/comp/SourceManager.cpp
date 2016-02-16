@@ -43,7 +43,7 @@ Source &SourceManager::create(std::string name, std::vector<char> &&data) {
         *it = ' ';
     }
 
-    int id = sources.size();
+    int id = static_cast<int>(sources.size());
     sources.emplace_back(new Source(std::move(name), id, std::move(data)));
 
     for (int offset : nulls) {

@@ -246,7 +246,8 @@ void LineTestDiagProcessor::process(qore::comp::DiagRecord &record) {
     lineTest.processDiag(record);
 }
 
-LineTest::LineTest() : /*srcMgr(std::string(TEST_INPUT_DIR) + "/"), */ output(*this), diagProcessor(*this) {
+LineTest::LineTest(const std::string &includePath) : srcMgr(diagMgr, std::string(TEST_INPUT_DIR) + includePath),
+        output(*this), diagProcessor(*this), sourceId(-1){
     diagMgr.addProcessor(&diagProcessor);
 }
 
@@ -255,7 +256,7 @@ LineTest::~LineTest() {
 
 void LineTest::SetUp() {
     AbstractTest::SetUp();
-    source.reset(new qore::comp::Source(getFileName(), 1, getInput()));
+    sourceId = srcMgr.createFromString(getFileName(), std::string(getInput().begin(), getInput().end())).getId();
 }
 
 void LineTest::verify() {

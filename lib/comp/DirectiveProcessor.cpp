@@ -45,13 +45,13 @@ DirectiveProcessor::DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcM
     srcStack.push(src);
 }
 
-Token DirectiveProcessor::read() {
+Token DirectiveProcessor::read(Mode mode) {
     LOG_FUNCTION();
     assert(!srcStack.empty());
 
     while (true) {
         Source &src = srcStack.top();
-        Token t = scanner.read(src);
+        Token t = scanner.read(src, mode);
         if (t.type == TokenType::ParseDirective) {
             processDirective(src, src.getMarkLocation(), src.getMarkedString());
         } else if (t.type == TokenType::EndOfFile && srcStack.size() > 1) {
@@ -99,10 +99,10 @@ void DirectiveProcessor::processDirective(Source &src, SourceLocation location, 
         diagMgr.report(DiagId::PdpUnknownDirective, location) << directive;
         return;
     }
-    if (it->second.args == DirectiveArgs::None && !arg.empty()) {
-        diagMgr.report(DiagId::PdpUnexpectedArgument, location) << directive;
-        return;
-    }
+//    if (it->second.args == DirectiveArgs::None && !arg.empty()) {
+//        diagMgr.report(DiagId::PdpUnexpectedArgument, location) << directive;
+//        return;
+//    }
     if (it->second.args == DirectiveArgs::Single && arg.empty()) {
         diagMgr.report(DiagId::PdpMissingArgument, location) << directive;
         return;

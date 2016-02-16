@@ -1,0 +1,11 @@
+switch (x) {;}
+#$$$
+#$!ParserExpectedCaseOrDefault@1:13
+-Script@1:1-2:1
+  .members:
+  .statements:
+    -SwitchStatement@1:1-1:14
+      .expr:
+        -NameExpression@1:9-1:9
+          .name: x
+      .body:

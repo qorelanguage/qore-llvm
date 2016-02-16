@@ -1,0 +1,72 @@
+x++++;
+x()--;
+x[y{z}];
+x.y.z;
+a.(b++);
+#$$$
+-Script@1:1-6:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:6
+      .expression:
+        -UnaryExpression@1:1-1:4
+          .expr:
+            -UnaryExpression@1:1-1:2
+              .expr:
+                -NameExpression@1:1-1:1
+                  .name: x
+              .op: DoublePlus ++
+              .postfix: true
+          .op: DoublePlus ++
+          .postfix: true
+    -ExpressionStatement@2:1-2:6
+      .expression:
+        -UnaryExpression@2:1-2:4
+          .expr:
+            -CallExpression@2:1-2:3
+              .calee:
+                -NameExpression@2:1-2:1
+                  .name: x
+              .argList:
+          .op: DoubleMinus --
+          .postfix: true
+    -ExpressionStatement@3:1-3:8
+      .expression:
+        -IndexExpression@3:1-3:7
+          .left:
+            -NameExpression@3:1-3:1
+              .name: x
+          .right:
+            -IndexExpression@3:3-3:6
+              .left:
+                -NameExpression@3:3-3:3
+                  .name: y
+              .right:
+                -NameExpression@3:5-3:5
+                  .name: z
+              .endToken: CurlyRight }
+          .endToken: SquareRight ]
+    -ExpressionStatement@4:1-4:6
+      .expression:
+        -AccessExpression@4:1-4:5
+          .expr:
+            -AccessExpression@4:1-4:3
+              .expr:
+                -NameExpression@4:1-4:1
+                  .name: x
+              .token: Identifier y
+          .token: Identifier z
+    -ExpressionStatement@5:1-5:8
+      .expression:
+        -IndexExpression@5:1-5:7
+          .left:
+            -NameExpression@5:1-5:1
+              .name: a
+          .right:
+            -UnaryExpression@5:4-5:5
+              .expr:
+                -NameExpression@5:4-5:4
+                  .name: b
+              .op: DoublePlus ++
+              .postfix: true
+          .endToken: ParenRight )

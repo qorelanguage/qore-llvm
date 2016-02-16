@@ -1,0 +1,10 @@
+=;
+#$$$
+#$!ParserExpectedPrimaryExpression@1:1
+-Script@1:1-2:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:2
+      .expression:
+        -ErrorExpression@1:1-1:1
+          .token: Equals =

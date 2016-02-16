@@ -1,0 +1,128 @@
+public class C;
+class C {}
+class C inherits A::B;
+class C inherits public A::B, X;
+class C inherits A::B, private X;
+class C {
+    public static *X::Y f() {}
+    X::Y f();
+    private f();
+    f() : x(a), y() {}
+    public {
+        private int i = 1;
+        hash h;
+        *A::B a(1, 2);
+        const X = {};
+    }
+}
+#$$$
+-Script@1:1-18:1
+  .members:
+    -Class@1:8-1:15
+      .modifiers: public
+      .name: C
+      .inherits:
+      .members:
+    -Class@2:1-2:10
+      .modifiers: -none-
+      .name: C
+      .inherits:
+      .members:
+    -Class@3:1-3:22
+      .modifiers: -none-
+      .name: C
+      .inherits:
+        -A::B
+      .members:
+    -Class@4:1-4:32
+      .modifiers: -none-
+      .name: C
+      .inherits:
+        -A::B public
+        -X
+      .members:
+    -Class@5:1-5:33
+      .modifiers: -none-
+      .name: C
+      .inherits:
+        -A::B
+        -X private
+      .members:
+    -Class@6:1-17:1
+      .modifiers: -none-
+      .name: C
+      .inherits:
+      .members:
+        -Method@7:19-7:30
+          .modifiers: public static
+          .type:
+            -AsteriskType@7:19-7:23
+              .name: X::Y
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@7:29-7:30
+              .statements:
+        -Method@8:5-8:13
+          .modifiers: -none-
+          .type:
+            -NameType@8:5-8:8
+              .name: X::Y
+          .name: f
+          .params:
+        -Method@9:13-9:16
+          .modifiers: private
+          .type:
+            -ImplicitType@9:13-9:13
+          .name: f
+          .params:
+        -Method@10:5-10:22
+          .modifiers: -none-
+          .type:
+            -ImplicitType@10:5-10:5
+          .name: f
+          .params:
+          .baseCtors:
+            -x
+              -NameExpression@10:13-10:13
+                .name: a
+            -y
+          .body:
+            -CompoundStatement@10:21-10:22
+              .statements:
+        -MemberGroup@11:12-16:5
+          .modifiers: public
+          .members:
+            -Field@12:17-12:26
+              .modifiers: private
+              .type:
+                -NameType@12:17-12:17
+                  .name: int
+              .name: Identifier i
+              .exprInit:
+                -LiteralExpression@12:25-12:25
+                  .token: Integer 1
+            -Field@13:9-13:15
+              .modifiers: -none-
+              .type:
+                -NameType@13:9-13:9
+                  .name: hash
+              .name: Identifier h
+            -Field@14:9-14:22
+              .modifiers: -none-
+              .type:
+                -AsteriskType@14:9-14:13
+                  .name: A::B
+              .name: Identifier a
+              .argListInit:
+                -LiteralExpression@14:17-14:17
+                  .token: Integer 1
+                -LiteralExpression@14:20-14:20
+                  .token: Integer 2
+            -ClassConstant@15:9-15:21
+              .modifiers: -none-
+              .name: X
+              .initializer:
+                -HashExpression@15:19-15:20
+                  .data:
+  .statements:

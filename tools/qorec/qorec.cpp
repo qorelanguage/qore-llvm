@@ -1,6 +1,8 @@
 #include <iostream>
 #include "qore/common/Logging.h"
 #include "qore/comp/DirectiveProcessor.h"
+#include "qore/comp/Parser.h"
+#include "qore/comp/ast/Dump.h"
 #if QORE_USE_LLVM
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -32,16 +34,16 @@ private:
     const SourceManager &srcMgr;
 };
 
-
-class StdinWrapper {
+/// \cond NoDoxygen
+class StdinWrapper : public ITokenStream {
 
 public:
     StdinWrapper(DiagManager &diagMgr, SourceManager &srcMgr) : src(srcMgr.createFromString("<stdin>", "")), dp(diagMgr, srcMgr, src) {
     }
 
-    Token read() {
+    Token read(Mode mode) override {
         while (true) {
-            Token t = dp.read();
+            Token t = dp.read(mode);
             if (t.type != TokenType::EndOfFile) {
                 return t;
             }
@@ -59,8 +61,26 @@ private:
     Source &src;
     DirectiveProcessor dp;
 };
+/// \endcond NoDoxygen
+
+#ifdef QORE_LOGGING
+/**
+ * \brief Logging filter
+ */
+class LogFilter : public qore::log::Logger {
+
+public:
+    bool filter(const std::string &component) override {
+        return component.find("Parser") != std::string::npos;
+    }
+};
+#endif
 
 int main() {
+#ifdef QORE_LOGGING
+    LogFilter logFilter;
+    qore::log::LoggerManager::set(&logFilter);
+#endif
     LOG_FUNCTION();
 
 #if QORE_USE_LLVM
@@ -73,16 +93,12 @@ int main() {
     SourceManager srcMgr(diagMgr);
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "ab\n%include xyz\n;"));
+    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "(*a::b sub(int i = 5, *hash h) { 0; });a;"));
 //    StdinWrapper dp(diagMgr, srcMgr);
 
-    while (true) {
-        Token t = dp.read();
-        std::cout << t.type << "\n";
-        if (t.type == TokenType::EndOfFile) {
-            break;
-        }
-    }
+    Parser parser(diagMgr, dp);
+    ast::Script::Ptr script = parser.parseScript();
+    ast::dump(srcMgr, std::cout, *script);
 
     return 0;
 }

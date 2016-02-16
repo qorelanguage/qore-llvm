@@ -1,0 +1,18 @@
+synchronized private static
+deprecated abstract namespace X {
+}
+public public namespace Y {
+}
+#$$$
+#$!ParserModifierGivenTwice@4:8
+-Script@1:1-6:1
+  .members:
+    -Namespace@2:21-3:1
+      .modifiers: abstract deprecated private static synchronized
+      .name: X
+      .members:
+    -Namespace@4:15-5:1
+      .modifiers: public
+      .name: Y
+      .members:
+  .statements:

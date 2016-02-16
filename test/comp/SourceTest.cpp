@@ -181,5 +181,17 @@ TEST_F(SourceTest, decodeLocationTabs) {
     EXPECT_EQ(std::make_pair(1, 9), src.decodeLocation(6, 2));
 }
 
+TEST_F(SourceTest, getRange) {
+    EXPECT_EQ("", src.getRange(0, 0));
+    EXPECT_EQ("", src.getRange(2, 0));
+    EXPECT_EQ("", src.getRange(5, 0));
+    EXPECT_EQ("a", src.getRange(0, 1));
+    EXPECT_EQ("\n", src.getRange(2, 1));
+    EXPECT_EQ("d", src.getRange(4, 1));
+    EXPECT_EQ("ab\nc", src.getRange(0, 4));
+    EXPECT_EQ("b\ncd", src.getRange(1, 4));
+    EXPECT_EQ("ab\ncd", src.getRange(0, 5));
+}
+
 } // namespace comp
 } // namespace qore

@@ -1,0 +1,39 @@
+a || b && c | d ^ e & f;
+#$$$
+-Script@1:1-2:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:24
+      .expression:
+        -BinaryExpression@1:1-1:23
+          .left:
+            -NameExpression@1:1-1:1
+              .name: a
+          .op: DoubleVerticalBar ||
+          .right:
+            -BinaryExpression@1:6-1:23
+              .left:
+                -NameExpression@1:6-1:6
+                  .name: b
+              .op: DoubleAmpersand &&
+              .right:
+                -BinaryExpression@1:11-1:23
+                  .left:
+                    -NameExpression@1:11-1:11
+                      .name: c
+                  .op: VerticalBar |
+                  .right:
+                    -BinaryExpression@1:15-1:23
+                      .left:
+                        -NameExpression@1:15-1:15
+                          .name: d
+                      .op: Caret ^
+                      .right:
+                        -BinaryExpression@1:19-1:23
+                          .left:
+                            -NameExpression@1:19-1:19
+                              .name: e
+                          .op: Ampersand &
+                          .right:
+                            -NameExpression@1:23-1:23
+                              .name: f

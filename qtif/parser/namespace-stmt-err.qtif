@@ -1,0 +1,24 @@
+namespace n {
+    sub f(){}
+    sub (){}
+}
+;
+#$$$
+#$!ParserExpectedNamespaceMember@3:5
+-Script@1:1-6:1
+  .members:
+    -Namespace@1:1-4:1
+      .modifiers: -none-
+      .name: n
+      .members:
+        -Function@2:5-2:13
+          .modifiers: -none-
+          .type:
+            -ImplicitType@2:5-2:5
+          .name: f
+          .params:
+          .body:
+            -CompoundStatement@2:12-2:13
+              .statements:
+  .statements:
+    -EmptyStatement@5:1-5:1

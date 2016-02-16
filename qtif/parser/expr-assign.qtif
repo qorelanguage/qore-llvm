@@ -1,0 +1,21 @@
+a = b += c;
+#$$$
+-Script@1:1-2:1
+  .members:
+  .statements:
+    -ExpressionStatement@1:1-1:11
+      .expression:
+        -AssignmentExpression@1:1-1:10
+          .left:
+            -NameExpression@1:1-1:1
+              .name: a
+          .op: Equals =
+          .right:
+            -AssignmentExpression@1:5-1:10
+              .left:
+                -NameExpression@1:5-1:5
+                  .name: b
+              .op: PlusEquals +=
+              .right:
+                -NameExpression@1:10-1:10
+                  .name: c
