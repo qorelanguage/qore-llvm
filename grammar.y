@@ -221,14 +221,6 @@ X       ;
 
 X   expr
 X       : assignment_expr
-X       | TOK_UNSHIFT expr_list
-X       | TOK_PUSH expr_list
-X       | TOK_SPLICE expr_list
-X       | TOK_EXTRACT expr_list
-X       | TOK_MAP expr_list
-X       | TOK_FOLDR expr_list
-X       | TOK_FOLDL expr_list
-X       | TOK_SELECT expr_list
 X       ;
 
 X   assignment_expr
@@ -283,27 +275,22 @@ X       | and_expr '&' relational_expr
 X       ;
 
 X   relational_expr
-X       : exists_expr
-X       | relational_expr '>' exists_expr
-X       | relational_expr '<' exists_expr
-X       | relational_expr '!=' exists_expr
-X       | relational_expr '<>' exists_expr
-X       | relational_expr '<=' exists_expr
-X       | relational_expr '>=' exists_expr
-X       | relational_expr '<=>' exists_expr
-X       | relational_expr '==' exists_expr
-X       | relational_expr '===' exists_expr
-X       | relational_expr '!==' exists_expr
+X       : instanceof_expr
+X       | relational_expr '>' instanceof_expr
+X       | relational_expr '<' instanceof_expr
+X       | relational_expr '!=' instanceof_expr
+X       | relational_expr '<>' instanceof_expr
+X       | relational_expr '<=' instanceof_expr
+X       | relational_expr '>=' instanceof_expr
+X       | relational_expr '<=>' instanceof_expr
+X       | relational_expr '==' instanceof_expr
+X       | relational_expr '===' instanceof_expr
+X       | relational_expr '!==' instanceof_expr
 X       | relational_expr '=~' REGEX
 X       | relational_expr '!~' REGEX
 X       | relational_expr '=~' REGEX_SUBST
 X       | relational_expr '=~' REGEX_TRANS
 X       | relational_expr '=~' REGEX_EXTRACT
-X       ;
-
-X   exists_expr
-X       : instanceof_expr
-X       | KW_EXISTS exists_expr
 X       ;
 
 X   instanceof_expr
@@ -348,6 +335,15 @@ X       | KW_TRIM prefix_expr
 X       | KW_BACKGROUND prefix_expr
 X       | KW_DELETE prefix_expr
 X       | KW_REMOVE prefix_expr
+X       | KW_EXISTS instanceof_expr
+X       | TOK_UNSHIFT expr_list
+X       | TOK_PUSH expr_list
+X       | TOK_SPLICE expr_list
+X       | TOK_EXTRACT expr_list
+X       | TOK_MAP expr_list
+X       | TOK_FOLDR expr_list
+X       | TOK_FOLDL expr_list
+X       | TOK_SELECT expr_list
 X       ;
 
     postfix_expr

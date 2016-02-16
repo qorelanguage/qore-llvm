@@ -174,7 +174,6 @@ private:
     ast::Expression::Ptr xorExpr();
     ast::Expression::Ptr andExpr();
     ast::Expression::Ptr relationalExpr();
-    ast::Expression::Ptr existsExpr();
     ast::Expression::Ptr instanceofExpr();
     ast::Expression::Ptr shiftExpr();
     ast::Expression::Ptr addExpr();

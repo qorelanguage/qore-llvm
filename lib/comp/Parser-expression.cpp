@@ -35,39 +35,10 @@ namespace comp {
 
 //expr
 //    : assignment_expr
-//    | TOK_UNSHIFT expr_list
-//    | TOK_PUSH expr_list
-//    | TOK_SPLICE expr_list
-//    | TOK_EXTRACT expr_list
-//    | TOK_MAP expr_list
-//    | TOK_FOLDR expr_list
-//    | TOK_FOLDL expr_list
-//    | TOK_SELECT expr_list
 //    ;
 ast::Expression::Ptr Parser::expression() {
     LOG_FUNCTION();
-
-    switch (tokenType()) {
-        case TokenType::KwUnshift:
-        case TokenType::KwPush:
-        case TokenType::KwSplice:
-        case TokenType::KwExtract:
-        case TokenType::KwMap:
-        case TokenType::KwFoldr:
-        case TokenType::KwFoldl:
-        case TokenType::KwSelect: {
-            Token t = consume();
-            ast::ListExpression::Data data;
-            data.emplace_back(expression());
-            while (tokenType() == TokenType::Comma) {
-                consume();
-                data.emplace_back(expression());
-            }
-            return ast::ListOperationExpression::create(t, std::move(data));
-        }
-        default:
-            return assignmentExpr();
-    }
+    return assignmentExpr();
 }
 
 //assignment_expr
@@ -209,17 +180,17 @@ ast::Expression::Ptr Parser::andExpr() {
 }
 
 //relational_expr
-//    : exists_expr
-//    | relational_expr '>' exists_expr
-//    | relational_expr '<' exists_expr
-//    | relational_expr '!=' exists_expr
-//    | relational_expr '<>' exists_expr
-//    | relational_expr '<=' exists_expr
-//    | relational_expr '>=' exists_expr
-//    | relational_expr '<=>' exists_expr
-//    | relational_expr '==' exists_expr
-//    | relational_expr '===' exists_expr
-//    | relational_expr '!==' exists_expr
+//    : instanceof_expr
+//    | relational_expr '>' instanceof_expr
+//    | relational_expr '<' instanceof_expr
+//    | relational_expr '!=' instanceof_expr
+//    | relational_expr '<>' instanceof_expr
+//    | relational_expr '<=' instanceof_expr
+//    | relational_expr '>=' instanceof_expr
+//    | relational_expr '<=>' instanceof_expr
+//    | relational_expr '==' instanceof_expr
+//    | relational_expr '===' instanceof_expr
+//    | relational_expr '!==' instanceof_expr
 //    | relational_expr '=~' REGEX
 //    | relational_expr '!~' REGEX
 //    | relational_expr '=~' REGEX_SUBST
@@ -228,7 +199,7 @@ ast::Expression::Ptr Parser::andExpr() {
 //    ;
 ast::Expression::Ptr Parser::relationalExpr() {
     LOG_FUNCTION();
-    ast::Expression::Ptr e = existsExpr();
+    ast::Expression::Ptr e = instanceofExpr();
     while (true) {
         switch (tokenType()) {
             case TokenType::AngleLeft:
@@ -242,7 +213,7 @@ ast::Expression::Ptr Parser::relationalExpr() {
             case TokenType::TripleEquals:
             case TokenType::ExclamationDoubleEquals: {
                 Token t = consume();
-                e = ast::BinaryExpression::create(std::move(e), t, existsExpr());
+                e = ast::BinaryExpression::create(std::move(e), t, instanceofExpr());
                 break;
             }
             case TokenType::EqualsTilde:
@@ -255,19 +226,6 @@ ast::Expression::Ptr Parser::relationalExpr() {
                 return e;
         }
     }
-}
-
-//exists_expr
-//    : instanceof_expr
-//    | KW_EXISTS exists_expr
-//    ;
-ast::Expression::Ptr Parser::existsExpr() {
-    LOG_FUNCTION();
-    if (tokenType() == TokenType::KwExists) {
-        Token t = consume();
-        return ast::UnaryExpression::create(existsExpr(), t, false);
-    }
-    return instanceofExpr();
 }
 
 //instanceof_expr
@@ -348,10 +306,18 @@ ast::Expression::Ptr Parser::multExpr() {
 //    | KW_BACKGROUND prefix_expr
 //    | KW_DELETE prefix_expr
 //    | KW_REMOVE prefix_expr
+//    | KW_EXISTS instanceof_expr
+//    | KW_UNSHIFT expr_list
+//    | KW_PUSH expr_list
+//    | KW_SPLICE expr_list
+//    | KW_EXTRACT expr_list
+//    | KW_MAP expr_list
+//    | KW_FOLDR expr_list
+//    | KW_FOLDL expr_list
+//    | KW_SELECT expr_list
 //    ;
 ast::Expression::Ptr Parser::prefixExpr() {
     LOG_FUNCTION();
-    Token t;
     switch (tokenType()) {
         case TokenType::Plus:
         case TokenType::Minus:
@@ -368,9 +334,31 @@ ast::Expression::Ptr Parser::prefixExpr() {
         case TokenType::KwTrim:
         case TokenType::KwBackground:
         case TokenType::KwDelete:
-        case TokenType::KwRemove:
-            t = consume();
+        case TokenType::KwRemove: {
+            Token t = consume();
             return ast::UnaryExpression::create(prefixExpr(), t, false);
+        }
+        case TokenType::KwExists: {
+            Token t = consume();
+            return ast::UnaryExpression::create(instanceofExpr(), t, false);
+        }
+        case TokenType::KwUnshift:
+        case TokenType::KwPush:
+        case TokenType::KwSplice:
+        case TokenType::KwExtract:
+        case TokenType::KwMap:
+        case TokenType::KwFoldr:
+        case TokenType::KwFoldl:
+        case TokenType::KwSelect: {
+            Token t = consume();
+            ast::ListExpression::Data data;
+            data.emplace_back(expression());
+            while (tokenType() == TokenType::Comma) {
+                consume();
+                data.emplace_back(expression());
+            }
+            return ast::ListOperationExpression::create(t, std::move(data));
+        }
         default:
             return postfixExpr();
     }
