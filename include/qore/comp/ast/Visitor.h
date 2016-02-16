@@ -76,6 +76,7 @@ class InstanceofExpression;
 class ConditionalExpression;
 class AssignmentExpression;
 class ListOperationExpression;
+class RegexExpression;
 class ClosureExpression;
 class NameType;
 class AsteriskType;
@@ -190,6 +191,12 @@ public:
      * \param node the node being visited
      */
     virtual void visit(ListOperationExpression &node) = 0;
+
+    /**
+     * \brief Called by a RegexExpression AST node.
+     * \param node the node being visited
+     */
+    virtual void visit(RegexExpression &node) = 0;
 
     /**
      * \brief Called by a ClosureExpression AST node.

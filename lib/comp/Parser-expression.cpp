@@ -245,7 +245,12 @@ ast::Expression::Ptr Parser::relationalExpr() {
                 e = ast::BinaryExpression::create(std::move(e), t, existsExpr());
                 break;
             }
-            //TODO regular expressions
+            case TokenType::EqualsTilde:
+            case TokenType::ExclamationTilde: {
+                Token t = consume();
+                e = ast::RegexExpression::create(std::move(e), t, src.read(ITokenStream::Mode::Regex));
+                break;
+            }
             default:
                 return e;
         }

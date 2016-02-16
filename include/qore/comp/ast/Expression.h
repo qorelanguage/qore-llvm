@@ -803,6 +803,48 @@ private:
     }
 };
 
+/**
+ * \brief Represents an expression for matching regular expressions.
+ */
+class RegexExpression : public Expression {
+
+public:
+    Expression::Ptr left;                                   //!< The left subexpression.
+    Token op;                                               //!< The operator.
+    Token regex;                                            //!< The regular expression.
+
+public:
+    using Ptr = std::unique_ptr<RegexExpression>;           //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param left the left subexpression
+     * \param op the operator
+     * \param regex the regular expression
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(Expression::Ptr left, Token op, Token regex) {
+        return Ptr(new RegexExpression(std::move(left), op, regex));
+    }
+
+    void accept(ExpressionVisitor &v) override {
+        v.visit(*this);
+    }
+
+    SourceLocation getStart() const override {
+        return left->getStart();
+    }
+
+    SourceLocation getEnd() const override {
+        return regex.location;
+    }
+
+private:
+    RegexExpression(Expression::Ptr left, Token op, Token regex) : left(std::move(left)), op(op), regex(regex) {
+    }
+};
+
 } // namespace ast
 } // namespace comp
 } // namespace qore

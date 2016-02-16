@@ -305,6 +305,12 @@ public:
             NODE_ARRAY(args);
     })
 
+    NODE(RegexExpression, {
+            VISIT(left);
+            TOKEN(op);
+            TOKEN(regex);
+    })
+
     NODE(ClosureExpression, {
             visit(*node.routine);
     })
