@@ -91,10 +91,12 @@ public:
     })
 
     NODE(Function, {
+            NAME(name);
             visit(*node.routine);
     })
 
     NODE(Method, {
+            NAME(name);
             visit(*node.routine);
     })
 
@@ -335,7 +337,6 @@ public:
     void visit(Routine &node) {
         MODIFIERS(modifiers);
         VISIT(type);
-        NAME(name);
         ARRAY(params,
                 std::get<0>(i)->accept(*this);
                 os << indent << "-"; doToken(std::get<1>(i));
@@ -384,14 +385,16 @@ private:
     }
 
     void doName(const Name &name) {
-        if (name.tokens.empty()) {
-            os << "-none-";
-        } else {
-            auto it = name.tokens.begin();
+        if (!name.isValid()) {
+            os << "-invalid-";
+            return;
+        }
+        auto it = name.begin();
+        if (!name.isRoot()) {
             os << lexeme(*it++);
-            while (it != name.tokens.end()) {
-                os << "::" << lexeme(*it++);
-            }
+        }
+        while (it != name.end()) {
+            os << "::" << lexeme(*it++);
         }
     }
 

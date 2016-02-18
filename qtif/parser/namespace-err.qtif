@@ -9,7 +9,7 @@ namespace;
 #$$$
 #$!ParserExpectedNamespaceMember@3:5
 #$!ParserUnexpectedToken@7:1-Semicolon
-#$!ParserExpectedNamespaceName@8:10
+#$!ParserExpectedName@8:10
 -Script@1:1-9:1
   .members:
     -Namespace@1:1-5:1
@@ -30,6 +30,6 @@ namespace;
       .members:
     -Namespace@8:1-8:10
       .modifiers: -none-
-      .name: -none-
+      .name: -invalid-
       .members:
   .statements:

@@ -33,12 +33,11 @@
 namespace qore {
 namespace comp {
 
-ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name rName, bool method) {
+ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type::Ptr type, bool method) {
     LOG_FUNCTION();
     ast::Routine::Ptr r = ast::Routine::create();
     r->modifiers = mods;
     r->type = std::move(type);
-    r->name = std::move(rName);
     r->params = paramList();
     if (method) {
         if (tokenType() == TokenType::Colon) {

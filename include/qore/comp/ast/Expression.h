@@ -166,7 +166,6 @@ public:
 
 private:
     explicit NameExpression(Name name) : name(std::move(name)) {
-        assert(!this->name.tokens.empty());
     }
 };
 

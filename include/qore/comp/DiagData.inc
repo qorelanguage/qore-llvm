@@ -59,8 +59,8 @@ DIAG(ParserExpectedVariableName,                "PARSE-EXCEPTION", Error,
         "unexpected %s, expecting variable name")
 DIAG(ParserModifierGivenTwice,                  "PARSE-EXCEPTION", Error,
         "modifier '%s' given twice")
-DIAG(ParserExpectedNamespaceName,               "PARSE-EXCEPTION", Error,
-        "expected namespace name")
+DIAG(ParserExpectedName,                        "PARSE-EXCEPTION", Error,
+        "expected name")
 DIAG(ParserExpectedNamespaceMember,             "PARSE-EXCEPTION", Error,
         "expected namespace member")
 DIAG(ParserUnendedNamespaceDecl,                "PARSE-EXCEPTION", Error,

@@ -39,17 +39,32 @@ namespace comp {
 namespace ast {
 
 /**
- * \brief Describes a name, which is a sequence of identifiers separated by double colons.
+ * \brief Describes a name.
  *
- * The name is nonempty except in instances of Routine that represent nameless callable units - closures,
- * constructors, destructors etc.
+ * A valid name is a nonempty sequence of identifiers separated by double colons, possibly starting with a double colon.
+ * An instance of this class can also represent an invalid name which is used for error recovery.
  */
 class Name {
 
 public:
-    std::vector<Token> tokens;                              //!< The identifiers of the name.
+    /**
+     * \brief Creates a valid name.
+     * \param start the starting location
+     * \param root true if the name starts with a double colon
+     * \param names the identifiers of the name
+     */
+    Name(SourceLocation start, bool root, std::vector<Token> names) : start(start), root(root), names(std::move(names)){
+        assert(isValid());
+    }
 
-    Name() = default;
+    /**
+     * \brief Creates an invalid name indicating an error in the source script.
+     * \param location the location
+     * \return an invalid name
+     */
+    static Name invalid(SourceLocation location = SourceLocation()) {
+        return Name(location);
+    }
 
     /**
      * \brief Default move-constructor.
@@ -66,8 +81,7 @@ public:
      * \return the start location
      */
     SourceLocation getStart() const {
-        assert(!tokens.empty());
-        return tokens[0].location;
+        return start;
     }
 
     /**
@@ -75,13 +89,62 @@ public:
      * \return the end location
      */
     SourceLocation getEnd() const {
-        assert(!tokens.empty());
-        return tokens[tokens.size() - 1].location;
+        return isValid() ? names[names.size() - 1].location : start;
+    }
+
+    /**
+     * \brief Returns true if the name is valid.
+     * \return true if the name is valid
+     */
+    bool isValid() const {
+        return !names.empty();
+    }
+
+    /**
+     * \brief Returns true if the name starts with a double colon.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return true if the name starts with a double colon
+     */
+    bool isRoot() const {
+        assert(isValid());
+        return root;
+    }
+
+    /**
+     * \brief Returns an iterator to the first identifier of the name.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return returns an iterator to the first identifier of the name
+     */
+    const std::vector<Token>::const_iterator begin() const {
+        assert(isValid());
+        return names.begin();
+    }
+
+    /**
+     * \brief Returns an iterator to the element following the last identifier of the name.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return returns an iterator to the element following the last identifier of the name
+     */
+    const std::vector<Token>::const_iterator end() const {
+        assert(isValid());
+        return names.end();
     }
 
 private:
+    explicit Name(SourceLocation location) : start(location), root(false) {
+        assert(!isValid());
+    }
+
     Name(const Name &) = delete;
     Name &operator=(const Name &) = delete;
+
+private:
+    SourceLocation start;
+    bool root;
+    std::vector<Token> names;
 };
 
 } // namespace ast

@@ -70,30 +70,31 @@ ast::ClassMember::Ptr Parser::classMember() {
     LOG_FUNCTION();
     ast::Modifiers mods = modifiers();
     ast::Type::Ptr t;
-    ast::Name n;
     switch (tokenType()) {
         case TokenType::CurlyLeft:
             if (mods.isEmpty()) {
                 return ast::ClassMember::Ptr();
             }
             return classMemberList(mods);
-        case TokenType::Asterisk:
+        case TokenType::Asterisk: {
             t = type();
-            n = name();
-            break;
-        case TokenType::Identifier:
-            n = name();
-            if (tokenType() == TokenType::Identifier) {
+            ast::Name n = name();
+            return ast::Method::create(std::move(n), routine(mods, std::move(t), true));
+        }
+        case TokenType::DoubleColon:
+        case TokenType::Identifier: {
+            ast::Name n = name();
+            if (tokenType() == TokenType::DoubleColon || tokenType() == TokenType::Identifier) {
                 t = ast::NameType::create(std::move(n));
                 n = name();
             } else {
-                t = ast::ImplicitType::create(n.tokens.front().location);
+                t = ast::ImplicitType::create(n.getStart());
             }
-            break;
+            return ast::Method::create(std::move(n), routine(mods, std::move(t), true));
+        }
         default:
             return ast::ClassMember::Ptr();
     }
-    return ast::Method::create(routine(mods, std::move(t), std::move(n), true));
 }
 
 ast::ClassMember::Ptr Parser::classMemberList(ast::Modifiers groupMods) {

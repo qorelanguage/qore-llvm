@@ -90,7 +90,7 @@ public:
     }
 
 private:
-    Namespace() {
+    Namespace() : name(Name::invalid()) {
     }
 };
 
@@ -100,6 +100,7 @@ private:
 class Function : public NamespaceMember {
 
 public:
+    Name name;                                              //!< The name of the function.
     Routine::Ptr routine;                                   //!< The function.
 
 public:
@@ -107,11 +108,12 @@ public:
 
     /**
      * \brief Allocates a new node.
+     * \param name the name of the function
      * \param routine the routine
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Routine::Ptr routine) {
-        return Ptr(new Function(std::move(routine)));
+    static Ptr create(Name name, Routine::Ptr routine) {
+        return Ptr(new Function(std::move(name), std::move(routine)));
     }
 
     void accept(DeclarationVisitor &visitor) override {
@@ -127,7 +129,7 @@ public:
     }
 
 private:
-    explicit Function(Routine::Ptr routine) : routine(std::move(routine)) {
+    explicit Function(Name name, Routine::Ptr routine) : name(std::move(name)), routine(std::move(routine)) {
     }
 };
 
@@ -204,7 +206,7 @@ public:
     }
 
 private:
-    GlobalVariable() {
+    GlobalVariable() : name(Name::invalid()) {
     }
 };
 

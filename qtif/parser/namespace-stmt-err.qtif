@@ -12,10 +12,10 @@ namespace n {
       .name: n
       .members:
         -Function@2:5-2:13
+          .name: f
           .modifiers: -none-
           .type:
             -ImplicitType@2:5-2:5
-          .name: f
           .params:
           .body:
             -CompoundStatement@2:12-2:13

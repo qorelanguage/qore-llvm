@@ -57,7 +57,6 @@ public:
 public:
     Modifiers modifiers;                                    //!< The modifiers.
     Type::Ptr type;                                         //!< The return type.
-    Name name;                                              //!< The name, may be empty.
     std::vector<Param> params;                              //!< The parameters.
     std::vector<BaseCtorInvocation> baseCtors;              //!< The base constructor invocation list.
     CompoundStatement::Ptr body;                            //!< The body of the routine, nullptr for abstract methods.

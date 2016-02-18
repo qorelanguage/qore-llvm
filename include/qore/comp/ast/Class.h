@@ -92,7 +92,7 @@ public:
     }
 
 private:
-    Class() {
+    Class() : name(Name::invalid()) {
     }
 };
 
@@ -102,6 +102,7 @@ private:
 class Method : public ClassMember {
 
 public:
+    Name name;                                              //!< The name of the method.
     Routine::Ptr routine;                                   //!< The method.
 
 public:
@@ -109,11 +110,12 @@ public:
 
     /**
      * \brief Allocates a new node.
+     * \param name the name of the method
      * \param routine the routine
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Routine::Ptr routine) {
-        return Ptr(new Method(std::move(routine)));
+    static Ptr create(Name name, Routine::Ptr routine) {
+        return Ptr(new Method(std::move(name), std::move(routine)));
     }
 
     void accept(DeclarationVisitor &visitor) override {
@@ -129,7 +131,7 @@ public:
     }
 
 private:
-    explicit Method(Routine::Ptr routine) : routine(std::move(routine)) {
+    explicit Method(Name name, Routine::Ptr routine) : name(std::move(name)), routine(std::move(routine)) {
     }
 };
 

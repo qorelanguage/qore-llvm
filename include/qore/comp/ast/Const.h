@@ -70,7 +70,7 @@ public:
     }
 
 private:
-    Constant() {
+    Constant() : name(Name::invalid()) {
     }
 };
 

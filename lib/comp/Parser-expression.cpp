@@ -458,6 +458,7 @@ ast::Expression::Ptr Parser::primaryExpr() {
             }
             return ast::VarDeclExpression::create(std::move(t), match(TokenType::Identifier));
         }
+        case TokenType::DoubleColon:
         case TokenType::Identifier: {
             ast::Name n = name();
             if (tokenType() == TokenType::KwSub) {
@@ -579,22 +580,40 @@ ast::Expression::Ptr Parser::list(Token openToken, ast::Expression::Ptr expr) {
 ast::ClosureExpression::Ptr Parser::closure(ast::Modifiers mods, ast::Type::Ptr type) {
     LOG_FUNCTION();
     match(TokenType::KwSub);
-    return ast::ClosureExpression::create(routine(mods, std::move(type), ast::Name()));
+    return ast::ClosureExpression::create(routine(mods, std::move(type)));
 }
 
 //name
+//    : names
+//    | '::' names
+//    ;
+//names
 //    : IDENTIFIER
 //    | IDENTIFIER '::' name
 //    ;
 ast::Name Parser::name() {
     LOG_FUNCTION();
-    ast::Name name;
-    name.tokens.push_back(match(TokenType::Identifier));
+    SourceLocation start = location();
+    bool root;
+    std::vector<Token> names;
+    if (tokenType() == TokenType::DoubleColon) {
+        root = true;
+    } else if (tokenType() == TokenType::Identifier) {
+        root = false;
+        names.push_back(consume());
+    } else {
+        report(DiagId::ParserExpectedName);
+        return ast::Name::invalid(start);
+    }
     while (tokenType() == TokenType::DoubleColon) {
         consume();
-        name.tokens.push_back(match(TokenType::Identifier));
+        if (tokenType() != TokenType::Identifier) {
+            report(DiagId::ParserExpectedName);
+            return ast::Name::invalid(start);
+        }
+        names.push_back(consume());
     }
-    return name;
+    return ast::Name(start, root, std::move(names));
 }
 
 //type
