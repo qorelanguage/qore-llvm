@@ -25,6 +25,7 @@
 //------------------------------------------------------------------------------
 #include "LineTest.h"
 #include <regex>
+#include "qore/common/Util.h"
 
 namespace qtif {
 
@@ -282,13 +283,16 @@ void LineTest::parseExpectations(Reader &reader) {
         if (x.second.length() >= 3 && x.second[0] == '#' && x.second[1] == '$') {
             switch (x.second[2]) {
                 case '$':
-                    expected.emplace_back(new StringExpectation(getFileName(), x.first, x.second.erase(1, 1)));
+                    expected.push_back(qore::util::make_unique<StringExpectation>(
+                            getFileName(), x.first, x.second.erase(1, 1)));
                     break;
                 case '~':
-                    expected.emplace_back(new RegexExpectation(getFileName(), x.first, x.second.erase(0, 3)));
+                    expected.push_back(qore::util::make_unique<RegexExpectation>(
+                            getFileName(), x.first, x.second.erase(0, 3)));
                     break;
                 case '!':
-                    expected.emplace_back(new DiagExpectation(getFileName(), x.first, x.second.erase(0, 3)));
+                    expected.push_back(qore::util::make_unique<DiagExpectation>(
+                            getFileName(), x.first, x.second.erase(0, 3)));
                     break;
                 case '#':
                     //comment
@@ -297,10 +301,10 @@ void LineTest::parseExpectations(Reader &reader) {
                     throw Exception("Invalid expectation format: " + x.second, x.first);
             }
         } else {
-            expected.emplace_back(new StringExpectation(getFileName(), x.first, x.second));
+            expected.push_back(qore::util::make_unique<StringExpectation>(getFileName(), x.first, x.second));
         }
     }
-    expected.emplace_back(new EndSentinel(getFileName(), reader.getLineNumber()));
+    expected.push_back(qore::util::make_unique<EndSentinel>(getFileName(), reader.getLineNumber()));
     current = expected.begin();
 }
 

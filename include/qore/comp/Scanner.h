@@ -70,7 +70,7 @@ public:
     /**
      * \brief Reads a line comment from the source.
      *
-     * Consumes all characters that are part of the comment, but leaves the terminating new line character.
+     * Consumes all characters that are part of the comment, but leaves the terminating newline character.
      * \param src the source which must be positioned after the '#' character
      */
     void readLineComment(Source &src);
