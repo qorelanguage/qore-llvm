@@ -33,6 +33,7 @@
 
 #include "qore/comp/ast/Visitor.h"
 #include "qore/comp/ast/Script.h"
+#include "qore/comp/ast/Class.h"
 
 namespace qore {
 namespace comp {

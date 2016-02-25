@@ -83,7 +83,17 @@ public:
     }
 
     void visit(ast::Class &node) override {
-
+        LOG_FUNCTION();
+        if (!node.name.isValid()) {
+            return;
+        }
+        if (node.name.isRoot()) {
+            context.report(DiagId::SemaInvalidClassName, node.name.getStart());
+            return;
+        }
+        if (Namespace *parent = findParentFor(node.name)) {
+            parent->createClass(node.name.last());
+        }
     }
 
 private:

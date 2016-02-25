@@ -115,6 +115,13 @@ public:
      */
     Namespace *findOrCreateNamespace(const Token &token);
 
+    /**
+     * \brief Creates a class with given name.
+     * \param token an identifier token representing the name of the class
+     * \return a pointer to the class or `nullptr` if a class or namespace with given name already exists
+     */
+    class Class *createClass(const Token &token);
+
 private:
     explicit Namespace(Context &context) : context(context), parent(nullptr), name("<root>") {
     }

@@ -1,0 +1,18 @@
+class ;
+class ::a;
+class a;
+namespace x;
+class x;
+class a;
+class x::y::z;
+#$$$
+#$!ParserExpectedName@1:7
+#$!SemaInvalidClassName@2:7
+#$!SemaDuplicateClassName@5:7
+#$!SemaPreviousDeclaration@4:11
+#$!SemaDuplicateClassName@6:7
+#$!SemaPreviousDeclaration@3:7
+#$!SemaNamespaceNotFound@7:10-namespace y not found in namespace ::x
+-namespace <root>
+  -class a @3:7
+  -namespace x @4:11

@@ -34,6 +34,7 @@
 #include "qore/common/Exceptions.h"
 #include "qore/common/Indent.h"
 #include "qore/comp/semantic/Namespace.h"
+#include "qore/comp/semantic/Class.h"
 
 namespace qore {
 namespace comp {
@@ -51,6 +52,9 @@ public:
             case Symbol::Kind::Namespace:
                 dumpNamespace(static_cast<Namespace *>(s));
                 break;
+            case Symbol::Kind::Class:
+                dumpClass(static_cast<Class *>(s));
+                break;
             default:
                 QORE_UNREACHABLE("Not implemented");
         }
@@ -64,6 +68,10 @@ public:
         os << "\n";
         ns->forEach(std::bind(&Dump::dumpSymbol, this, std::placeholders::_1));
         --indent;
+    }
+
+    void dumpClass(Class *c) {
+        os << indent << "-class " << c->getName() << " @" << decode(c->getLocation()) << "\n";
     }
 
 private:

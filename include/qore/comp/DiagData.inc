@@ -79,7 +79,11 @@ DIAG(SemaInvalidNamespaceName,                  "PARSE-EXCEPTION", Error,
 DIAG(SemaNamespaceNotFound,                     "PARSE-EXCEPTION", Error,
         "namespace %s not found in namespace %s")
 DIAG(SemaDuplicateNamespaceName,                "PARSE-EXCEPTION", Error,
-        "cannot create namespace %s in %s because a class with the same name already exists")
+        "cannot declare namespace %s in %s because a class with the same name already exists")
+DIAG(SemaInvalidClassName,                      "PARSE-EXCEPTION", Error,
+        "invalid class name")
+DIAG(SemaDuplicateClassName,                "PARSE-EXCEPTION", Error,
+        "cannot declare class %s in %s because a class or namespace with the same name already exists")
 
 DIAG(SemaPreviousDeclaration,                   "PARSE-EXCEPTION", Info,
         "previous declaration here")

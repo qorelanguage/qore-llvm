@@ -41,6 +41,44 @@ namespace semantic {
  * \brief Represents a class.
  */
 class Class : public SymbolBase<Symbol::Kind::Class> {
+
+public:
+    /**
+     * \brief Returns the location of the class declaration.
+     * \return the location of the class declaration.
+     */
+    const SourceLocation &getLocation() const {
+        return location;
+    }
+
+    /**
+     * \brief Returns the name of the class.
+     * \return the name of the class
+     */
+    const std::string getName() const {
+        return name;
+    }
+
+    /**
+     * \brief Returns the full name of the class.
+     * \return the full name of the class
+     */
+    std::string getFullName() const {
+        return (parent ? (parent->isRoot() ? "" : parent->getFullName()) + "::" : "") + name;
+    }
+
+private:
+    Class(Context &context, Namespace *parent, SourceLocation location, std::string name) : context(context),
+            parent(parent), location(location), name(std::move(name)) {
+    }
+
+private:
+    Context &context;
+    Namespace *parent;
+    SourceLocation location;
+    std::string name;
+
+    FRIEND_MAKE_UNIQUE;
 };
 
 } // namespace semantic
