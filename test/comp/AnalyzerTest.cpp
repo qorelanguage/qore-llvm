@@ -23,39 +23,43 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Defines the structure of diagnostic messages.
-///
-//------------------------------------------------------------------------------
-#include "qore/comp/DiagRecord.h"
-#include "qore/common/Exceptions.h"
+#include "../Qtif.h"
+#include "gmock/gmock.h"
+#include "qore/comp/DirectiveProcessor.h"
+#include "qore/comp/Parser.h"
+#include "qore/comp/semantic/Analyzer.h"
+#include "qore/comp/semantic/Dump.h"
 
 namespace qore {
 namespace comp {
+namespace semantic {
 
-std::ostream &operator<<(std::ostream &o, DiagLevel level) {
-    switch (level) {
-        case DiagLevel::Error:
-            return o << "error";
-        case DiagLevel::Warning:
-            return o << "warning";
-        case DiagLevel::Info:
-            return o << "info";
-    }
-    QORE_UNREACHABLE("Invalid value of DiagLevel: " << static_cast<int>(level));
+class AnalyzerTest : public qtif::LineTest {
+};
+
+TEST_P(AnalyzerTest, Run) {
+    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
+    Parser parser(diagMgr, dp);
+    ast::Script::Ptr script = parser.parseScript();
+    Analyzer analyzer(srcMgr, diagMgr);
+    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
+    semantic::dump(srcMgr, output, root.get());
 }
 
-std::ostream &operator<<(std::ostream &o, DiagId id) {
-    switch (id) {
-        #define DIAG(N, C, L, D)        case DiagId::N: return o << #N;
-        /// \cond IGNORED_BY_DOXYGEN
-        #include "qore/comp/DiagData.inc"
-        /// \endcond
-        #undef DIAG
-    }
-    QORE_UNREACHABLE("Invalid value of DiagId: " << static_cast<int>(id));
+QTIF_TEST_CASE(AnalyzerTest, "semantic/");
+
+TEST(DumpCoverage, Coverage) {
+    struct MockSymbol : public Symbol {
+        MOCK_CONST_METHOD0(getKind, Kind());
+    };
+    DiagManager diagMgr;
+    SourceManager srcMgr(diagMgr);
+    Dump<std::ostream> dump(srcMgr, std::cout);
+    MockSymbol s;
+    EXPECT_CALL(s, getKind()).WillOnce(::testing::Return(static_cast<Symbol::Kind>(999)));
+    EXPECT_THROW(dump.dumpSymbol(&s), class Unreachable);
 }
 
+} // namespace semantic
 } // namespace comp
 } // namespace qore

@@ -3,6 +3,8 @@
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/ast/Dump.h"
+#include "qore/comp/semantic/Analyzer.h"
+#include "qore/comp/semantic/Dump.h"
 #if QORE_USE_LLVM
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -71,12 +73,13 @@ class LogFilter : public qore::log::Logger {
 
 public:
     bool filter(const std::string &component) override {
-        return component.find("Parser") != std::string::npos;
+        return component.find("Parser") == std::string::npos && component.find("Scanner") == std::string::npos
+                && component.find("DirectiveProcessor") == std::string::npos;
     }
 };
 #endif
 
-int main() {
+int main(int argc, char *argv[]) {
 #ifdef QORE_LOGGING
     LogFilter logFilter;
     qore::log::LoggerManager::set(&logFilter);
@@ -93,12 +96,17 @@ int main() {
     SourceManager srcMgr(diagMgr);
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "(*a::b sub(int i = 5, *hash h) { 0; });a;"));
+//    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromFile(argv[1]));
+    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "namespace a; namespace a::b { namespace a; namespace a::x; namespace a::x; } namespace a::b::a::b; namespace u::v;"));
 //    StdinWrapper dp(diagMgr, srcMgr);
 
     Parser parser(diagMgr, dp);
     ast::Script::Ptr script = parser.parseScript();
     ast::dump(srcMgr, std::cout, *script);
+
+    semantic::Analyzer analyzer(srcMgr, diagMgr);
+    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
+    semantic::dump(srcMgr, std::cout, root.get());
 
     return 0;
 }

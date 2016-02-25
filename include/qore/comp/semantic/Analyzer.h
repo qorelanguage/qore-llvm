@@ -25,69 +25,46 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the structure of diagnostic messages.
+/// \brief Semantic analyzer.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_DIAGRECORD_H_
-#define INCLUDE_QORE_COMP_DIAGRECORD_H_
+#ifndef INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
+#define INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
 
-#include <ostream>
-#include <string>
-#include "qore/comp/SourceLocation.h"
+#include "qore/comp/ast/Script.h"
+#include "qore/comp/semantic/Namespace.h"
 
 namespace qore {
 namespace comp {
+namespace semantic {
 
 /**
- * \brief Enumeration of all diagnostic messages.
- *
- * \ref DiagData.inc
+ * \brief Semantic analyzer.
  */
-enum class DiagId {
-    #define DIAG(N, C, L, D)        N,
-    /// \cond IGNORED_BY_DOXYGEN
-    #include "qore/comp/DiagData.inc"
-    /// \endcond
-    #undef DIAG
+class Analyzer {
+
+public:
+    /**
+     * \brief Constructs an instance.
+     * \param srcMgr source manager
+     * \param diagMgr diagnostic manager
+     */
+    Analyzer(SourceManager &srcMgr, DiagManager &diagMgr) : context(srcMgr, diagMgr) {
+    }
+
+    /**
+     * \brief Analyzes the script.
+     * \param script the script to analyze
+     * \return the root namespace
+     */
+    std::unique_ptr<Namespace> analyze(ast::Script::Ptr &script);
+
+private:
+    Context context;
 };
 
-/**
- * \brief Writes diagnostic id to an output stream.
- * \param o the output stream
- * \param id the diagnostic id to write
- * \return the output stream
- */
-std::ostream &operator<<(std::ostream &o, DiagId id);
-
-/**
- * \brief Diagnostic levels.
- */
-enum class DiagLevel {
-    Error,          //!< Error
-    Warning,        //!< Warning
-    Info,           //!< Info
-};
-
-/**
- * \brief Writes diagnostic level to an output stream.
- * \param o the output stream
- * \param level the diagnostic level to write
- * \return the output stream
- */
-std::ostream &operator<<(std::ostream &o, DiagLevel level);
-
-/**
- * \brief Represents a diagnostic message.
- */
-struct DiagRecord {
-    DiagId id;                      //!< Identifier of the diagnostic.
-    const char *code;               //!< Diagnostic code.
-    DiagLevel level;                //!< Diagnostic level.
-    std::string message;            //!< Diagnostic message.
-    SourceLocation location;        //!< Location in the source.
-};
-
+} // namespace semantic
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_DIAGRECORD_H_
+#endif // INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_

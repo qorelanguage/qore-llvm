@@ -1,0 +1,10 @@
+namespace ;
+namespace ::a;
+namespace a;
+namespace a::x::y;
+#$$$
+#$!ParserExpectedName@1:11
+#$!SemaInvalidNamespaceName@2:11
+#$!SemaNamespaceNotFound@4:14-namespace x not found in namespace ::a
+-namespace <root>
+  -namespace a @3:11

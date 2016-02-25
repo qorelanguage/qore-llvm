@@ -47,6 +47,9 @@ namespace ast {
 class Name {
 
 public:
+    using Iterator = std::vector<Token>::const_iterator;    //!< Iterator type.
+
+public:
     /**
      * \brief Creates a valid name.
      * \param start the starting location
@@ -89,7 +92,7 @@ public:
      * \return the end location
      */
     SourceLocation getEnd() const {
-        return isValid() ? names[names.size() - 1].location : start;
+        return isValid() ? last().location : start;
     }
 
     /**
@@ -117,7 +120,7 @@ public:
      * It is illegal to call this method on an invalid name.
      * \return returns an iterator to the first identifier of the name
      */
-    const std::vector<Token>::const_iterator begin() const {
+    Iterator begin() const {
         assert(isValid());
         return names.begin();
     }
@@ -128,9 +131,20 @@ public:
      * It is illegal to call this method on an invalid name.
      * \return returns an iterator to the element following the last identifier of the name
      */
-    const std::vector<Token>::const_iterator end() const {
+    Iterator end() const {
         assert(isValid());
         return names.end();
+    }
+
+    /**
+     * \brief Returns the last token in the name.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return the last token in the name
+     */
+    const Token &last() const {
+        assert(isValid());
+        return names[names.size() - 1];
     }
 
 private:

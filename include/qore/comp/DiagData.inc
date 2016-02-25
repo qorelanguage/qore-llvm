@@ -73,3 +73,13 @@ DIAG(ParserExpectedCaseOrDefault,               "PARSE-EXCEPTION", Error,
         "expected 'case' or 'default'")
 DIAG(ParserModuleIgnored,                       "PARSE-WARNING", Warning,
         "module declaration ignored")
+
+DIAG(SemaInvalidNamespaceName,                  "PARSE-EXCEPTION", Error,
+        "invalid namespace name")
+DIAG(SemaNamespaceNotFound,                     "PARSE-EXCEPTION", Error,
+        "namespace %s not found in namespace %s")
+DIAG(SemaDuplicateNamespaceName,                "PARSE-EXCEPTION", Error,
+        "cannot create namespace %s in %s because a class with the same name already exists")
+
+DIAG(SemaPreviousDeclaration,                   "PARSE-EXCEPTION", Info,
+        "previous declaration here")

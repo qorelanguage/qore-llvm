@@ -12,6 +12,8 @@ add_library(comp STATIC
     Source.cpp
     SourceManager.cpp
     Token.cpp
+    semantic/Analyzer.cpp
+    semantic/Namespace.cpp
 )
 
 target_link_libraries(comp

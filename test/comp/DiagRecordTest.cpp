@@ -26,6 +26,7 @@
 #include <sstream>
 #include "gtest/gtest.h"
 #include "qore/common/Exceptions.h"
+#include "qore/common/Util.h"
 #include "qore/comp/DiagRecord.h"
 
 namespace qore {
@@ -39,9 +40,9 @@ TEST(DiagRecordTest, IdToString) {
 }
 
 TEST(DiagRecordTest, LevelToStream) {
-    std::ostringstream ss;
-    ss << "*" << DiagLevel::Error << "#" << DiagLevel::Warning << "$";
-    EXPECT_EQ("*error#warning$", ss.str());
+    EXPECT_EQ("error", util::to_string(DiagLevel::Error));
+    EXPECT_EQ("warning", util::to_string(DiagLevel::Warning));
+    EXPECT_EQ("info", util::to_string(DiagLevel::Info));
 }
 
 #ifdef QORE_COVERAGE

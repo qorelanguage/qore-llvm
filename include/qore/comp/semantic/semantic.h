@@ -25,37 +25,22 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the structure of diagnostic messages.
+/// \brief Semantic analyzer namespace.
 ///
 //------------------------------------------------------------------------------
-#include "qore/comp/DiagRecord.h"
-#include "qore/common/Exceptions.h"
+#ifndef INCLUDE_QORE_COMP_SEMANTIC_H_
+#define INCLUDE_QORE_COMP_SEMANTIC_H_
 
 namespace qore {
 namespace comp {
 
-std::ostream &operator<<(std::ostream &o, DiagLevel level) {
-    switch (level) {
-        case DiagLevel::Error:
-            return o << "error";
-        case DiagLevel::Warning:
-            return o << "warning";
-        case DiagLevel::Info:
-            return o << "info";
-    }
-    QORE_UNREACHABLE("Invalid value of DiagLevel: " << static_cast<int>(level));
+/**
+ * \brief The namespace used by the semantic analyzer.
+ */
+namespace semantic {
 }
 
-std::ostream &operator<<(std::ostream &o, DiagId id) {
-    switch (id) {
-        #define DIAG(N, C, L, D)        case DiagId::N: return o << #N;
-        /// \cond IGNORED_BY_DOXYGEN
-        #include "qore/comp/DiagData.inc"
-        /// \endcond
-        #undef DIAG
-    }
-    QORE_UNREACHABLE("Invalid value of DiagId: " << static_cast<int>(id));
+}
 }
 
-} // namespace comp
-} // namespace qore
+#endif /* INCLUDE_QORE_COMP_SEMANTIC_H_ */
