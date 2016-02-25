@@ -65,14 +65,7 @@ public:
 
     void visit(ast::Namespace &node) override {
         LOG_FUNCTION();
-        if (!node.name.isValid()) {
-            return;
-        }
-        if (node.name.isRoot()) {
-            context.report(DiagId::SemaInvalidNamespaceName, node.name.getStart());
-            return;
-        }
-        if (Namespace *parent = findParentFor(node.name)) {
+        if (Namespace *parent = currentNamespace->findParentFor(node.name)) {
             if (Namespace *ns = parent->findOrCreateNamespace(node.name.last())) {
                 TypeDeclarationCollector nc(context, ns);
                 for (ast::NamespaceMember::Ptr &m : node.members) {
@@ -84,32 +77,9 @@ public:
 
     void visit(ast::Class &node) override {
         LOG_FUNCTION();
-        if (!node.name.isValid()) {
-            return;
-        }
-        if (node.name.isRoot()) {
-            context.report(DiagId::SemaInvalidClassName, node.name.getStart());
-            return;
-        }
-        if (Namespace *parent = findParentFor(node.name)) {
+        if (Namespace *parent = currentNamespace->findParentFor(node.name)) {
             parent->createClass(node.name.last());
         }
-    }
-
-private:
-    Namespace *findParentFor(const ast::Name &name) {
-        Namespace *parent = currentNamespace;
-        for (ast::Name::Iterator it = name.begin(); it != name.end() - 1; ++it) {
-            Namespace *ns = parent->findNamespace(*it);
-            if (!ns) {
-                context.report(DiagId::SemaNamespaceNotFound, it->location)
-                        << context.getIdentifier(*it)
-                        << parent->getFullName();
-                return nullptr;
-            }
-            parent = ns;
-        }
-        return parent;
     }
 
 private:

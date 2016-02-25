@@ -34,6 +34,7 @@
 #include "qore/common/Util.h"
 #include "qore/comp/semantic/Context.h"
 #include "qore/comp/semantic/Symbol.h"
+#include "qore/comp/ast/Name.h"
 
 namespace qore {
 namespace comp {
@@ -121,6 +122,13 @@ public:
      * \return a pointer to the class or `nullptr` if a class or namespace with given name already exists
      */
     class Class *createClass(const Token &token);
+
+    /**
+     * \brief Finds namespace for a declaration with given name.
+     * \param name the name of the declaration (namespace, class, constant, ...)
+     * \return the parent namespace for given name
+     */
+    Namespace *findParentFor(const ast::Name &name);
 
 private:
     explicit Namespace(Context &context) : context(context), parent(nullptr), name("<root>") {

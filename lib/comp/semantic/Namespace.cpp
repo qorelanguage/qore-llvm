@@ -35,6 +35,8 @@ namespace qore {
 namespace comp {
 namespace semantic {
 
+//TODO modifiers
+//TODO reserved words
 Namespace *Namespace::findOrCreateNamespace(const Token &token) {
     LOG_FUNCTION();
     std::string name = context.getIdentifier(token);
@@ -67,6 +69,28 @@ Class *Namespace::createClass(const Token &token) {
     c = util::safe_emplace_back<Class>(members, context, this, token.location, std::move(name));
     set.add(c);
     return c;
+}
+
+Namespace *Namespace::findParentFor(const ast::Name &name) {
+    if (!name.isValid()) {
+        return nullptr;
+    }
+    if (name.isRoot()) {
+        context.report(DiagId::SemaInvalidNamespaceMemberName, name.getStart());
+        return nullptr;
+    }
+    Namespace *parent = this;
+    for (ast::Name::Iterator it = name.begin(); it != name.end() - 1; ++it) {
+        Namespace *ns = parent->findNamespace(*it);
+        if (!ns) {
+            context.report(DiagId::SemaNamespaceNotFound, it->location)
+                    << context.getIdentifier(*it)
+                    << parent->getFullName();
+            return nullptr;
+        }
+        parent = ns;
+    }
+    return parent;
 }
 
 } // namespace semantic

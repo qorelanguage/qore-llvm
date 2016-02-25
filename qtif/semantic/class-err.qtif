@@ -7,7 +7,7 @@ class a;
 class x::y::z;
 #$$$
 #$!ParserExpectedName@1:7
-#$!SemaInvalidClassName@2:7
+#$!SemaInvalidNamespaceMemberName@2:7
 #$!SemaDuplicateClassName@5:7
 #$!SemaPreviousDeclaration@4:11
 #$!SemaDuplicateClassName@6:7
