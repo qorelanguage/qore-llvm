@@ -25,69 +25,51 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Context for semantic analysis.
+/// \brief Interface for scopes.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
-#define INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
+#ifndef INCLUDE_QORE_COMP_SEMANTIC_SCOPE_H_
+#define INCLUDE_QORE_COMP_SEMANTIC_SCOPE_H_
 
 #include <string>
-#include "qore/comp/DiagManager.h"
-#include "qore/comp/SourceManager.h"
-#include "qore/comp/Token.h"
-#include "qore/comp/semantic/Scope.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
 /**
- * \brief Context for semantic analysis.
+ * \brief Interface for symbol name resolution.
  */
-class Context {
+class Scope {
+
+public:
+    virtual ~Scope() = default;
+
+protected:
+    Scope() = default;
+
+private:
+    Scope(const Scope &) = delete;
+    Scope(Scope &&) = delete;
+    Scope &operator=(const Scope &) = delete;
+    Scope &operator=(Scope &&) = delete;
+};
+
+/**
+ * \brief Interface for named scopes (namespaces and classes).
+ */
+class NamedScope : public Scope {
 
 public:
     /**
-     * \brief Constructs an instance.
-     * \param srcMgr source manager
-     * \param diagMgr diagnostic manager
+     * \brief Returns the full name of the named scope.
+     * \return the full name of the named scope
      */
-    Context(SourceManager &srcMgr, DiagManager &diagMgr) : srcMgr(srcMgr), diagMgr(diagMgr) {
-    }
-
-    /**
-     * \brief Returns the actual name of an identifier.
-     * \param token an identifier token
-     * \return the name of the identifier
-     */
-    std::string getIdentifier(const Token &token) const {
-        assert(token.type == TokenType::Identifier);
-        return srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
-    }
-
-    /**
-     * \brief Reports a diagnostic message.
-     * \param diagId the identifier of the diagnostic message
-     * \param location the location in the source
-     * \return a builder for providing additional info
-     */
-    DiagBuilder report(DiagId diagId, SourceLocation location) {
-        return diagMgr.report(diagId, location);
-    }
-
-private:
-    Context(const Context &) = delete;
-    Context(Context &&) = delete;
-    Context &operator=(const Context &) = delete;
-    Context &operator=(Context &&) = delete;
-
-private:
-    SourceManager &srcMgr;
-    DiagManager &diagMgr;
+    virtual std::string getFullName() const = 0;
 };
 
 } // namespace semantic
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
+#endif // INCLUDE_QORE_COMP_SEMANTIC_SCOPE_H_

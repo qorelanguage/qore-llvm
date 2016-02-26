@@ -48,7 +48,7 @@ class Class;
 /**
  * \brief Represents a namespace.
  */
-class Namespace {
+class Namespace : public NamedScope {
 
 public:
     using Ptr = std::unique_ptr<Namespace>;                 //!< Pointer type.
@@ -101,12 +101,8 @@ public:
         return name;
     }
 
-    /**
-     * \brief Returns the full name of the namespace.
-     * \return the full name of the namespace
-     */
-    std::string getFullName() const {
-        return (parent ? (parent->isRoot() ? "" : parent->getFullName()) + "::" : "") + name;
+    std::string getFullName() const override {
+        return parent ? parent->getFullName() + "::" + name : "";
     }
 
     /**
@@ -152,8 +148,14 @@ public:
     /**
      * \brief Calls a function for each member global variable.
      * \param callback the callback to call
+     * \param recursive if true, the callback is called for global variables declared in nested namespaces as well
      */
-    void forEachGlobalVariable(std::function<void(GlobalVariable &)> callback) const {
+    void forEachGlobalVariable(std::function<void(GlobalVariable &)> callback, bool recursive = false) const {
+        if (recursive) {
+            for (auto &n : namespaces) {
+                n.second->forEachGlobalVariable(callback, true);
+            }
+        }
         for (auto &gv : globalVariables) {
             callback(*gv.second);
         }

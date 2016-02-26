@@ -36,8 +36,9 @@ namespace comp {
 namespace semantic {
 
 Namespace::Ptr Analyzer::analyze(ast::Script::Ptr &script) {
+    LOG_FUNCTION();
     Namespace::Ptr rootNamespace = NamespaceMemberCollector::collect(context, script);
-
+    rootNamespace->forEachGlobalVariable([](GlobalVariable &gv){ gv.analyzeType(); }, true);
     return rootNamespace;
 }
 

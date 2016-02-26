@@ -118,7 +118,7 @@ public:
     void visit(ast::GlobalVariable &node) override {
         LOG_FUNCTION();
         if (Namespace *parent = findParentFor(node.name)) {
-            parent->addGlobalVariable(GlobalVariable::create(context, node));
+            parent->addGlobalVariable(GlobalVariable::create(context, *currentNamespace, node));
         }
     }
 

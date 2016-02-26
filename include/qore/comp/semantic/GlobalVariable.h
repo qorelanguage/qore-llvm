@@ -51,12 +51,13 @@ public:
     /**
      * \brief Creates a new instance.
      * \param context the context for semantic analysis
+     * \param scope the parent scope
      * \param astNode the AST node, the name must be valid
      * \return a unique pointer to the allocated instance
      */
-    static Ptr create(Context &context, ast::GlobalVariable &astNode) {
+    static Ptr create(Context &context, NamedScope &scope, ast::GlobalVariable &astNode) {
         assert(astNode.name.isValid());
-        return Ptr(new GlobalVariable(context, astNode));
+        return Ptr(new GlobalVariable(context, scope, astNode));
     }
 
     /**
@@ -75,13 +76,31 @@ public:
         return name;
     }
 
+    /**
+     * \brief Returns the full name of the global variable.
+     * \return the full name of the global variable
+     */
+    const std::string getFullName() const {
+        return scope.getFullName() + "::" + name;
+    }
+
+    /**
+     * \brief Resolves the type of the global variable.
+     */
+    void analyzeType() {
+        LOG_FUNCTION();
+        LOG("Analyzing type of global variable " << getFullName());
+        //context.resolveType(scope, astNode.type);
+    }
+
 private:
-    GlobalVariable(Context &context, ast::GlobalVariable &astNode) : context(context),
-            astNode(astNode), name(context.getIdentifier(astNode.name.last())) {
+    GlobalVariable(Context &context, NamedScope &scope, ast::GlobalVariable &astNode) : context(context),
+            scope(scope), astNode(astNode), name(context.getIdentifier(astNode.name.last())) {
     }
 
 private:
     Context &context;
+    NamedScope &scope;
     ast::GlobalVariable &astNode;
     std::string name;
 };

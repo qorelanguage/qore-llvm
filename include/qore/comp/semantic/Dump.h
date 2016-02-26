@@ -38,6 +38,8 @@
 #include "qore/comp/semantic/Namespace.h"
 #include "qore/comp/semantic/Class.h"
 
+using std::placeholders::_1;
+
 namespace qore {
 namespace comp {
 namespace semantic {
@@ -45,6 +47,7 @@ namespace semantic {
 /// \cond IGNORED_BY_DOXYGEN
 template<typename OS>
 class Dump {
+
 public:
     Dump(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
     }
@@ -55,11 +58,11 @@ public:
             os << " @" << decode(ns.getLocation());
         }
         os << "\n";
-        ns.forEachNamespace(std::bind(&Dump::dumpNamespace, this, std::placeholders::_1));
-        ns.forEachClass(std::bind(&Dump::dumpClass, this, std::placeholders::_1));
-        ns.forEachConstant(std::bind(&Dump::dumpConstant, this, std::placeholders::_1));
-        ns.forEachFunctionGroup(std::bind(&Dump::dumpFunctionGroup, this, std::placeholders::_1));
-        ns.forEachGlobalVariable(std::bind(&Dump::dumpGlobalVariable, this, std::placeholders::_1));
+        ns.forEachNamespace(std::bind(&Dump::dumpNamespace, this, _1));
+        ns.forEachClass(std::bind(&Dump::dumpClass, this, _1));
+        ns.forEachConstant(std::bind(&Dump::dumpConstant, this, _1));
+        ns.forEachFunctionGroup(std::bind(&Dump::dumpFunctionGroup, this, _1));
+        ns.forEachGlobalVariable(std::bind(&Dump::dumpGlobalVariable, this, _1));
         --indent;
     }
 

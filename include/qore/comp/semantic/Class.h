@@ -42,7 +42,7 @@ namespace semantic {
 /**
  * \brief Represents a class.
  */
-class Class {
+class Class : public NamedScope {
 
 public:
     using Ptr = std::unique_ptr<Class>;                     //!< Pointer type.
@@ -76,12 +76,8 @@ public:
         return name;
     }
 
-    /**
-     * \brief Returns the full name of the class.
-     * \return the full name of the class
-     */
-    std::string getFullName() const {
-        return (parent.isRoot() ? "" : parent.getFullName()) + "::" + name;
+    std::string getFullName() const override {
+        return parent.getFullName() + "::" + name;
     }
 
 private:
