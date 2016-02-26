@@ -57,7 +57,7 @@ public:
      * \param script the script to analyze
      * \return the root namespace
      */
-    std::unique_ptr<Namespace> analyze(ast::Script::Ptr &script);
+    Namespace::Ptr analyze(ast::Script::Ptr &script);
 
 private:
     Context context;

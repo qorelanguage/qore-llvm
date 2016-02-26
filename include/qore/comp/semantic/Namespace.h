@@ -31,19 +31,23 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_NAMESPACE_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_NAMESPACE_H_
 
+#include <map>
 #include "qore/common/Util.h"
 #include "qore/comp/semantic/Context.h"
-#include "qore/comp/semantic/Symbol.h"
-#include "qore/comp/ast/Name.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
+class Class;
+
 /**
  * \brief Represents a namespace.
  */
-class Namespace : public SymbolBase<Symbol::Kind::Namespace> {
+class Namespace {
+
+public:
+    using Ptr = std::unique_ptr<Namespace>;                 //!< Pointer type.
 
 public:
     /**
@@ -51,8 +55,8 @@ public:
      * \param context the context for semantic analysis
      * \return the root namespace
      */
-    static std::unique_ptr<Namespace> createRoot(Context &context) {
-        return util::make_unique<Namespace>(context);
+    static Ptr createRoot(Context &context) {
+        return Ptr(new Namespace(context));
     }
 
     /**
@@ -91,22 +95,43 @@ public:
     }
 
     /**
-     * \brief Calls a function for each member of the namespace.
+     * \brief Calls a function for each member namespace.
      * \param callback the callback to call
      */
-    void forEach(std::function<void(Symbol *)> callback) const {
-        for (auto &s : members) {
-            callback(s.get());
+    void forEachNamespace(std::function<void(Namespace &)> callback) const {
+        for (auto &n : namespaces) {
+            callback(*n.second);
+        }
+    }
+
+    /**
+     * \brief Calls a function for each member class.
+     * \param callback the callback to call
+     */
+    void forEachClass(std::function<void(Class &)> callback) const {
+        for (auto &c : classes) {
+            callback(*c.second);
         }
     }
 
     /**
      * \brief Finds a namespace with given name.
-     * \param token an identifier token representing the name to find
+     * \param name the name to find
      * \return the namespace or `nullptr` if not found
      */
-    Namespace *findNamespace(const Token &token) const {
-        return symbolTable.find<Namespace>(context.getIdentifier(token));
+    Namespace *findNamespace(const std::string &name) const {
+        auto it = namespaces.find(name);
+        return it == namespaces.end() ? nullptr : it->second.get();
+    }
+
+    /**
+     * \brief Finds a class with given name.
+     * \param name the name to find
+     * \return the class or `nullptr` if not found
+     */
+    Class *findClass(const std::string &name) const {
+        auto it = classes.find(name);
+        return it == classes.end() ? nullptr : it->second.get();
     }
 
     /**
@@ -121,14 +146,7 @@ public:
      * \param token an identifier token representing the name of the class
      * \return a pointer to the class or `nullptr` if a class or namespace with given name already exists
      */
-    class Class *createClass(const Token &token);
-
-    /**
-     * \brief Finds namespace for a declaration with given name.
-     * \param name the name of the declaration (namespace, class, constant, ...)
-     * \return the parent namespace for given name
-     */
-    Namespace *findParentFor(const ast::Name &name);
+    Class *createClass(const Token &token);
 
 private:
     explicit Namespace(Context &context) : context(context), parent(nullptr), name("<root>") {
@@ -142,10 +160,8 @@ private:
     Namespace *parent;
     SourceLocation location;
     std::string name;
-    std::vector<std::unique_ptr<Symbol>> members;
-    SymbolTable symbolTable;
-
-    FRIEND_MAKE_UNIQUE;
+    std::map<std::string, Namespace::Ptr> namespaces;
+    std::map<std::string, std::unique_ptr<Class>> classes;
 };
 
 } // namespace semantic

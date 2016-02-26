@@ -42,23 +42,11 @@ TEST_P(AnalyzerTest, Run) {
     Parser parser(diagMgr, dp);
     ast::Script::Ptr script = parser.parseScript();
     Analyzer analyzer(srcMgr, diagMgr);
-    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
-    semantic::dump(srcMgr, output, root.get());
+    semantic::Namespace::Ptr root = analyzer.analyze(script);
+    semantic::dump(srcMgr, output, *root);
 }
 
 QTIF_TEST_CASE(AnalyzerTest, "semantic/");
-
-TEST(DumpCoverage, Coverage) {
-    struct MockSymbol : public Symbol {
-        MOCK_CONST_METHOD0(getKind, Kind());
-    };
-    DiagManager diagMgr;
-    SourceManager srcMgr(diagMgr);
-    Dump<std::ostream> dump(srcMgr, std::cout);
-    MockSymbol s;
-    EXPECT_CALL(s, getKind()).WillOnce(::testing::Return(static_cast<Symbol::Kind>(999)));
-    EXPECT_THROW(dump.dumpSymbol(&s), class Unreachable);
-}
 
 } // namespace semantic
 } // namespace comp

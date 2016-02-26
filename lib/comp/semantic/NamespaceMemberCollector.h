@@ -62,8 +62,8 @@ public:
      * \param script the AST script node
      * \return the root namespace
      */
-    static std::unique_ptr<Namespace> collect(Context &context, ast::Script::Ptr &script) {
-        std::unique_ptr<Namespace> rootNamespace = Namespace::createRoot(context);
+    static Namespace::Ptr collect(Context &context, ast::Script::Ptr &script) {
+        Namespace::Ptr rootNamespace = Namespace::createRoot(context);
         NamespaceMemberCollector visitor(context, rootNamespace.get());
         for (ast::NamespaceMember::Ptr &m : script->members) {
             m->accept(visitor);
@@ -120,7 +120,7 @@ private:
         }
         Namespace *parent = currentNamespace;
         for (ast::Name::Iterator it = name.begin(); it != name.end() - 1; ++it) {
-            Namespace *ns = parent->findNamespace(*it);
+            Namespace *ns = parent->findNamespace(context.getIdentifier(*it));
             if (!ns) {
                 context.report(DiagId::SemaNamespaceNotFound, it->location)
                         << context.getIdentifier(*it)

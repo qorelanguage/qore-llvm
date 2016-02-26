@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
 //    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromFile(argv[1]));
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "namespace a; namespace a::b { namespace a; namespace a::x; namespace a::x; } namespace a::b::a::b; namespace u::v;"));
+    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "namespace a; namespace a::b;"));
 //    StdinWrapper dp(diagMgr, srcMgr);
 
     Parser parser(diagMgr, dp);
@@ -105,8 +105,8 @@ int main(int argc, char *argv[]) {
     ast::dump(srcMgr, std::cout, *script);
 
     semantic::Analyzer analyzer(srcMgr, diagMgr);
-    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
-    semantic::dump(srcMgr, std::cout, root.get());
+    semantic::Namespace::Ptr root = analyzer.analyze(script);
+    semantic::dump(srcMgr, std::cout, *root);
 
     return 0;
 }

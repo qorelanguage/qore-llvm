@@ -40,35 +40,34 @@ namespace semantic {
 Namespace *Namespace::findOrCreateNamespace(const Token &token) {
     LOG_FUNCTION();
     std::string name = context.getIdentifier(token);
-    SymbolSet &set = symbolTable[name];
-    if (Namespace *ns = set.find<Namespace>()) {
+    if (Namespace *ns = findNamespace(name)) {
         return ns;
     }
-    if (Class *c = set.find<Class>()) {
+    if (Class *c = findClass(name)) {
         context.report(DiagId::SemaDuplicateNamespaceName, token.location) << name << getFullName();
         context.report(DiagId::SemaPreviousDeclaration, c->getLocation());
         return nullptr;
     }
-    Namespace *ns = util::safe_emplace_back<Namespace>(members, this, token.location, std::move(name));
-    set.add(ns);
-    return ns;
+    Namespace::Ptr ptr = Ptr(new Namespace(this, token.location, name));
+    Namespace *value = ptr.get();
+    namespaces[name] = std::move(ptr);
+    return value;
 }
 
 Class *Namespace::createClass(const Token &token) {
     LOG_FUNCTION();
     std::string name = context.getIdentifier(token);
-    SymbolSet &set = symbolTable[name];
-
-    Class *c = set.find<Class>();
-    Namespace *ns = set.find<Namespace>();
+    Class *c = findClass(name);
+    Namespace *ns = findNamespace(name);
     if (c || ns) {
         context.report(DiagId::SemaDuplicateClassName, token.location) << name << getFullName();
         context.report(DiagId::SemaPreviousDeclaration, c ? c->getLocation() : ns->getLocation());
         return nullptr;
     }
-    c = util::safe_emplace_back<Class>(members, context, this, token.location, std::move(name));
-    set.add(c);
-    return c;
+    Class::Ptr ptr = Class::create(context, *this, token.location, name);
+    Class *value = ptr.get();
+    classes[name] = std::move(ptr);
+    return value;
 }
 
 } // namespace semantic

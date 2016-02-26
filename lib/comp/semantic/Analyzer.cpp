@@ -35,8 +35,8 @@ namespace qore {
 namespace comp {
 namespace semantic {
 
-std::unique_ptr<Namespace> Analyzer::analyze(ast::Script::Ptr &script) {
-    std::unique_ptr<Namespace> rootNamespace = NamespaceMemberCollector::collect(context, script);
+Namespace::Ptr Analyzer::analyze(ast::Script::Ptr &script) {
+    Namespace::Ptr rootNamespace = NamespaceMemberCollector::collect(context, script);
 
     return rootNamespace;
 }

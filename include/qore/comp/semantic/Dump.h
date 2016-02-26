@@ -47,31 +47,19 @@ public:
     Dump(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
     }
 
-    void dumpSymbol(Symbol *s) {
-        switch (s->getKind()) {
-            case Symbol::Kind::Namespace:
-                dumpNamespace(static_cast<Namespace *>(s));
-                break;
-            case Symbol::Kind::Class:
-                dumpClass(static_cast<Class *>(s));
-                break;
-            default:
-                QORE_UNREACHABLE("Not implemented");
-        }
-    }
-
-    void dumpNamespace(Namespace *ns) {
-        os << indent++ << "-namespace " << ns->getName();
-        if (!ns->isRoot()) {
-            os << " @" << decode(ns->getLocation());
+    void dumpNamespace(Namespace &ns) {
+        os << indent++ << "-namespace " << ns.getName();
+        if (!ns.isRoot()) {
+            os << " @" << decode(ns.getLocation());
         }
         os << "\n";
-        ns->forEach(std::bind(&Dump::dumpSymbol, this, std::placeholders::_1));
+        ns.forEachNamespace(std::bind(&Dump::dumpNamespace, this, std::placeholders::_1));
+        ns.forEachClass(std::bind(&Dump::dumpClass, this, std::placeholders::_1));
         --indent;
     }
 
-    void dumpClass(Class *c) {
-        os << indent << "-class " << c->getName() << " @" << decode(c->getLocation()) << "\n";
+    void dumpClass(Class &c) {
+        os << indent << "-class " << c.getName() << " @" << decode(c.getLocation()) << "\n";
     }
 
 private:
@@ -89,10 +77,10 @@ private:
     log::Indent indent;
 };
 
-template<typename OS, typename N>
-void dump(SourceManager &srcMgr, OS &os, N n) {
+template<typename OS>
+void dump(SourceManager &srcMgr, OS &os, Namespace &n) {
     Dump<OS> dump(srcMgr, os);
-    dump.dumpSymbol(n);
+    dump.dumpNamespace(n);
 }
 /// \endcond
 

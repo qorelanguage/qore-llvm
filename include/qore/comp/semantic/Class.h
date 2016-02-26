@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_CLASS_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_CLASS_H_
 
-#include "qore/comp/semantic/Symbol.h"
+#include "qore/comp/semantic/Namespace.h"
 
 namespace qore {
 namespace comp {
@@ -40,9 +40,24 @@ namespace semantic {
 /**
  * \brief Represents a class.
  */
-class Class : public SymbolBase<Symbol::Kind::Class> {
+class Class {
 
 public:
+    using Ptr = std::unique_ptr<Class>;                     //!< Pointer type.
+
+public:
+    /**
+     * \brief Creates a new instance.
+     * \param context the context for semantic analysis
+     * \param parent the parent namespace
+     * \param location the location of the class declaration
+     * \param name the name of the class
+     * \return a unique pointer to the allocated instance
+     */
+    static Ptr create(Context &context, Namespace &parent, SourceLocation location, std::string name) {
+        return Ptr(new Class(context, parent, location, std::move(name)));
+    }
+
     /**
      * \brief Returns the location of the class declaration.
      * \return the location of the class declaration.
@@ -64,21 +79,19 @@ public:
      * \return the full name of the class
      */
     std::string getFullName() const {
-        return (parent ? (parent->isRoot() ? "" : parent->getFullName()) + "::" : "") + name;
+        return (parent.isRoot() ? "" : parent.getFullName()) + "::" + name;
     }
 
 private:
-    Class(Context &context, Namespace *parent, SourceLocation location, std::string name) : context(context),
+    Class(Context &context, Namespace &parent, SourceLocation location, std::string name) : context(context),
             parent(parent), location(location), name(std::move(name)) {
     }
 
 private:
     Context &context;
-    Namespace *parent;
+    Namespace &parent;
     SourceLocation location;
     std::string name;
-
-    FRIEND_MAKE_UNIQUE;
 };
 
 } // namespace semantic
