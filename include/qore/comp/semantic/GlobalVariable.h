@@ -33,6 +33,7 @@
 
 #include <string>
 #include "qore/comp/semantic/Context.h"
+#include "qore/comp/semantic/TypeRegistry.h"
 #include "qore/comp/ast/Namespace.h"
 
 namespace qore {
@@ -77,6 +78,14 @@ public:
     }
 
     /**
+     * \brief Returns the type of the global variable.
+     * \return the type of the global variable
+     */
+    const Type::Ref &getType() const {
+        return type;
+    }
+
+    /**
      * \brief Returns the full name of the global variable.
      * \return the full name of the global variable
      */
@@ -87,10 +96,9 @@ public:
     /**
      * \brief Resolves the type of the global variable.
      */
-    void analyzeType() {
-        LOG_FUNCTION();
+    void analyzeType(TypeRegistry &typeRegistry) {
         LOG("Analyzing type of global variable " << getFullName());
-        //context.resolveType(scope, astNode.type);
+        type = typeRegistry.resolve(scope, astNode.type);
     }
 
 private:
@@ -99,10 +107,11 @@ private:
     }
 
 private:
-    Context &context;
+    Context &context;               //XXX context is not needed
     NamedScope &scope;
     ast::GlobalVariable &astNode;
     std::string name;
+    Type::Ref type;
 };
 
 } // namespace semantic

@@ -25,47 +25,74 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Semantic analyzer.
+/// \brief Type representation during semantic analysis.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
-#define INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
+#ifndef INCLUDE_QORE_COMP_SEMANTIC_TYPE_H_
+#define INCLUDE_QORE_COMP_SEMANTIC_TYPE_H_
 
-#include "qore/comp/ast/Script.h"
-#include "qore/comp/semantic/Namespace.h"
+#include <string>
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
 /**
- * \brief Semantic analyzer.
+ * \brief Type representation during semantic analysis.
  */
-class Analyzer {
+class Type {
 
 public:
     /**
-     * \brief Constructs an instance.
-     * \param srcMgr source manager
-     * \param diagMgr diagnostic manager
+     * \brief Type reference;
      */
-    Analyzer(SourceManager &srcMgr, DiagManager &diagMgr) : context(srcMgr, diagMgr), typeRegistry(context) {
+    class Ref {
+
+    public:
+        /**
+         * \brief Constructs an invalid type reference.
+         */
+        Ref() : type(nullptr) {
+        }
+
+    private:
+        explicit Ref(const Type *type) : type(type) {
+        }
+
+    private:
+        const Type *type;
+
+        friend class TypeRegistry;
+        friend std::ostream &operator<<(std::ostream &os, const Ref &r) {
+            if (!r.type) {
+                return os << "<unknown>";
+            }
+            return os <<r.type->getName();
+        }
+    };
+
+public:
+    /**
+     * \brief Creates a type with given name.
+     * \param name the name of the type
+     */
+    explicit Type(std::string name) : name(std::move(name)) {
     }
 
     /**
-     * \brief Analyzes the script.
-     * \param script the script to analyze
-     * \return the root namespace
+     * \brief Returns the name of the type.
+     * \return the name of the type
      */
-    Namespace::Ptr analyze(ast::Script::Ptr &script);
+    const std::string &getName() const {
+        return name;
+    }
 
 private:
-    Context context;
-    TypeRegistry typeRegistry;
+    std::string name;
 };
 
 } // namespace semantic
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
+#endif // INCLUDE_QORE_COMP_SEMANTIC_TYPE_H_

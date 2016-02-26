@@ -14,6 +14,7 @@ add_library(comp STATIC
     Token.cpp
     semantic/Analyzer.cpp
     semantic/Namespace.cpp
+    semantic/TypeRegistry.cpp
 )
 
 target_link_libraries(comp

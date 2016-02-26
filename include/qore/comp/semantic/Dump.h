@@ -81,7 +81,7 @@ public:
     }
 
     void dumpGlobalVariable(GlobalVariable &gv) {
-        os << indent << "-our " << gv.getName() << " @" << decode(gv.getLocation()) << "\n";
+        os << indent << "-our " << gv.getType() << " " << gv.getName() << " @" << decode(gv.getLocation()) << "\n";
     }
 
 private:

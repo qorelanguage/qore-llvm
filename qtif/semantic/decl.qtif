@@ -13,4 +13,4 @@ our int g;
     -const C @5:10
     -sub f @6:13
     -sub f @7:13
-  -our g @8:9
+  -our int g @8:9

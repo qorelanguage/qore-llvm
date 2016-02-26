@@ -29,4 +29,4 @@ our string g;
 -namespace <root>
   -const X @1:7
   -sub f @5:5
-  -our g @8:12
+  -our string g @8:12

@@ -35,7 +35,6 @@
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/SourceManager.h"
 #include "qore/comp/Token.h"
-#include "qore/comp/semantic/Scope.h"
 
 namespace qore {
 namespace comp {

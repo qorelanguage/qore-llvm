@@ -25,47 +25,61 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Semantic analyzer.
+/// \brief Repository of all known types.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
-#define INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
+#ifndef INCLUDE_QORE_COMP_SEMANTIC_TYPEREGISTRY_H_
+#define INCLUDE_QORE_COMP_SEMANTIC_TYPEREGISTRY_H_
 
-#include "qore/comp/ast/Script.h"
-#include "qore/comp/semantic/Namespace.h"
+#include <string>
+#include "qore/comp/semantic/Context.h"
+#include "qore/comp/semantic/Scope.h"
+#include "qore/comp/semantic/Type.h"
+#include "qore/comp/ast/Type.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
 /**
- * \brief Semantic analyzer.
+ * \brief Repository of all known types.
  */
-class Analyzer {
+class TypeRegistry {
 
 public:
     /**
-     * \brief Constructs an instance.
-     * \param srcMgr source manager
-     * \param diagMgr diagnostic manager
+     * \brief Constructor.
+     * \param context the context for semantic analysis
      */
-    Analyzer(SourceManager &srcMgr, DiagManager &diagMgr) : context(srcMgr, diagMgr), typeRegistry(context) {
+    explicit TypeRegistry(Context &context) : context(context) {
     }
 
     /**
-     * \brief Analyzes the script.
-     * \param script the script to analyze
-     * \return the root namespace
+     * \brief Resolves a type represented by an AST node.
+     * \param scope current scope for resolving names
+     * \param node the AST node
+     * \return reference to the resolved type
      */
-    Namespace::Ptr analyze(ast::Script::Ptr &script);
+    Type::Ref resolve(Scope &scope, ast::Type::Ptr &node);
 
 private:
-    Context context;
-    TypeRegistry typeRegistry;
+    Type::Ref resolveName(Scope &scope, const ast::Name &name, bool asterisk);
+    Type *findBuiltin(const std::string &name);
+    Type::Ref getImplicit() const {
+        return Type::Ref(&builtinNothing);
+    }
+
+private:
+    Context &context;
+    Type builtinNothing{"nothing"};
+    Type builtinInt{"int"};
+    Type builtinString{"string"};
+
+    friend class TypeResolver;
 };
 
 } // namespace semantic
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
+#endif // INCLUDE_QORE_COMP_SEMANTIC_TYPEREGISTRY_H_

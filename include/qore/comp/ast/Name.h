@@ -149,6 +149,17 @@ public:
         return names[names.size() - 1];
     }
 
+    /**
+     * \brief Returns true if the name is a single identifier with no double colons.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return true if the name is a single identifier with no double colons.
+     */
+    bool isSimple() const {
+        assert(isValid());
+        return !root && names.size() == 1;
+    }
+
 private:
     explicit Name(SourceLocation location) : start(location), root(false) {
         assert(!isValid());
