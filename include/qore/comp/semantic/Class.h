@@ -33,6 +33,7 @@
 
 #include <string>
 #include "qore/comp/semantic/Namespace.h"
+#include "qore/comp/ast/Class.h"
 
 namespace qore {
 namespace comp {
@@ -51,12 +52,12 @@ public:
      * \brief Creates a new instance.
      * \param context the context for semantic analysis
      * \param parent the parent namespace
-     * \param location the location of the class declaration
-     * \param name the name of the class
+     * \param astNode the AST node, the name must be valid
      * \return a unique pointer to the allocated instance
      */
-    static Ptr create(Context &context, Namespace &parent, SourceLocation location, std::string name) {
-        return Ptr(new Class(context, parent, location, std::move(name)));
+    static Ptr create(Context &context, Namespace &parent, ast::Class &astNode) {
+        assert(astNode.name.isValid());
+        return Ptr(new Class(context, parent, astNode));
     }
 
     /**
@@ -64,7 +65,7 @@ public:
      * \return the location of the class declaration.
      */
     const SourceLocation &getLocation() const {
-        return location;
+        return astNode.name.last().location;
     }
 
     /**
@@ -84,14 +85,14 @@ public:
     }
 
 private:
-    Class(Context &context, Namespace &parent, SourceLocation location, std::string name) : context(context),
-            parent(parent), location(location), name(std::move(name)) {
+    Class(Context &context, Namespace &parent, ast::Class &astNode) : context(context),
+            parent(parent), astNode(astNode), name(context.getIdentifier(astNode.name.last())) {
     }
 
 private:
     Context &context;
     Namespace &parent;
-    SourceLocation location;
+    ast::Class &astNode;
     std::string name;
 };
 

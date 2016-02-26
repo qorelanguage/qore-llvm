@@ -31,6 +31,7 @@
 #ifndef LIB_COMP_SEMANTIC_NAMESPACEMEMBERCOLLECTOR_H_
 #define LIB_COMP_SEMANTIC_NAMESPACEMEMBERCOLLECTOR_H_
 
+#include <string>
 #include "qore/comp/ast/VisitorBase.h"
 #include "qore/comp/semantic/Class.h"
 #include "qore/comp/semantic/Namespace.h"
@@ -75,21 +76,28 @@ public:
     void visit(ast::Namespace &node) override {
         LOG_FUNCTION();
         if (Namespace *parent = findParentFor(node.name)) {
-            if (Namespace *ns = parent->findOrCreateNamespace(node.name.last())) {
-                Namespace *prevNamespace = currentNamespace;
-                currentNamespace = ns;
-                for (ast::NamespaceMember::Ptr &m : node.members) {
-                    m->accept(*this);
+            std::string name = context.getIdentifier(node.name.last());
+            Namespace *ns = parent->findNamespace(name);
+            if (!ns) {
+                Namespace::Ptr ptr = Namespace::create(*parent, node.name.last().location, std::move(name));
+                ns = ptr.get();
+                if (!parent->addNamespace(std::move(ptr))) {
+                    return;
                 }
-                currentNamespace = prevNamespace;
             }
+            Namespace *prevNamespace = currentNamespace;
+            currentNamespace = ns;
+            for (ast::NamespaceMember::Ptr &m : node.members) {
+                m->accept(*this);
+            }
+            currentNamespace = prevNamespace;
         }
     }
 
     void visit(ast::Class &node) override {
         LOG_FUNCTION();
         if (Namespace *parent = findParentFor(node.name)) {
-            parent->createClass(node.name.last());
+            parent->addClass(Class::create(context, *parent, node));
         }
     }
 

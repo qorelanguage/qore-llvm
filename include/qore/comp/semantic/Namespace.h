@@ -35,6 +35,8 @@
 #include <string>
 #include "qore/common/Util.h"
 #include "qore/comp/semantic/Context.h"
+#include "qore/comp/ast/Class.h"
+#include "qore/comp/ast/Namespace.h"
 
 namespace qore {
 namespace comp {
@@ -57,7 +59,18 @@ public:
      * \return the root namespace
      */
     static Ptr createRoot(Context &context) {
-        return Ptr(new Namespace(context));
+        return Ptr(new Namespace(context, nullptr, SourceLocation(), "<root>"));
+    }
+
+    /**
+     * \brief Creates a new namespace.
+     * \param parent the parent namespace
+     * \param location the location of the (first) declaration
+     * \param name the name of the namespace
+     * \return the namespace
+     */
+    static Ptr create(Namespace &parent, SourceLocation location, std::string name) {
+        return Ptr(new Namespace(parent.context, &parent, location, std::move(name)));
     }
 
     /**
@@ -136,25 +149,26 @@ public:
     }
 
     /**
-     * \brief Finds a namespace with given name or creates it if it does not exist.
-     * \param token an identifier token representing the name of the namespace
-     * \return a pointer to the namespace or `nullptr` if a class with given name already exists
+     * \brief Adds a namespace to this namespace.
+     *
+     * If another class with the same name exists, reports an error and does not add the namespace.
+     * If another namespace with the same name exists, the behavior is undefined.
+     * \param ns the namespace to add
+     * \return true if added successfully
      */
-    Namespace *findOrCreateNamespace(const Token &token);
+    bool addNamespace(Ptr ns);
 
     /**
-     * \brief Creates a class with given name.
-     * \param token an identifier token representing the name of the class
-     * \return a pointer to the class or `nullptr` if a class or namespace with given name already exists
+     * \brief Adds a class to this namespace.
+     *
+     * If another class or namespace with the same name exists, reports an error and does not add the class.
+     * \param c the class to add
      */
-    Class *createClass(const Token &token);
+    void addClass(std::unique_ptr<Class> c);
 
 private:
-    explicit Namespace(Context &context) : context(context), parent(nullptr), name("<root>") {
-    }
-
-    Namespace(Namespace *parent, SourceLocation location, std::string name) : context(parent->context), parent(parent),
-            location(location), name(std::move(name)) {
+    Namespace(Context &context, Namespace *parent, SourceLocation location, std::string name)
+            : context(context), parent(parent), location(location), name(std::move(name)) {
     }
 
     Context &context;
