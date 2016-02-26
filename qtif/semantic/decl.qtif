@@ -1,19 +1,16 @@
-namespace a;
-namespace b {
-    namespace a;
-    namespace b;
-    namespace a::b;
+namespace N {
+    class C {
+    }
 }
-namespace a::x;
-namespace b::b {
-    namespace b;
-}
+const N::C = 1;
+function N::f() {}
+function N::f(int i) {}
+our int g;
 #$$$
 -namespace <root>
-  -namespace a @1:11
-    -namespace x @7:14
-  -namespace b @2:11
-    -namespace a @3:15
-      -namespace b @5:18
-    -namespace b @4:15
-      -namespace b @9:15
+  -namespace N @1:11
+    -class C @2:11
+    -const C @5:10
+    -sub f @6:13
+    -sub f @7:13
+  -our g @8:9

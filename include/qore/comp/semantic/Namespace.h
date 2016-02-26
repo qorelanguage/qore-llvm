@@ -35,8 +35,9 @@
 #include <string>
 #include "qore/common/Util.h"
 #include "qore/comp/semantic/Context.h"
-#include "qore/comp/ast/Class.h"
-#include "qore/comp/ast/Namespace.h"
+#include "qore/comp/semantic/Constant.h"
+#include "qore/comp/semantic/Function.h"
+#include "qore/comp/semantic/GlobalVariable.h"
 
 namespace qore {
 namespace comp {
@@ -129,6 +130,36 @@ public:
     }
 
     /**
+     * \brief Calls a function for each member constant.
+     * \param callback the callback to call
+     */
+    void forEachConstant(std::function<void(Constant &)> callback) const {
+        for (auto &c : constants) {
+            callback(*c.second);
+        }
+    }
+
+    /**
+     * \brief Calls a function for each function group.
+     * \param callback the callback to call
+     */
+    void forEachFunctionGroup(std::function<void(const Function::Group &)> callback) const {
+        for (auto &f : functionGroups) {
+            callback(f.second);
+        }
+    }
+
+    /**
+     * \brief Calls a function for each member global variable.
+     * \param callback the callback to call
+     */
+    void forEachGlobalVariable(std::function<void(GlobalVariable &)> callback) const {
+        for (auto &gv : globalVariables) {
+            callback(*gv.second);
+        }
+    }
+
+    /**
      * \brief Finds a namespace with given name.
      * \param name the name to find
      * \return the namespace or `nullptr` if not found
@@ -166,10 +197,39 @@ public:
      */
     void addClass(std::unique_ptr<Class> c);
 
+    /**
+     * \brief Adds a constant to this namespace.
+     *
+     * If another constant, function or global variable with the same name exists, reports an error and
+     * does not add the constant to the namespace.
+     * \param c the constant to add
+     */
+    void addConstant(Constant::Ptr c);
+
+    /**
+     * \brief Adds a function to this namespace.
+     *
+     * If another constant or global variable with the same name exists, reports an error and
+     * does not add the function to the namespace.
+     * \param f the function to add
+     */
+    void addFunction(Function::Ptr f);
+
+    /**
+     * \brief Adds a global variable to this namespace.
+     *
+     * If another constant, function or global variable with the same name exists, reports an error and
+     * does not add the global variable to the namespace.
+     * \param gv the global variable to add
+     */
+    void addGlobalVariable(GlobalVariable::Ptr gv);
+
 private:
     Namespace(Context &context, Namespace *parent, SourceLocation location, std::string name)
             : context(context), parent(parent), location(location), name(std::move(name)) {
     }
+
+    bool findPreviousMember(const std::string &name, SourceLocation &location) const;
 
     Context &context;
     Namespace *parent;
@@ -177,6 +237,9 @@ private:
     std::string name;
     std::map<std::string, Namespace::Ptr> namespaces;
     std::map<std::string, std::unique_ptr<Class>> classes;
+    std::map<std::string, Constant::Ptr> constants;
+    std::map<std::string, Function::Group> functionGroups;
+    std::map<std::string, GlobalVariable::Ptr> globalVariables;
 };
 
 } // namespace semantic

@@ -102,15 +102,24 @@ public:
     }
 
     void visit(ast::NamespaceConstant &node) override {
-        //TODO constants
-    }
-
-    void visit(ast::GlobalVariable &node) override {
-        //TODO global variables
+        LOG_FUNCTION();
+        if (Namespace *parent = findParentFor(node.constant->name)) {
+            parent->addConstant(Constant::create(context, *node.constant));
+        }
     }
 
     void visit(ast::Function &node) override {
-        //TODO functions
+        LOG_FUNCTION();
+        if (Namespace *parent = findParentFor(node.name)) {
+            parent->addFunction(Function::create(context, node));
+        }
+    }
+
+    void visit(ast::GlobalVariable &node) override {
+        LOG_FUNCTION();
+        if (Namespace *parent = findParentFor(node.name)) {
+            parent->addGlobalVariable(GlobalVariable::create(context, node));
+        }
     }
 
 private:

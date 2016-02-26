@@ -57,11 +57,28 @@ public:
         os << "\n";
         ns.forEachNamespace(std::bind(&Dump::dumpNamespace, this, std::placeholders::_1));
         ns.forEachClass(std::bind(&Dump::dumpClass, this, std::placeholders::_1));
+        ns.forEachConstant(std::bind(&Dump::dumpConstant, this, std::placeholders::_1));
+        ns.forEachFunctionGroup(std::bind(&Dump::dumpFunctionGroup, this, std::placeholders::_1));
+        ns.forEachGlobalVariable(std::bind(&Dump::dumpGlobalVariable, this, std::placeholders::_1));
         --indent;
     }
 
     void dumpClass(Class &c) {
         os << indent << "-class " << c.getName() << " @" << decode(c.getLocation()) << "\n";
+    }
+
+    void dumpConstant(Constant &c) {
+        os << indent << "-const " << c.getName() << " @" << decode(c.getLocation()) << "\n";
+    }
+
+    void dumpFunctionGroup(const Function::Group &fg) {
+        for (const Function::Ptr &f : fg) {
+            os << indent << "-sub " << f->getName() << " @" << decode(f->getLocation()) << "\n";
+        }
+    }
+
+    void dumpGlobalVariable(GlobalVariable &gv) {
+        os << indent << "-our " << gv.getName() << " @" << decode(gv.getLocation()) << "\n";
     }
 
 private:

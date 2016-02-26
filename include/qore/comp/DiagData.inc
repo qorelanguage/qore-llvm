@@ -82,6 +82,12 @@ DIAG(SemaDuplicateNamespaceName,                "PARSE-EXCEPTION", Error,
         "cannot declare namespace %s in %s because a class with the same name already exists")
 DIAG(SemaDuplicateClassName,                    "PARSE-EXCEPTION", Error,
         "cannot declare class %s in %s because a class or namespace with the same name already exists")
+DIAG(SemaDuplicateConstantName,                 "PARSE-EXCEPTION", Error,
+        "cannot declare constant %s in %s because of a conflicting declaration")
+DIAG(SemaDuplicateFunctionName,                 "PARSE-EXCEPTION", Error,
+        "cannot declare function %s in %s because of a conflicting declaration")
+DIAG(SemaDuplicateGlobalVariableName,           "PARSE-EXCEPTION", Error,
+        "cannot declare global variable %s in %s because of a conflicting declaration")
 
 DIAG(SemaPreviousDeclaration,                   "PARSE-EXCEPTION", Info,
         "previous declaration here")
