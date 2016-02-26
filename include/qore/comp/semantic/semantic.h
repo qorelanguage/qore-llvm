@@ -28,8 +28,8 @@
 /// \brief Semantic analyzer namespace.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEMANTIC_H_
-#define INCLUDE_QORE_COMP_SEMANTIC_H_
+#ifndef INCLUDE_QORE_COMP_SEMANTIC_SEMANTIC_H_
+#define INCLUDE_QORE_COMP_SEMANTIC_SEMANTIC_H_
 
 namespace qore {
 namespace comp {
@@ -40,7 +40,7 @@ namespace comp {
 namespace semantic {
 }
 
-}
-}
+} // namespace comp
+} // namespace qore
 
-#endif /* INCLUDE_QORE_COMP_SEMANTIC_H_ */
+#endif // INCLUDE_QORE_COMP_SEMANTIC_SEMANTIC_H_

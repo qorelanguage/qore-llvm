@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_AST_STATEMENT_H_
 #define INCLUDE_QORE_COMP_AST_STATEMENT_H_
 
+#include <vector>
 #include "qore/comp/ast/Expression.h"
 
 namespace qore {
@@ -164,7 +165,7 @@ public:
     }
 
 private:
-    explicit CompoundStatement() {
+    CompoundStatement() {
     }
 };
 

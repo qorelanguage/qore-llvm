@@ -32,6 +32,8 @@
 #define INCLUDE_QORE_COMP_AST_EXPRESSION_H_
 
 #include <cassert>
+#include <utility>
+#include <vector>
 #include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Type.h"
 #include "qore/comp/ast/Visitor.h"

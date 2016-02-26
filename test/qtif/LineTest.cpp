@@ -25,6 +25,8 @@
 //------------------------------------------------------------------------------
 #include "LineTest.h"
 #include <regex>
+#include <string>
+#include <utility>
 #include "qore/common/Util.h"
 
 namespace qtif {
@@ -248,7 +250,7 @@ void LineTestDiagProcessor::process(qore::comp::DiagRecord &record) {
 }
 
 LineTest::LineTest(const std::string &includePath) : srcMgr(diagMgr, std::string(TEST_INPUT_DIR) + includePath),
-        output(*this), diagProcessor(*this), sourceId(-1){
+        output(*this), diagProcessor(*this), sourceId(-1) {
     diagMgr.addProcessor(&diagProcessor);
 }
 

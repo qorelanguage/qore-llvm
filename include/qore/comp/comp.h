@@ -28,8 +28,8 @@
 /// \brief Qore compiler namespace.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_H_
-#define INCLUDE_QORE_COMP_H_
+#ifndef INCLUDE_QORE_COMP_COMP_H_
+#define INCLUDE_QORE_COMP_COMP_H_
 
 namespace qore {
 
@@ -39,6 +39,6 @@ namespace qore {
 namespace comp {
 }
 
-}
+} // namespace qore
 
-#endif /* INCLUDE_QORE_COMP_H_ */
+#endif // INCLUDE_QORE_COMP_COMP_H_

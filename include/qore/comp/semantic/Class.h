@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_CLASS_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_CLASS_H_
 
+#include <string>
 #include "qore/comp/semantic/Namespace.h"
 
 namespace qore {

@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMMON_LOGGING_H_
 #define INCLUDE_QORE_COMMON_LOGGING_H_
 
+#include <string>
 #include "qore/common/Indent.h"
 
 /**
@@ -82,13 +83,10 @@
 #define CLOG_EX(C, M, FU, FI, L)                    \
     ::qore::log::LoggerManager::get()->log(         \
             C,                                      \
-            static_cast<std::ostringstream&>(       \
-                std::ostringstream().flush() << M   \
-            ).str(),                                \
+            static_cast<std::ostringstream&>(std::ostringstream().flush() << M).str(),  \
             FU,                                     \
             FI,                                     \
-            L                                       \
-    );
+            L);
 
 /**
  * \brief Logs a message.
@@ -242,10 +240,10 @@ private:
 
 #else   // QORE_LOGGING
 
-#define CLOG_EX(C, M, FU, FI, L)    do {} while(0)
-#define CLOG(C, M)                  do {} while(0)
-#define CLOG_FUNCTION(C)            do {} while(0)
+#define CLOG_EX(C, M, FU, FI, L)    do {} while (0)
+#define CLOG(C, M)                  do {} while (0)
+#define CLOG_FUNCTION(C)            do {} while (0)
 
 #endif  // QORE_LOGGING
 
-#endif /* INCLUDE_QORE_COMMON_LOGGING_H_ */
+#endif // INCLUDE_QORE_COMMON_LOGGING_H_

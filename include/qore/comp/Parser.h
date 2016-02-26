@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_PARSER_H_
 #define INCLUDE_QORE_COMP_PARSER_H_
 
+#include <vector>
 #include "qore/common/Util.h"
 #include "qore/comp/ast/Script.h"
 #include "qore/comp/ast/Class.h"

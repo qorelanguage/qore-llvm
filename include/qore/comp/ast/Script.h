@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_AST_SCRIPT_H_
 #define INCLUDE_QORE_COMP_AST_SCRIPT_H_
 
+#include <vector>
 #include "qore/comp/ast/Namespace.h"
 #include "qore/comp/ast/Statement.h"
 
@@ -77,4 +78,4 @@ private:
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AST_NAMESPACE_H_
+#endif // INCLUDE_QORE_COMP_AST_SCRIPT_H_

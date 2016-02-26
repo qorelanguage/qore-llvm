@@ -29,6 +29,8 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/Source.h"
+#include <utility>
+#include <vector>
 
 namespace qore {
 namespace comp {

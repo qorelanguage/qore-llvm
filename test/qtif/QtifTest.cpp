@@ -23,6 +23,8 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
+#include <string>
+#include <vector>
 #include "gmock/gmock.h"
 #include "../Qtif.h"
 

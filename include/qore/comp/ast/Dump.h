@@ -31,6 +31,8 @@
 #ifndef INCLUDE_QORE_COMP_AST_DUMP_H_
 #define INCLUDE_QORE_COMP_AST_DUMP_H_
 
+#include <string>
+#include <utility>
 #include "qore/comp/ast/Visitor.h"
 #include "qore/comp/ast/Script.h"
 
@@ -81,7 +83,7 @@ public:
     NODE(Class, {
             MODIFIERS(modifiers);
             NAME(name);
-            ARRAY(inherits, os << indent << "-"; doName(i.second); doModifiers(i.first, false); os << "\n"; );
+            ARRAY(inherits, os << indent << "-"; doName(i.second); doModifiers(i.first, false); os << "\n";);
             NODE_ARRAY(members);
     })
 
@@ -203,7 +205,7 @@ public:
 
     NODE(SwitchStatement, {
             VISIT(expr);
-            ARRAY(body,
+            ARRAY(body, {
                     os << indent++ << "-" << lexeme(i->keyword);
                     if (i->op.type != TokenType::None) {
                         os << " " << lexeme(i->op);
@@ -224,7 +226,7 @@ public:
                         --indent;
                     }
                     --indent;
-            );
+            });
     })
 
     NODE(ErrorExpression, {
@@ -342,13 +344,13 @@ public:
     void visit(Routine &node) {
         MODIFIERS(modifiers);
         VISIT(type);
-        ARRAY(params,
+        ARRAY(params, {
                 std::get<0>(i)->accept(*this);
                 os << indent << "-"; doToken(std::get<1>(i));
-                if (std::get<2>(i)) std::get<2>(i)->accept(*this); else os << indent << "-no default-\n";
-        );
+                if (std::get<2>(i)) { std::get<2>(i)->accept(*this); } else { os << indent << "-no default-\n"; }
+        });
         if (!node.baseCtors.empty()) {
-            ARRAY(baseCtors, os << indent++ << "-"; doName(i.first); os << "\n"; visit(*i.second); --indent; );
+            ARRAY(baseCtors, os << indent++ << "-"; doName(i.first); os << "\n"; visit(*i.second); --indent;);
         }
         if (node.body) {
             VISIT(body);

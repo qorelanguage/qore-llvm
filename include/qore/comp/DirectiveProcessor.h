@@ -31,8 +31,9 @@
 #ifndef INCLUDE_QORE_COMP_DIRECTIVEPROCESSOR_H_
 #define INCLUDE_QORE_COMP_DIRECTIVEPROCESSOR_H_
 
-#include <stack>
 #include <functional>
+#include <stack>
+#include <string>
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/Scanner.h"
 #include "qore/comp/SourceManager.h"

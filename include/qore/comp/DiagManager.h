@@ -33,6 +33,7 @@
 
 #include <cassert>
 #include <functional>
+#include <string>
 #include <vector>
 #include "qore/common/Logging.h"
 #include "qore/comp/DiagRecord.h"
@@ -188,7 +189,7 @@ public:
      */
     void disable() {
         disabledCounter++;
-        CLOG("DIAG","Disabling diagnostics, counter = " << disabledCounter);
+        CLOG("DIAG", "Disabling diagnostics, counter = " << disabledCounter);
     }
 
     /**
@@ -199,7 +200,7 @@ public:
     void enable() {
         assert(disabledCounter && "Diagnostics are already enabled");
         disabledCounter--;
-        CLOG("DIAG","Enabling diagnostics, counter = " << disabledCounter);
+        CLOG("DIAG", "Enabling diagnostics, counter = " << disabledCounter);
     }
 
     /**

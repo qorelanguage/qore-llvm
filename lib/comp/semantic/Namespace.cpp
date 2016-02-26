@@ -29,6 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/semantic/Namespace.h"
+#include <string>
 #include "qore/comp/semantic/Class.h"
 
 namespace qore {

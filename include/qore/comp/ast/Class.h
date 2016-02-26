@@ -31,6 +31,8 @@
 #ifndef INCLUDE_QORE_COMP_AST_CLASS_H_
 #define INCLUDE_QORE_COMP_AST_CLASS_H_
 
+#include <utility>
+#include <vector>
 #include "qore/comp/ast/Namespace.h"
 
 namespace qore {

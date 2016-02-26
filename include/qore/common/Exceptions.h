@@ -89,4 +89,4 @@ private:
 
 } // namespace qore
 
-#endif /* INCLUDE_QORE_COMMON_EXCEPTIONS_H_ */
+#endif // INCLUDE_QORE_COMMON_EXCEPTIONS_H_

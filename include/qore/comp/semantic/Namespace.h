@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_SEMANTIC_NAMESPACE_H_
 
 #include <map>
+#include <string>
 #include "qore/common/Util.h"
 #include "qore/comp/semantic/Context.h"
 

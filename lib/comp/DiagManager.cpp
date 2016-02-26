@@ -29,8 +29,9 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/DiagManager.h"
+#include <string>
 
-using namespace std::placeholders;
+using std::placeholders::_1;
 
 namespace qore {
 namespace comp {

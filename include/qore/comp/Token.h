@@ -170,4 +170,4 @@ private:
 } //namespace comp
 } //namespace qore
 
-#endif /* INCLUDE_QORE_COMP_TOKEN_H_ */
+#endif // INCLUDE_QORE_COMP_TOKEN_H_

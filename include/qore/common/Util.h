@@ -83,4 +83,4 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 } // namespace util
 } // namespace qore
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+#endif // INCLUDE_QORE_COMMON_UTIL_H_

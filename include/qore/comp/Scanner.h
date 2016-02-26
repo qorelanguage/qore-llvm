@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SCANNER_H_
 #define INCLUDE_QORE_COMP_SCANNER_H_
 
+#include <string>
 #include <unordered_map>
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/Source.h"
@@ -143,4 +144,4 @@ private:
 } //namespace comp
 } //namespace qore
 
-#endif /* INCLUDE_QORE_COMP_SCANNER_H_ */
+#endif // INCLUDE_QORE_COMP_SCANNER_H_

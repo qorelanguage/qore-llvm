@@ -29,6 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/Parser.h"
+#include <vector>
 
 namespace qore {
 namespace comp {

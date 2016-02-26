@@ -26,6 +26,8 @@
 #ifndef TEST_QTIF_ABSTRACTTEST_H_
 #define TEST_QTIF_ABSTRACTTEST_H_
 
+#include <string>
+#include <vector>
 #include "gtest/gtest.h"
 #include "Core.h"
 #include "Reader.h"

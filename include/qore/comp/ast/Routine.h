@@ -32,6 +32,8 @@
 #define INCLUDE_QORE_COMP_AST_ROUTINE_H_
 
 #include <tuple>
+#include <utility>
+#include <vector>
 #include "qore/comp/ast/Statement.h"
 
 namespace qore {

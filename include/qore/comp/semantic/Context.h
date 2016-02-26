@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
 
+#include <string>
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/SourceManager.h"
 #include "qore/comp/Token.h"

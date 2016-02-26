@@ -29,6 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/DirectiveProcessor.h"
+#include <string>
 #include "qore/common/Logging.h"
 #include "qore/common/Util.h"
 

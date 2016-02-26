@@ -29,6 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/Scanner.h"
+#include <string>
 #include "qore/common/Logging.h"
 
 /// \cond IGNORED_BY_DOXYGEN

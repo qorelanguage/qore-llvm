@@ -31,6 +31,8 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_DUMP_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_DUMP_H_
 
+#include <string>
+#include <utility>
 #include "qore/common/Exceptions.h"
 #include "qore/common/Indent.h"
 #include "qore/comp/semantic/Namespace.h"

@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_AST_NAME_H_
 
 #include <cassert>
+#include <vector>
 #include "qore/comp/Token.h"
 
 namespace qore {
@@ -56,7 +57,8 @@ public:
      * \param root true if the name starts with a double colon
      * \param names the identifiers of the name
      */
-    Name(SourceLocation start, bool root, std::vector<Token> names) : start(start), root(root), names(std::move(names)){
+    Name(SourceLocation start, bool root, std::vector<Token> names)
+            : start(start), root(root), names(std::move(names)) {
         assert(isValid());
     }
 
