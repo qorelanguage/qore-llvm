@@ -49,7 +49,7 @@ public:
      * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
      * \param visitor the visitor to call
      */
-    virtual void accept(DeclarationVisitor &visitor) = 0;
+    virtual void accept(ClassMemberVisitor &visitor) = 0;
 };
 
 /**
@@ -79,7 +79,7 @@ public:
         return Ptr(new Class());
     }
 
-    void accept(DeclarationVisitor &visitor) override {
+    void accept(NamespaceMemberVisitor &visitor) override {
         visitor.visit(*this);
     }
 
@@ -118,7 +118,7 @@ public:
         return Ptr(new Method(std::move(name), std::move(routine)));
     }
 
-    void accept(DeclarationVisitor &visitor) override {
+    void accept(ClassMemberVisitor &visitor) override {
         visitor.visit(*this);
     }
 
@@ -155,7 +155,7 @@ public:
         return Ptr(new ClassConstant(std::move(constant)));
     }
 
-    void accept(DeclarationVisitor &visitor) override {
+    void accept(ClassMemberVisitor &visitor) override {
         visitor.visit(*this);
     }
 
@@ -194,7 +194,7 @@ public:
         return Ptr(new MemberGroup());
     }
 
-    void accept(DeclarationVisitor &visitor) override {
+    void accept(ClassMemberVisitor &visitor) override {
         visitor.visit(*this);
     }
 
@@ -237,7 +237,7 @@ public:
         return Ptr(new Field());
     }
 
-    void accept(DeclarationVisitor &visitor) override {
+    void accept(ClassMemberVisitor &visitor) override {
         visitor.visit(*this);
     }
 

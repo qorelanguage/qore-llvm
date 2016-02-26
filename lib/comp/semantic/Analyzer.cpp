@@ -29,18 +29,16 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/semantic/Analyzer.h"
-#include "TypeDeclarationCollector.h"
+#include "NamespaceMemberCollector.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
 std::unique_ptr<Namespace> Analyzer::analyze(ast::Script::Ptr &script) {
-    std::unique_ptr<Namespace> rootNamespace = Namespace::createRoot(context);
+    std::unique_ptr<Namespace> rootNamespace = NamespaceMemberCollector::collect(context, script);
 
-    TypeDeclarationCollector(context, rootNamespace.get()).visit(*script);
-
-    return std::move(rootNamespace);
+    return rootNamespace;
 }
 
 } // namespace semantic

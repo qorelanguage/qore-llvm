@@ -35,7 +35,6 @@ namespace qore {
 namespace comp {
 namespace ast {
 
-class Script;
 class Namespace;
 class Class;
 class NamespaceConstant;
@@ -317,18 +316,12 @@ private:
 };
 
 /**
- * \brief Interface for visitors of declarations (namespaces, classes, globals, constants, functions).
+ * \brief Interface for visitors of namespace member declarations (namespaces, classes, globals, constants, functions).
  */
-class DeclarationVisitor {
+class NamespaceMemberVisitor {
 
 public:
-    virtual ~DeclarationVisitor() {}
-
-    /**
-     * \brief Called by a Script AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Script &node) = 0;
+    virtual ~NamespaceMemberVisitor() {}
 
     /**
      * \brief Called by a Namespace AST node.
@@ -360,6 +353,24 @@ public:
      */
     virtual void visit(Function &node) = 0;
 
+protected:
+    NamespaceMemberVisitor() = default;
+
+private:
+    NamespaceMemberVisitor(const NamespaceMemberVisitor &) = delete;
+    NamespaceMemberVisitor(NamespaceMemberVisitor &&) = delete;
+    NamespaceMemberVisitor &operator=(const NamespaceMemberVisitor &) = delete;
+    NamespaceMemberVisitor &operator=(NamespaceMemberVisitor &&) = delete;
+};
+
+/**
+ * \brief Interface for visitors of class member declarations (fields, methods, constants).
+ */
+class ClassMemberVisitor {
+
+public:
+    virtual ~ClassMemberVisitor() {}
+
     /**
      * \brief Called by a Method AST node.
      * \param node the node being visited
@@ -385,13 +396,13 @@ public:
     virtual void visit(Field &node) = 0;
 
 protected:
-    DeclarationVisitor() = default;
+    ClassMemberVisitor() = default;
 
 private:
-    DeclarationVisitor(const DeclarationVisitor &) = delete;
-    DeclarationVisitor(DeclarationVisitor &&) = delete;
-    DeclarationVisitor &operator=(const DeclarationVisitor &) = delete;
-    DeclarationVisitor &operator=(DeclarationVisitor &&) = delete;
+    ClassMemberVisitor(const ClassMemberVisitor &) = delete;
+    ClassMemberVisitor(ClassMemberVisitor &&) = delete;
+    ClassMemberVisitor &operator=(const ClassMemberVisitor &) = delete;
+    ClassMemberVisitor &operator=(ClassMemberVisitor &&) = delete;
 };
 
 /**

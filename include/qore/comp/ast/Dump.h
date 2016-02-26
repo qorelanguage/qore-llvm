@@ -39,11 +39,13 @@ namespace comp {
 namespace ast {
 
 /// \cond IGNORED_BY_DOXYGEN
+#define NODE_HEADER(name)   os << indent++ << "-" << #name << "@" << decode(node.getStart())  \
+                               << "-" << decode(node.getEnd()) << "\n"
+#define NODE_FOOTER()       --indent
 #define NODE(name, body)    void visit(name &node) override { \
-                                os << indent++ << "-" << #name << "@" << decode(node.getStart())  \
-                                   << "-" << decode(node.getEnd()) << "\n"; \
+                                NODE_HEADER(name); \
                                 body \
-                                --indent; \
+                                NODE_FOOTER(); \
                             }
 #define FIELD(name, sep)    os << indent << "." << name << ":" sep
 #define ARRAY(name, body)   FIELD(#name, "\n"); ++indent; for (auto &i : node.name) { body } --indent
@@ -56,16 +58,19 @@ namespace ast {
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
-class DumpVisitor : public DeclarationVisitor, public StatementVisitor, public ExpressionVisitor, public TypeVisitor {
+class DumpVisitor : public NamespaceMemberVisitor, public ClassMemberVisitor, public StatementVisitor,
+        public ExpressionVisitor, public TypeVisitor {
 
 public:
     DumpVisitor(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
     }
 
-    NODE(Script, {
-            NODE_ARRAY(members);
-            NODE_ARRAY(statements);
-    })
+    void visit(Script &node) {
+        NODE_HEADER(Script);
+        NODE_ARRAY(members);
+        NODE_ARRAY(statements);
+        NODE_FOOTER();
+    }
 
     NODE(Namespace, {
             MODIFIERS(modifiers);
@@ -408,6 +413,8 @@ private:
     qore::log::Indent indent;
 };
 
+#undef NODE_HEADER
+#undef NODE_FOOTER
 #undef NODE
 #undef FIELD
 #undef ARRAY

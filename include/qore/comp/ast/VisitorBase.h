@@ -89,17 +89,24 @@ public:
 };
 
 /**
- * \brief Base class for visitors of declarations (namespaces, classes, globals, constants, functions).
+ * \brief Base class for visitors of namespace member declarations (namespaces, classes, globals, constants, functions).
  */
-class DeclarationVisitorBase : public DeclarationVisitor {
+class NamespaceMemberVisitorBase : public NamespaceMemberVisitor {
 
 public:
-    void visit(Script &node) override {}
     void visit(Namespace &node) override {}
     void visit(Class &node) override {}
     void visit(NamespaceConstant &node) override {}
     void visit(GlobalVariable &node) override {}
     void visit(Function &node) override {}
+};
+
+/**
+ * \brief Base class for visitors of class member declarations (fields, methods, constants).
+ */
+class ClassMemberVisitorBase : public ClassMemberVisitor {
+
+public:
     void visit(Method &node) override {}
     void visit(ClassConstant &node) override {}
     void visit(MemberGroup &node) override {}
