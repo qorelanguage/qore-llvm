@@ -33,6 +33,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 #include "qore/common/Util.h"
 #include "qore/comp/semantic/Context.h"
 #include "qore/comp/semantic/Constant.h"
@@ -216,6 +217,17 @@ private:
     Namespace(Context &context, Namespace *parent, SourceLocation location, std::string name)
             : context(context), parent(parent), location(location), name(std::move(name)) {
     }
+
+    Namespace &getRoot() {
+        Namespace *ns = this;
+        while (ns->parent) {
+            ns = ns->parent;
+        }
+        return *ns;
+    }
+
+    Class *lookupClass(ast::Name::Iterator begin, ast::Name::Iterator end);
+    void collectClasses(std::vector<Class *> &classes, ast::Name::Iterator begin, ast::Name::Iterator end);
 
     Context &context;
     Namespace *parent;

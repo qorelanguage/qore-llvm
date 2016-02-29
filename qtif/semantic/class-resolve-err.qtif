@@ -1,0 +1,23 @@
+namespace N {
+    class C {
+    }
+    namespace N {
+        class C {
+        }
+    }
+    our ::C g;
+}
+our C g1;
+our N::C g2;
+#$$$
+#$!SemaUnresolvedClass@8:9
+#$!SemaAmbiguousClass@10:5
+#$!SemaAmbiguousClass@11:5
+-namespace <root>
+  -namespace N @1:11
+    -namespace N @4:15
+      -class C @5:15
+    -class C @2:11
+    -our <unknown> g @8:13
+  -our <unknown> g1 @10:7
+  -our <unknown> g2 @11:10

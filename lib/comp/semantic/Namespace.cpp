@@ -30,6 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/semantic/Namespace.h"
 #include <string>
+#include <vector>
 #include "qore/comp/semantic/Class.h"
 
 namespace qore {
@@ -94,14 +95,62 @@ void Namespace::addGlobalVariable(GlobalVariable::Ptr gv) {
 
 Class *Namespace::resolveClass(const ast::Name &name) {
     assert(name.isValid());
-    if (name.isSimple()) {
-        if (Class *c = findClass(context.getIdentifier(name.last()))) {
+    if (name.isRoot()) {
+        if (Class *c = getRoot().lookupClass(name.begin(), name.end())) {
             return c;
         }
+        context.report(DiagId::SemaUnresolvedClass, name.getStart()) << context.nameToString(name);
+        return nullptr;
     }
-    //FIXME resolve
-    context.report(DiagId::SemaUnresolvedClass, name.getStart()) << context.nameToString(name);
+    if (parent) {
+        if (Class *c = lookupClass(name.begin(), name.end())) {
+            return c;
+        }
+        return parent->resolveClass(name);
+    }
+    std::vector<Class *> classes;
+    collectClasses(classes, name.begin(), name.end());
+    if (classes.size() == 1) {
+        return classes[0];
+    }
+    if (classes.empty()) {
+        context.report(DiagId::SemaUnresolvedClass, name.getStart()) << context.nameToString(name);
+    } else {
+        context.report(DiagId::SemaAmbiguousClass, name.getStart()) << context.nameToString(name);
+    }
     return nullptr;
+}
+
+Class *Namespace::lookupClass(ast::Name::Iterator begin, ast::Name::Iterator end) {
+    assert(begin != end);
+    std::string name = context.getIdentifier(*begin);
+
+    if (begin + 1 == end) {
+        return findClass(name);
+    }
+    if (Namespace *ns = findNamespace(name)) {
+        return ns->lookupClass(begin + 1, end);
+    }
+    return nullptr;
+}
+
+void Namespace::collectClasses(std::vector<Class *> &classes, ast::Name::Iterator begin, ast::Name::Iterator end) {
+    assert(begin != end);
+    std::string name = context.getIdentifier(*begin);
+
+    if (begin + 1 == end) {
+        if (Class *c = findClass(name)) {
+            classes.push_back(c);
+        }
+    }
+    if (Namespace *ns = findNamespace(name)) {
+        if (Class *c = ns->lookupClass(begin + 1, end)) {
+            classes.push_back(c);
+        }
+    }
+    for (auto &it : namespaces) {
+        it.second->collectClasses(classes, begin, end);
+    }
 }
 
 } // namespace semantic

@@ -90,6 +90,8 @@ DIAG(SemaDuplicateGlobalVariableName,           "PARSE-EXCEPTION", Error,
         "cannot declare global variable %s in %s because of a conflicting declaration")
 DIAG(SemaUnresolvedClass,                       "PARSE-EXCEPTION", Error,
         "unresolved class %s")
+DIAG(SemaAmbiguousClass,                        "PARSE-EXCEPTION", Error,
+        "ambiguous class %s")
 
 DIAG(SemaPreviousDeclaration,                   "PARSE-EXCEPTION", Info,
         "previous declaration here")
