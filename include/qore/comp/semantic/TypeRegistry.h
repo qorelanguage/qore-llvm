@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_TYPEREGISTRY_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_TYPEREGISTRY_H_
 
+#include <map>
 #include <string>
 #include "qore/comp/semantic/Context.h"
 #include "qore/comp/semantic/Scope.h"
@@ -63,17 +64,20 @@ public:
     Type::Ref resolve(Scope &scope, ast::Type::Ptr &node);
 
 private:
-    Type::Ref resolveName(Scope &scope, const ast::Name &name, bool asterisk);
+    Type::Ref resolveName(Scope &scope, const ast::Name &name);
     Type *findBuiltin(const std::string &name);
     Type::Ref getImplicit() const {
-        return Type::Ref(&builtinNothing);
+        return Type::Ref(&builtinImplicit);
     }
+    Type::Ref getAsteriskType(Type::Ref t);
 
 private:
     Context &context;
-    Type builtinNothing{"nothing"};
-    Type builtinInt{"int"};
-    Type builtinString{"string"};
+    BuiltinType builtinImplicit{"<implicit>"};
+    BuiltinType builtinInt{"int"};
+    BuiltinType builtinString{"string"};
+    std::map<const Class *, ClassType::Ptr> classTypes;
+    std::map<const Type *, AsteriskType::Ptr> asteriskTypes;
 
     friend class TypeResolver;
 };

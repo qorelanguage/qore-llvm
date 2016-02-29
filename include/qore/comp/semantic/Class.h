@@ -76,6 +76,10 @@ public:
         return name;
     }
 
+    class Class *resolveClass(const ast::Name &name) override {
+        return parent.resolveClass(name);
+    }
+
     std::string getFullName() const override {
         return parent.getFullName() + "::" + name;
     }

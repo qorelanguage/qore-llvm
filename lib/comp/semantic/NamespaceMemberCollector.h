@@ -104,7 +104,7 @@ public:
     void visit(ast::NamespaceConstant &node) override {
         LOG_FUNCTION();
         if (Namespace *parent = findParentFor(node.constant->name)) {
-            parent->addConstant(Constant::create(context, *currentNamespace, *node.constant));
+            parent->addConstant(Constant::create(context, *parent, *node.constant));
         }
     }
 
@@ -118,7 +118,7 @@ public:
     void visit(ast::GlobalVariable &node) override {
         LOG_FUNCTION();
         if (Namespace *parent = findParentFor(node.name)) {
-            parent->addGlobalVariable(GlobalVariable::create(context, *currentNamespace, node));
+            parent->addGlobalVariable(GlobalVariable::create(context, *parent, node));
         }
     }
 

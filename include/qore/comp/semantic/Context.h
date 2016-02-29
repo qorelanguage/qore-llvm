@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
 
 #include <string>
+#include "qore/comp/ast/Name.h"
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/SourceManager.h"
 #include "qore/comp/Token.h"
@@ -62,6 +63,25 @@ public:
     std::string getIdentifier(const Token &token) const {
         assert(token.type == TokenType::Identifier);
         return srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
+    }
+
+    /**
+     * \brief Converts a name to a string.
+     * \param name the name to convert
+     * \return the converted name
+     */
+    std::string nameToString(const ast::Name &name) const {
+        assert(name.isValid());
+        std::ostringstream str;
+
+        auto it = name.begin();
+        if (!name.isRoot()) {
+            str << getIdentifier(*it++);
+        }
+        while (it != name.end()) {
+            str << "::" << getIdentifier(*it++);
+        }
+        return str.str();
     }
 
     /**

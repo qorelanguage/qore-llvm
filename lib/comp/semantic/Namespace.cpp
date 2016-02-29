@@ -92,6 +92,18 @@ void Namespace::addGlobalVariable(GlobalVariable::Ptr gv) {
     }
 }
 
+Class *Namespace::resolveClass(const ast::Name &name) {
+    assert(name.isValid());
+    if (name.isSimple()) {
+        if (Class *c = findClass(context.getIdentifier(name.last()))) {
+            return c;
+        }
+    }
+    //FIXME resolve
+    context.report(DiagId::SemaUnresolvedClass, name.getStart()) << context.nameToString(name);
+    return nullptr;
+}
+
 } // namespace semantic
 } // namespace comp
 } // namespace qore

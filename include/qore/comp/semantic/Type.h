@@ -43,52 +43,132 @@ namespace semantic {
 class Type {
 
 public:
+    using Ref = class TypeReference;                        //!< Reference type.
+
+public:
+    virtual ~Type() = default;
+
     /**
-     * \brief Type reference;
+     * \brief Returns the name of the type.
+     * \return the name of the type
      */
-    class Ref {
+    virtual std::string getName() const = 0;
 
-    public:
-        /**
-         * \brief Constructs an invalid type reference.
-         */
-        Ref() : type(nullptr) {
+protected:
+    Type() = default;
+
+private:
+    Type(const Type &) = delete;
+    Type(Type &&) = delete;
+    Type &operator=(const Type &) = delete;
+    Type &operator=(Type &&) = delete;
+};
+
+/**
+ * \brief Reference to a type
+ */
+class TypeReference {
+
+public:
+    /**
+     * \brief Constructs an invalid type reference.
+     */
+    TypeReference() : type(nullptr) {
+    }
+
+private:
+    explicit TypeReference(const Type *type) : type(type) {
+    }
+
+private:
+    const Type *type;
+
+    friend class TypeRegistry;
+    friend std::ostream &operator<<(std::ostream &os, const TypeReference &r) {
+        if (!r.type) {
+            return os << "<unknown>";
         }
+        return os <<r.type->getName();
+    }
+};
 
-    private:
-        explicit Ref(const Type *type) : type(type) {
-        }
-
-    private:
-        const Type *type;
-
-        friend class TypeRegistry;
-        friend std::ostream &operator<<(std::ostream &os, const Ref &r) {
-            if (!r.type) {
-                return os << "<unknown>";
-            }
-            return os <<r.type->getName();
-        }
-    };
+/**
+ * \brief Represents a built-in type.
+ */
+class BuiltinType : public Type {
 
 public:
     /**
      * \brief Creates a type with given name.
      * \param name the name of the type
      */
-    explicit Type(std::string name) : name(std::move(name)) {
+    explicit BuiltinType(std::string name) : name(std::move(name)) {
     }
 
-    /**
-     * \brief Returns the name of the type.
-     * \return the name of the type
-     */
-    const std::string &getName() const {
+    std::string getName() const override {
         return name;
     }
 
 private:
     std::string name;
+};
+
+/**
+ * \brief Represents a type defined by a class.
+ */
+class ClassType : public Type {
+
+public:
+    using Ptr = std::unique_ptr<ClassType>;                 //!< Pointer type.
+
+public:
+    /**
+     * \brief Creates the type for given class.
+     * \param clazz the class
+     * \return pointer to the new instance
+     */
+    static Ptr create(Class &clazz) {
+        return Ptr(new ClassType(clazz));
+    }
+
+    std::string getName() const override;
+
+private:
+    explicit ClassType(Class &clazz) : clazz(clazz) {
+    }
+
+private:
+    Class &clazz;
+};
+
+/**
+ * \brief Represents the type *T for a type T.
+ */
+class AsteriskType : public Type {
+
+public:
+    using Ptr = std::unique_ptr<AsteriskType>;              //!< Pointer type.
+
+public:
+    /**
+     * \brief Creates the type *T for given type T.
+     * \param type the original type
+     * \return pointer to the new instance
+     */
+    static Ptr create(const Type &type) {
+        return Ptr(new AsteriskType(type));
+    }
+
+    std::string getName() const override {
+        return  "*" + type.getName();
+    }
+
+private:
+    explicit AsteriskType(const Type &type) : type(type) {
+    }
+
+private:
+    const Type &type;
 };
 
 } // namespace semantic

@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_SEMANTIC_SCOPE_H_
 
 #include <string>
+#include "qore/comp/ast/Name.h"
 
 namespace qore {
 namespace comp {
@@ -107,6 +108,13 @@ class Scope {
 
 public:
     virtual ~Scope() = default;
+
+    /**
+     * \brief Resolves a class with given name.
+     * \param name the name to resolve
+     * \return resolved class or `nullptr` if not found or ambiguous
+     */
+    virtual class Class *resolveClass(const ast::Name &name) = 0;
 
 protected:
     Scope() = default;

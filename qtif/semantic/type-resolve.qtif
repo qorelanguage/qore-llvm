@@ -1,0 +1,19 @@
+namespace N {
+    class C {
+    }
+    our *C g;
+}
+our int g1;
+our *string g2;
+our C N::g3;
+our *N::D g4;
+#$$$
+#$!SemaUnresolvedClass@9:6
+-namespace <root>
+  -namespace N @1:11
+    -class C @2:11
+    -our *::N::C g @4:12
+    -our ::N::C g3 @8:10
+  -our int g1 @6:9
+  -our *string g2 @7:13
+  -our <unknown> g4 @9:11

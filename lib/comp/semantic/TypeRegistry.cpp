@@ -30,12 +30,17 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/semantic/TypeRegistry.h"
 #include <string>
-#include "qore/comp/ast/Evaluator.h"
 #include "qore/common/Exceptions.h"
+#include "qore/comp/ast/Evaluator.h"
+#include "qore/comp/semantic/Class.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
+
+std::string ClassType::getName() const {
+    return clazz.getFullName();
+}
 
 /// \cond NoDoxygen
 class TypeResolver {
@@ -45,11 +50,11 @@ public:
     }
 
     Type::Ref eval(ast::NameType &node) {
-        return typeRegistry.resolveName(scope, node.name, false);
+        return typeRegistry.resolveName(scope, node.name);
     }
 
     Type::Ref eval(ast::AsteriskType &node) {
-        return typeRegistry.resolveName(scope, node.name, true);
+        return typeRegistry.getAsteriskType(typeRegistry.resolveName(scope, node.name));
     }
 
     Type::Ref eval(ast::ImplicitType &node) {
@@ -67,24 +72,24 @@ Type::Ref TypeRegistry::resolve(Scope &scope, ast::Type::Ptr &node) {
     return ast::evaluateTypeNode<Type::Ref>(*node, resolver);
 }
 
-Type::Ref TypeRegistry::resolveName(Scope &scope, const ast::Name &name, bool asterisk) {
+Type::Ref TypeRegistry::resolveName(Scope &scope, const ast::Name &name) {
     if (!name.isValid()) {
         return Type::Ref();
     }
     if (name.isSimple()) {
         if (Type *t = findBuiltin(context.getIdentifier(name.last()))) {
-            if (asterisk) {
-                QORE_UNREACHABLE("Not implemented");
-            }
             return Type::Ref(t);
         }
     }
-    QORE_UNREACHABLE("Not implemented");
-//    scope->resolve(node.name);
-//    filter classes
-//    0  - undeclared
-//    2+ - ambiguous
-//    1  - should be a class
+    Class *c = scope.resolveClass(name);
+    if (!c) {
+        return Type::Ref();
+    }
+    ClassType::Ptr &t = classTypes[c];
+    if (!t) {
+        t = ClassType::create(*c);
+    }
+    return Type::Ref(t.get());
 }
 
 Type *TypeRegistry::findBuiltin(const std::string &name) {
@@ -95,6 +100,18 @@ Type *TypeRegistry::findBuiltin(const std::string &name) {
         return &builtinString;
     }
     return nullptr;
+}
+
+Type::Ref TypeRegistry::getAsteriskType(Type::Ref t) {
+    if (!t.type || t.type == getImplicit().type) {     //XXX any
+        return t;
+    }
+
+    AsteriskType::Ptr &p = asteriskTypes[t.type];
+    if (!p) {
+        p = AsteriskType::create(*t.type);
+    }
+    return Type::Ref(p.get());
 }
 
 } // namespace semantic

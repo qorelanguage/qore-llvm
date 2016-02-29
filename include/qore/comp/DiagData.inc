@@ -88,6 +88,8 @@ DIAG(SemaDuplicateFunctionName,                 "PARSE-EXCEPTION", Error,
         "cannot declare function %s in %s because of a conflicting declaration")
 DIAG(SemaDuplicateGlobalVariableName,           "PARSE-EXCEPTION", Error,
         "cannot declare global variable %s in %s because of a conflicting declaration")
+DIAG(SemaUnresolvedClass,                       "PARSE-EXCEPTION", Error,
+        "unresolved class %s")
 
 DIAG(SemaPreviousDeclaration,                   "PARSE-EXCEPTION", Info,
         "previous declaration here")
