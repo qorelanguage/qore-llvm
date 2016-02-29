@@ -47,7 +47,6 @@ class Function {
 
 public:
     using Ptr = std::unique_ptr<Function>;                  //!< Pointer type.
-    using Group = std::vector<Ptr>;                         //!< Group of function overloads.
 
 public:
     /**
@@ -87,6 +86,56 @@ private:
     SourceLocation location;
     ast::Routine &astNode;
     std::string name;
+};
+
+/**
+ * \brief Represents a group of function overloads.
+ */
+class FunctionGroup : public NamedObjectBase<NamedObject::Kind::FunctionGroup> {
+
+public:
+    using Ptr = std::unique_ptr<FunctionGroup>;             //!< Pointer type.
+
+public:
+    /**
+     * \brief Creates a new function group containing given function.
+     * \param f the function
+     * \return a pointer to the new group
+     */
+    static Ptr create(Function::Ptr f) {
+        assert(f);
+        return Ptr(new FunctionGroup(std::move(f)));
+    }
+
+    const SourceLocation &getLocation() const override {
+        return functions[0]->getLocation();
+    }
+
+    /**
+     * \brief Adds a function to the group.
+     * \param f thre function to add
+     */
+    void add(Function::Ptr f) {
+        assert(f);
+        functions.push_back(std::move(f));
+    }
+
+    //XXX begin(), end()
+    std::vector<Function::Ptr>::const_iterator begin() const {
+        return functions.begin();
+    }
+
+    std::vector<Function::Ptr>::const_iterator end() const {
+        return functions.end();
+    }
+
+private:
+    explicit FunctionGroup(Function::Ptr f) {
+        functions.push_back(std::move(f));
+    }
+
+private:
+    std::vector<Function::Ptr> functions;
 };
 
 } // namespace semantic

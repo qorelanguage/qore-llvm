@@ -60,59 +60,36 @@ void Namespace::addClass(Class::Ptr c) {
     classes[c->getName()] = std::move(c);
 }
 
-bool Namespace::findPreviousMember(const std::string &name, SourceLocation &location) const {
-    auto it1 = constants.find(name);
-    if (it1 != constants.end()) {
-        location = it1->second->getLocation();
-        return true;
-    }
-    auto it2 = functionGroups.find(name);
-    if (it2 != functionGroups.end()) {
-        location = it2->second[0]->getLocation();
-        return true;
-    }
-    auto it3 = globalVariables.find(name);
-    if (it3 != globalVariables.end()) {
-        location = it3->second->getLocation();
-        return true;
-    }
-    return false;
-}
-
 void Namespace::addConstant(Constant::Ptr c) {
-    SourceLocation old;
-    if (findPreviousMember(c->getName(), old)) {
+    NamedObject::Ptr &p = objects[c->getName()];
+    if (!p) {
+        p = std::move(c);
+    } else {
         context.report(DiagId::SemaDuplicateConstantName, c->getLocation()) << c->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, old);
-        return;
+        context.report(DiagId::SemaPreviousDeclaration, p->getLocation());
     }
-    constants[c->getName()] = std::move(c);
 }
 
 void Namespace::addFunction(Function::Ptr f) {
-    auto it = functionGroups.find(f->getName());
-    if (it != functionGroups.end()) {
-        it->second.push_back(std::move(f));
-        return;
-    }
-
-    SourceLocation old;
-    if (findPreviousMember(f->getName(), old)) {
+    NamedObject::Ptr &p = objects[f->getName()];
+    if (!p) {
+        p = FunctionGroup::create(std::move(f));
+    } else if (p->getKind() == NamedObject::Kind::FunctionGroup) {
+        static_cast<FunctionGroup &>(*p).add(std::move(f));
+    } else {
         context.report(DiagId::SemaDuplicateFunctionName, f->getLocation()) << f->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, old);
-        return;
+        context.report(DiagId::SemaPreviousDeclaration, p->getLocation());
     }
-    functionGroups[f->getName()].push_back(std::move(f));
 }
 
 void Namespace::addGlobalVariable(GlobalVariable::Ptr gv) {
-    SourceLocation old;
-    if (findPreviousMember(gv->getName(), old)) {
+    NamedObject::Ptr &p = objects[gv->getName()];
+    if (!p) {
+        p = std::move(gv);
+    } else {
         context.report(DiagId::SemaDuplicateGlobalVariableName, gv->getLocation()) << gv->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, old);
-        return;
+        context.report(DiagId::SemaPreviousDeclaration, p->getLocation());
     }
-    globalVariables[gv->getName()] = std::move(gv);
 }
 
 } // namespace semantic

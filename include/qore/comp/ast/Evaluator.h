@@ -32,11 +32,116 @@
 #define INCLUDE_QORE_COMP_AST_EVALUATOR_H_
 
 #include "qore/comp/ast/Visitor.h"
-#include "qore/comp/ast/Type.h"
+#include "qore/comp/ast/Closure.h"
 
 namespace qore {
 namespace comp {
 namespace ast {
+
+/**
+ * \brief Helper class for evaluating expression nodes.
+ * \tparam V the type of the value
+ * \tparam E the type of the evaluator
+ */
+template<typename V, typename E>
+class ExpressionEvaluatorVisitor : public ExpressionVisitor {
+
+public:
+    /**
+     * \brief Constructor.
+     * \param evaluator the evaluator
+     */
+    explicit ExpressionEvaluatorVisitor(E &evaluator) : evaluator(evaluator) {
+    }
+
+    /**
+     * \brief Returns the value evaluated for the visited node.
+     * \return the value evaluated for the visited node
+     */
+    V getValue() {
+        return std::move(value);
+    }
+
+    void visit(ErrorExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(LiteralExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(NameExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(ListExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(HashExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(VarDeclExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(CastExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(CallExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(UnaryExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(IndexExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(AccessExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(NewExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(BinaryExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(InstanceofExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(ConditionalExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(AssignmentExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(ListOperationExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(RegexExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+    void visit(ClosureExpression &node) override {
+        value = evaluator.eval(node);
+    }
+
+private:
+    V value;
+    E &evaluator;
+};
 
 /**
  * \brief Helper class for evaluating type nodes.
@@ -80,6 +185,23 @@ private:
 };
 
 /**
+ * \brief Evaluates an expression node using an evaluator.
+ *
+ * Calls `V eval(X &)` where X is the concrete type of the node.
+ * \tparam V the type of the value
+ * \tparam E the type of the evaluator
+ * \param node the expression node to evaluate
+ * \param evaluator the evaluator
+ * \return the return value of `V E::eval(X &)`
+ */
+template<typename V, typename E>
+V evaluateExpressionNode(ast::Expression &node, E &evaluator) {
+    ExpressionEvaluatorVisitor<V, E> visitor(evaluator);
+    node.accept(visitor);
+    return visitor.getValue();
+}
+
+/**
  * \brief Evaluates a type node using an evaluator.
  *
  * Calls `V eval(X &)` where X is the concrete type of the node.
@@ -90,9 +212,9 @@ private:
  * \return the return value of `V E::eval(X &)`
  */
 template<typename V, typename E>
-V evaluateTypeNode(const ast::Type::Ptr &node, E &evaluator) {
+V evaluateTypeNode(ast::Type &node, E &evaluator) {
     TypeEvaluatorVisitor<V, E> visitor(evaluator);
-    node->accept(visitor);
+    node.accept(visitor);
     return visitor.getValue();
 }
 

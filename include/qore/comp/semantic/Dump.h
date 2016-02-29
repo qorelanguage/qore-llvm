@@ -60,9 +60,9 @@ public:
         os << "\n";
         ns.forEachNamespace(std::bind(&Dump::dumpNamespace, this, _1));
         ns.forEachClass(std::bind(&Dump::dumpClass, this, _1));
-        ns.forEachConstant(std::bind(&Dump::dumpConstant, this, _1));
-        ns.forEachFunctionGroup(std::bind(&Dump::dumpFunctionGroup, this, _1));
-        ns.forEachGlobalVariable(std::bind(&Dump::dumpGlobalVariable, this, _1));
+        ns.forEach<Constant>(std::bind(&Dump::dumpConstant, this, _1));
+        ns.forEach<FunctionGroup>(std::bind(&Dump::dumpFunctionGroup, this, _1));
+        ns.forEach<GlobalVariable>(std::bind(&Dump::dumpGlobalVariable, this, _1));
         --indent;
     }
 
@@ -74,7 +74,7 @@ public:
         os << indent << "-const " << c.getName() << " @" << decode(c.getLocation()) << "\n";
     }
 
-    void dumpFunctionGroup(const Function::Group &fg) {
+    void dumpFunctionGroup(FunctionGroup &fg) {
         for (const Function::Ptr &f : fg) {
             os << indent << "-sub " << f->getName() << " @" << decode(f->getLocation()) << "\n";
         }

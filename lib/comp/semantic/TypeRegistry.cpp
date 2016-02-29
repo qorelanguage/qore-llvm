@@ -64,7 +64,7 @@ private:
 
 Type::Ref TypeRegistry::resolve(Scope &scope, ast::Type::Ptr &node) {
     TypeResolver resolver(*this, scope);
-    return ast::evaluateTypeNode<Type::Ref>(node, resolver);
+    return ast::evaluateTypeNode<Type::Ref>(*node, resolver);
 }
 
 Type::Ref TypeRegistry::resolveName(Scope &scope, const ast::Name &name, bool asterisk) {

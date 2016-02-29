@@ -126,38 +126,22 @@ public:
     }
 
     /**
-     * \brief Calls a function for each member constant.
+     * \brief Calls a function for each member object.
+     * \tparam T the type of the member
      * \param callback the callback to call
+     * \param recursive if true, the callback is called for objects declared in nested namespaces as well
      */
-    void forEachConstant(std::function<void(Constant &)> callback) const {
-        for (auto &c : constants) {
-            callback(*c.second);
-        }
-    }
-
-    /**
-     * \brief Calls a function for each function group.
-     * \param callback the callback to call
-     */
-    void forEachFunctionGroup(std::function<void(const Function::Group &)> callback) const {
-        for (auto &f : functionGroups) {
-            callback(f.second);
-        }
-    }
-
-    /**
-     * \brief Calls a function for each member global variable.
-     * \param callback the callback to call
-     * \param recursive if true, the callback is called for global variables declared in nested namespaces as well
-     */
-    void forEachGlobalVariable(std::function<void(GlobalVariable &)> callback, bool recursive = false) const {
+    template<typename T>
+    void forEach(std::function<void(T &)> callback, bool recursive = false) const {
         if (recursive) {
             for (auto &n : namespaces) {
-                n.second->forEachGlobalVariable(callback, true);
+                n.second->forEach<T>(callback, true);
             }
         }
-        for (auto &gv : globalVariables) {
-            callback(*gv.second);
+        for (auto &o : objects) {
+            if (o.second->getKind() == T::NamedObjectKind) {
+                callback(static_cast<T &>(*o.second));
+            }
         }
     }
 
@@ -231,17 +215,13 @@ private:
             : context(context), parent(parent), location(location), name(std::move(name)) {
     }
 
-    bool findPreviousMember(const std::string &name, SourceLocation &location) const;
-
     Context &context;
     Namespace *parent;
     SourceLocation location;
     std::string name;
     std::map<std::string, Namespace::Ptr> namespaces;
     std::map<std::string, std::unique_ptr<Class>> classes;
-    std::map<std::string, Constant::Ptr> constants;
-    std::map<std::string, Function::Group> functionGroups;
-    std::map<std::string, GlobalVariable::Ptr> globalVariables;
+    std::map<std::string, NamedObject::Ptr> objects;
 };
 
 } // namespace semantic

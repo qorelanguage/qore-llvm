@@ -33,6 +33,8 @@
 
 #include <string>
 #include "qore/comp/semantic/Context.h"
+#include "qore/comp/semantic/Scope.h"
+#include "qore/comp/semantic/TypeRegistry.h"
 #include "qore/comp/ast/Const.h"
 
 namespace qore {
@@ -42,7 +44,7 @@ namespace semantic {
 /**
  * \brief Represents a constant.
  */
-class Constant {
+class Constant : public NamedObjectBase<NamedObject::Kind::Constant> {
 
 public:
     using Ptr = std::unique_ptr<Constant>;                  //!< Pointer type.
@@ -51,20 +53,17 @@ public:
     /**
      * \brief Creates a new instance.
      * \param context the context for semantic analysis
+     * \param scope the parent scope
      * \param astNode the AST node, the name must be valid
      * \return a unique pointer to the allocated instance
      */
-    static Ptr create(Context &context, ast::Constant &astNode) {
+    static Ptr create(Context &context, NamedScope &scope, ast::Constant &astNode) {
         assert(astNode.name.isValid());
-        return Ptr(new Constant(context, astNode));
+        return Ptr(new Constant(context, scope, astNode));
     }
 
-    /**
-     * \brief Returns the location of the constant declaration.
-     * \return the location of the constant declaration.
-     */
-    const SourceLocation &getLocation() const {
-        return astNode.name.last().location;
+    const SourceLocation &getLocation() const override {
+        return location;
     }
 
     /**
@@ -75,14 +74,25 @@ public:
         return name;
     }
 
+    /**
+     * \brief Returns the full name of the constant.
+     * \return the full name of the constant
+     */
+    const std::string getFullName() const {
+        return scope.getFullName() + "::" + name;
+    }
+
 private:
-    Constant(Context &context, ast::Constant &astNode) : context(context),
-            astNode(astNode), name(context.getIdentifier(astNode.name.last())) {
+    Constant(Context &context, NamedScope &scope, ast::Constant &astNode) : context(context), scope(scope),
+            location(astNode.name.last().location), initializerNode(*astNode.initializer),
+            name(context.getIdentifier(astNode.name.last())) {
     }
 
 private:
     Context &context;
-    ast::Constant &astNode;
+    NamedScope &scope;
+    SourceLocation location;
+    ast::Expression &initializerNode;
     std::string name;
 };
 

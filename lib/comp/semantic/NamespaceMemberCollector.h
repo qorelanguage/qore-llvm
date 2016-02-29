@@ -104,7 +104,7 @@ public:
     void visit(ast::NamespaceConstant &node) override {
         LOG_FUNCTION();
         if (Namespace *parent = findParentFor(node.constant->name)) {
-            parent->addConstant(Constant::create(context, *node.constant));
+            parent->addConstant(Constant::create(context, *currentNamespace, *node.constant));
         }
     }
 

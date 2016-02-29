@@ -43,7 +43,7 @@ namespace semantic {
 /**
  * \brief Represents a global variable.
  */
-class GlobalVariable {
+class GlobalVariable : public NamedObjectBase<NamedObject::Kind::GlobalVariable> {
 
 public:
     using Ptr = std::unique_ptr<GlobalVariable>;            //!< Pointer type.
@@ -61,11 +61,7 @@ public:
         return Ptr(new GlobalVariable(context, scope, astNode));
     }
 
-    /**
-     * \brief Returns the location of the global variable declaration.
-     * \return the location of the global variable declaration.
-     */
-    const SourceLocation &getLocation() const {
+    const SourceLocation &getLocation() const override {
         return astNode.name.last().location;
     }
 
@@ -78,19 +74,19 @@ public:
     }
 
     /**
-     * \brief Returns the type of the global variable.
-     * \return the type of the global variable
-     */
-    const Type::Ref &getType() const {
-        return type;
-    }
-
-    /**
      * \brief Returns the full name of the global variable.
      * \return the full name of the global variable
      */
     const std::string getFullName() const {
         return scope.getFullName() + "::" + name;
+    }
+
+    /**
+     * \brief Returns the type of the global variable.
+     * \return the type of the global variable
+     */
+    const Type::Ref &getType() const {
+        return type;
     }
 
     /**

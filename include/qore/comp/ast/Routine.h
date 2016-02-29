@@ -34,6 +34,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include "qore/comp/ast/Modifiers.h"
 #include "qore/comp/ast/Statement.h"
 
 namespace qore {
