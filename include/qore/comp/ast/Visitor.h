@@ -35,15 +35,6 @@ namespace qore {
 namespace comp {
 namespace ast {
 
-class Namespace;
-class Class;
-class NamespaceConstant;
-class GlobalVariable;
-class Function;
-class Method;
-class ClassConstant;
-class MemberGroup;
-class Field;
 class EmptyStatement;
 class ExpressionStatement;
 class CompoundStatement;
@@ -77,9 +68,6 @@ class AssignmentExpression;
 class ListOperationExpression;
 class RegexExpression;
 class ClosureExpression;
-class NameType;
-class AsteriskType;
-class ImplicitType;
 
 /**
  * \brief Interface for expression visitors.
@@ -313,96 +301,6 @@ private:
     StatementVisitor(StatementVisitor &&) = delete;
     StatementVisitor &operator=(const StatementVisitor &) = delete;
     StatementVisitor &operator=(StatementVisitor &&) = delete;
-};
-
-/**
- * \brief Interface for visitors of namespace member declarations (namespaces, classes, globals, constants, functions).
- */
-class NamespaceMemberVisitor {
-
-public:
-    virtual ~NamespaceMemberVisitor() {}
-
-    /**
-     * \brief Called by a Namespace AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Namespace &node) = 0;
-
-    /**
-     * \brief Called by a Class AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Class &node) = 0;
-
-    /**
-     * \brief Called by a NamespaceConstant AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(NamespaceConstant &node) = 0;
-
-    /**
-     * \brief Called by a GlobalVariable AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(GlobalVariable &node) = 0;
-
-    /**
-     * \brief Called by a Function AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Function &node) = 0;
-
-protected:
-    NamespaceMemberVisitor() = default;
-
-private:
-    NamespaceMemberVisitor(const NamespaceMemberVisitor &) = delete;
-    NamespaceMemberVisitor(NamespaceMemberVisitor &&) = delete;
-    NamespaceMemberVisitor &operator=(const NamespaceMemberVisitor &) = delete;
-    NamespaceMemberVisitor &operator=(NamespaceMemberVisitor &&) = delete;
-};
-
-/**
- * \brief Interface for visitors of class member declarations (fields, methods, constants).
- */
-class ClassMemberVisitor {
-
-public:
-    virtual ~ClassMemberVisitor() {}
-
-    /**
-     * \brief Called by a Method AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Method &node) = 0;
-
-    /**
-     * \brief Called by a ClassConstant AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(ClassConstant &node) = 0;
-
-    /**
-     * \brief Called by a MemberGroup AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(MemberGroup &node) = 0;
-
-    /**
-     * \brief Called by a Field AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Field &node) = 0;
-
-protected:
-    ClassMemberVisitor() = default;
-
-private:
-    ClassMemberVisitor(const ClassMemberVisitor &) = delete;
-    ClassMemberVisitor(ClassMemberVisitor &&) = delete;
-    ClassMemberVisitor &operator=(const ClassMemberVisitor &) = delete;
-    ClassMemberVisitor &operator=(ClassMemberVisitor &&) = delete;
 };
 
 } // namespace ast

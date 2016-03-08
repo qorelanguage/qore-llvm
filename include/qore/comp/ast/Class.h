@@ -40,21 +40,6 @@ namespace comp {
 namespace ast {
 
 /**
- * \brief Base class for all nodes representing class members.
- */
-class ClassMember : public Node {
-
-public:
-    using Ptr = std::unique_ptr<ClassMember>;               //!< Pointer type.
-
-    /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
-     * \param visitor the visitor to call
-     */
-    virtual void accept(ClassMemberVisitor &visitor) = 0;
-};
-
-/**
  * \brief Represents a class.
  */
 class Class : public Declaration {
@@ -68,7 +53,7 @@ public:
     Modifiers modifiers;                                    //!< The modifiers.
     Name name;                                              //!< The class name.
     std::vector<Superclass> inherits;                       //!< The superclasses.
-    std::vector<ClassMember::Ptr> members;                  //!< The members of the class.
+    std::vector<Declaration::Ptr> members;                  //!< The members of the class.
 
 public:
     using Ptr = std::unique_ptr<Class>;                     //!< Pointer type.
@@ -101,7 +86,8 @@ private:
 /**
  * \brief Represents a method (including special methods such as constructors).
  */
-class Method : public ClassMember {
+//XXX merge Method and Function?
+class Method : public Declaration {
 
 public:
     Name name;                                              //!< The name of the method.
@@ -120,8 +106,8 @@ public:
         return Ptr(new Method(std::move(name), std::move(routine)));
     }
 
-    void accept(ClassMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::Method;
     }
 
     SourceLocation getStart() const override {
@@ -138,52 +124,15 @@ private:
 };
 
 /**
- * \brief Represents a constant definition in a class.
- */
-class ClassConstant : public ClassMember {
-
-public:
-    Constant::Ptr constant;                                 //!< The constant.
-
-public:
-    using Ptr = std::unique_ptr<ClassConstant>;             //!< Pointer type.
-
-    /**
-     * \brief Allocates a new node.
-     * \param constant the constant
-     * \return a unique pointer to the allocated node
-     */
-    static Ptr create(Constant::Ptr constant) {
-        return Ptr(new ClassConstant(std::move(constant)));
-    }
-
-    void accept(ClassMemberVisitor &visitor) override {
-        visitor.visit(*this);
-    }
-
-    SourceLocation getStart() const override {
-        return constant->getStart();
-    }
-
-    SourceLocation getEnd() const override {
-        return constant->getEnd();
-    }
-
-private:
-    explicit ClassConstant(Constant::Ptr constant) : constant(std::move(constant)) {
-    }
-};
-
-/**
  * \brief Represents a group of members in a class.
  */
-class MemberGroup : public ClassMember {
+class MemberGroup : public Declaration {
 
 public:
     SourceLocation start;                                   //!< The location of the opening brace.
     SourceLocation end;                                     //!< The location of the closing brace.
     Modifiers modifiers;                                    //!< The modifiers of the whole group.
-    std::vector<ClassMember::Ptr> members;                  //!< The members of the group.
+    std::vector<Declaration::Ptr> members;                  //!< The members of the group.
 
 public:
     using Ptr = std::unique_ptr<MemberGroup>;               //!< Pointer type.
@@ -196,8 +145,8 @@ public:
         return Ptr(new MemberGroup());
     }
 
-    void accept(ClassMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::MemberGroup;
     }
 
     SourceLocation getStart() const override {
@@ -218,7 +167,7 @@ private:
  *
  * At most one of the exprInit and argListInit can be used.
  */
-class Field : public ClassMember {
+class Field : public Declaration {
 
 public:
     Modifiers modifiers;                                    //!< The modifiers.
@@ -239,8 +188,8 @@ public:
         return Ptr(new Field());
     }
 
-    void accept(ClassMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::Field;
     }
 
     SourceLocation getStart() const override {

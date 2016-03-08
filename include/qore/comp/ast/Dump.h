@@ -62,7 +62,7 @@ namespace ast {
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
-class DumpVisitor : public ClassMemberVisitor, public StatementVisitor, public ExpressionVisitor {
+class DumpVisitor : public StatementVisitor, public ExpressionVisitor {
 
 public:
     DumpVisitor(Context &ctx, OS &os) : ctx(ctx), os(os) {
@@ -87,10 +87,19 @@ public:
                 visit(static_cast<Function &>(decl));
                 break;
             case Declaration::Kind::Constant:
-                visit(static_cast<NamespaceConstant &>(decl));
+                visit(static_cast<Constant &>(decl));
                 break;
             case Declaration::Kind::Class:
                 visit(static_cast<Class &>(decl));
+                break;
+            case Declaration::Kind::Method:
+                visit(static_cast<Method &>(decl));
+                break;
+            case Declaration::Kind::Field:
+                visit(static_cast<Field &>(decl));
+                break;
+            case Declaration::Kind::MemberGroup:
+                visit(static_cast<MemberGroup &>(decl));
                 break;
         }
     }
@@ -105,11 +114,7 @@ public:
             MODIFIERS(modifiers);
             NAME(name);
             ARRAY(inherits, os << indent << "-"; doName(i.second); doModifiers(i.first, false); os << "\n";);
-            NODE_ARRAY(members);
-    })
-
-    NODE(NamespaceConstant, {
-            visit(*node.constant);
+            ARRAY(members, visit(*i););
     })
 
     NODE(GlobalVariable, {
@@ -128,13 +133,9 @@ public:
             visit(*node.routine);
     })
 
-    NODE(ClassConstant, {
-            visit(*node.constant);
-    })
-
     NODE(MemberGroup, {
             MODIFIERS(modifiers);
-            NODE_ARRAY(members);
+            ARRAY(members, visit(*i););
     })
 
     NODE(Field, {
@@ -345,6 +346,12 @@ public:
             visit(*node.routine);
     })
 
+    NODE(Constant, {
+        MODIFIERS(modifiers);
+        NAME(name);
+        VISIT(initializer);
+    })
+
     void visit(Type &node) {
         if (node.getKind() == Type::Kind::Implicit) {
             NODE_HEADER(ImplicitType);
@@ -357,12 +364,6 @@ public:
             FIELD("name", " "); doName(node.getName()); os << "\n";
         }
         NODE_FOOTER();
-    }
-
-    void visit(Constant &node) {
-        MODIFIERS(modifiers);
-        NAME(name);
-        VISIT(initializer);
     }
 
     void visit(Routine &node) {

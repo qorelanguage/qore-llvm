@@ -9,7 +9,7 @@ namespace a::;
 #$!ParserExpectedName@6:14
 -Script@1:1-7:1
   .members:
-    -NamespaceConstant@1:1-1:17
+    -Constant@1:1-1:17
       .modifiers: -none-
       .name: ::A::B
       .initializer:

@@ -21,7 +21,7 @@ our hash h;
           .modifiers: -none-
           .name: YY
           .members:
-        -NamespaceConstant@4:13-4:24
+        -Constant@4:13-4:24
           .modifiers: private
           .name: X
           .initializer:

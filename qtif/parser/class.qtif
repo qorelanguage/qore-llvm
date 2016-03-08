@@ -119,7 +119,7 @@ class C {
                   .token: Integer 1
                 -LiteralExpression@14:20-14:20
                   .token: Integer 2
-            -ClassConstant@15:9-15:21
+            -Constant@15:9-15:21
               .modifiers: -none-
               .name: X
               .initializer:

@@ -86,8 +86,11 @@ public:
         Namespace,          //!< Identifies instances of \ref Namespace.
         Class,              //!< Identifies instances of \ref Class.
         Function,           //!< Identifies instances of \ref Function.
-        Constant,           //!< Identifies instances of \ref NamespaceConstant.
+        Constant,           //!< Identifies instances of \ref Constant.
         GlobalVariable,     //!< Identifies instances of \ref GlobalVariable.
+        Method,             //!< Identifies instances of \ref Method.
+        Field,              //!< Identifies instances of \ref Field.
+        MemberGroup,        //!< Identifies instances of \ref MemberGroup.
     };
 
     /**

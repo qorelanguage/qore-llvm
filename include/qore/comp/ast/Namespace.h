@@ -120,43 +120,6 @@ private:
 };
 
 /**
- * \brief Represents a constant definition in a namespace.
- */
-class NamespaceConstant : public Declaration {
-
-public:
-    Constant::Ptr constant;                                 //!< The constant.
-
-public:
-    using Ptr = std::unique_ptr<NamespaceConstant>;         //!< Pointer type.
-
-    /**
-     * \brief Allocates a new node.
-     * \param constant the constant
-     * \return a unique pointer to the allocated node
-     */
-    static Ptr create(Constant::Ptr constant) {
-        return Ptr(new NamespaceConstant(std::move(constant)));
-    }
-
-    Kind getKind() const override {
-        return Kind::Constant;
-    }
-
-    SourceLocation getStart() const override {
-        return constant->getStart();
-    }
-
-    SourceLocation getEnd() const override {
-        return constant->getEnd();
-    }
-
-private:
-    explicit NamespaceConstant(Constant::Ptr constant) : constant(std::move(constant)) {
-    }
-};
-
-/**
  * \brief Represents a global variable declaration.
  */
 class GlobalVariable : public Declaration {

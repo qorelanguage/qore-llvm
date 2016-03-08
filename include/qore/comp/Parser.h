@@ -162,8 +162,8 @@ private:
     ast::Declaration::Ptr namespaceMember(bool topLevel);
     ast::Modifiers modifiers();
     ast::Class::Ptr classDecl(ast::Modifiers mods);
-    ast::ClassMember::Ptr classMember();
-    ast::ClassMember::Ptr classMemberList(ast::Modifiers mods);
+    ast::Declaration::Ptr classMember();
+    ast::Declaration::Ptr classMemberList(ast::Modifiers mods);
     ast::Statement::Ptr statement();
     ast::ExpressionStatement::Ptr expressionStmt();
     ast::CompoundStatement::Ptr compoundStmt();

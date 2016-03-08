@@ -50,7 +50,7 @@ ast::Class::Ptr Parser::classDecl(ast::Modifiers mods) {
     if (tokenType() == TokenType::CurlyLeft) {
         consume();
         while (tokenType() != TokenType::CurlyRight) {
-            ast::ClassMember::Ptr member = classMember();
+            ast::Declaration::Ptr member = classMember();
             if (member) {
                 c->members.push_back(std::move(member));
             } else {
@@ -66,13 +66,13 @@ ast::Class::Ptr Parser::classDecl(ast::Modifiers mods) {
     return c;
 }
 
-ast::ClassMember::Ptr Parser::classMember() {
+ast::Declaration::Ptr Parser::classMember() {
     LOG_FUNCTION();
     ast::Modifiers mods = modifiers();
     switch (tokenType()) {
         case TokenType::CurlyLeft:
             if (mods.isEmpty()) {
-                return ast::ClassMember::Ptr();
+                return ast::Declaration::Ptr();
             }
             return classMemberList(mods);
         case TokenType::Asterisk: {
@@ -93,11 +93,11 @@ ast::ClassMember::Ptr Parser::classMember() {
             }
         }
         default:
-            return ast::ClassMember::Ptr();
+            return ast::Declaration::Ptr();
     }
 }
 
-ast::ClassMember::Ptr Parser::classMemberList(ast::Modifiers groupMods) {
+ast::Declaration::Ptr Parser::classMemberList(ast::Modifiers groupMods) {
     LOG_FUNCTION();
     ast::MemberGroup::Ptr group = ast::MemberGroup::create();
     group->start = match(TokenType::CurlyLeft).location;
@@ -106,7 +106,7 @@ ast::ClassMember::Ptr Parser::classMemberList(ast::Modifiers groupMods) {
     while (tokenType() != TokenType::CurlyRight) {
         ast::Modifiers mods = modifiers();
         if (tokenType() == TokenType::KwConst) {
-            group->members.push_back(ast::ClassConstant::create(constant(mods)));
+            group->members.push_back(constant(mods));
         } else {
             ast::Field::Ptr f = ast::Field::create();
             f->modifiers = mods;

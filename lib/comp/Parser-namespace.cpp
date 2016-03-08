@@ -139,7 +139,7 @@ ast::Declaration::Ptr Parser::namespaceMember(bool topLevel) {
         }
         case TokenType::KwConst:
             recorder.stop();
-            return ast::NamespaceConstant::create(constant(mods));
+            return constant(mods);
         case TokenType::KwClass:
             recorder.stop();
             return classDecl(mods);
