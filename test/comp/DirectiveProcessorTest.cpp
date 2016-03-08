@@ -36,7 +36,7 @@ public:
 };
 
 TEST_P(DirectiveProcessorTest, Run) {
-    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
+    DirectiveProcessor dp(ctx, getSrc());
     while (true) {
         Token token = dp.read(ITokenStream::Mode::Normal);
         output << token.type << token.location << ':' << token.length << '\n';

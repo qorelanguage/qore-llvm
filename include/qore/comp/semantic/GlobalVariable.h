@@ -32,9 +32,8 @@
 #define INCLUDE_QORE_COMP_SEMANTIC_GLOBALVARIABLE_H_
 
 #include <string>
-#include "qore/comp/semantic/Context.h"
-#include "qore/comp/semantic/TypeRegistry.h"
-#include "qore/comp/ast/Namespace.h"
+#include "qore/comp/semantic/Symbol.h"
+#include "qore/comp/semantic/Type.h"
 
 namespace qore {
 namespace comp {
@@ -43,42 +42,39 @@ namespace semantic {
 /**
  * \brief Represents a global variable.
  */
-class GlobalVariable : public NamedObjectBase<NamedObject::Kind::GlobalVariable> {
-
-public:
-    using Ptr = std::unique_ptr<GlobalVariable>;            //!< Pointer type.
+class GlobalVariable : public Symbol {
 
 public:
     /**
      * \brief Creates a new instance.
-     * \param context the context for semantic analysis
-     * \param scope the parent scope
-     * \param astNode the AST node, the name must be valid
-     * \return a unique pointer to the allocated instance
+     * \param ctx the compiler context
+     * \param parent the parent scope
+     * \param name the name of the variable
+     * \param location the location of the declaration
+     * \param type the type of the variable
      */
-    static Ptr create(Context &context, NamedScope &scope, ast::GlobalVariable &astNode) {
-        assert(astNode.name.isValid());
-        return Ptr(new GlobalVariable(context, scope, astNode));
+    GlobalVariable(Context &ctx, NamedScope &parent, String::Ref name, SourceLocation location, Type::Ref type)
+         : ctx(ctx), parent(parent), name(name), location(location), type(type) {
     }
 
-    const SourceLocation &getLocation() const override {
-        return astNode.name.last().location;
+    Kind getKind() const override {
+        return Kind::GlobalVariable;
     }
 
-    /**
-     * \brief Returns the name of the global variable.
-     * \return the name of the global variable
-     */
-    const std::string getName() const {
+    String::Ref getName() const override {
         return name;
+    }
+
+    SourceLocation getLocation() const override {
+        return location;
     }
 
     /**
      * \brief Returns the full name of the global variable.
      * \return the full name of the global variable
      */
-    const std::string getFullName() const {
-        return scope.getFullName() + "::" + name;
+    std::string getFullName() const {
+        return parent.getFullName() + "::" + ctx.getStringTable().get(name);
     }
 
     /**
@@ -89,24 +85,11 @@ public:
         return type;
     }
 
-    /**
-     * \brief Resolves the type of the global variable.
-     */
-    void analyzeType(TypeRegistry &typeRegistry) {
-        LOG("Analyzing type of global variable " << getFullName());
-        type = typeRegistry.resolve(scope, astNode.type);
-    }
-
 private:
-    GlobalVariable(Context &context, NamedScope &scope, ast::GlobalVariable &astNode) : context(context),
-            scope(scope), astNode(astNode), name(context.getIdentifier(astNode.name.last())) {
-    }
-
-private:
-    Context &context;               //XXX context is not needed
-    NamedScope &scope;
-    ast::GlobalVariable &astNode;
-    std::string name;
+    Context &ctx;
+    NamedScope &parent;
+    String::Ref name;
+    SourceLocation location;
     Type::Ref type;
 };
 

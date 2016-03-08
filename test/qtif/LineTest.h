@@ -29,9 +29,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "qore/comp/DiagManager.h"
+#include "qore/comp/Context.h"
 #include "qore/comp/Source.h"
-#include "qore/comp/SourceManager.h"
 #include "AbstractTest.h"
 
 namespace qtif {
@@ -100,8 +99,10 @@ public:
     }
 
 protected:
+    qore::comp::StringTable stringTable;
     qore::comp::DiagManager diagMgr;
     qore::comp::SourceManager srcMgr;
+    qore::comp::Context ctx;
     LineTestOutput output;
     LineTestDiagProcessor diagProcessor;
 

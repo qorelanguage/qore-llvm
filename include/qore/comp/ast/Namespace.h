@@ -33,6 +33,7 @@
 
 #include <vector>
 #include "qore/comp/ast/Const.h"
+#include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Routine.h"
 
 namespace qore {
@@ -40,31 +41,16 @@ namespace comp {
 namespace ast {
 
 /**
- * \brief Base class for all nodes representing namespace members.
- */
-class NamespaceMember : public Node {
-
-public:
-    using Ptr = std::unique_ptr<NamespaceMember>;           //!< Pointer type.
-
-    /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
-     * \param visitor the visitor to call
-     */
-    virtual void accept(NamespaceMemberVisitor &visitor) = 0;
-};
-
-/**
  * \brief Represents a namespace.
  */
-class Namespace : public NamespaceMember {
+class Namespace : public Declaration {
 
 public:
     SourceLocation start;                                   //!< The location of the `namespace` keyword.
     SourceLocation end;                                     //!< The location of the closing brace or semicolon.
     Modifiers modifiers;                                    //!< The modifiers.
     Name name;                                              //!< The name of the namespace.
-    std::vector<NamespaceMember::Ptr> members;              //!< The members of the namespace.
+    std::vector<Declaration::Ptr> members;                  //!< The members of the namespace.
 
 public:
     using Ptr = std::unique_ptr<Namespace>;                 //!< Pointer type.
@@ -77,8 +63,8 @@ public:
         return Ptr(new Namespace());
     }
 
-    void accept(NamespaceMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::Namespace;
     }
 
     SourceLocation getStart() const override {
@@ -97,7 +83,7 @@ private:
 /**
  * \brief Represents a function.
  */
-class Function : public NamespaceMember {
+class Function : public Declaration {
 
 public:
     Name name;                                              //!< The name of the function.
@@ -116,8 +102,8 @@ public:
         return Ptr(new Function(std::move(name), std::move(routine)));
     }
 
-    void accept(NamespaceMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::Function;
     }
 
     SourceLocation getStart() const override {
@@ -136,7 +122,7 @@ private:
 /**
  * \brief Represents a constant definition in a namespace.
  */
-class NamespaceConstant : public NamespaceMember {
+class NamespaceConstant : public Declaration {
 
 public:
     Constant::Ptr constant;                                 //!< The constant.
@@ -153,8 +139,8 @@ public:
         return Ptr(new NamespaceConstant(std::move(constant)));
     }
 
-    void accept(NamespaceMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::Constant;
     }
 
     SourceLocation getStart() const override {
@@ -173,12 +159,12 @@ private:
 /**
  * \brief Represents a global variable declaration.
  */
-class GlobalVariable : public NamespaceMember {
+class GlobalVariable : public Declaration {
 
 public:
     SourceLocation start;                                   //!< The location of the 'our' keyword.
     Modifiers modifiers;                                    //!< The modifiers.
-    Type::Ptr type;                                         //!< The type of the variable.
+    Type type;                                              //!< The type of the variable.
     Name name;                                              //!< The name of the variable.
     SourceLocation end;                                     //!< The location of the semicolon.
 
@@ -187,14 +173,19 @@ public:
 
     /**
      * \brief Allocates a new node.
+     * \param start the location of the 'our' keyword
+     * \param modifiers the modifiers
+     * \param type the type of the variable
+     * \param name the name of the variable
+     * \param end the location of the semicolon
      * \return a unique pointer to the allocated node
      */
-    static Ptr create() {
-        return Ptr(new GlobalVariable());
+    static Ptr create(SourceLocation start, Modifiers modifiers, Type type, Name name, SourceLocation end) {
+        return Ptr(new GlobalVariable(start, modifiers, std::move(type), std::move(name), end));
     }
 
-    void accept(NamespaceMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::GlobalVariable;
     }
 
     SourceLocation getStart() const override {
@@ -206,7 +197,8 @@ public:
     }
 
 private:
-    GlobalVariable() : name(Name::invalid()) {
+    GlobalVariable(SourceLocation start, Modifiers modifiers, Type type, Name name, SourceLocation end)
+            : start(start), modifiers(modifiers), type(std::move(type)), name(std::move(name)), end(end) {
     }
 };
 

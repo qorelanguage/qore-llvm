@@ -32,74 +32,12 @@
 #define INCLUDE_QORE_COMP_SEMANTIC_SCOPE_H_
 
 #include <string>
+#include "qore/comp/semantic/Symbol.h"
 #include "qore/comp/ast/Name.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
-
-/**
- * \brief Base class for all named objects.
- */
-class NamedObject {
-
-public:
-    /**
-     * \brief Identifies the type of the named object.
-     */
-    enum class Kind {
-        Constant,                   //!< Identifies instances of \ref Constant.
-        FunctionGroup,              //!< Identifies instances of \ref FunctionGroup.
-        GlobalVariable,             //!< Identifies instances of \ref GlobalVariable.
-    };
-
-public:
-    using Ptr = std::unique_ptr<NamedObject>;               //!< Pointer type.
-
-public:
-    virtual ~NamedObject() = default;
-
-    /**
-     * \brief Returns the type of the symbol.
-     * \return the type of the symbol
-     */
-    virtual Kind getKind() const = 0;
-
-    /**
-     * \brief Returns the location of the declaration.
-     * \return the location of the declaration.
-     */
-    virtual const SourceLocation &getLocation() const = 0;
-
-protected:
-    NamedObject() = default;
-
-private:
-    NamedObject(const NamedObject &) = delete;
-    NamedObject(NamedObject &&) = delete;
-    NamedObject &operator=(const NamedObject &) = delete;
-    NamedObject &operator=(NamedObject &&) = delete;
-};
-
-/**
- * \brief Helper template for extending \ref NamedObject.
- */
-template<NamedObject::Kind kind> class NamedObjectBase : public NamedObject {
-
-public:
-    /**
-     * \brief Identifies the named object type.
-     */
-    static constexpr Kind NamedObjectKind = kind;
-
-    /**
-     * \brief Returns the type of the named object.
-     * \return the type of the named object
-     */
-    Kind getKind() const override {
-        return kind;
-    }
-};
 
 /**
  * \brief Interface for symbol name resolution.
@@ -111,10 +49,14 @@ public:
 
     /**
      * \brief Resolves a class with given name.
-     * \param name the name to resolve
-     * \return resolved class or `nullptr` if not found or ambiguous
+     *
+     * If the class name cannot be resolved either because it is not found or ambiguous, reports the error
+     * and throws ReportedError.
+     * \param name the name to resolve, must be valid
+     * \return resolved class
+     * \throws ReportedError if the class is not found or ambiguous
      */
-    virtual class Class *resolveClass(const ast::Name &name) = 0;
+    virtual class Class &resolveClass(const ast::Name &name) const = 0;
 
 protected:
     Scope() = default;

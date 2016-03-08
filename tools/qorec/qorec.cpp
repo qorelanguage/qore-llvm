@@ -68,8 +68,7 @@ private:
 class StdinWrapper : public ITokenStream {
 
 public:
-    StdinWrapper(DiagManager &diagMgr, SourceManager &srcMgr)
-            : src(srcMgr.createFromString("<stdin>", "")), dp(diagMgr, srcMgr, src) {
+    explicit StdinWrapper(Context &ctx) : src(ctx.getSrcMgr().createFromString("<stdin>", "")), dp(ctx, src) {
     }
 
     Token read(Mode mode) override {
@@ -94,21 +93,32 @@ private:
 };
 
 void test() {
-    DiagManager diagMgr;
+    StringTable stringTable;
+    DiagManager diagMgr(stringTable);
     SourceManager srcMgr(diagMgr);
     DiagPrinter diagPrinter(srcMgr);
     diagMgr.addProcessor(&diagPrinter);
-//    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromFile(argv[1]));
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "namespace a; namespace a::b;"));
-//    StdinWrapper dp(diagMgr, srcMgr);
+    Context ctx(stringTable, diagMgr, srcMgr);
+//    DirectiveProcessor dp(ctx, srcMgr.createFromFile(argv[1]));
+    DirectiveProcessor dp(ctx, srcMgr.createFromString("<noname>", R"(
+namespace a;
+namespace a::x::b;
+our int i;
 
-    Parser parser(diagMgr, dp);
+string s = "A";
+s = s + i;
+i = i + 1;
+
+)"));
+//    StdinWrapper dp(dctx);
+
+    Parser parser(ctx, dp);
     ast::Script::Ptr script = parser.parseScript();
-    ast::dump(srcMgr, std::cout, *script);
+    ast::dump(ctx, std::cout, *script);
 
-    semantic::Analyzer analyzer(srcMgr, diagMgr);
-    semantic::Namespace::Ptr root = analyzer.analyze(script);
-    semantic::dump(srcMgr, std::cout, *root);
+    semantic::Analyzer analyzer(ctx);
+    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
+    semantic::dump(ctx, std::cout, *root);
 }
 
 } // namespace comp

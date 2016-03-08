@@ -96,6 +96,7 @@ private:
  */
 class ExpressionStatement : public Statement {
 
+    //XXX guarantee nonull expression
 public:
     SourceLocation start;                                   //!< The starting location.
     Expression::Ptr expression;                             //!< The expression.
@@ -256,7 +257,7 @@ class TryStatement : public Statement {
 public:
     SourceLocation start;                                   //!< The location of the 'try' keyword.
     Statement::Ptr stmtTry;                                 //!< The body of the try statement.
-    Type::Ptr exceptionType;                                //!< The type of the exception parameter.
+    Type exceptionType;                                     //!< The type of the exception parameter.
     Token exceptionName;                                    //!< The name of the exception parameter.
     Statement::Ptr stmtCatch;                               //!< The body of the catch part.
 
@@ -285,7 +286,7 @@ public:
     }
 
 private:
-    TryStatement() {
+    TryStatement() : exceptionType(Type::createInvalid()) {
     }
 };
 
@@ -296,7 +297,7 @@ class ForeachStatement : public Statement {
 
 public:
     SourceLocation start;                                   //!< The location of the 'foreach' keyword.
-    Type::Ptr varType;                                      //!< The type of the variable.
+    Type varType;                                           //!< The type of the variable.
     Token varName;                                          //!< The name of the variable.
     Expression::Ptr expr;                                   //!< The expression to iterate.
     Statement::Ptr stmt;                                    //!< The body of the loop.
@@ -326,7 +327,7 @@ public:
     }
 
 private:
-    ForeachStatement() {
+    ForeachStatement() : varType(Type::createInvalid()) {
     }
 };
 

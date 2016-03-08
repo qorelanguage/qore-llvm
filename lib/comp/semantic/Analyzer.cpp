@@ -29,20 +29,87 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/semantic/Analyzer.h"
-#include "NamespaceMemberCollector.h"
+#include <vector>
+#include "ReportedError.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
-Namespace::Ptr Analyzer::analyze(ast::Script::Ptr &script) {
-    LOG_FUNCTION();
-    Namespace::Ptr rootNamespace = NamespaceMemberCollector::collect(context, script);
+void Analyzer::collectNamespacesAndClasses(Namespace &ns, std::vector<ast::Declaration::Ptr> &declNodes) {
+    for (ast::Declaration::Ptr &declNode : declNodes) {
+        try {
+            if (declNode->getKind() == ast::Declaration::Kind::Namespace) {
+                createNamespace(ns, static_cast<ast::Namespace &>(*declNode));
+            } else if (declNode->getKind() == ast::Declaration::Kind::Class) {
+                createClass(ns, static_cast<ast::Class &>(*declNode));
+            } else {
+                nsMemberQueue.emplace_back(&ns, declNode.get());
+            }
+        } catch (ReportedError &) {
+            // ignore declaration
+        }
+    }
+}
 
-    rootNamespace->forEach<GlobalVariable>([this](GlobalVariable &gv){ gv.analyzeType(typeRegistry); }, true);
+void Analyzer::declareNamespaceMembers() {
+    for (auto &i : nsMemberQueue) {
+        try {
+            if (i.second->getKind() == ast::Declaration::Kind::GlobalVariable) {
+                createGlobalVariable(*i.first, static_cast<ast::GlobalVariable &>(*i.second));
+            } else {
+                //TODO functions, constants
+            }
+        } catch (ReportedError &) {
+            // ignore declaration
+        }
+    }
+}
 
-    //FIXME returned value contains references to typeRegistry!
-    return rootNamespace;
+void Analyzer::processClasses() {
+    //TODO classes
+//    for (auto &i : classQueue) {
+//    }
+}
+
+void Analyzer::createNamespace(Namespace &scope, ast::Namespace &node) {
+    Namespace &parent = findParentFor(scope, node.name);
+    //TODO check modifiers, reserved words
+    Namespace &ns = parent.addNamespace(node.name.last().str, node.name.last().location);
+    collectNamespacesAndClasses(ns, node.members);
+}
+
+void Analyzer::createClass(Namespace &scope, ast::Class &node) {
+    Namespace &parent = findParentFor(scope, node.name);
+    //TODO check modifiers, reserved words
+    classQueue.emplace_back(&parent.addClass(node.name.last().str, node.name.last().location), &node);
+}
+
+void Analyzer::createGlobalVariable(Namespace &scope, ast::GlobalVariable &node) {
+    Namespace &parent = findParentFor(scope, node.name);
+    //TODO check modifiers, reserved words
+    Type::Ref type = resolveType(scope, node.type);
+    parent.addGlobalVariable(node.name.last().str, node.name.last().location, type);
+}
+
+Namespace &Analyzer::findParentFor(Namespace &scope, const ast::Name &name) {
+    if (!name.isValid()) {
+        throw ReportedError();
+    }
+    if (name.isRoot()) {
+        ctx.report(DiagId::SemaInvalidNamespaceMemberName, name.getStart());
+        throw ReportedError();
+    }
+    Namespace *parent = &scope;
+    for (ast::Name::Iterator it = name.begin(); it != name.end() - 1; ++it) {
+        if (Namespace *ns = parent->findNamespace(it->str)) {
+            parent = ns;
+        } else {
+            ctx.report(DiagId::SemaNamespaceNotFound, it->location) << it->str << *parent;
+            throw ReportedError();
+        }
+    }
+    return *parent;
 }
 
 } // namespace semantic

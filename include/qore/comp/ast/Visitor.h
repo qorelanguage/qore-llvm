@@ -405,42 +405,6 @@ private:
     ClassMemberVisitor &operator=(ClassMemberVisitor &&) = delete;
 };
 
-/**
- * \brief Interface for visitors of types.
- */
-class TypeVisitor {
-
-public:
-    virtual ~TypeVisitor() {}
-
-    /**
-     * \brief Called by a NameType AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(NameType &node) = 0;
-
-    /**
-     * \brief Called by an AsteriskType AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(AsteriskType &node) = 0;
-
-    /**
-     * \brief Called by an ImplicitType AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(ImplicitType &node) = 0;
-
-protected:
-    TypeVisitor() = default;
-
-private:
-    TypeVisitor(const TypeVisitor &) = delete;
-    TypeVisitor(TypeVisitor &&) = delete;
-    TypeVisitor &operator=(const TypeVisitor &) = delete;
-    TypeVisitor &operator=(TypeVisitor &&) = delete;
-};
-
 } // namespace ast
 } // namespace comp
 } // namespace qore

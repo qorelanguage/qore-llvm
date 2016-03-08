@@ -32,8 +32,11 @@
 #define INCLUDE_QORE_COMP_AST_NAME_H_
 
 #include <cassert>
+#include <utility>
 #include <vector>
-#include "qore/comp/Token.h"
+#include "qore/comp/DiagManager.h"
+#include "qore/comp/SourceLocation.h"
+#include "qore/comp/String.h"
 
 namespace qore {
 namespace comp {
@@ -48,7 +51,22 @@ namespace ast {
 class Name {
 
 public:
-    using Iterator = std::vector<Token>::const_iterator;    //!< Iterator type.
+    /**
+     * \brief An element of the name - identifier and its location.
+     */
+    struct Id {
+        String::Ref str;            //!< The identifier.
+        SourceLocation location;    //!< The location.
+
+        /**
+         * \brief Constructor.
+         * \param str the indentifier
+         * \param location the location
+         */
+        Id(String::Ref str, SourceLocation location) : str(str), location(location) {
+        }
+    };
+    using Iterator = std::vector<Id>::const_iterator;       //!< Iterator type.
 
 public:
     /**
@@ -57,11 +75,12 @@ public:
      * \param root true if the name starts with a double colon
      * \param names the identifiers of the name
      */
-    Name(SourceLocation start, bool root, std::vector<Token> names)
+    Name(SourceLocation start, bool root, std::vector<Id> names)
             : start(start), root(root), names(std::move(names)) {
         assert(isValid());
     }
 
+    //TODO make location mandatory
     /**
      * \brief Creates an invalid name indicating an error in the source script.
      * \param location the location
@@ -142,9 +161,9 @@ public:
      * \brief Returns the last token in the name.
      *
      * It is illegal to call this method on an invalid name.
-     * \return the last token in the name
+     * \return the last identifier in the name
      */
-    const Token &last() const {
+    const Id &last() const {
         assert(isValid());
         return names[names.size() - 1];
     }
@@ -171,10 +190,33 @@ private:
 private:
     SourceLocation start;
     bool root;
-    std::vector<Token> names;
+    std::vector<Id> names;
 };
 
 } // namespace ast
+
+/**
+ * \brief Sets the value of a parameter of the message.
+ *
+ * The value will replace the next occurrence of '%s' in the message.
+ * \param b the diagnostic message builder
+ * \param name the value of the parameter, must be a valid name
+ */
+template<>
+inline void toDiagArg(DiagBuilder &b, const ast::Name &name) {
+    assert(name.isValid());
+    std::ostringstream str;
+
+    auto it = name.begin();
+    if (!name.isRoot()) {
+        str << b.getStringTable().get((it++)->str);
+    }
+    while (it != name.end()) {
+        str << "::" << b.getStringTable().get((it++)->str);
+    }
+    b << str.str();
+}
+
 } // namespace comp
 } // namespace qore
 

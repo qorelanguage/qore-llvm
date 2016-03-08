@@ -77,7 +77,7 @@ DIAG(ParserModuleIgnored,                       "PARSE-WARNING", Warning,
 DIAG(SemaInvalidNamespaceMemberName,            "PARSE-EXCEPTION", Error,
         "invalid namespace member name")
 DIAG(SemaNamespaceNotFound,                     "PARSE-EXCEPTION", Error,
-        "namespace %s not found in namespace %s")
+        "namespace %s not found in %s")
 DIAG(SemaDuplicateNamespaceName,                "PARSE-EXCEPTION", Error,
         "cannot declare namespace %s in %s because a class with the same name already exists")
 DIAG(SemaDuplicateClassName,                    "PARSE-EXCEPTION", Error,

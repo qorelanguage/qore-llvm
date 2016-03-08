@@ -33,6 +33,7 @@
 
 #include <string>
 #include <utility>
+#include "qore/comp/Context.h"
 #include "qore/comp/ast/Visitor.h"
 #include "qore/comp/ast/Script.h"
 
@@ -44,7 +45,7 @@ namespace ast {
 #define NODE_HEADER(name)   os << indent++ << "-" << #name << "@" << decode(node.getStart())  \
                                << "-" << decode(node.getEnd()) << "\n"
 #define NODE_FOOTER()       --indent
-#define NODE(name, body)    void visit(name &node) override { \
+#define NODE(name, body)    void visit(name &node) { \
                                 NODE_HEADER(name); \
                                 body \
                                 NODE_FOOTER(); \
@@ -53,6 +54,7 @@ namespace ast {
 #define ARRAY(name, body)   FIELD(#name, "\n"); ++indent; for (auto &i : node.name) { body } --indent
 #define NODE_ARRAY(name)    ARRAY(name, i->accept(*this);)
 #define VISIT(name)         FIELD(#name, "\n"); ++indent; node.name->accept(*this); --indent
+#define TYPE(name)          FIELD(#name, "\n"); ++indent; visit(node.name); --indent
 #define MODIFIERS(name)     FIELD(#name, ""); doModifiers(node.name); os << "\n"
 #define TOKEN(name)         FIELD(#name, " "); doToken(node.name)
 #define NAME(name)          FIELD(#name, " "); doName(node.name); os << "\n"
@@ -60,24 +62,43 @@ namespace ast {
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
-class DumpVisitor : public NamespaceMemberVisitor, public ClassMemberVisitor, public StatementVisitor,
-        public ExpressionVisitor, public TypeVisitor {
+class DumpVisitor : public ClassMemberVisitor, public StatementVisitor, public ExpressionVisitor {
 
 public:
-    DumpVisitor(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
+    DumpVisitor(Context &ctx, OS &os) : ctx(ctx), os(os) {
     }
 
     void visit(Script &node) {
         NODE_HEADER(Script);
-        NODE_ARRAY(members);
+        ARRAY(members, visit(*i););
         NODE_ARRAY(statements);
         NODE_FOOTER();
+    }
+
+    void visit(Declaration &decl) {
+        switch (decl.getKind()) {
+            case Declaration::Kind::Namespace:
+                visit(static_cast<Namespace &>(decl));
+                break;
+            case Declaration::Kind::GlobalVariable:
+                visit(static_cast<GlobalVariable &>(decl));
+                break;
+            case Declaration::Kind::Function:
+                visit(static_cast<Function &>(decl));
+                break;
+            case Declaration::Kind::Constant:
+                visit(static_cast<NamespaceConstant &>(decl));
+                break;
+            case Declaration::Kind::Class:
+                visit(static_cast<Class &>(decl));
+                break;
+        }
     }
 
     NODE(Namespace, {
             MODIFIERS(modifiers);
             NAME(name);
-            NODE_ARRAY(members);
+            ARRAY(members, visit(*i););
     })
 
     NODE(Class, {
@@ -93,7 +114,7 @@ public:
 
     NODE(GlobalVariable, {
             MODIFIERS(modifiers);
-            VISIT(type);
+            TYPE(type);
             NAME(name);
     })
 
@@ -118,7 +139,7 @@ public:
 
     NODE(Field, {
             MODIFIERS(modifiers);
-            VISIT(type);
+            TYPE(type);
             TOKEN(name);
             if (node.exprInit) {
                 VISIT(exprInit);
@@ -155,13 +176,13 @@ public:
 
     NODE(TryStatement, {
             VISIT(stmtTry);
-            VISIT(exceptionType);
+            TYPE(exceptionType);
             TOKEN(exceptionName);
             VISIT(stmtCatch);
     })
 
     NODE(ForeachStatement, {
-            VISIT(varType);
+            TYPE(varType);
             TOKEN(varName);
             VISIT(expr);
             VISIT(stmt);
@@ -250,12 +271,12 @@ public:
     })
 
     NODE(VarDeclExpression, {
-            VISIT(type);
+            TYPE(type);
             TOKEN(name);
     })
 
     NODE(CastExpression, {
-            VISIT(type);
+            TYPE(type);
             VISIT(expression);
     })
 
@@ -324,16 +345,19 @@ public:
             visit(*node.routine);
     })
 
-    NODE(NameType, {
-            NAME(name);
-    })
-
-    NODE(AsteriskType, {
-            NAME(name);
-    })
-
-    NODE(ImplicitType, {
-    })
+    void visit(Type &node) {
+        if (node.getKind() == Type::Kind::Implicit) {
+            NODE_HEADER(ImplicitType);
+        } else {
+            if (node.getKind() == Type::Kind::Basic) {
+                NODE_HEADER(NameType);
+            } else {
+                NODE_HEADER(AsteriskType);
+            }
+            FIELD("name", " "); doName(node.getName()); os << "\n";
+        }
+        NODE_FOOTER();
+    }
 
     void visit(Constant &node) {
         MODIFIERS(modifiers);
@@ -343,9 +367,9 @@ public:
 
     void visit(Routine &node) {
         MODIFIERS(modifiers);
-        VISIT(type);
+        TYPE(type);
         ARRAY(params, {
-                std::get<0>(i)->accept(*this);
+                visit(std::get<0>(i));
                 os << indent << "-"; doToken(std::get<1>(i));
                 if (std::get<2>(i)) { std::get<2>(i)->accept(*this); } else { os << indent << "-no default-\n"; }
         });
@@ -366,7 +390,7 @@ public:
 private:
     std::string decode(const SourceLocation &location) {
         assert(location.sourceId >= 0);
-        std::pair<int, int> l = srcMgr.get(location.sourceId).decodeLocation(location.offset);
+        std::pair<int, int> l = ctx.getSrcMgr().get(location.sourceId).decodeLocation(location.offset);
         std::ostringstream str;
         str << l.first << ":" << l.second;
         return str.str();
@@ -398,19 +422,19 @@ private:
         }
         auto it = name.begin();
         if (!name.isRoot()) {
-            os << lexeme(*it++);
+            os << ctx.getStringTable().get((it++)->str);
         }
         while (it != name.end()) {
-            os << "::" << lexeme(*it++);
+            os << "::" << ctx.getStringTable().get((it++)->str);
         }
     }
 
     std::string lexeme(const Token &token) {
-        return srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
+        return ctx.getSrcMgr().get(token.location.sourceId).getRange(token.location.offset, token.length);
     }
 
 private:
-    SourceManager &srcMgr;
+    Context &ctx;
     OS &os;
     qore::log::Indent indent;
 };
@@ -422,6 +446,7 @@ private:
 #undef ARRAY
 #undef NODE_ARRAY
 #undef VISIT
+#undef TYPE
 #undef MODIFIERS
 #undef TOKEN
 #undef NAME
@@ -429,8 +454,8 @@ private:
 #undef BOOL
 
 template<typename OS, typename N>
-void dump(SourceManager &srcMgr, OS &os, N &n) {
-    DumpVisitor<OS> dumpVisitor(srcMgr, os);
+void dump(Context &ctx, OS &os, N &n) {
+    DumpVisitor<OS> dumpVisitor(ctx, os);
     dumpVisitor.visit(n);
 }
 /// \endcond

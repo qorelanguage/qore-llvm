@@ -37,6 +37,7 @@
 #include <vector>
 #include "qore/common/Logging.h"
 #include "qore/comp/DiagRecord.h"
+#include "qore/comp/String.h"
 
 namespace qore {
 namespace comp {
@@ -68,6 +69,16 @@ private:
 };
 
 /**
+ * \brief Template for custom arguments of diagnostic messages.
+ *
+ * This template is specialized for types that can be used as arguments of diagnostic messages.
+ * \param b the diagnostic message builder
+ * \param t the value of the argument
+ */
+template<typename T>
+void toDiagArg(class DiagBuilder &b, const T &t);
+
+/**
  * \brief A helper class for building diagnostic messages with additional parameters.
  */
 class DiagBuilder {
@@ -78,6 +89,7 @@ private:
 public:
     /**
      * \brief Creates the builder.
+     * \param stringTable the string table
      * \param processCallback the function to be called for processing the message once it is built
      * \param id the identifier of the diagnostic
      * \param code the diagnostic code
@@ -85,7 +97,7 @@ public:
      * \param message the diagnostic message
      * \param location the location in the source
      */
-    DiagBuilder(ProcessCallback processCallback, DiagId id, const char *code, DiagLevel level,
+    DiagBuilder(StringTable &stringTable, ProcessCallback processCallback, DiagId id, const char *code, DiagLevel level,
             std::string message, SourceLocation location);
 
     /**
@@ -109,25 +121,35 @@ public:
     ~DiagBuilder();
 
     /**
-     * \brief Sets the value of a parameter of the message.
-     *
-     * The value will replace the next occurrence of '%s' in the message.
-     * \param s the value of the parameter
-     * \return `this` for chaining
+     * \brief Returns the string table.
+     * \return the string table
      */
-    DiagBuilder &operator<<(const std::string &s) {
-        return arg<>(s.begin(), s.end());
+    StringTable &getStringTable() {
+        return stringTable;
     }
 
     /**
      * \brief Sets the value of a parameter of the message.
      *
      * The value will replace the next occurrence of '%s' in the message.
-     * \param c the value of the parameter
+     * \param t the value of the parameter
      * \return `this` for chaining
      */
-    DiagBuilder &operator<<(char c) {
-        return arg<>(&c, &c + 1);
+    template<typename T>
+    DiagBuilder &operator<<(const T &t) {
+        toDiagArg(*this, t);
+        return *this;
+    }
+
+    /**
+     * \brief Sets the value of a parameter of the message.
+     *
+     * The value will replace the next occurrence of '%s' in the message.
+     * \param t the value of the parameter
+     * \return `this` for chaining
+     */
+    DiagBuilder &operator<<(const char *t) {
+        return *this << std::string(t);
     }
 
     /**
@@ -164,9 +186,46 @@ private:
     DiagBuilder &operator=(const DiagBuilder &) = delete;
 
 private:
+    StringTable &stringTable;
     ProcessCallback processCallback;
     DiagRecord record;
 };
+
+/**
+ * \brief Sets the value of a parameter of the message.
+ *
+ * The value will replace the next occurrence of '%s' in the message.
+ * \param b the diagnostic message builder
+ * \param s the value of the parameter
+ */
+template<>
+inline void toDiagArg(class DiagBuilder &b, const std::string &s) {
+    b.arg<>(s.begin(), s.end());
+}
+
+/**
+ * \brief Sets the value of a parameter of the message.
+ *
+ * The value will replace the next occurrence of '%s' in the message.
+ * \param b the diagnostic message builder
+ * \param str the value of the parameter
+ */
+template<>
+inline void toDiagArg(class DiagBuilder &b, const String::Ref &str) {
+    b << b.getStringTable().get(str);
+}
+
+/**
+ * \brief Sets the value of a parameter of the message.
+ *
+ * The value will replace the next occurrence of '%s' in the message.
+ * \param b the diagnostic message builder
+ * \param c the value of the parameter
+ */
+template<>
+inline void toDiagArg(class DiagBuilder &b, const char &c) {
+    b.arg<>(&c, &c + 1);
+}
 
 /**
  * \brief Manages reporting of diagnostic messages.
@@ -174,7 +233,12 @@ private:
 class DiagManager {
 
 public:
-    DiagManager() = default;
+    /**
+     * \brief Constructor.
+     * \param stringTable for decoding strings references
+     */
+    explicit DiagManager(StringTable &stringTable) : stringTable(stringTable) {
+    }
 
     /**
      * \brief Reports a message.
@@ -218,6 +282,7 @@ private:
     void process(DiagRecord &record);
 
 private:
+    StringTable &stringTable;
     std::vector<IDiagProcessor *> processors;
     int disabledCounter{0};
 };

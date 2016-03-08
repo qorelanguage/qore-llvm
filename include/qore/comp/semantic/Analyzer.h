@@ -31,8 +31,14 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_ANALYZER_H_
 
+#include <utility>
+#include <vector>
 #include "qore/comp/ast/Script.h"
+#include "qore/comp/ast/Class.h"
+#include "qore/comp/Context.h"
 #include "qore/comp/semantic/Namespace.h"
+#include "qore/comp/semantic/TypeRegistry.h"
+#include "qore/common/Util.h"
 
 namespace qore {
 namespace comp {
@@ -46,10 +52,9 @@ class Analyzer {
 public:
     /**
      * \brief Constructs an instance.
-     * \param srcMgr source manager
-     * \param diagMgr diagnostic manager
+     * \param ctx the compiler context
      */
-    Analyzer(SourceManager &srcMgr, DiagManager &diagMgr) : context(srcMgr, diagMgr), typeRegistry(context) {
+    explicit Analyzer(Context &ctx) : ctx(ctx), typeRegistry(ctx) {
     }
 
     /**
@@ -57,11 +62,33 @@ public:
      * \param script the script to analyze
      * \return the root namespace
      */
-    Namespace::Ptr analyze(ast::Script::Ptr &script);
+    std::unique_ptr<Namespace> analyze(ast::Script::Ptr &script) {
+        std::unique_ptr<Namespace> root = util::make_unique<Namespace>(ctx);
+        collectNamespacesAndClasses(*root, script->members);
+        declareNamespaceMembers();
+        processClasses();
+        return root;
+    }
 
 private:
-    Context context;
+    void collectNamespacesAndClasses(Namespace &ns, std::vector<ast::Declaration::Ptr> &declNodes);
+    void declareNamespaceMembers();
+    void processClasses();
+    void createNamespace(Namespace &scope, ast::Namespace &node);
+    void createClass(Namespace &scope, ast::Class &node);
+    void createGlobalVariable(Namespace &scope, ast::GlobalVariable &node);
+    Namespace &findParentFor(Namespace &scope, const ast::Name &name);
+
+    Type::Ref resolveType(Scope &scope, const ast::Type &node) {
+        return typeRegistry.resolve(scope, node);
+    }
+
+private:
+    Context &ctx;
     TypeRegistry typeRegistry;
+
+    std::vector<std::pair<Namespace *, ast::Declaration *>> nsMemberQueue;
+    std::vector<std::pair<Class *, ast::Class *>> classQueue;
 };
 
 } // namespace semantic

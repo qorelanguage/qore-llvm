@@ -31,49 +31,60 @@
 #ifndef INCLUDE_QORE_COMP_SEMANTIC_NAMESPACE_H_
 #define INCLUDE_QORE_COMP_SEMANTIC_NAMESPACE_H_
 
-#include <map>
 #include <string>
 #include <vector>
-#include "qore/common/Util.h"
-#include "qore/comp/semantic/Context.h"
-#include "qore/comp/semantic/Constant.h"
-#include "qore/comp/semantic/Function.h"
+#include "qore/comp/Context.h"
+#include "qore/comp/semantic/Class.h"
 #include "qore/comp/semantic/GlobalVariable.h"
+#include "qore/comp/semantic/Scope.h"
+#include "qore/comp/semantic/Symbol.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
-class Class;
-
 /**
  * \brief Represents a namespace.
  */
-class Namespace : public NamedScope {
-
-public:
-    using Ptr = std::unique_ptr<Namespace>;                 //!< Pointer type.
+class Namespace : public NamedScope, public Symbol {
 
 public:
     /**
      * \brief Creates the root namespace.
-     * \param context the context for semantic analysis
-     * \return the root namespace
+     * \param ctx the compiler context
      */
-    static Ptr createRoot(Context &context) {
-        return Ptr(new Namespace(context, nullptr, SourceLocation(), "<root>"));
+    explicit Namespace(Context &ctx) : ctx(ctx), parent(nullptr), name() {
     }
 
     /**
      * \brief Creates a new namespace.
      * \param parent the parent namespace
-     * \param location the location of the (first) declaration
      * \param name the name of the namespace
-     * \return the namespace
+     * \param location the location of the first declaration of the namespace
      */
-    static Ptr create(Namespace &parent, SourceLocation location, std::string name) {
-        return Ptr(new Namespace(parent.context, &parent, location, std::move(name)));
+    Namespace(Namespace &parent, String::Ref name, SourceLocation location)
+            : ctx(parent.ctx), parent(&parent), name(name), location(location) {
     }
+
+    Kind getKind() const override {
+        return Kind::Namespace;
+    }
+
+    String::Ref getName() const override {
+        assert(!isRoot());
+        return name;
+    }
+
+    SourceLocation getLocation() const override {
+        assert(!isRoot());
+        return location;
+    }
+
+    std::string getFullName() const override {
+        return parent ? parent->getFullName() + "::" + ctx.getStringTable().get(name) : "";
+    }
+
+    Class &resolveClass(const ast::Name &name) const override;
 
     /**
      * \brief Return true if this instance represents the root namespace.
@@ -84,78 +95,54 @@ public:
     }
 
     /**
-     * \brief Returns the location of the (first) namespace declaration.
+     * \brief Adds a namespace to this namespace.
      *
-     * It is illegal to call this method for root namespace since it has no declaration.
-     * \return the location of the namespace declaration.
+     * If another class with the same name exists, reports an error and throws ReportedError.
+     * If another namespace with the same name exists, returns it instead of creating a new instance.
+     * \param name the name of the namespace
+     * \param location the location of the declaration
+     * \return namespace object
+     * \throws ReportedError if a class with given name already exists
      */
-    const SourceLocation &getLocation() const {
-        assert(!isRoot());
-        return location;
-    }
+    Namespace &addNamespace(String::Ref name, SourceLocation location);
 
     /**
-     * \brief Returns the name of the namespace.
-     * \return the name of the namespace
+     * \brief Adds a class to this namespace.
+     *
+     * If another class or namespace with the same name exists, reports an error and throws ReportedError.
+     * \param name the name of the class
+     * \param location the location of the declaration
+     * \return class object
+     * \throws ReportedError if a class or namespace with given name already exists
      */
-    const std::string getName() const {
-        return name;
-    }
-
-    class Class *resolveClass(const ast::Name &name) override;
-
-    std::string getFullName() const override {
-        return parent ? parent->getFullName() + "::" + name : "";
-    }
+    Class &addClass(String::Ref name, SourceLocation location);
 
     /**
-     * \brief Calls a function for each member namespace.
-     * \param callback the callback to call
+     * \brief Adds a global variable to this namespace.
+     *
+     * If another constant, function or global variable with the same name exists, reports an error and
+     * throws ReportedError.
+     * \param name the name of the variable
+     * \param location the location of the declaration
+     * \param type the type of the variable
+     * \return global variable object
+     * \throws ReportedError if a constant, function or global variable with given name already exists
      */
-    void forEachNamespace(std::function<void(Namespace &)> callback) const {
-        for (auto &n : namespaces) {
-            callback(*n.second);
-        }
-    }
-
-    /**
-     * \brief Calls a function for each member class.
-     * \param callback the callback to call
-     */
-    void forEachClass(std::function<void(Class &)> callback) const {
-        for (auto &c : classes) {
-            callback(*c.second);
-        }
-    }
-
-    /**
-     * \brief Calls a function for each member object.
-     * \tparam T the type of the member
-     * \param callback the callback to call
-     * \param recursive if true, the callback is called for objects declared in nested namespaces as well
-     */
-    template<typename T>
-    void forEach(std::function<void(T &)> callback, bool recursive = false) const {
-        if (recursive) {
-            for (auto &n : namespaces) {
-                n.second->forEach<T>(callback, true);
-            }
-        }
-        for (auto &o : objects) {
-            if (o.second->getKind() == T::NamedObjectKind) {
-                callback(static_cast<T &>(*o.second));
-            }
-        }
-    }
+    GlobalVariable &addGlobalVariable(String::Ref name, SourceLocation location, Type::Ref type);
 
     /**
      * \brief Finds a namespace with given name.
      * \param name the name to find
      * \return the namespace or `nullptr` if not found
      */
-    Namespace *findNamespace(const std::string &name) const {
-        auto it = namespaces.find(name);
-        return it == namespaces.end() ? nullptr : it->second.get();
+    Namespace *findNamespace(String::Ref name) const {
+        //FIXME symbol table?
+        for (const Symbol::Ptr &s : symbols) {
+            if (s->getName() == name && s->getKind() == Kind::Namespace) {
+                return static_cast<Namespace *>(s.get());
+            }
+        }
+        return nullptr;
     }
 
     /**
@@ -163,82 +150,66 @@ public:
      * \param name the name to find
      * \return the class or `nullptr` if not found
      */
-    Class *findClass(const std::string &name) const {
-        auto it = classes.find(name);
-        return it == classes.end() ? nullptr : it->second.get();
+    Class *findClass(String::Ref name) const {
+        //FIXME symbol table?
+        for (const Symbol::Ptr &s : symbols) {
+            if (s->getName() == name && s->getKind() == Kind::Class) {
+                return static_cast<Class *>(s.get());
+            }
+        }
+        return nullptr;
     }
-
-    /**
-     * \brief Adds a namespace to this namespace.
-     *
-     * If another class with the same name exists, reports an error and does not add the namespace.
-     * If another namespace with the same name exists, the behavior is undefined.
-     * \param ns the namespace to add
-     * \return true if added successfully
-     */
-    bool addNamespace(Ptr ns);
-
-    /**
-     * \brief Adds a class to this namespace.
-     *
-     * If another class or namespace with the same name exists, reports an error and does not add the class.
-     * \param c the class to add
-     */
-    void addClass(std::unique_ptr<Class> c);
-
-    /**
-     * \brief Adds a constant to this namespace.
-     *
-     * If another constant, function or global variable with the same name exists, reports an error and
-     * does not add the constant to the namespace.
-     * \param c the constant to add
-     */
-    void addConstant(Constant::Ptr c);
-
-    /**
-     * \brief Adds a function to this namespace.
-     *
-     * If another constant or global variable with the same name exists, reports an error and
-     * does not add the function to the namespace.
-     * \param f the function to add
-     */
-    void addFunction(Function::Ptr f);
-
-    /**
-     * \brief Adds a global variable to this namespace.
-     *
-     * If another constant, function or global variable with the same name exists, reports an error and
-     * does not add the global variable to the namespace.
-     * \param gv the global variable to add
-     */
-    void addGlobalVariable(GlobalVariable::Ptr gv);
 
 private:
-    Namespace(Context &context, Namespace *parent, SourceLocation location, std::string name)
-            : context(context), parent(parent), location(location), name(std::move(name)) {
+    //FIXME symbol table?
+    template<typename S, typename... Args>
+    S &add(Args&&... args) {
+        std::unique_ptr<S> uptr(new S(std::forward<Args>(args)...));
+        S &ptr = *uptr;
+        symbols.push_back(std::move(uptr));
+        return ptr;
     }
 
-    Namespace &getRoot() {
-        Namespace *ns = this;
+    const Namespace &getRoot() const {
+        const Namespace *ns = this;
         while (ns->parent) {
             ns = ns->parent;
         }
         return *ns;
     }
 
-    Class *lookupClass(ast::Name::Iterator begin, ast::Name::Iterator end);
-    void collectClasses(std::vector<Class *> &classes, ast::Name::Iterator begin, ast::Name::Iterator end);
+    Class *lookupClass(ast::Name::Iterator begin, ast::Name::Iterator end) const;
+    void collectClasses(std::vector<Class *> &classes, ast::Name::Iterator begin, ast::Name::Iterator end) const;
 
-    Context &context;
+
+private:
+    Context &ctx;
     Namespace *parent;
+    String::Ref name;
     SourceLocation location;
-    std::string name;
-    std::map<std::string, Namespace::Ptr> namespaces;
-    std::map<std::string, std::unique_ptr<Class>> classes;
-    std::map<std::string, NamedObject::Ptr> objects;
+    std::vector<Symbol::Ptr> symbols;
+
+    template<typename OS> friend class Dump;      //TODO remove friend Dump
 };
 
 } // namespace semantic
+
+/**
+ * \brief Sets the value of a parameter of the message.
+ *
+ * The value will replace the next occurrence of '%s' in the message.
+ * \param b the diagnostic message builder
+ * \param ns the value of the parameter
+ */
+template<>
+inline void toDiagArg(DiagBuilder &b, const semantic::Namespace &ns) {
+    if (ns.isRoot()) {
+        b << "the root namespace";
+    } else {
+        b << "namespace " + ns.getFullName();
+    }
+}
+
 } // namespace comp
 } // namespace qore
 

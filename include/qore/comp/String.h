@@ -23,37 +23,73 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "../Qtif.h"
-#include "qore/comp/DirectiveProcessor.h"
-#include "qore/comp/Parser.h"
-#include "qore/comp/ast/Dump.h"
+///
+/// \file
+/// \brief String table.
+///
+//------------------------------------------------------------------------------
+#ifndef INCLUDE_QORE_COMP_STRING_H_
+#define INCLUDE_QORE_COMP_STRING_H_
+
+#include <cassert>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace qore {
 namespace comp {
 
-class ParserTest : public qtif::LineTest {
+/**
+ * \brief Represents a string in the string table.
+ */
+class String {
+
+public:
+    /**
+     * \brief Reference to a string in the string table.
+     */
+    using Ref = uint64_t;
+
+private:
+    String() = delete;
 };
 
-TEST_P(ParserTest, Run) {
-    DirectiveProcessor dp(ctx, getSrc());
-    Parser parser(ctx, dp);
-    ast::Script::Ptr script = parser.parseScript();
-    ast::dump(ctx, output, *script);
-}
+/**
+ * \brief A simple string table.
+ */
+class StringTable {
 
-QTIF_TEST_CASE(ParserTest, "parser/");
+public:
+    /**
+     * \brief Puts a string in the table and returns its reference.
+     * \param str the string to add to the table
+     * \return the string reference
+     */
+    String::Ref put(const std::string &str) {
+        String::Ref &value = map[str];
+        if (!value) {
+            data.emplace_back(str);
+            value = data.size();
+        }
+        return value;
+    }
 
-TEST(AstCoverage, ArgList) {
-    Token t1;
-    Token t2;
-    t1.location.sourceId = 1;
-    t1.location.offset = 2;
-    t2.location.sourceId = 3;
-    t2.location.offset = 4;
-    ast::ArgList::Ptr a = ast::ArgList::create(t1, ast::ArgList::Data(), t2);
-    EXPECT_EQ(1, a->getStart().sourceId);
-    EXPECT_EQ(2, a->getStart().offset);
-}
+    /**
+     * \brief Returns the string identified by given reference.
+     * \param ref a valid reference to the string table
+     * \return the string value
+     */
+    const std::string &get(String::Ref ref) {
+        assert(ref > 0 && ref <= data.size());
+        return data[ref - 1];
+    }
+
+private:
+    std::vector<std::string> data;
+    std::unordered_map<std::string, String::Ref> map;
+};
 
 } // namespace comp
 } // namespace qore
+
+#endif // INCLUDE_QORE_COMP_STRING_H_

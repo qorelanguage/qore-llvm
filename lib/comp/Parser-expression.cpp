@@ -446,14 +446,14 @@ ast::Expression::Ptr Parser::primaryExpr() {
         case TokenType::KwSynchronized: {
             ast::Modifiers mods = modifiers();
             if (tokenType() == TokenType::KwSub) {
-                return closure(mods, ast::ImplicitType::create(location()));
+                return closure(mods, ast::Type::createImplicit(location()));
             }
             return closure(mods, type());
         }
         case TokenType::KwSub:
-            return closure(ast::Modifiers(), ast::ImplicitType::create(location()));
+            return closure(ast::Modifiers(), ast::Type::createImplicit(location()));
         case TokenType::Asterisk: {
-            ast::Type::Ptr t = type();
+            ast::Type t = type();
             if (tokenType() == TokenType::KwSub) {
                 return closure(ast::Modifiers(), std::move(t));
             }
@@ -463,10 +463,10 @@ ast::Expression::Ptr Parser::primaryExpr() {
         case TokenType::Identifier: {
             ast::Name n = name();
             if (tokenType() == TokenType::KwSub) {
-                return closure(ast::Modifiers(), ast::NameType::create(std::move(n)));
+                return closure(ast::Modifiers(), ast::Type::createBasic(std::move(n)));
             }
             if (tokenType() == TokenType::Identifier) {
-                return ast::VarDeclExpression::create(ast::NameType::create(std::move(n)), consume());
+                return ast::VarDeclExpression::create(ast::Type::createBasic(std::move(n)), consume());
             }
             return ast::NameExpression::create(std::move(n));
         }
@@ -578,7 +578,7 @@ ast::Expression::Ptr Parser::list(Token openToken, ast::Expression::Ptr expr) {
 //primary_expr
 //    | modifiers type KwSub param_list block
 //    | modifiers KwSub param_list block
-ast::ClosureExpression::Ptr Parser::closure(ast::Modifiers mods, ast::Type::Ptr type) {
+ast::ClosureExpression::Ptr Parser::closure(ast::Modifiers mods, ast::Type type) {
     LOG_FUNCTION();
     match(TokenType::KwSub);
     return ast::ClosureExpression::create(routine(mods, std::move(type)));
@@ -596,12 +596,13 @@ ast::Name Parser::name() {
     LOG_FUNCTION();
     SourceLocation start = location();
     bool root;
-    std::vector<Token> names;
+    std::vector<ast::Name::Id> names;
     if (tokenType() == TokenType::DoubleColon) {
         root = true;
     } else if (tokenType() == TokenType::Identifier) {
         root = false;
-        names.push_back(consume());
+        names.emplace_back(strVal(), location());
+        consume();
     } else {
         report(DiagId::ParserExpectedName);
         return ast::Name::invalid(start);
@@ -612,7 +613,8 @@ ast::Name Parser::name() {
             report(DiagId::ParserExpectedName);
             return ast::Name::invalid(start);
         }
-        names.push_back(consume());
+        names.emplace_back(strVal(), location());
+        consume();
     }
     return ast::Name(start, root, std::move(names));
 }
@@ -621,13 +623,13 @@ ast::Name Parser::name() {
 //    : name
 //    | '*' name
 //    ;
-ast::Type::Ptr Parser::type() {
+ast::Type Parser::type() {
     LOG_FUNCTION();
     if (tokenType() == TokenType::Asterisk) {
         SourceLocation l = consume().location;
-        return ast::AsteriskType::create(l, name());
+        return ast::Type::createAsterisk(l, name());
     }
-    return ast::NameType::create(name());
+    return ast::Type::createBasic(name());
 }
 
 //arg_list

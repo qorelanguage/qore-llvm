@@ -25,57 +25,71 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief AST nodes related to the whole Qore script.
+/// \brief Interface for symbols.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AST_SCRIPT_H_
-#define INCLUDE_QORE_COMP_AST_SCRIPT_H_
+#ifndef INCLUDE_QORE_COMP_SEMANTIC_SYMBOL_H_
+#define INCLUDE_QORE_COMP_SEMANTIC_SYMBOL_H_
 
-#include <vector>
-#include "qore/comp/ast/Namespace.h"
-#include "qore/comp/ast/Statement.h"
+#include <string>
+#include "qore/comp/SourceLocation.h"
+#include "qore/comp/String.h"
 
 namespace qore {
 namespace comp {
-namespace ast {
+namespace semantic {
 
 /**
- * \brief Represents the whole script, which is the root namespace with possible top level statements.
+ * \brief Base class for all symbols.
  */
-class Script : public Node {
+class Symbol {
 
 public:
-    SourceLocation start;                                   //!< The starting location.
-    SourceLocation end;                                     //!< The ending location.
-    std::vector<Declaration::Ptr> members;                  //!< The members of the root namespace.
-    std::vector<Statement::Ptr> statements;                 //!< The top level statements.
+    /**
+     * \brief Identifies the type of the symbol.
+     */
+    enum class Kind {
+        Namespace,                  //!< Identifies instances of \ref Namespace.
+        Class,                      //!< Identifies instances of \ref Class.
+        GlobalVariable,             //!< Identifies instances of \ref GlobalVariable.
+    };
 
 public:
-    using Ptr = std::unique_ptr<Script>;                    //!< Pointer type.
+    using Ptr = std::unique_ptr<Symbol>;            //!< Unique pointer type.
+
+public:
+    virtual ~Symbol() = default;
 
     /**
-     * \brief Allocates a new node.
-     * \return a unique pointer to the allocated node
+     * \brief Returns the type of the symbol.
+     * \return the type of the symbol
      */
-    static Ptr create() {
-        return Ptr(new Script());
-    }
+    virtual Kind getKind() const = 0;
 
-    SourceLocation getStart() const override {
-        return start;
-    }
+    /**
+     * \brief Returns the name of the symbol.
+     * \return the name of the symbol
+     */
+    virtual String::Ref getName() const = 0;
 
-    SourceLocation getEnd() const override {
-        return end;
-    }
+    /**
+     * \brief Returns the location of the declaration.
+     * \return the location of the declaration.
+     */
+    virtual SourceLocation getLocation() const = 0;
+
+protected:
+    Symbol() = default;
 
 private:
-    Script() {
-    }
+    Symbol(const Symbol &) = delete;
+    Symbol(Symbol &&) = delete;
+    Symbol &operator=(const Symbol &) = delete;
+    Symbol &operator=(Symbol &&) = delete;
 };
 
-} // namespace ast
+} // namespace semantic
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AST_SCRIPT_H_
+#endif // INCLUDE_QORE_COMP_SEMANTIC_SYMBOL_H_

@@ -1,32 +1,7 @@
-const X = 1;
-const X = 2;
-int X() {}
-our string X;
-int f() {}
-const f = 0;
-our string f;
 our string g;
-const g = 3;
-int g() {}
-our string g;
+our int g;
 #$$$
-#$!SemaDuplicateConstantName@2:7
-#$!SemaPreviousDeclaration@1:7
-#$!SemaDuplicateFunctionName@3:5
-#$!SemaPreviousDeclaration@1:7
-#$!SemaDuplicateGlobalVariableName@4:12
-#$!SemaPreviousDeclaration@1:7
-#$!SemaDuplicateConstantName@6:7
-#$!SemaPreviousDeclaration@5:5
-#$!SemaDuplicateGlobalVariableName@7:12
-#$!SemaPreviousDeclaration@5:5
-#$!SemaDuplicateConstantName@9:7
-#$!SemaPreviousDeclaration@8:12
-#$!SemaDuplicateFunctionName@10:5
-#$!SemaPreviousDeclaration@8:12
-#$!SemaDuplicateGlobalVariableName@11:12
-#$!SemaPreviousDeclaration@8:12
--namespace <root>
-  -const X @1:7
-  -sub f @5:5
-  -our string g @8:12
+#$!SemaDuplicateGlobalVariableName@2:9
+#$!SemaPreviousDeclaration@1:12
+-root namespace
+  -our string g @1:12

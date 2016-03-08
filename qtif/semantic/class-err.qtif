@@ -13,6 +13,6 @@ class x::y::z;
 #$!SemaDuplicateClassName@6:7
 #$!SemaPreviousDeclaration@3:7
 #$!SemaNamespaceNotFound@7:10-namespace y not found in namespace ::x
--namespace <root>
-  -namespace x @4:11
+-root namespace
   -class a @3:7
+  -namespace x @4:11

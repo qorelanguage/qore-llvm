@@ -270,7 +270,7 @@ private:
 class VarDeclExpression : public Expression {
 
 public:
-    Type::Ptr type;                                         //!< The type.
+    Type type;                                              //!< The type.
     Token name;                                             //!< The name.
 
 public:
@@ -283,7 +283,7 @@ public:
      * \param name the name
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Type::Ptr type, Token name) {
+    static Ptr create(Type type, Token name) {
         return Ptr(new VarDeclExpression(std::move(type), name));
     }
 
@@ -292,7 +292,7 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return type->getStart();
+        return type.getStart();
     }
 
     SourceLocation getEnd() const override {
@@ -300,7 +300,7 @@ public:
     }
 
 private:
-    explicit VarDeclExpression(Type::Ptr type, Token name) : type(std::move(type)), name(name) {
+    explicit VarDeclExpression(Type type, Token name) : type(std::move(type)), name(name) {
     }
 };
 
@@ -311,7 +311,7 @@ class CastExpression : public Expression {
 
 public:
     SourceLocation start;                                   //!< The starting location.
-    Type::Ptr type;                                         //!< The type.
+    Type type;                                              //!< The type.
     Expression::Ptr expression;                             //!< The expression.
     SourceLocation end;                                     //!< The ending location.
 
@@ -340,7 +340,7 @@ public:
     }
 
 private:
-    CastExpression() {
+    CastExpression() : type(Type::createInvalid()) {
     }
 };
 

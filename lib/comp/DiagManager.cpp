@@ -52,7 +52,7 @@ static const DiagInfo data[] = {
 
 DiagBuilder DiagManager::report(DiagId diagId, SourceLocation location) {
     const DiagInfo &info = data[static_cast<int>(diagId)];
-    return DiagBuilder(std::bind(&DiagManager::process, this, _1), diagId,
+    return DiagBuilder(stringTable, std::bind(&DiagManager::process, this, _1), diagId,
             info.code, info.level, info.description, location);
 }
 
@@ -66,9 +66,9 @@ void DiagManager::process(DiagRecord &record) {
     }
 }
 
-DiagBuilder::DiagBuilder(ProcessCallback processCallback, DiagId id, const char *code, DiagLevel level,
-        std::string message, SourceLocation location)
-        : processCallback(processCallback), record{id, code, level, message, location} {
+DiagBuilder::DiagBuilder(StringTable &stringTable, ProcessCallback processCallback, DiagId id, const char *code,
+        DiagLevel level, std::string message, SourceLocation location)
+        : stringTable(stringTable), processCallback(processCallback), record{id, code, level, message, location} {
 }
 
 DiagBuilder::~DiagBuilder() {

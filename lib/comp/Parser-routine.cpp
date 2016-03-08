@@ -34,7 +34,7 @@
 namespace qore {
 namespace comp {
 
-ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type::Ptr type, bool method) {
+ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type type, bool method) {
     LOG_FUNCTION();
     ast::Routine::Ptr r = ast::Routine::create();
     r->modifiers = mods;
@@ -77,7 +77,7 @@ std::vector<ast::Routine::Param> Parser::paramList() {
     match(TokenType::ParenLeft);
     if (tokenType() != TokenType::ParenRight && tokenType() != TokenType::EndOfFile) {
         while (true) {
-            ast::Type::Ptr t = type();
+            ast::Type t = type();
             Token id = match(TokenType::Identifier);
             ast::Expression::Ptr expr;
             if (tokenType() == TokenType::Equals) {

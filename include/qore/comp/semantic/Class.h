@@ -32,8 +32,8 @@
 #define INCLUDE_QORE_COMP_SEMANTIC_CLASS_H_
 
 #include <string>
-#include "qore/comp/semantic/Namespace.h"
-#include "qore/comp/ast/Class.h"
+#include "qore/comp/semantic/Scope.h"
+#include "qore/comp/semantic/Symbol.h"
 
 namespace qore {
 namespace comp {
@@ -42,58 +42,45 @@ namespace semantic {
 /**
  * \brief Represents a class.
  */
-class Class : public NamedScope {
-
-public:
-    using Ptr = std::unique_ptr<Class>;                     //!< Pointer type.
+class Class : public NamedScope, public Symbol {
 
 public:
     /**
      * \brief Creates a new instance.
-     * \param context the context for semantic analysis
-     * \param parent the parent namespace
-     * \param astNode the AST node, the name must be valid
-     * \return a unique pointer to the allocated instance
+     * \param ctx the compiler context
+     * \param parent the parent scope
+     * \param name the name of the class
+     * \param location the location of the declaration
      */
-    static Ptr create(Context &context, Namespace &parent, ast::Class &astNode) {
-        assert(astNode.name.isValid());
-        return Ptr(new Class(context, parent, astNode));
+    Class(Context &ctx, NamedScope &parent, String::Ref name, SourceLocation location)
+        : ctx(ctx), parent(parent), name(name), location(location) {
     }
 
-    /**
-     * \brief Returns the location of the class declaration.
-     * \return the location of the class declaration.
-     */
-    const SourceLocation &getLocation() const {
-        return astNode.name.last().location;
+    Kind getKind() const override {
+        return Kind::Class;
     }
 
-    /**
-     * \brief Returns the name of the class.
-     * \return the name of the class
-     */
-    const std::string getName() const {
+    String::Ref getName() const override {
         return name;
     }
 
-    class Class *resolveClass(const ast::Name &name) override {
-        return parent.resolveClass(name);
+    SourceLocation getLocation() const override {
+        return location;
     }
 
     std::string getFullName() const override {
-        return parent.getFullName() + "::" + name;
+        return parent.getFullName() + "::" + ctx.getStringTable().get(name);
+    }
+
+    Class &resolveClass(const ast::Name &name) const override {
+        return parent.resolveClass(name);
     }
 
 private:
-    Class(Context &context, Namespace &parent, ast::Class &astNode) : context(context),
-            parent(parent), astNode(astNode), name(context.getIdentifier(astNode.name.last())) {
-    }
-
-private:
-    Context &context;
-    Namespace &parent;
-    ast::Class &astNode;
-    std::string name;
+    Context &ctx;
+    NamedScope &parent;
+    String::Ref name;
+    SourceLocation location;
 };
 
 } // namespace semantic

@@ -41,134 +41,115 @@ namespace comp {
 namespace ast {
 
 /**
- * \brief Base class for all nodes representing types.
+ * \brief Type representation in the AST.
  */
-class Type : public Node {
+class Type {
 
 public:
-    using Ptr = std::unique_ptr<Type>;                      //!< Pointer type.
-
     /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
-     * \param visitor the visitor to call
+     * \brief Identifies the kind of the type.
      */
-    virtual void accept(TypeVisitor &visitor) = 0;
-};
-
-/**
- * \brief Represents simple type expressed by a name.
- */
-class NameType : public Type {
-
-public:
-    Name name;                                              //!< The name of the type.
-
-public:
-    using Ptr = std::unique_ptr<NameType>;                  //!< Pointer type.
+    enum class Kind {
+        Basic,              //!< Identifies basic types represented by a name.
+        Asterisk,           //!< Identifies types represented by a name with an asterisk.
+        Implicit,           //!< Implicit type.
+        Invalid,            //!< Invalid type.
+    };
 
 public:
     /**
-     * \brief Allocates a new node.
+     * \brief Creates a basic type.
      * \param name the name of the type
-     * \return a unique pointer to the allocated node
+     * \return new \ref Kind::Basic type
      */
-    static Ptr create(Name name) {
-        return Ptr(new NameType(std::move(name)));
+    static Type createBasic(Name name) {
+        return Type(Kind::Basic, name.getStart(), std::move(name));
     }
 
-    void accept(TypeVisitor &v) override {
-        v.visit(*this);
+    /**
+     * \brief Creates an astrisk type.
+     * \param asteriskLocation the location of the asterisk
+     * \param name the name of the type
+     * \return new \ref Kind::Asterisk type
+     */
+    static Type createAsterisk(SourceLocation asteriskLocation, Name name) {
+        return Type(Kind::Asterisk, asteriskLocation, std::move(name));
     }
 
-    SourceLocation getStart() const override {
-        return name.getStart();
+    /**
+     * \brief Creates the implicit type.
+     * \param location the implied location of the type
+     * \return new \ref Kind::Implicit type
+     */
+    static Type createImplicit(SourceLocation location) {
+        return Type(Kind::Implicit, location, Name::invalid(location));
     }
 
-    SourceLocation getEnd() const override {
+    /**
+     * \brief Creates an invalid type.
+     * TODO remove invalid type
+     * \return new \ref Kind::Invalid type
+     */
+    static Type createInvalid() {
+        return Type(Kind::Invalid, SourceLocation(), Name::invalid());
+    }
+
+    /**
+     * \brief Default move-constructor.
+     */
+    Type(Type &&) = default;
+
+    /**
+     * \brief Default move-assignment.
+     */
+    Type &operator=(Type &&) = default;
+
+    /**
+     * \brief Returns the starting location of the type.
+     * \return the starting location of the type
+     */
+    SourceLocation getStart() const {
+        return start;
+    }
+
+    /**
+     * \brief Returns the ending location of the type.
+     * \return the ending location of the type
+     */
+    SourceLocation getEnd() const {
         return name.getEnd();
     }
 
-private:
-    explicit NameType(Name name) : name(std::move(name)) {
-    }
-};
-
-/**
- * \brief Represents type expressed by an asterisk followed by a name.
- */
-class AsteriskType : public Type {
-
-public:
-    SourceLocation asterisk;                                //!< The location of the asterisk.
-    Name name;                                              //!< The name of the type.
-
-public:
-    using Ptr = std::unique_ptr<AsteriskType>;              //!< Pointer type.
-
-public:
     /**
-     * \brief Allocates a new node.
-     * \param asterisk the location of the asterisk
-     * \param name the name of the type
-     * \return a unique pointer to the allocated node
+     * \brief Returns the kind of the type.
+     * \return the kind of the type
      */
-    static Ptr create(SourceLocation asterisk, Name name) {
-        return Ptr(new AsteriskType(asterisk, std::move(name)));
+    Kind getKind() const {
+        return kind;
     }
 
-    void accept(TypeVisitor &v) override {
-        v.visit(*this);
-    }
-
-    SourceLocation getStart() const override {
-        return asterisk;
-    }
-
-    SourceLocation getEnd() const override {
-        return name.getEnd();
-    }
-
-private:
-    explicit AsteriskType(SourceLocation asterisk, Name name) : asterisk(asterisk), name(std::move(name)) {
-    }
-};
-
-/**
- * \brief Represents the implicit 'nothing' type of functions without return type declaration.
- */
-class ImplicitType : public Type {
-
-public:
-    SourceLocation location;                                //!< The location of the 'sub' declaration
-
-public:
-    using Ptr = std::unique_ptr<ImplicitType>;              //!< Pointer type.
-
-public:
     /**
-     * \brief Allocates a new node.
-     * \param location the (implied) location in the source code
-     * \return a unique pointer to the allocated node
+     * \brief Returns the name of the type.
+     *
+     * This method can be called only for \ref Kind::Basic and \ref Kind::Asterisk types.
+     * \return the name of the type
      */
-    static Ptr create(SourceLocation location) {
-        return Ptr(new ImplicitType(location));
-    }
-
-    void accept(TypeVisitor &v) override {
-        v.visit(*this);
-    }
-
-    SourceLocation getStart() const override {
-        return location;
-    }
-
-    SourceLocation getEnd() const override {
-        return location;
+    const Name &getName() const {
+        assert(kind == Kind::Basic || kind == Kind::Asterisk);
+        return name;
     }
 
 private:
-    explicit ImplicitType(SourceLocation location) : location(location) {
+    Type(Kind kind, SourceLocation start, Name name) : kind(kind), start(start), name(std::move(name)) {
     }
+
+    Type(const Type &) = delete;
+    Type &operator=(const Type &) = delete;
+
+private:
+    Kind kind;
+    SourceLocation start;
+    Name name;
 };
 
 } // namespace ast

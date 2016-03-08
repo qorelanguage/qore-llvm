@@ -57,7 +57,7 @@ public:
 /**
  * \brief Represents a class.
  */
-class Class : public NamespaceMember {
+class Class : public Declaration {
 
 public:
     using Superclass = std::pair<Modifiers, Name>;          //!< The element type of the `inherits` field.
@@ -81,8 +81,8 @@ public:
         return Ptr(new Class());
     }
 
-    void accept(NamespaceMemberVisitor &visitor) override {
-        visitor.visit(*this);
+    Kind getKind() const override {
+        return Kind::Class;
     }
 
     SourceLocation getStart() const override {
@@ -222,7 +222,7 @@ class Field : public ClassMember {
 
 public:
     Modifiers modifiers;                                    //!< The modifiers.
-    Type::Ptr type;                                         //!< The type of the field.
+    Type type;                                              //!< The type of the field.
     Token name;                                             //!< The name of the field.
     SourceLocation end;                                     //!< The location of the semicolon.
     Expression::Ptr exprInit;                               //!< The expression initializer.
@@ -244,7 +244,7 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return type->getStart();
+        return type.getStart();
     }
 
     SourceLocation getEnd() const override {
@@ -252,7 +252,7 @@ public:
     }
 
 private:
-    Field() {
+    Field() : type(Type::createInvalid()) {
     }
 };
 

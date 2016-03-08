@@ -50,7 +50,7 @@ public:
     /**
      * \brief The type of one element of the parameter list: a triplet (type, name, default value (may be nullptr)).
      */
-    using Param = std::tuple<Type::Ptr, Token, Expression::Ptr>;
+    using Param = std::tuple<Type, Token, Expression::Ptr>;
 
     /**
      * \brief The type of one element of the base constructor invocation list.
@@ -59,7 +59,7 @@ public:
 
 public:
     Modifiers modifiers;                                    //!< The modifiers.
-    Type::Ptr type;                                         //!< The return type.
+    Type type;                                              //!< The return type.
     std::vector<Param> params;                              //!< The parameters.
     std::vector<BaseCtorInvocation> baseCtors;              //!< The base constructor invocation list.
     CompoundStatement::Ptr body;                            //!< The body of the routine, nullptr for abstract methods.
@@ -78,7 +78,7 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return type->getStart();
+        return type.getStart();
     }
 
     SourceLocation getEnd() const override {
@@ -86,7 +86,7 @@ public:
     }
 
 private:
-    Routine() {
+    Routine() : type(Type::createInvalid()) {
     }
 };
 

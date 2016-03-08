@@ -144,47 +144,6 @@ private:
 };
 
 /**
- * \brief Helper class for evaluating type nodes.
- * \tparam V the type of the value
- * \tparam E the type of the evaluator
- */
-template<typename V, typename E>
-class TypeEvaluatorVisitor : public TypeVisitor {
-
-public:
-    /**
-     * \brief Constructor.
-     * \param evaluator the evaluator
-     */
-    explicit TypeEvaluatorVisitor(E &evaluator) : evaluator(evaluator) {
-    }
-
-    /**
-     * \brief Returns the value evaluated for the visited node.
-     * \return the value evaluated for the visited node
-     */
-    V getValue() {
-        return std::move(value);
-    }
-
-    void visit(NameType &node) override {
-        value = evaluator.eval(node);
-    }
-
-    void visit(AsteriskType &node) override {
-        value = evaluator.eval(node);
-    }
-
-    void visit(ImplicitType &node) override {
-        value = evaluator.eval(node);
-    }
-
-private:
-    V value;
-    E &evaluator;
-};
-
-/**
  * \brief Evaluates an expression node using an evaluator.
  *
  * Calls `V eval(X &)` where X is the concrete type of the node.
@@ -197,23 +156,6 @@ private:
 template<typename V, typename E>
 V evaluateExpressionNode(ast::Expression &node, E &evaluator) {
     ExpressionEvaluatorVisitor<V, E> visitor(evaluator);
-    node.accept(visitor);
-    return visitor.getValue();
-}
-
-/**
- * \brief Evaluates a type node using an evaluator.
- *
- * Calls `V eval(X &)` where X is the concrete type of the node.
- * \tparam V the type of the value
- * \tparam E the type of the evaluator
- * \param node the type node to evaluate
- * \param evaluator the evaluator
- * \return the return value of `V E::eval(X &)`
- */
-template<typename V, typename E>
-V evaluateTypeNode(ast::Type &node, E &evaluator) {
-    TypeEvaluatorVisitor<V, E> visitor(evaluator);
     node.accept(visitor);
     return visitor.getValue();
 }

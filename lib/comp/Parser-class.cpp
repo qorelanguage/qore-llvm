@@ -69,7 +69,6 @@ ast::Class::Ptr Parser::classDecl(ast::Modifiers mods) {
 ast::ClassMember::Ptr Parser::classMember() {
     LOG_FUNCTION();
     ast::Modifiers mods = modifiers();
-    ast::Type::Ptr t;
     switch (tokenType()) {
         case TokenType::CurlyLeft:
             if (mods.isEmpty()) {
@@ -77,7 +76,7 @@ ast::ClassMember::Ptr Parser::classMember() {
             }
             return classMemberList(mods);
         case TokenType::Asterisk: {
-            t = type();
+            ast::Type t = type();
             ast::Name n = name();
             return ast::Method::create(std::move(n), routine(mods, std::move(t), true));
         }
@@ -85,12 +84,13 @@ ast::ClassMember::Ptr Parser::classMember() {
         case TokenType::Identifier: {
             ast::Name n = name();
             if (tokenType() == TokenType::DoubleColon || tokenType() == TokenType::Identifier) {
-                t = ast::NameType::create(std::move(n));
+                ast::Type t = ast::Type::createBasic(std::move(n));
                 n = name();
+                return ast::Method::create(std::move(n), routine(mods, std::move(t), true));
             } else {
-                t = ast::ImplicitType::create(n.getStart());
+                ast::Type t = ast::Type::createImplicit(n.getStart());
+                return ast::Method::create(std::move(n), routine(mods, std::move(t), true));
             }
-            return ast::Method::create(std::move(n), routine(mods, std::move(t), true));
         }
         default:
             return ast::ClassMember::Ptr();

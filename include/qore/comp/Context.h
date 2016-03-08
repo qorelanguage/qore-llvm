@@ -25,63 +25,55 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Context for semantic analysis.
+/// \brief Defines the context of the compiler.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
-#define INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
+#ifndef INCLUDE_QORE_COMP_CONTEXT_H_
+#define INCLUDE_QORE_COMP_CONTEXT_H_
 
 #include <string>
-#include "qore/comp/ast/Name.h"
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/SourceManager.h"
-#include "qore/comp/Token.h"
+#include "qore/comp/String.h"
 
 namespace qore {
 namespace comp {
-namespace semantic {
 
 /**
- * \brief Context for semantic analysis.
+ * \brief Provides access to the core components of the compiler.
  */
 class Context {
 
 public:
     /**
-     * \brief Constructs an instance.
-     * \param srcMgr source manager
-     * \param diagMgr diagnostic manager
+     * \brief Creates a new context.
      */
-    Context(SourceManager &srcMgr, DiagManager &diagMgr) : srcMgr(srcMgr), diagMgr(diagMgr) {
+    explicit Context(StringTable &stringTable, DiagManager &diagMgr, SourceManager &srcMgr)
+            : stringTable(stringTable), diagMgr(diagMgr), srcMgr(srcMgr) {
     }
 
     /**
-     * \brief Returns the actual name of an identifier.
-     * \param token an identifier token
-     * \return the name of the identifier
+     * \brief Returns the string table.
+     * \return the string table
      */
-    std::string getIdentifier(const Token &token) const {
-        assert(token.type == TokenType::Identifier);
-        return srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
+    StringTable &getStringTable() {
+        return stringTable;
     }
 
     /**
-     * \brief Converts a name to a string.
-     * \param name the name to convert
-     * \return the converted name
+     * \brief Returns the diagnostic manager.
+     * \return the diagnostic manager
      */
-    std::string nameToString(const ast::Name &name) const {
-        assert(name.isValid());
-        std::ostringstream str;
+    DiagManager &getDiagMgr() {
+        return diagMgr;
+    }
 
-        auto it = name.begin();
-        if (!name.isRoot()) {
-            str << getIdentifier(*it++);
-        }
-        while (it != name.end()) {
-            str << "::" << getIdentifier(*it++);
-        }
-        return str.str();
+    /**
+     * \brief Returns the source manager.
+     * \return the source manager
+     */
+    SourceManager &getSrcMgr() {
+        return srcMgr;
     }
 
     /**
@@ -101,12 +93,12 @@ private:
     Context &operator=(Context &&) = delete;
 
 private:
-    SourceManager &srcMgr;
+    StringTable &stringTable;
     DiagManager &diagMgr;
+    SourceManager &srcMgr;
 };
 
-} // namespace semantic
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEMANTIC_CONTEXT_H_
+#endif // INCLUDE_QORE_COMP_CONTEXT_H_

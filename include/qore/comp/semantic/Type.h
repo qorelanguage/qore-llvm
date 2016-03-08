@@ -69,106 +69,18 @@ private:
  */
 class TypeReference {
 
-public:
-    /**
-     * \brief Constructs an invalid type reference.
-     */
-    TypeReference() : type(nullptr) {
+private:
+    explicit TypeReference(std::shared_ptr<Type> type) : type(type) {
+        assert(type != nullptr);
     }
 
 private:
-    explicit TypeReference(const Type *type) : type(type) {
-    }
-
-private:
-    const Type *type;
+    std::shared_ptr<Type> type;
 
     friend class TypeRegistry;
     friend std::ostream &operator<<(std::ostream &os, const TypeReference &r) {
-        if (!r.type) {
-            return os << "<unknown>";
-        }
-        return os <<r.type->getName();
+        return os << r.type->getName();
     }
-};
-
-/**
- * \brief Represents a built-in type.
- */
-class BuiltinType : public Type {
-
-public:
-    /**
-     * \brief Creates a type with given name.
-     * \param name the name of the type
-     */
-    explicit BuiltinType(std::string name) : name(std::move(name)) {
-    }
-
-    std::string getName() const override {
-        return name;
-    }
-
-private:
-    std::string name;
-};
-
-/**
- * \brief Represents a type defined by a class.
- */
-class ClassType : public Type {
-
-public:
-    using Ptr = std::unique_ptr<ClassType>;                 //!< Pointer type.
-
-public:
-    /**
-     * \brief Creates the type for given class.
-     * \param clazz the class
-     * \return pointer to the new instance
-     */
-    static Ptr create(Class &clazz) {
-        return Ptr(new ClassType(clazz));
-    }
-
-    std::string getName() const override;
-
-private:
-    explicit ClassType(Class &clazz) : clazz(clazz) {
-    }
-
-private:
-    Class &clazz;
-};
-
-/**
- * \brief Represents the type *T for a type T.
- */
-class AsteriskType : public Type {
-
-public:
-    using Ptr = std::unique_ptr<AsteriskType>;              //!< Pointer type.
-
-public:
-    /**
-     * \brief Creates the type *T for given type T.
-     * \param type the original type
-     * \return pointer to the new instance
-     */
-    static Ptr create(const Type &type) {
-        return Ptr(new AsteriskType(type));
-    }
-
-    std::string getName() const override {
-        return  "*" + type.getName();
-    }
-
-private:
-    explicit AsteriskType(const Type &type) : type(type) {
-    }
-
-private:
-    const Type &type;
 };
 
 } // namespace semantic

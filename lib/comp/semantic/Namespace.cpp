@@ -29,127 +29,102 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/semantic/Namespace.h"
-#include <string>
 #include <vector>
-#include "qore/comp/semantic/Class.h"
+#include "ReportedError.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
-//TODO modifiers
-//TODO reserved words
-bool Namespace::addNamespace(Ptr ns) {
-    assert(!findNamespace(ns->getName()));
-    if (Class *c = findClass(ns->getName())) {
-        context.report(DiagId::SemaDuplicateNamespaceName, ns->getLocation()) << ns->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, c->getLocation());
-        return false;
+Namespace &Namespace::addNamespace(String::Ref name, SourceLocation location) {
+    if (Namespace *ns = findNamespace(name)) {
+        return *ns;
     }
-    namespaces[ns->getName()] = std::move(ns);
-    return true;
+    if (Class *c = findClass(name)) {
+        ctx.report(DiagId::SemaDuplicateNamespaceName, location) << name << getFullName();
+        ctx.report(DiagId::SemaPreviousDeclaration, c->getLocation());
+        throw ReportedError();
+    }
+    return add<Namespace>(*this, name, location);
 }
 
-void Namespace::addClass(Class::Ptr c) {
-    Class *old = findClass(c->getName());
-    Namespace *ns = findNamespace(c->getName());
+Class &Namespace::addClass(String::Ref name, SourceLocation location) {
+    Class *old = findClass(name);
+    Namespace *ns = findNamespace(name);
     if (old || ns) {
-        context.report(DiagId::SemaDuplicateClassName, c->getLocation()) << c->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : ns->getLocation());
-        return;
+        ctx.report(DiagId::SemaDuplicateClassName, location) << name << getFullName();
+        ctx.report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : ns->getLocation());
+        throw ReportedError();
     }
-    classes[c->getName()] = std::move(c);
+    return add<Class>(ctx, *this, name, location);
 }
 
-void Namespace::addConstant(Constant::Ptr c) {
-    NamedObject::Ptr &p = objects[c->getName()];
-    if (!p) {
-        p = std::move(c);
-    } else {
-        context.report(DiagId::SemaDuplicateConstantName, c->getLocation()) << c->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, p->getLocation());
+GlobalVariable &Namespace::addGlobalVariable(String::Ref name, SourceLocation location, Type::Ref type) {
+    for (auto &s : symbols) {
+        if (s->getName() == name) {
+            if (s->getKind() == Kind::GlobalVariable) { //TODO or function or constant
+                ctx.report(DiagId::SemaDuplicateGlobalVariableName, location) << name << getFullName();
+                ctx.report(DiagId::SemaPreviousDeclaration, s->getLocation());
+                throw ReportedError();
+            }
+        }
     }
+    return add<GlobalVariable>(ctx, *this, name, location, type);
 }
 
-void Namespace::addFunction(Function::Ptr f) {
-    NamedObject::Ptr &p = objects[f->getName()];
-    if (!p) {
-        p = FunctionGroup::create(std::move(f));
-    } else if (p->getKind() == NamedObject::Kind::FunctionGroup) {
-        static_cast<FunctionGroup &>(*p).add(std::move(f));
-    } else {
-        context.report(DiagId::SemaDuplicateFunctionName, f->getLocation()) << f->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, p->getLocation());
-    }
-}
-
-void Namespace::addGlobalVariable(GlobalVariable::Ptr gv) {
-    NamedObject::Ptr &p = objects[gv->getName()];
-    if (!p) {
-        p = std::move(gv);
-    } else {
-        context.report(DiagId::SemaDuplicateGlobalVariableName, gv->getLocation()) << gv->getName() << getFullName();
-        context.report(DiagId::SemaPreviousDeclaration, p->getLocation());
-    }
-}
-
-Class *Namespace::resolveClass(const ast::Name &name) {
+Class &Namespace::resolveClass(const ast::Name &name) const {
     assert(name.isValid());
     if (name.isRoot()) {
         if (Class *c = getRoot().lookupClass(name.begin(), name.end())) {
-            return c;
+            return *c;
         }
-        context.report(DiagId::SemaUnresolvedClass, name.getStart()) << context.nameToString(name);
-        return nullptr;
+        ctx.report(DiagId::SemaUnresolvedClass, name.getStart()) << name;
+        throw ReportedError();
     }
     if (parent) {
         if (Class *c = lookupClass(name.begin(), name.end())) {
-            return c;
+            return *c;
         }
         return parent->resolveClass(name);
     }
     std::vector<Class *> classes;
     collectClasses(classes, name.begin(), name.end());
     if (classes.size() == 1) {
-        return classes[0];
+        return *classes[0];
     }
-    if (classes.empty()) {
-        context.report(DiagId::SemaUnresolvedClass, name.getStart()) << context.nameToString(name);
-    } else {
-        context.report(DiagId::SemaAmbiguousClass, name.getStart()) << context.nameToString(name);
-    }
-    return nullptr;
+    ctx.report(classes.empty() ? DiagId::SemaUnresolvedClass : DiagId::SemaAmbiguousClass, name.getStart()) << name;
+    throw ReportedError();
 }
 
-Class *Namespace::lookupClass(ast::Name::Iterator begin, ast::Name::Iterator end) {
+Class *Namespace::lookupClass(ast::Name::Iterator begin, ast::Name::Iterator end) const {
     assert(begin != end);
-    std::string name = context.getIdentifier(*begin);
 
     if (begin + 1 == end) {
-        return findClass(name);
+        return findClass(begin->str);
     }
-    if (Namespace *ns = findNamespace(name)) {
+    if (Namespace *ns = findNamespace(begin->str)) {
         return ns->lookupClass(begin + 1, end);
     }
     return nullptr;
 }
 
-void Namespace::collectClasses(std::vector<Class *> &classes, ast::Name::Iterator begin, ast::Name::Iterator end) {
+void Namespace::collectClasses(std::vector<Class *> &classes, ast::Name::Iterator begin,
+        ast::Name::Iterator end) const {
     assert(begin != end);
-    std::string name = context.getIdentifier(*begin);
 
     if (begin + 1 == end) {
-        if (Class *c = findClass(name)) {
+        if (Class *c = findClass(begin->str)) {
             classes.push_back(c);
         }
-    }
-    if (Namespace *ns = findNamespace(name)) {
+    } else if (Namespace *ns = findNamespace(begin->str)) {
         if (Class *c = ns->lookupClass(begin + 1, end)) {
             classes.push_back(c);
         }
     }
-    for (auto &it : namespaces) {
-        it.second->collectClasses(classes, begin, end);
+    for (auto &it : symbols) {
+        if (it->getKind() == Kind::Namespace) {
+            static_cast<Namespace &>(*it).collectClasses(classes, begin, end);
+        }
     }
 }
 

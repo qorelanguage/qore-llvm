@@ -40,8 +40,7 @@ const std::unordered_map<std::string, DirectiveInfo> DirectiveProcessor::Directi
     {"%include",            {DirectiveId::Include, DirectiveArgs::Single}},
 };
 
-DirectiveProcessor::DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr, Source &src) : diagMgr(diagMgr),
-        srcMgr(srcMgr), scanner(diagMgr) {
+DirectiveProcessor::DirectiveProcessor(Context &ctx, Source &src) : ctx(ctx), scanner(ctx) {
     LOG_FUNCTION();
     srcStack.push(src);
 }
@@ -97,7 +96,7 @@ void DirectiveProcessor::processDirective(Source &src, SourceLocation location, 
 
     auto it = Directives.find(directive);
     if (it == Directives.end()) {
-        diagMgr.report(DiagId::PdpUnknownDirective, location) << directive;
+        ctx.report(DiagId::PdpUnknownDirective, location) << directive;
         return;
     }
 //    if (it->second.args == DirectiveArgs::None && !arg.empty()) {
@@ -105,7 +104,7 @@ void DirectiveProcessor::processDirective(Source &src, SourceLocation location, 
 //        return;
 //    }
     if (it->second.args == DirectiveArgs::Single && arg.empty()) {
-        diagMgr.report(DiagId::PdpMissingArgument, location) << directive;
+        ctx.report(DiagId::PdpMissingArgument, location) << directive;
         return;
     }
 
@@ -114,7 +113,7 @@ void DirectiveProcessor::processDirective(Source &src, SourceLocation location, 
             if ((arg[0] == '"' && arg[arg.length() - 1] == '"') || (arg[0] == '\'' && arg[arg.length() - 1] == '\'')) {
                 arg = arg.substr(1, arg.length() - 2);
             }
-            srcStack.push(srcMgr.createFromFile(arg, location));
+            srcStack.push(ctx.getSrcMgr().createFromFile(arg, location));
             break;
     }
 }

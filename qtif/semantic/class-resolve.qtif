@@ -21,17 +21,20 @@ class C {
 our N::N::C g1;
 our ::C g2;
 our ::N::C g3;
+class N::N::N {}
+our N g4;
 #$$$
--namespace <root>
+-root namespace
   -namespace N @1:11
+    -class C @2:11
     -namespace N @4:15
       -class C @5:15
+      -class N @24:13
       -our ::N::N::C g1 @7:15
       -our ::N::N::C g2 @8:18
       -our ::N::N::C g3 @9:21
       -our ::C g4 @10:17
       -our ::N::C g5 @11:20
-    -class C @2:11
     -our ::N::C g1 @13:11
     -our ::N::N::C g2 @14:14
     -our ::N::N::C g3 @15:17
@@ -41,3 +44,4 @@ our ::N::C g3;
   -our ::N::N::C g1 @21:13
   -our ::C g2 @22:9
   -our ::N::C g3 @23:12
+  -our ::N::N::N g4 @25:7

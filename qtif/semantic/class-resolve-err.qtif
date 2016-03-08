@@ -13,11 +13,11 @@ our N::C g2;
 #$!SemaUnresolvedClass@8:9
 #$!SemaAmbiguousClass@10:5
 #$!SemaAmbiguousClass@11:5
--namespace <root>
+-root namespace
   -namespace N @1:11
+    -class C @2:11
     -namespace N @4:15
       -class C @5:15
-    -class C @2:11
-    -our <unknown> g @8:13
-  -our <unknown> g1 @10:7
-  -our <unknown> g2 @11:10
+    -our <error> g @8:13
+  -our <error> g1 @10:7
+  -our <error> g2 @11:10

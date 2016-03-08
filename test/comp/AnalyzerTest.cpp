@@ -38,12 +38,12 @@ class AnalyzerTest : public qtif::LineTest {
 };
 
 TEST_P(AnalyzerTest, Run) {
-    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
-    Parser parser(diagMgr, dp);
+    DirectiveProcessor dp(ctx, getSrc());
+    Parser parser(ctx, dp);
     ast::Script::Ptr script = parser.parseScript();
-    Analyzer analyzer(srcMgr, diagMgr);
-    semantic::Namespace::Ptr root = analyzer.analyze(script);
-    semantic::dump(srcMgr, output, *root);
+    Analyzer analyzer(ctx);
+    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
+    semantic::dump(ctx, output, *root);
 }
 
 QTIF_TEST_CASE(AnalyzerTest, "semantic/");

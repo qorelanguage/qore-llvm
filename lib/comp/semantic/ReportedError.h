@@ -23,37 +23,27 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "../Qtif.h"
-#include "qore/comp/DirectiveProcessor.h"
-#include "qore/comp/Parser.h"
-#include "qore/comp/ast/Dump.h"
+///
+/// \file
+/// \brief Defines an exception type used for error recovery.
+///
+//------------------------------------------------------------------------------
+#ifndef LIB_COMP_SEMANTIC_REPORTEDERROR_H_
+#define LIB_COMP_SEMANTIC_REPORTEDERROR_H_
 
 namespace qore {
 namespace comp {
+namespace semantic {
 
-class ParserTest : public qtif::LineTest {
+/**
+ * \brief An exception thrown when a semantic error has been detected and reported to the user, but recovery
+ * needs to be done somewhere else.
+ */
+class ReportedError {
 };
 
-TEST_P(ParserTest, Run) {
-    DirectiveProcessor dp(ctx, getSrc());
-    Parser parser(ctx, dp);
-    ast::Script::Ptr script = parser.parseScript();
-    ast::dump(ctx, output, *script);
-}
-
-QTIF_TEST_CASE(ParserTest, "parser/");
-
-TEST(AstCoverage, ArgList) {
-    Token t1;
-    Token t2;
-    t1.location.sourceId = 1;
-    t1.location.offset = 2;
-    t2.location.sourceId = 3;
-    t2.location.offset = 4;
-    ast::ArgList::Ptr a = ast::ArgList::create(t1, ast::ArgList::Data(), t2);
-    EXPECT_EQ(1, a->getStart().sourceId);
-    EXPECT_EQ(2, a->getStart().offset);
-}
-
+} // namespace semantic
 } // namespace comp
 } // namespace qore
+
+#endif // LIB_COMP_SEMANTIC_REPORTEDERROR_H_

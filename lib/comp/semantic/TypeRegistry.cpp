@@ -30,88 +30,158 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/semantic/TypeRegistry.h"
 #include <string>
-#include "qore/common/Exceptions.h"
-#include "qore/comp/ast/Evaluator.h"
 #include "qore/comp/semantic/Class.h"
+#include "ReportedError.h"
 
 namespace qore {
 namespace comp {
 namespace semantic {
 
-std::string ClassType::getName() const {
-    return clazz.getFullName();
-}
-
-/// \cond NoDoxygen
-class TypeResolver {
+/**
+ * \brief Represents a built-in type.
+ */
+class BuiltinType : public Type {
 
 public:
-    TypeResolver(TypeRegistry &typeRegistry, Scope &scope) : typeRegistry(typeRegistry), scope(scope) {
+    /**
+     * \brief Creates a type with given name.
+     * \param ctx the compiler context
+     * \param name the name of the type
+     */
+    BuiltinType(Context &ctx, String::Ref name) : ctx(ctx), name(name) {
     }
 
-    Type::Ref eval(ast::NameType &node) {
-        return typeRegistry.resolveName(scope, node.name);
-    }
-
-    Type::Ref eval(ast::AsteriskType &node) {
-        return typeRegistry.getAsteriskType(typeRegistry.resolveName(scope, node.name));
-    }
-
-    Type::Ref eval(ast::ImplicitType &node) {
-        return typeRegistry.getImplicit();
+    std::string getName() const override {
+        return ctx.getStringTable().get(name);
     }
 
 private:
-    TypeRegistry &typeRegistry;
-    Scope &scope;
+    Context &ctx;
+    String::Ref name;
 };
-/// \endcond NoDoxygen
 
-Type::Ref TypeRegistry::resolve(Scope &scope, ast::Type::Ptr &node) {
-    TypeResolver resolver(*this, scope);
-    return ast::evaluateTypeNode<Type::Ref>(*node, resolver);
+/**
+ * \brief Represents the implicit type.
+ */
+class ImplicitType : public Type {
+
+public:
+    /**
+     * \brief Constructor.
+     */
+    ImplicitType() = default;
+
+    std::string getName() const override {
+        return "<implicit>";
+    }
+};
+
+/**
+ * \brief Represents the error type.
+ */
+class ErrorType : public Type {
+
+public:
+    /**
+     * \brief Constructor.
+     */
+    ErrorType() = default;
+
+    std::string getName() const override {
+        return "<error>";
+    }
+};
+
+/**
+ * \brief Represents a type defined by a class.
+ */
+class ClassType : public Type {
+
+public:
+    /**
+     * \brief Creates the type for given class.
+     * \param clazz the class
+     */
+    explicit ClassType(Class &clazz) : clazz(clazz) {
+    }
+
+    std::string getName() const override {
+        return clazz.getFullName();
+    }
+
+private:
+    Class &clazz;
+};
+
+/**
+ * \brief Represents the type *T for a type T.
+ */
+class AsteriskType : public Type {
+
+public:
+    /**
+     * \brief Creates the type *T for given type T.
+     * \param type the original type
+     */
+    explicit AsteriskType(const Type &type) : type(type) {
+    }
+
+    std::string getName() const override {
+        return  "*" + type.getName();
+    }
+
+private:
+    const Type &type;
+};
+
+TypeRegistry::TypeRegistry(Context &ctx)
+        : ctx(ctx), implicit(std::make_shared<ImplicitType>()), error(std::make_shared<ErrorType>()) {
+    makeBuiltin("int");
+    makeBuiltin("string");
 }
 
-Type::Ref TypeRegistry::resolveName(Scope &scope, const ast::Name &name) {
-    if (!name.isValid()) {
-        return Type::Ref();
+void TypeRegistry::makeBuiltin(std::string name) {
+    LOG("Creating " << name);
+    String::Ref str = ctx.getStringTable().put(name);
+    builtinTypes[str] = std::make_shared<BuiltinType>(ctx, str);
+}
+
+Type::Ref TypeRegistry::resolve(const Scope &scope, const ast::Type &node) {
+    if (node.getKind() == ast::Type::Kind::Implicit) {
+        return Type::Ref(implicit);
     }
-    if (name.isSimple()) {
-        if (Type *t = findBuiltin(context.getIdentifier(name.last()))) {
-            return Type::Ref(t);
+    if (node.getKind() == ast::Type::Kind::Invalid || !node.getName().isValid()) {
+        return Type::Ref(error);
+    }
+    std::shared_ptr<Type> type;
+    if (node.getName().isSimple()) {
+        auto it = builtinTypes.find(node.getName().last().str);
+        if (it != builtinTypes.end()) {
+            type = it->second;
         }
     }
-    Class *c = scope.resolveClass(name);
-    if (!c) {
-        return Type::Ref();
+    if (!type) {
+        try {
+            Class &c = scope.resolveClass(node.getName());
+            std::shared_ptr<Type> &p = classTypes[&c];
+            if (!p) {
+                p = std::make_shared<ClassType>(c);
+            }
+            type = p;
+        } catch (ReportedError &) {
+            return Type::Ref(error);
+        }
     }
-    ClassType::Ptr &t = classTypes[c];
-    if (!t) {
-        t = ClassType::create(*c);
+    if (node.getKind() == ast::Type::Kind::Basic) {
+        return Type::Ref(type);
     }
-    return Type::Ref(t.get());
-}
-
-Type *TypeRegistry::findBuiltin(const std::string &name) {
-    if (name == "int") {
-        return &builtinInt;
-    }
-    if (name == "string") {
-        return &builtinString;
-    }
-    return nullptr;
-}
-
-Type::Ref TypeRegistry::getAsteriskType(Type::Ref t) {
-    if (!t.type || t.type == getImplicit().type) {     //XXX any
-        return t;
-    }
-
-    AsteriskType::Ptr &p = asteriskTypes[t.type];
+    assert(node.getKind() == ast::Type::Kind::Asterisk);
+    //TODO handle *any, *nothing etc
+    std::shared_ptr<Type> &p = asteriskTypes[type.get()];
     if (!p) {
-        p = AsteriskType::create(*t.type);
+        p = std::make_shared<AsteriskType>(*type);
     }
-    return Type::Ref(p.get());
+    return Type::Ref(p);
 }
 
 } // namespace semantic

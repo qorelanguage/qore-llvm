@@ -36,9 +36,6 @@
 #include "qore/common/Exceptions.h"
 #include "qore/common/Indent.h"
 #include "qore/comp/semantic/Namespace.h"
-#include "qore/comp/semantic/Class.h"
-
-using std::placeholders::_1;
 
 namespace qore {
 namespace comp {
@@ -49,59 +46,59 @@ template<typename OS>
 class Dump {
 
 public:
-    Dump(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
+    Dump(Context &ctx, OS &os) : ctx(ctx), os(os) {
+    }
+
+    void dumpSymbol(Symbol &s) {
+        if (s.getKind() == Symbol::Kind::Namespace) {
+            dumpNamespace(static_cast<Namespace &>(s));
+        } else if (s.getKind() == Symbol::Kind::Class) {
+            dumpClass(static_cast<Class &>(s));
+        } else if (s.getKind() == Symbol::Kind::GlobalVariable) {
+            dumpGlobalVariable(static_cast<GlobalVariable &>(s));
+        }
     }
 
     void dumpNamespace(Namespace &ns) {
-        os << indent++ << "-namespace " << ns.getName();
-        if (!ns.isRoot()) {
-            os << " @" << decode(ns.getLocation());
+        os << indent++;
+        if (ns.isRoot()) {
+            os << "-root namespace";
+        } else {
+            os << "-namespace " << ctx.getStringTable().get(ns.getName()) << " @" << decode(ns.getLocation());
         }
         os << "\n";
-        ns.forEachNamespace(std::bind(&Dump::dumpNamespace, this, _1));
-        ns.forEachClass(std::bind(&Dump::dumpClass, this, _1));
-        ns.forEach<Constant>(std::bind(&Dump::dumpConstant, this, _1));
-        ns.forEach<FunctionGroup>(std::bind(&Dump::dumpFunctionGroup, this, _1));
-        ns.forEach<GlobalVariable>(std::bind(&Dump::dumpGlobalVariable, this, _1));
+        for (auto &s : ns.symbols) {
+            dumpSymbol(*s);
+        }
         --indent;
     }
 
     void dumpClass(Class &c) {
-        os << indent << "-class " << c.getName() << " @" << decode(c.getLocation()) << "\n";
-    }
-
-    void dumpConstant(Constant &c) {
-        os << indent << "-const " << c.getName() << " @" << decode(c.getLocation()) << "\n";
-    }
-
-    void dumpFunctionGroup(FunctionGroup &fg) {
-        for (const Function::Ptr &f : fg) {
-            os << indent << "-sub " << f->getName() << " @" << decode(f->getLocation()) << "\n";
-        }
+        os << indent << "-class " << ctx.getStringTable().get(c.getName()) << " @" << decode(c.getLocation()) << "\n";
     }
 
     void dumpGlobalVariable(GlobalVariable &gv) {
-        os << indent << "-our " << gv.getType() << " " << gv.getName() << " @" << decode(gv.getLocation()) << "\n";
+        os << indent << "-our " << gv.getType() << " " << ctx.getStringTable().get(gv.getName()) << " @" << decode(gv.getLocation()) << "\n";
     }
 
 private:
     std::string decode(const SourceLocation &location) {
         assert(location.sourceId >= 0);
-        std::pair<int, int> l = srcMgr.get(location.sourceId).decodeLocation(location.offset);
+        std::pair<int, int> l = ctx.getSrcMgr().get(location.sourceId).decodeLocation(location.offset);
         std::ostringstream str;
         str << l.first << ":" << l.second;
         return str.str();
     }
 
 private:
-    SourceManager &srcMgr;
+    Context &ctx;
     OS &os;
     log::Indent indent;
 };
 
 template<typename OS>
-void dump(SourceManager &srcMgr, OS &os, Namespace &n) {
-    Dump<OS> dump(srcMgr, os);
+void dump(Context &ctx, OS &os, Namespace &n) {
+    Dump<OS> dump(ctx, os);
     dump.dumpNamespace(n);
 }
 /// \endcond

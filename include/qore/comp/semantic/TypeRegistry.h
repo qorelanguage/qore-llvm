@@ -33,7 +33,7 @@
 
 #include <map>
 #include <string>
-#include "qore/comp/semantic/Context.h"
+#include "qore/comp/Context.h"
 #include "qore/comp/semantic/Scope.h"
 #include "qore/comp/semantic/Type.h"
 #include "qore/comp/ast/Type.h"
@@ -50,10 +50,9 @@ class TypeRegistry {
 public:
     /**
      * \brief Constructor.
-     * \param context the context for semantic analysis
+     * \param ctx the compiler context
      */
-    explicit TypeRegistry(Context &context) : context(context) {
-    }
+    explicit TypeRegistry(Context &ctx);
 
     /**
      * \brief Resolves a type represented by an AST node.
@@ -61,25 +60,18 @@ public:
      * \param node the AST node
      * \return reference to the resolved type
      */
-    Type::Ref resolve(Scope &scope, ast::Type::Ptr &node);
+    Type::Ref resolve(const Scope &scope, const ast::Type &node);
 
 private:
-    Type::Ref resolveName(Scope &scope, const ast::Name &name);
-    Type *findBuiltin(const std::string &name);
-    Type::Ref getImplicit() const {
-        return Type::Ref(&builtinImplicit);
-    }
-    Type::Ref getAsteriskType(Type::Ref t);
+    void makeBuiltin(std::string name);
 
 private:
-    Context &context;
-    BuiltinType builtinImplicit{"<implicit>"};
-    BuiltinType builtinInt{"int"};
-    BuiltinType builtinString{"string"};
-    std::map<const Class *, ClassType::Ptr> classTypes;
-    std::map<const Type *, AsteriskType::Ptr> asteriskTypes;
-
-    friend class TypeResolver;
+    Context &ctx;
+    std::shared_ptr<Type> implicit;
+    std::shared_ptr<Type> error;
+    std::map<String::Ref, std::shared_ptr<Type>> builtinTypes;
+    std::map<const class Class *, std::shared_ptr<Type>> classTypes;
+    std::map<const Type *, std::shared_ptr<Type>> asteriskTypes;
 };
 
 } // namespace semantic

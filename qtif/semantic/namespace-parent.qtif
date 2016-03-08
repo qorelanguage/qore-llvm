@@ -9,7 +9,7 @@ namespace b::b {
     namespace b;
 }
 #$$$
--namespace <root>
+-root namespace
   -namespace a @1:11
     -namespace x @7:14
   -namespace b @2:11

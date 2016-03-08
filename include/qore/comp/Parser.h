@@ -31,11 +31,13 @@
 #ifndef INCLUDE_QORE_COMP_PARSER_H_
 #define INCLUDE_QORE_COMP_PARSER_H_
 
+#include <string>
 #include <vector>
 #include "qore/common/Util.h"
 #include "qore/comp/ast/Script.h"
 #include "qore/comp/ast/Class.h"
 #include "qore/comp/ast/Closure.h"
+#include "qore/comp/Context.h"
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/Token.h"
 
@@ -50,10 +52,10 @@ class Parser {
 public:
     /**
      * \brief Constructs the parser for given source of tokens.
-     * \param diagMgr used for reporting diagnostic messages
+     * \param ctx the compiler context
      * \param src the source of tokens
      */
-    Parser(DiagManager &diagMgr, ITokenStream &src) : diagMgr(diagMgr), src(src), hasToken(false), recorder(nullptr) {
+    Parser(Context &ctx, ITokenStream &src) : ctx(ctx), src(src), hasToken(false), recorder(nullptr) {
     }
 
     /**
@@ -109,7 +111,16 @@ private:
 
     DiagBuilder report(DiagId id) {
         assert(hasToken);
-        return diagMgr.report(id, token.location);
+        return ctx.report(id, token.location);
+    }
+
+    String::Ref strVal() {
+        return ctx.getStringTable().put(lexeme());
+    }
+
+    std::string lexeme() {
+        ensureToken();
+        return ctx.getSrcMgr().get(token.location.sourceId).getRange(token.location.offset, token.length);
     }
 
     void recoverDoNothing() {}
@@ -148,7 +159,7 @@ private:
 
 private:
     ast::Namespace::Ptr namespaceDecl(ast::Modifiers mods);
-    ast::NamespaceMember::Ptr namespaceMember(bool topLevel);
+    ast::Declaration::Ptr namespaceMember(bool topLevel);
     ast::Modifiers modifiers();
     ast::Class::Ptr classDecl(ast::Modifiers mods);
     ast::ClassMember::Ptr classMember();
@@ -184,16 +195,16 @@ private:
     ast::Expression::Ptr primaryExpr();
     ast::Expression::Ptr hash(Token openToken, ast::Expression::Ptr expr);
     ast::Expression::Ptr list(Token openToken, ast::Expression::Ptr expr);
-    ast::ClosureExpression::Ptr closure(ast::Modifiers mods, ast::Type::Ptr type);
+    ast::ClosureExpression::Ptr closure(ast::Modifiers mods, ast::Type type);
     std::vector<ast::Routine::Param> paramList();
     ast::Name name();
-    ast::Type::Ptr type();
-    ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type::Ptr type, bool method = false);
+    ast::Type type();
+    ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type type, bool method = false);
     ast::ArgList::Ptr argList();
     ast::Constant::Ptr constant(ast::Modifiers mods);
 
 private:
-    DiagManager &diagMgr;
+    Context &ctx;
     TokenQueue src;
     Token token;
     bool hasToken;
