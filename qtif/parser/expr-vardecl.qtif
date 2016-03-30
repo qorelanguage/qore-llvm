@@ -12,25 +12,25 @@ x::y a;
           .type:
             -NameType@1:1-1:1
               .name: x
-          .name: Identifier a
+          .name: a
     -ExpressionStatement@2:1-2:7
       .expression:
         -VarDeclExpression@2:1-2:6
           .type:
             -NameType@2:1-2:4
               .name: x::y
-          .name: Identifier a
+          .name: a
     -ExpressionStatement@3:1-3:5
       .expression:
         -VarDeclExpression@3:1-3:4
           .type:
             -AsteriskType@3:1-3:2
               .name: x
-          .name: Identifier a
+          .name: a
     -ExpressionStatement@4:1-4:8
       .expression:
         -VarDeclExpression@4:1-4:7
           .type:
             -AsteriskType@4:1-4:5
               .name: x::y
-          .name: Identifier a
+          .name: a

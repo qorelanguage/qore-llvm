@@ -51,6 +51,9 @@ class Unreachable {};
 #define QORE_UNREACHABLE(M) __builtin_unreachable()
 #endif
 
+class NotImplemented {};
+#define QORE_NOT_IMPLEMENTED(M) LOG(__PRETTY_FUNCTION__ << " - NOT IMPLEMENTED: " << M); throw NotImplemented();
+
 /**
  * \brief Helper macro for constructing messages for FatalError exception.
  *

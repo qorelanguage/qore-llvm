@@ -457,7 +457,13 @@ ast::Expression::Ptr Parser::primaryExpr() {
             if (tokenType() == TokenType::KwSub) {
                 return closure(ast::Modifiers(), std::move(t));
             }
-            return ast::VarDeclExpression::create(std::move(t), match(TokenType::Identifier));
+            if (tokenType() == TokenType::Identifier) {
+                String::Ref name = strVal();
+                return ast::VarDeclExpression::create(std::move(t), name, consume().location);
+            }
+            report(DiagId::ParserExpectedVariableName) << util::to_string(tokenType());
+            consume();
+            return ast::ErrorExpression::create(token);
         }
         case TokenType::DoubleColon:
         case TokenType::Identifier: {
@@ -466,7 +472,8 @@ ast::Expression::Ptr Parser::primaryExpr() {
                 return closure(ast::Modifiers(), ast::Type::createBasic(std::move(n)));
             }
             if (tokenType() == TokenType::Identifier) {
-                return ast::VarDeclExpression::create(ast::Type::createBasic(std::move(n)), consume());
+                String::Ref name = strVal();
+                return ast::VarDeclExpression::create(ast::Type::createBasic(std::move(n)), name, consume().location);
             }
             return ast::NameExpression::create(std::move(n));
         }

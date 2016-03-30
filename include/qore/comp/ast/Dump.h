@@ -57,6 +57,7 @@ namespace ast {
 #define TYPE(name)          FIELD(#name, "\n"); ++indent; visit(node.name); --indent
 #define MODIFIERS(name)     FIELD(#name, ""); doModifiers(node.name); os << "\n"
 #define TOKEN(name)         FIELD(#name, " "); doToken(node.name)
+#define STR(name)           FIELD(#name, " ") << str(node.name) << "\n"
 #define NAME(name)          FIELD(#name, " "); doName(node.name); os << "\n"
 #define VISIT_DIRECT(name)  FIELD(#name, "\n"); ++indent; visit(*node.name); --indent
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
@@ -273,7 +274,7 @@ public:
 
     NODE(VarDeclExpression, {
             TYPE(type);
-            TOKEN(name);
+            STR(name);
     })
 
     NODE(CastExpression, {
@@ -423,15 +424,19 @@ private:
         }
         auto it = name.begin();
         if (!name.isRoot()) {
-            os << ctx.getStringTable().get((it++)->str);
+            os << str((it++)->str);
         }
         while (it != name.end()) {
-            os << "::" << ctx.getStringTable().get((it++)->str);
+            os << "::" << str((it++)->str);
         }
     }
 
     std::string lexeme(const Token &token) {
         return ctx.getSrcMgr().get(token.location.sourceId).getRange(token.location.offset, token.length);
+    }
+
+    const std::string &str(String::Ref s) {
+        return ctx.getStringTable().get(s);
     }
 
 private:

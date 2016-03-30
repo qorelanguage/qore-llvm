@@ -270,8 +270,9 @@ private:
 class VarDeclExpression : public Expression {
 
 public:
-    Type type;                                              //!< The type.
-    Token name;                                             //!< The name.
+    Type type;                                              //!< The type of the variable.
+    String::Ref name;                                       //!< The name of the variable.
+    SourceLocation location;                                //!< The location of the name.
 
 public:
     using Ptr = std::unique_ptr<VarDeclExpression>;         //!< Pointer type.
@@ -279,12 +280,13 @@ public:
 public:
     /**
      * \brief Allocates a new node.
-     * \param type the type
-     * \param name the name
+     * \param type the type of the variable
+     * \param name the name of the variable
+     * \param location the location of the name
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Type type, Token name) {
-        return Ptr(new VarDeclExpression(std::move(type), name));
+    static Ptr create(Type type, String::Ref name, SourceLocation location) {
+        return Ptr(new VarDeclExpression(std::move(type), name, location));
     }
 
     void accept(ExpressionVisitor &v) override {
@@ -296,11 +298,12 @@ public:
     }
 
     SourceLocation getEnd() const override {
-        return name.location;
+        return location;
     }
 
 private:
-    explicit VarDeclExpression(Type type, Token name) : type(std::move(type)), name(name) {
+    explicit VarDeclExpression(Type type, String::Ref name, SourceLocation location)
+            : type(std::move(type)), name(name), location(location) {
     }
 };
 
