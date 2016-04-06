@@ -144,9 +144,16 @@ public:
         }
     }
 
-    llvm::Function *findFunction(const ir::Function &f) const {
+    llvm::Value *call(llvm::IRBuilder<> builder, const ir::Function &f, llvm::ArrayRef<llvm::Value *> args) const {
+        if (f == ir::Functions::IntPlusInt) {
+            assert(args.size() == 2);
+            return builder.CreateAdd(args[0], args[1]);
+        }
         auto it = functions.find(&f);
-        return it != functions.end() ? it->second : nullptr;
+        if (it != functions.end()) {
+            return builder.CreateCall(it->second, args);
+        }
+        return nullptr;
     }
 
 public:

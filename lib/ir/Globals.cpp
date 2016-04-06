@@ -40,7 +40,8 @@ BuiltinType Types::String(rt::Type::String, rt::qvalue_type::Ptr);
 
 OperatorFunction Functions::StringPlusString(rt::Operator::StringPlusString,
         Types::String, Types::String, Types::String);
-
+OperatorFunction Functions::IntPlusInt(rt::Operator::IntPlusInt,
+        Types::Int, Types::Int, Types::Int);
 ConversionFunction Functions::IntToString(rt::Conversion::IntToString, Types::String, Types::Int);
 BoxFunction Functions::BoxInt(Types::Int);
 AnyOperatorFunction Functions::AnyPlusAny;

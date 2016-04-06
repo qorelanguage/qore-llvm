@@ -77,6 +77,8 @@ public:
         if (l.getKind() == ir::Type::Kind::Builtin && r.getKind() == ir::Type::Kind::Builtin) {
             switch (rt::meta::findOperatorAdd(static_cast<const ir::BuiltinType &>(l).getRuntimeType(),
                     static_cast<const ir::BuiltinType &>(r).getRuntimeType())) {
+                case rt::Operator::IntPlusInt:
+                    return ir::Functions::IntPlusInt;
                 case rt::Operator::StringPlusString:
                     return ir::Functions::StringPlusString;
                 default:

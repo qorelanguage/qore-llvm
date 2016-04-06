@@ -226,6 +226,8 @@ Value ExpressionEvaluator::invoke1(const ir::Function &f, rt::qvalue arg1) {
 Value ExpressionEvaluator::invoke2(const ir::Function &f, rt::qvalue arg1, rt::qvalue arg2) {
     if (f.getKind() == ir::Function::Kind::Operator) {
         switch (static_cast<const ir::OperatorFunction &>(f).getOperator()) {
+            case rt::Operator::IntPlusInt:
+                return Value(arg1.i + arg2.i);
             case rt::Operator::StringPlusString:
                 return Value(qore::rt::opAddStringString(arg1.p, arg2.p));
             default:

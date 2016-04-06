@@ -107,7 +107,7 @@ Value ExpressionCompiler::compile(const ir::InvokeExpression &expr) {
         //assert that v.type == f.getArgType(i)
         args.push_back(v.value);
     }
-    llvm::Value *r = builder.CreateCall(scriptCompiler.getFunction(f), args);
+    llvm::Value *r = scriptCompiler.call(builder, f, args);
     for (ir::Function::Index i = f.getArgCount(); i > 0; --i) {
         if (f.getArgType(i - 1).rtType == rt::qvalue_type::Ptr) {
             builder.CreateCall(helper.lf_decRef, args[i - 1]);
@@ -171,7 +171,7 @@ void ExpressionCompiler::compileNoValue(const ir::CompoundAssignmentExpression &
 
     assert(expr.getFunction().getArgCount() == 2);
 
-    llvm::Value *sum = builder.CreateCall(scriptCompiler.getFunction(expr.getFunction()), args);
+    llvm::Value *sum = scriptCompiler.call(builder, expr.getFunction(), args);
     //push cleanup of sum
 
     builder.CreateStore(sum, ptr);

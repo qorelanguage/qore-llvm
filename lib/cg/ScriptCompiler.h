@@ -57,14 +57,14 @@ public:
         return it->second;
     }
 
-    llvm::Function *getFunction(const ir::Function &f) const {
-        llvm::Function *r = helper.findFunction(f);
-        if (r) {
-            return r;
+    llvm::Value *call(llvm::IRBuilder<> builder, const ir::Function &f, llvm::ArrayRef<llvm::Value *> args) const {
+        llvm::Value *v = helper.call(builder, f, args);
+        if (v) {
+            return v;
         }
         auto it = functions.find(&f);
         assert(it != functions.end());
-        return it->second;
+        return builder.CreateCall(it->second, args);
     }
 
     void addStringLiteral(const ir::StringLiteral &sl);

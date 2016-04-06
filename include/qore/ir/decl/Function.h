@@ -289,6 +289,7 @@ private:
 class Functions {
 public:
     static OperatorFunction StringPlusString;
+    static OperatorFunction IntPlusInt;
     static ConversionFunction IntToString;
     static BoxFunction BoxInt;
     static AnyOperatorFunction AnyPlusAny;

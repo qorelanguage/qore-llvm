@@ -121,7 +121,7 @@ public:
                 QORE_NOT_IMPLEMENTED("");           //e.g. int i; float f; i += f;
             }
             result = ir::CompoundAssignmentExpression::create(
-                    convert(std::move(left), f.getArgType(0)),          //XXX can this be something else than identity?
+                    std::move(left),
                     f,
                     convert(std::move(right), f.getArgType(1)));
         } else {

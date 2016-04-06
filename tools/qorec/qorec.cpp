@@ -82,16 +82,18 @@ int main(int argc, char *argv[]) {
     LOG_FUNCTION();
 
     std::string src = R"(
-#int i;
-#our string s;
-#s = "A";
-#s = s + i;
-#s += i;
+int i;
+our string s;
+s = "A";
+i = i + 1;
+s = s + i;
+i += 2;
+s += i;
 
-our any a;
-a = 1;
-a = a + 2;
-a += "s";
+#any a = 1;
+#a = a + 2;
+#a += "s";
+
 )";
 
 //    qore::interactive();
