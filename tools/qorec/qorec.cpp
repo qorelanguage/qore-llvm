@@ -30,100 +30,10 @@
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/ast/Dump.h"
-#include "qore/comp/semantic/Analyzer.h"
-#include "qore/comp/semantic/Dump.h"
-#if QORE_USE_LLVM
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#endif
-
-namespace qore {
-namespace comp {
-
-/**
- * \brief Basic DiagProcessor that writes messages to the standard error stream.
- */
-class DiagPrinter : public IDiagProcessor {
-
-public:
-    /**
-     * \brief Constructs the instance.
-     * \param srcMgr used for decoding source locations
-     */
-    explicit DiagPrinter(const SourceManager &srcMgr) : srcMgr(srcMgr) {
-    }
-
-    void process(DiagRecord &record) override {
-        Source &src = srcMgr.get(record.location.sourceId);
-        std::pair<int, int> l = src.decodeLocation(record.location.offset);
-        std::cerr << src.getName() << ':' << l.first << ':' << l.second
-                << ": " << record.level << ": " << record.code << ": " << record.message << '\n';
-    }
-
-private:
-    const SourceManager &srcMgr;
-};
+#include "qore/cg/CodeGen.h"
+#include "Interactive.h"
 
 /// \cond NoDoxygen
-class StdinWrapper : public ITokenStream {
-
-public:
-    explicit StdinWrapper(Context &ctx) : src(ctx.getSrcMgr().createFromString("<stdin>", "")), dp(ctx, src) {
-    }
-
-    Token read(Mode mode) override {
-        while (true) {
-            Token t = dp.read(mode);
-            if (t.type != TokenType::EndOfFile) {
-                return t;
-            }
-            std::string line;
-            std::getline(std::cin, line);
-            if (!std::cin.good()) {
-                return t;
-            }
-            line.push_back('\n');
-            src.append(line);
-        }
-    }
-
-private:
-    Source &src;
-    DirectiveProcessor dp;
-};
-
-void test() {
-    StringTable stringTable;
-    DiagManager diagMgr(stringTable);
-    SourceManager srcMgr(diagMgr);
-    DiagPrinter diagPrinter(srcMgr);
-    diagMgr.addProcessor(&diagPrinter);
-    Context ctx(stringTable, diagMgr, srcMgr);
-//    DirectiveProcessor dp(ctx, srcMgr.createFromFile(argv[1]));
-    DirectiveProcessor dp(ctx, srcMgr.createFromString("<noname>", R"(
-namespace a;
-namespace a::x::b;
-our int i;
-
-string s = "A";
-s = s + i;
-i = i + 1;
-
-)"));
-//    StdinWrapper dp(dctx);
-
-    Parser parser(ctx, dp);
-    ast::Script::Ptr script = parser.parseScript();
-    ast::dump(ctx, std::cout, *script);
-
-    semantic::Analyzer analyzer(ctx);
-    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
-    semantic::dump(ctx, std::cout, *root);
-}
-
-} // namespace comp
-} // namespace qore
-/// \endcond NoDoxygen
 
 #ifdef QORE_LOGGING
 /**
@@ -139,6 +49,31 @@ public:
 };
 #endif
 
+void test(bool file, std::string str) {
+    qore::comp::StringTable stringTable;
+    qore::comp::DiagManager diagMgr(stringTable);
+    qore::comp::SourceManager srcMgr(diagMgr);
+    qore::DiagPrinter diagPrinter(srcMgr);
+    diagMgr.addProcessor(&diagPrinter);
+    qore::comp::Context ctx(stringTable, diagMgr, srcMgr);
+    qore::comp::Source &src = file ? srcMgr.createFromFile(str) : srcMgr.createFromString("<noname>", str);
+    qore::comp::DirectiveProcessor dp(ctx, src);
+    qore::comp::Parser parser(ctx, dp);
+
+    qore::comp::ast::Script::Ptr script = parser.parseScript();
+    qore::comp::ast::dump(ctx, std::cout, *script);
+    LOG("-------------------------------------------------------------------------------")
+    qore::ir::Script scr;
+    qore::ir::UserFunction &main = qore::comp::sem::analyze(ctx, scr, *script);
+    //XXX dump
+    LOG("-------------------------------------------------------------------------------")
+    qore::in::Interpreter::run(scr, main);
+    LOG("-------------------------------------------------------------------------------")
+    qore::cg::CodeGen::process(scr);
+}
+
+/// \endcond NoDoxygen
+
 int main(int argc, char *argv[]) {
 #ifdef QORE_LOGGING
     LogFilter logFilter;
@@ -146,13 +81,22 @@ int main(int argc, char *argv[]) {
 #endif
     LOG_FUNCTION();
 
-#if QORE_USE_LLVM
-    llvm::LLVMContext &ctx{llvm::getGlobalContext()};
-    llvm::Module *module{new llvm::Module("Q", ctx)};
-    module->dump();
-#endif
+    std::string src = R"(
+#int i;
+#our string s;
+#s = "A";
+#s = s + i;
+#s += i;
 
-    qore::comp::test();
+our any a;
+a = 1;
+a = a + 2;
+a += "s";
+)";
+
+//    qore::interactive();
+//    test(true, argv[1]);
+    test(false, src);
 
     return 0;
 }

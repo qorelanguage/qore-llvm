@@ -5,6 +5,7 @@ add_executable(qorec
 target_link_libraries(qorec
     common
     comp
+    rt
+    in
+    cg
 )
-
-setup_llvm(qorec)

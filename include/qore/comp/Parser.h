@@ -50,6 +50,18 @@ namespace comp {
 class Parser {
 
 public:
+    struct DeclOrStmt {
+        DeclOrStmt() {      //indicates eof
+        }
+        explicit DeclOrStmt(ast::Declaration::Ptr decl) : decl(std::move(decl)) {
+        }
+        explicit DeclOrStmt(ast::Statement::Ptr stmt) : stmt(std::move(stmt)) {
+        }
+        ast::Declaration::Ptr decl;
+        ast::Statement::Ptr stmt;
+    };
+
+public:
     /**
      * \brief Constructs the parser for given source of tokens.
      * \param ctx the compiler context
@@ -63,6 +75,8 @@ public:
      * \return parsed script
      */
     ast::Script::Ptr parseScript();
+
+    DeclOrStmt parseDeclOrStmt();
 
 private:
     Parser(const Parser &) = delete;

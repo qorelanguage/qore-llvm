@@ -459,6 +459,7 @@ ast::Expression::Ptr Parser::primaryExpr() {
             }
             if (tokenType() == TokenType::Identifier) {
                 String::Ref name = strVal();
+                //XXX if '=' follows, parse initializer
                 return ast::VarDeclExpression::create(std::move(t), name, consume().location);
             }
             report(DiagId::ParserExpectedVariableName) << util::to_string(tokenType());
@@ -473,6 +474,7 @@ ast::Expression::Ptr Parser::primaryExpr() {
             }
             if (tokenType() == TokenType::Identifier) {
                 String::Ref name = strVal();
+                //XXX if '=' follows, parse initializer
                 return ast::VarDeclExpression::create(ast::Type::createBasic(std::move(n)), name, consume().location);
             }
             return ast::NameExpression::create(std::move(n));

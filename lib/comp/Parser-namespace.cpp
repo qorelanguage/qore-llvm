@@ -33,6 +33,19 @@
 namespace qore {
 namespace comp {
 
+Parser::DeclOrStmt Parser::parseDeclOrStmt() {
+    LOG_FUNCTION();
+
+    if (tokenType() == TokenType::EndOfFile) {
+        return DeclOrStmt();
+    }
+    ast::Declaration::Ptr nsMember = namespaceMember(true);
+    if (nsMember) {
+        return DeclOrStmt(std::move(nsMember));
+    }
+    return DeclOrStmt(statement());
+}
+
 //script
 //    : script_member
 //    | script script_member
@@ -64,7 +77,7 @@ ast::Script::Ptr Parser::parseScript() {
         if (nsMember) {
             script->members.push_back(std::move(nsMember));
         } else {
-            script->statements.push_back(std::move(statement()));
+            script->statements.push_back(statement());
         }
     }
     script->end = token.location;
