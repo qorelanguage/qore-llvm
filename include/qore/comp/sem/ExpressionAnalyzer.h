@@ -133,10 +133,14 @@ public:
         const ir::Type &type = scope.resolveType(node.type);
         Symbol v = scope.declareLocalVariable(node.name, type);
 
-        //if node.init
-        //  rhs = eval(node.init)
-        //else:
-        ir::Expression::Ptr rhs = scope.defaultFor(type);
+        ir::Expression::Ptr rhs;
+        if (node.initializer) {
+            //XXX check that the new variable is not used before initialization, but it needs to be in scope:
+            //                  code f = sub() {    f();    }
+            rhs = eval(*node.initializer, &type);
+        } else {
+            rhs = scope.defaultFor(type);
+        }
         result = ir::LifetimeStartExpression::create(v.asLocal(), std::move(rhs));
     }
 

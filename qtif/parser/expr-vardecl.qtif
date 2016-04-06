@@ -2,8 +2,9 @@ x a;
 x::y a;
 *x a;
 *x::y a;
+x a = b;
 #$$$
--Script@1:1-5:1
+-Script@1:1-6:1
   .members:
   .statements:
     -ExpressionStatement@1:1-1:4
@@ -34,3 +35,13 @@ x::y a;
             -AsteriskType@4:1-4:5
               .name: x::y
           .name: a
+    -ExpressionStatement@5:1-5:8
+      .expression:
+        -VarDeclExpression@5:1-5:3
+          .type:
+            -NameType@5:1-5:1
+              .name: x
+          .name: a
+          .initializer:
+            -NameExpression@5:7-5:7
+              .name: b

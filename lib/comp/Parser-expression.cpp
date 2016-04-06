@@ -458,9 +458,7 @@ ast::Expression::Ptr Parser::primaryExpr() {
                 return closure(ast::Modifiers(), std::move(t));
             }
             if (tokenType() == TokenType::Identifier) {
-                String::Ref name = strVal();
-                //XXX if '=' follows, parse initializer
-                return ast::VarDeclExpression::create(std::move(t), name, consume().location);
+                return varDecl(std::move(t));
             }
             report(DiagId::ParserExpectedVariableName) << util::to_string(tokenType());
             consume();
@@ -473,9 +471,7 @@ ast::Expression::Ptr Parser::primaryExpr() {
                 return closure(ast::Modifiers(), ast::Type::createBasic(std::move(n)));
             }
             if (tokenType() == TokenType::Identifier) {
-                String::Ref name = strVal();
-                //XXX if '=' follows, parse initializer
-                return ast::VarDeclExpression::create(ast::Type::createBasic(std::move(n)), name, consume().location);
+                return varDecl(ast::Type::createBasic(std::move(n)));
             }
             return ast::NameExpression::create(std::move(n));
         }
@@ -662,6 +658,18 @@ ast::ArgList::Ptr Parser::argList() {
         }
     }
     return ast::ArgList::create(openToken, std::move(data), match(TokenType::ParenRight));
+}
+
+ast::VarDeclExpression::Ptr Parser::varDecl(ast::Type type) {
+    assert(tokenType() == TokenType::Identifier);
+    String::Ref name = strVal();
+    SourceLocation location = consume().location;
+    ast::Expression::Ptr initializer;
+    if (tokenType() == TokenType::Equals) {
+        consume();
+        initializer = condExpr();
+    }
+    return ast::VarDeclExpression::create(std::move(type), name, location, std::move(initializer));
 }
 
 } // namespace comp

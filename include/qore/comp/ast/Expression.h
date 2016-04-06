@@ -273,6 +273,7 @@ public:
     Type type;                                              //!< The type of the variable.
     String::Ref name;                                       //!< The name of the variable.
     SourceLocation location;                                //!< The location of the name.
+    Expression::Ptr initializer;                            //!< The optional initializer expression.
 
 public:
     using Ptr = std::unique_ptr<VarDeclExpression>;         //!< Pointer type.
@@ -283,10 +284,11 @@ public:
      * \param type the type of the variable
      * \param name the name of the variable
      * \param location the location of the name
+     * \param initializer the optional initializer expression
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Type type, String::Ref name, SourceLocation location) {
-        return Ptr(new VarDeclExpression(std::move(type), name, location));
+    static Ptr create(Type type, String::Ref name, SourceLocation location, Expression::Ptr initializer) {
+        return Ptr(new VarDeclExpression(std::move(type), name, location, std::move(initializer)));
     }
 
     void accept(ExpressionVisitor &v) override {
@@ -302,8 +304,8 @@ public:
     }
 
 private:
-    explicit VarDeclExpression(Type type, String::Ref name, SourceLocation location)
-            : type(std::move(type)), name(name), location(location) {
+    explicit VarDeclExpression(Type type, String::Ref name, SourceLocation location, Expression::Ptr initializer)
+            : type(std::move(type)), name(name), location(location), initializer(std::move(initializer)) {
     }
 };
 

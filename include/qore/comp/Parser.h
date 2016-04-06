@@ -216,6 +216,7 @@ private:
     ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type type, bool method = false);
     ast::ArgList::Ptr argList();
     ast::Constant::Ptr constant(ast::Modifiers mods);
+    ast::VarDeclExpression::Ptr varDecl(ast::Type type);
 
 private:
     Context &ctx;

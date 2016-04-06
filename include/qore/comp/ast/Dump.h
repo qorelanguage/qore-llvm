@@ -275,6 +275,9 @@ public:
     NODE(VarDeclExpression, {
             TYPE(type);
             STR(name);
+            if (node.initializer) {
+                VISIT(initializer);
+            }
     })
 
     NODE(CastExpression, {
