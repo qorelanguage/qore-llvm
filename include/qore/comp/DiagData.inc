@@ -59,8 +59,8 @@ DIAG(ParserExpectedVariableName,                "PARSE-EXCEPTION", Error,
         "unexpected %s, expecting variable name")
 DIAG(ParserModifierGivenTwice,                  "PARSE-EXCEPTION", Error,
         "modifier '%s' given twice")
-DIAG(ParserExpectedNamespaceName,               "PARSE-EXCEPTION", Error,
-        "expected namespace name")
+DIAG(ParserExpectedName,                        "PARSE-EXCEPTION", Error,
+        "expected name")
 DIAG(ParserExpectedNamespaceMember,             "PARSE-EXCEPTION", Error,
         "expected namespace member")
 DIAG(ParserUnendedNamespaceDecl,                "PARSE-EXCEPTION", Error,
@@ -73,3 +73,25 @@ DIAG(ParserExpectedCaseOrDefault,               "PARSE-EXCEPTION", Error,
         "expected 'case' or 'default'")
 DIAG(ParserModuleIgnored,                       "PARSE-WARNING", Warning,
         "module declaration ignored")
+
+DIAG(SemaInvalidNamespaceMemberName,            "PARSE-EXCEPTION", Error,
+        "invalid namespace member name")
+DIAG(SemaNamespaceNotFound,                     "PARSE-EXCEPTION", Error,
+        "namespace %s not found in %s")
+DIAG(SemaDuplicateNamespaceName,                "PARSE-EXCEPTION", Error,
+        "cannot declare namespace %s in %s because a class with the same name already exists")
+DIAG(SemaDuplicateClassName,                    "PARSE-EXCEPTION", Error,
+        "cannot declare class %s in %s because a class or namespace with the same name already exists")
+DIAG(SemaDuplicateConstantName,                 "PARSE-EXCEPTION", Error,
+        "cannot declare constant %s in %s because of a conflicting declaration")
+DIAG(SemaDuplicateFunctionName,                 "PARSE-EXCEPTION", Error,
+        "cannot declare function %s in %s because of a conflicting declaration")
+DIAG(SemaDuplicateGlobalVariableName,           "PARSE-EXCEPTION", Error,
+        "cannot declare global variable %s in %s because of a conflicting declaration")
+DIAG(SemaUnresolvedClass,                       "PARSE-EXCEPTION", Error,
+        "unresolved class %s")
+DIAG(SemaAmbiguousClass,                        "PARSE-EXCEPTION", Error,
+        "ambiguous class %s")
+
+DIAG(SemaPreviousDeclaration,                   "PARSE-EXCEPTION", Info,
+        "previous declaration here")

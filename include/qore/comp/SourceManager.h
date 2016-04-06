@@ -51,7 +51,7 @@ public:
      * \param diagMgr for reporting diagnostic messages
      * \param includePath the include path to prepend to each file name passed to createFromFile()
      */
-    SourceManager(DiagManager &diagMgr, std::string includePath = "")
+    explicit SourceManager(DiagManager &diagMgr, std::string includePath = "")
         : diagMgr(diagMgr), includePath(std::move(includePath)) {
     }
 
@@ -83,7 +83,7 @@ public:
     }
 
 private:
-    Source &create(std::string name, std::vector<char> &&data);
+    Source &create(std::string name, std::vector<char> data);
 
     DiagManager &diagMgr;
     std::string includePath;
@@ -93,4 +93,4 @@ private:
 } // namespace comp
 } // namespace qore
 
-#endif /* INCLUDE_QORE_COMP_SOURCEMANAGER_H_ */
+#endif // INCLUDE_QORE_COMP_SOURCEMANAGER_H_

@@ -31,11 +31,11 @@
 #ifndef INCLUDE_QORE_COMP_DIRECTIVEPROCESSOR_H_
 #define INCLUDE_QORE_COMP_DIRECTIVEPROCESSOR_H_
 
-#include <stack>
 #include <functional>
-#include "qore/comp/DiagManager.h"
+#include <stack>
+#include <string>
+#include "qore/comp/Context.h"
 #include "qore/comp/Scanner.h"
-#include "qore/comp/SourceManager.h"
 
 namespace qore {
 namespace comp {
@@ -74,11 +74,10 @@ class DirectiveProcessor : public ITokenStream {
 public:
     /**
      * \brief Constructs the object.
-     * \param diagMgr for reporting diagnostic messages
-     * \param srcMgr for loading included source files
+     * \param ctx the compiler context
      * \param src the initial source file
      */
-    DirectiveProcessor(DiagManager &diagMgr, SourceManager &srcMgr, Source &src);
+    DirectiveProcessor(Context &ctx, Source &src);
 
     Token read(Mode mode) override;
 
@@ -86,8 +85,7 @@ private:
     void processDirective(Source &src, SourceLocation location, std::string directive);
 
 private:
-    DiagManager &diagMgr;
-    SourceManager &srcMgr;
+    Context &ctx;
     Scanner scanner;
     std::stack<std::reference_wrapper<Source>> srcStack;
 

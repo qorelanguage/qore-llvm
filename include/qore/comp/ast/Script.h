@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_AST_SCRIPT_H_
 #define INCLUDE_QORE_COMP_AST_SCRIPT_H_
 
+#include <vector>
 #include "qore/comp/ast/Namespace.h"
 #include "qore/comp/ast/Statement.h"
 
@@ -46,7 +47,7 @@ class Script : public Node {
 public:
     SourceLocation start;                                   //!< The starting location.
     SourceLocation end;                                     //!< The ending location.
-    std::vector<NamespaceMember::Ptr> members;              //!< The members of the root namespace.
+    std::vector<Declaration::Ptr> members;                  //!< The members of the root namespace.
     std::vector<Statement::Ptr> statements;                 //!< The top level statements.
 
 public:
@@ -58,14 +59,6 @@ public:
      */
     static Ptr create() {
         return Ptr(new Script());
-    }
-
-    /**
-     * \brief Calls visitor's `visit()` method.
-     * \param visitor the visitor to call
-     */
-    void accept(DeclarationVisitor &visitor) {
-        visitor.visit(*this);
     }
 
     SourceLocation getStart() const override {
@@ -85,4 +78,4 @@ private:
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AST_NAMESPACE_H_
+#endif // INCLUDE_QORE_COMP_AST_SCRIPT_H_

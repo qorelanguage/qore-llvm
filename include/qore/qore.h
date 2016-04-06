@@ -28,8 +28,8 @@
 /// \brief Qore namespace.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_H_
-#define INCLUDE_QORE_H_
+#ifndef INCLUDE_QORE_QORE_H_
+#define INCLUDE_QORE_QORE_H_
 
 /**
  * \brief The main namespace used by qore.
@@ -37,4 +37,4 @@
 namespace qore {
 }
 
-#endif /* INCLUDE_QORE_H_ */
+#endif // INCLUDE_QORE_QORE_H_

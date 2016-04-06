@@ -35,7 +35,7 @@ class ScannerTest : public qtif::LineTest {
 };
 
 TEST_P(ScannerTest, Run) {
-    Scanner scanner(diagMgr);
+    Scanner scanner(ctx);
     while (true) {
         Token token = scanner.read(getSrc(), ITokenStream::Mode::Normal);
         output << token.type << token.location << ':' << token.length << '\n';
@@ -51,7 +51,7 @@ class ScannerModeSimpleRegexTest : public qtif::LineTest {
 };
 
 TEST_P(ScannerModeSimpleRegexTest, Run) {
-    Scanner scanner(diagMgr);
+    Scanner scanner(ctx);
     while (true) {
         Token token = scanner.read(getSrc(), ITokenStream::Mode::NormalOrSimpleRegex);
         output << token.type << token.location << ':' << token.length << '\n';
@@ -67,7 +67,7 @@ class ScannerModeRegexTest : public qtif::LineTest {
 };
 
 TEST_P(ScannerModeRegexTest, Run) {
-    Scanner scanner(diagMgr);
+    Scanner scanner(ctx);
     while (true) {
         Token token = scanner.read(getSrc(), ITokenStream::Mode::Regex);
         output << token.type << token.location << ':' << token.length << '\n';
@@ -83,8 +83,9 @@ class ScannerCoverageTest : public ::testing::Test, public DiagManagerHelper {
 };
 
 TEST_F(ScannerCoverageTest, InvalidCharacter) {
-    Scanner scanner(diagMgr);
     SourceManager srcMgr(diagMgr, "");
+    Context ctx(stringTable, diagMgr, srcMgr);
+    Scanner scanner(ctx);
     Source &src = srcMgr.createFromString("", "\x7f;");
 
     EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::ScannerInvalidCharacter))).Times(1);

@@ -1,0 +1,7 @@
+our string g;
+our int g;
+#$$$
+#$!SemaDuplicateGlobalVariableName@2:9
+#$!SemaPreviousDeclaration@1:12
+-root namespace
+  -our string g @1:12

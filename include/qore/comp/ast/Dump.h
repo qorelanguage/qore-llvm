@@ -31,6 +31,9 @@
 #ifndef INCLUDE_QORE_COMP_AST_DUMP_H_
 #define INCLUDE_QORE_COMP_AST_DUMP_H_
 
+#include <string>
+#include <utility>
+#include "qore/comp/Context.h"
 #include "qore/comp/ast/Visitor.h"
 #include "qore/comp/ast/Script.h"
 
@@ -39,77 +42,106 @@ namespace comp {
 namespace ast {
 
 /// \cond IGNORED_BY_DOXYGEN
-#define NODE(name, body)    void visit(name &node) override { \
-                                os << indent++ << "-" << #name << "@" << decode(node.getStart())  \
-                                   << "-" << decode(node.getEnd()) << "\n"; \
+#define NODE_HEADER(name)   os << indent++ << "-" << #name << "@" << decode(node.getStart())  \
+                               << "-" << decode(node.getEnd()) << "\n"
+#define NODE_FOOTER()       --indent
+#define NODE(name, body)    void visit(name &node) { \
+                                NODE_HEADER(name); \
                                 body \
-                                --indent; \
+                                NODE_FOOTER(); \
                             }
 #define FIELD(name, sep)    os << indent << "." << name << ":" sep
 #define ARRAY(name, body)   FIELD(#name, "\n"); ++indent; for (auto &i : node.name) { body } --indent
 #define NODE_ARRAY(name)    ARRAY(name, i->accept(*this);)
 #define VISIT(name)         FIELD(#name, "\n"); ++indent; node.name->accept(*this); --indent
+#define TYPE(name)          FIELD(#name, "\n"); ++indent; visit(node.name); --indent
 #define MODIFIERS(name)     FIELD(#name, ""); doModifiers(node.name); os << "\n"
 #define TOKEN(name)         FIELD(#name, " "); doToken(node.name)
+#define STR(name)           FIELD(#name, " ") << str(node.name) << "\n"
 #define NAME(name)          FIELD(#name, " "); doName(node.name); os << "\n"
 #define VISIT_DIRECT(name)  FIELD(#name, "\n"); ++indent; visit(*node.name); --indent
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
-class DumpVisitor : public DeclarationVisitor, public StatementVisitor, public ExpressionVisitor, public TypeVisitor {
+class DumpVisitor : public StatementVisitor, public ExpressionVisitor {
 
 public:
-    DumpVisitor(SourceManager &srcMgr, OS &os) : srcMgr(srcMgr), os(os) {
+    DumpVisitor(Context &ctx, OS &os) : ctx(ctx), os(os) {
     }
 
-    NODE(Script, {
-            NODE_ARRAY(members);
-            NODE_ARRAY(statements);
-    })
+    void visit(Script &node) {
+        NODE_HEADER(Script);
+        ARRAY(members, visit(*i););
+        NODE_ARRAY(statements);
+        NODE_FOOTER();
+    }
+
+    void visit(Declaration &decl) {
+        switch (decl.getKind()) {
+            case Declaration::Kind::Namespace:
+                visit(static_cast<Namespace &>(decl));
+                break;
+            case Declaration::Kind::GlobalVariable:
+                visit(static_cast<GlobalVariable &>(decl));
+                break;
+            case Declaration::Kind::Function:
+                visit(static_cast<Function &>(decl));
+                break;
+            case Declaration::Kind::Constant:
+                visit(static_cast<Constant &>(decl));
+                break;
+            case Declaration::Kind::Class:
+                visit(static_cast<Class &>(decl));
+                break;
+            case Declaration::Kind::Method:
+                visit(static_cast<Method &>(decl));
+                break;
+            case Declaration::Kind::Field:
+                visit(static_cast<Field &>(decl));
+                break;
+            case Declaration::Kind::MemberGroup:
+                visit(static_cast<MemberGroup &>(decl));
+                break;
+        }
+    }
 
     NODE(Namespace, {
             MODIFIERS(modifiers);
             NAME(name);
-            NODE_ARRAY(members);
+            ARRAY(members, visit(*i););
     })
 
     NODE(Class, {
             MODIFIERS(modifiers);
             NAME(name);
-            ARRAY(inherits, os << indent << "-"; doName(i.second); doModifiers(i.first, false); os << "\n"; );
-            NODE_ARRAY(members);
-    })
-
-    NODE(NamespaceConstant, {
-            visit(*node.constant);
+            ARRAY(inherits, os << indent << "-"; doName(i.second); doModifiers(i.first, false); os << "\n";);
+            ARRAY(members, visit(*i););
     })
 
     NODE(GlobalVariable, {
             MODIFIERS(modifiers);
-            VISIT(type);
+            TYPE(type);
             NAME(name);
     })
 
     NODE(Function, {
+            NAME(name);
             visit(*node.routine);
     })
 
     NODE(Method, {
+            NAME(name);
             visit(*node.routine);
-    })
-
-    NODE(ClassConstant, {
-            visit(*node.constant);
     })
 
     NODE(MemberGroup, {
             MODIFIERS(modifiers);
-            NODE_ARRAY(members);
+            ARRAY(members, visit(*i););
     })
 
     NODE(Field, {
             MODIFIERS(modifiers);
-            VISIT(type);
+            TYPE(type);
             TOKEN(name);
             if (node.exprInit) {
                 VISIT(exprInit);
@@ -146,13 +178,13 @@ public:
 
     NODE(TryStatement, {
             VISIT(stmtTry);
-            VISIT(exceptionType);
+            TYPE(exceptionType);
             TOKEN(exceptionName);
             VISIT(stmtCatch);
     })
 
     NODE(ForeachStatement, {
-            VISIT(varType);
+            TYPE(varType);
             TOKEN(varName);
             VISIT(expr);
             VISIT(stmt);
@@ -196,7 +228,7 @@ public:
 
     NODE(SwitchStatement, {
             VISIT(expr);
-            ARRAY(body,
+            ARRAY(body, {
                     os << indent++ << "-" << lexeme(i->keyword);
                     if (i->op.type != TokenType::None) {
                         os << " " << lexeme(i->op);
@@ -217,7 +249,7 @@ public:
                         --indent;
                     }
                     --indent;
-            );
+            });
     })
 
     NODE(ErrorExpression, {
@@ -241,12 +273,12 @@ public:
     })
 
     NODE(VarDeclExpression, {
-            VISIT(type);
-            TOKEN(name);
+            TYPE(type);
+            STR(name);
     })
 
     NODE(CastExpression, {
-            VISIT(type);
+            TYPE(type);
             VISIT(expression);
     })
 
@@ -315,34 +347,36 @@ public:
             visit(*node.routine);
     })
 
-    NODE(NameType, {
-            NAME(name);
-    })
-
-    NODE(AsteriskType, {
-            NAME(name);
-    })
-
-    NODE(ImplicitType, {
-    })
-
-    void visit(Constant &node) {
+    NODE(Constant, {
         MODIFIERS(modifiers);
         NAME(name);
         VISIT(initializer);
+    })
+
+    void visit(Type &node) {
+        if (node.getKind() == Type::Kind::Implicit) {
+            NODE_HEADER(ImplicitType);
+        } else {
+            if (node.getKind() == Type::Kind::Basic) {
+                NODE_HEADER(NameType);
+            } else {
+                NODE_HEADER(AsteriskType);
+            }
+            FIELD("name", " "); doName(node.getName()); os << "\n";
+        }
+        NODE_FOOTER();
     }
 
     void visit(Routine &node) {
         MODIFIERS(modifiers);
-        VISIT(type);
-        NAME(name);
-        ARRAY(params,
-                std::get<0>(i)->accept(*this);
+        TYPE(type);
+        ARRAY(params, {
+                visit(std::get<0>(i));
                 os << indent << "-"; doToken(std::get<1>(i));
-                if (std::get<2>(i)) std::get<2>(i)->accept(*this); else os << indent << "-no default-\n";
-        );
+                if (std::get<2>(i)) { std::get<2>(i)->accept(*this); } else { os << indent << "-no default-\n"; }
+        });
         if (!node.baseCtors.empty()) {
-            ARRAY(baseCtors, os << indent++ << "-"; doName(i.first); os << "\n"; visit(*i.second); --indent; );
+            ARRAY(baseCtors, os << indent++ << "-"; doName(i.first); os << "\n"; visit(*i.second); --indent;);
         }
         if (node.body) {
             VISIT(body);
@@ -358,7 +392,7 @@ public:
 private:
     std::string decode(const SourceLocation &location) {
         assert(location.sourceId >= 0);
-        std::pair<int, int> l = srcMgr.get(location.sourceId).decodeLocation(location.offset);
+        std::pair<int, int> l = ctx.getSrcMgr().get(location.sourceId).decodeLocation(location.offset);
         std::ostringstream str;
         str << l.first << ":" << l.second;
         return str.str();
@@ -384,32 +418,41 @@ private:
     }
 
     void doName(const Name &name) {
-        if (name.tokens.empty()) {
-            os << "-none-";
-        } else {
-            auto it = name.tokens.begin();
-            os << lexeme(*it++);
-            while (it != name.tokens.end()) {
-                os << "::" << lexeme(*it++);
-            }
+        if (!name.isValid()) {
+            os << "-invalid-";
+            return;
+        }
+        auto it = name.begin();
+        if (!name.isRoot()) {
+            os << str((it++)->str);
+        }
+        while (it != name.end()) {
+            os << "::" << str((it++)->str);
         }
     }
 
     std::string lexeme(const Token &token) {
-        return srcMgr.get(token.location.sourceId).getRange(token.location.offset, token.length);
+        return ctx.getSrcMgr().get(token.location.sourceId).getRange(token.location.offset, token.length);
+    }
+
+    const std::string &str(String::Ref s) {
+        return ctx.getStringTable().get(s);
     }
 
 private:
-    SourceManager &srcMgr;
+    Context &ctx;
     OS &os;
     qore::log::Indent indent;
 };
 
+#undef NODE_HEADER
+#undef NODE_FOOTER
 #undef NODE
 #undef FIELD
 #undef ARRAY
 #undef NODE_ARRAY
 #undef VISIT
+#undef TYPE
 #undef MODIFIERS
 #undef TOKEN
 #undef NAME
@@ -417,8 +460,8 @@ private:
 #undef BOOL
 
 template<typename OS, typename N>
-void dump(SourceManager &srcMgr, OS &os, N &n) {
-    DumpVisitor<OS> dumpVisitor(srcMgr, os);
+void dump(Context &ctx, OS &os, N &n) {
+    DumpVisitor<OS> dumpVisitor(ctx, os);
     dumpVisitor.visit(n);
 }
 /// \endcond

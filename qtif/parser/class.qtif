@@ -54,33 +54,33 @@ class C {
       .inherits:
       .members:
         -Method@7:19-7:30
+          .name: f
           .modifiers: public static
           .type:
             -AsteriskType@7:19-7:23
               .name: X::Y
-          .name: f
           .params:
           .body:
             -CompoundStatement@7:29-7:30
               .statements:
         -Method@8:5-8:13
+          .name: f
           .modifiers: -none-
           .type:
             -NameType@8:5-8:8
               .name: X::Y
-          .name: f
           .params:
         -Method@9:13-9:16
+          .name: f
           .modifiers: private
           .type:
             -ImplicitType@9:13-9:13
-          .name: f
           .params:
         -Method@10:5-10:22
+          .name: f
           .modifiers: -none-
           .type:
             -ImplicitType@10:5-10:5
-          .name: f
           .params:
           .baseCtors:
             -x
@@ -119,7 +119,7 @@ class C {
                   .token: Integer 1
                 -LiteralExpression@14:20-14:20
                   .token: Integer 2
-            -ClassConstant@15:9-15:21
+            -Constant@15:9-15:21
               .modifiers: -none-
               .name: X
               .initializer:

@@ -23,9 +23,9 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
+#include <cctype>
 #include "gtest/gtest.h"
 #include "qore/common/Util.h"
-#include <cctype>
 
 namespace qore {
 namespace util {

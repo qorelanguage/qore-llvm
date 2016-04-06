@@ -1,5 +1,6 @@
 if(QORE_COVERAGE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -DQORE_COVERAGE")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    add_definitions(-DQORE_COVERAGE)
 
     add_custom_target(clean-coverage
         COMMAND find . -name *gcda -o -name *gcno | xargs rm

@@ -29,16 +29,16 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/Parser.h"
+#include <vector>
 
 namespace qore {
 namespace comp {
 
-ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type::Ptr type, ast::Name rName, bool method) {
+ast::Routine::Ptr Parser::routine(ast::Modifiers mods, ast::Type type, bool method) {
     LOG_FUNCTION();
     ast::Routine::Ptr r = ast::Routine::create();
     r->modifiers = mods;
     r->type = std::move(type);
-    r->name = std::move(rName);
     r->params = paramList();
     if (method) {
         if (tokenType() == TokenType::Colon) {
@@ -77,7 +77,7 @@ std::vector<ast::Routine::Param> Parser::paramList() {
     match(TokenType::ParenLeft);
     if (tokenType() != TokenType::ParenRight && tokenType() != TokenType::EndOfFile) {
         while (true) {
-            ast::Type::Ptr t = type();
+            ast::Type t = type();
             Token id = match(TokenType::Identifier);
             ast::Expression::Ptr expr;
             if (tokenType() == TokenType::Equals) {

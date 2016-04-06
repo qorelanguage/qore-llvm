@@ -40,6 +40,8 @@ std::ostream &operator<<(std::ostream &o, DiagLevel level) {
             return o << "error";
         case DiagLevel::Warning:
             return o << "warning";
+        case DiagLevel::Info:
+            return o << "info";
     }
     QORE_UNREACHABLE("Invalid value of DiagLevel: " << static_cast<int>(level));
 }

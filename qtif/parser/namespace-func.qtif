@@ -14,58 +14,58 @@ sub f(*a::b i = 5, hash h = {}){}
       .name: n
       .members:
         -Function@1:14-1:22
+          .name: f
           .modifiers: -none-
           .type:
             -ImplicitType@1:14-1:14
-          .name: f
           .params:
           .body:
             -CompoundStatement@1:21-1:22
               .statements:
         -Function@2:15-2:23
+          .name: f
           .modifiers: final private
           .type:
             -ImplicitType@2:15-2:15
-          .name: f
           .params:
           .body:
             -CompoundStatement@2:22-2:23
               .statements:
         -Function@3:8-3:21
+          .name: f
           .modifiers: public
           .type:
             -NameType@3:8-3:11
               .name: a::b
-          .name: f
           .params:
           .body:
             -CompoundStatement@3:20-3:21
               .statements:
         -Function@4:1-4:15
+          .name: f
           .modifiers: -none-
           .type:
             -AsteriskType@4:1-4:5
               .name: a::b
-          .name: f
           .params:
           .body:
             -CompoundStatement@4:14-4:15
               .statements:
         -Function@5:1-5:14
+          .name: f
           .modifiers: -none-
           .type:
             -NameType@5:1-5:4
               .name: a::b
-          .name: f
           .params:
           .body:
             -CompoundStatement@5:13-5:14
               .statements:
         -Function@6:1-6:15
+          .name: f
           .modifiers: -none-
           .type:
             -ImplicitType@6:1-6:1
-          .name: f
           .params:
             -NameType@6:7-6:10
               .name: a::b
@@ -75,10 +75,10 @@ sub f(*a::b i = 5, hash h = {}){}
             -CompoundStatement@6:14-6:15
               .statements:
         -Function@7:1-7:33
+          .name: f
           .modifiers: -none-
           .type:
             -ImplicitType@7:1-7:1
-          .name: f
           .params:
             -AsteriskType@7:7-7:11
               .name: a::b

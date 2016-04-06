@@ -33,10 +33,15 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <sstream>
 #include <string>
 
 namespace qore {
+
+/**
+ * \brief Contains utility functions.
+ */
 namespace util {
 
 /**
@@ -65,7 +70,17 @@ std::string to_string(const T &t) {
     return str.str();
 }
 
+/**
+ * \brief Construct an object of type T and wraps it in a std::unique_ptr.
+ * \param args list of arguments with which an instance of T will be constructed
+ * \return std::unique_ptr of an instance of type T
+ */
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 } // namespace util
 } // namespace qore
 
-#endif /* INCLUDE_QORE_COMMON_UTIL_H_ */
+#endif // INCLUDE_QORE_COMMON_UTIL_H_

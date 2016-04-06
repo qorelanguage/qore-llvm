@@ -29,10 +29,11 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/Scanner.h"
+#include <string>
 #include "qore/common/Logging.h"
 
 /// \cond IGNORED_BY_DOXYGEN
-#define REPORT(diagId)  diagMgr.report(DiagId::diagId, src.getMarkLocation())
+#define REPORT(diagId)  ctx.report(DiagId::diagId, src.getMarkLocation())
 /// \endcond
 
 namespace qore {
@@ -103,10 +104,6 @@ const std::unordered_map<std::string, TokenType> Scanner::Keywords{
 
     { "my",             TokenType::KwMy },
 };
-
-Scanner::Scanner(DiagManager &diagMgr) : diagMgr(diagMgr) {
-    LOG_FUNCTION();
-}
 
 Token Scanner::read(Source &src, ITokenStream::Mode mode) {
     LOG_FUNCTION();

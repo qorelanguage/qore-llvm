@@ -31,11 +31,14 @@
 #include "qore/comp/SourceManager.h"
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
+#include "qore/common/Util.h"
 
 namespace qore {
 namespace comp {
 
-Source &SourceManager::create(std::string name, std::vector<char> &&data) {
+Source &SourceManager::create(std::string name, std::vector<char> data) {
     std::vector<int> nulls;
 
     for (auto it = std::find(data.begin(), data.end(), 0); it != data.end(); it = std::find(it, data.end(), 0)) {
@@ -44,7 +47,7 @@ Source &SourceManager::create(std::string name, std::vector<char> &&data) {
     }
 
     int id = static_cast<int>(sources.size());
-    sources.emplace_back(new Source(std::move(name), id, std::move(data)));
+    sources.push_back(util::make_unique<Source>(std::move(name), id, std::move(data)));
 
     for (int offset : nulls) {
         diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(id, offset));

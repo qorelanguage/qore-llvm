@@ -1,0 +1,10 @@
+namespace N {
+    class C {
+    }
+}
+our int g;
+#$$$
+-root namespace
+  -namespace N @1:11
+    -class C @2:11
+  -our int g @5:9

@@ -32,24 +32,63 @@
 #define INCLUDE_QORE_COMP_AST_NAME_H_
 
 #include <cassert>
-#include "qore/comp/Token.h"
+#include <utility>
+#include <vector>
+#include "qore/comp/DiagManager.h"
+#include "qore/comp/SourceLocation.h"
+#include "qore/comp/String.h"
 
 namespace qore {
 namespace comp {
 namespace ast {
 
 /**
- * \brief Describes a name, which is a sequence of identifiers separated by double colons.
+ * \brief Describes a name.
  *
- * The name is nonempty except in instances of Routine that represent nameless callable units - closures,
- * constructors, destructors etc.
+ * A valid name is a nonempty sequence of identifiers separated by double colons, possibly starting with a double colon.
+ * An instance of this class can also represent an invalid name which is used for error recovery.
  */
 class Name {
 
 public:
-    std::vector<Token> tokens;                              //!< The identifiers of the name.
+    /**
+     * \brief An element of the name - identifier and its location.
+     */
+    struct Id {
+        String::Ref str;            //!< The identifier.
+        SourceLocation location;    //!< The location.
 
-    Name() = default;
+        /**
+         * \brief Constructor.
+         * \param str the indentifier
+         * \param location the location
+         */
+        Id(String::Ref str, SourceLocation location) : str(str), location(location) {
+        }
+    };
+    using Iterator = std::vector<Id>::const_iterator;       //!< Iterator type.
+
+public:
+    /**
+     * \brief Creates a valid name.
+     * \param start the starting location
+     * \param root true if the name starts with a double colon
+     * \param names the identifiers of the name
+     */
+    Name(SourceLocation start, bool root, std::vector<Id> names)
+            : start(start), root(root), names(std::move(names)) {
+        assert(isValid());
+    }
+
+    //TODO make location mandatory
+    /**
+     * \brief Creates an invalid name indicating an error in the source script.
+     * \param location the location
+     * \return an invalid name
+     */
+    static Name invalid(SourceLocation location = SourceLocation()) {
+        return Name(location);
+    }
 
     /**
      * \brief Default move-constructor.
@@ -66,8 +105,7 @@ public:
      * \return the start location
      */
     SourceLocation getStart() const {
-        assert(!tokens.empty());
-        return tokens[0].location;
+        return start;
     }
 
     /**
@@ -75,16 +113,110 @@ public:
      * \return the end location
      */
     SourceLocation getEnd() const {
-        assert(!tokens.empty());
-        return tokens[tokens.size() - 1].location;
+        return isValid() ? last().location : start;
+    }
+
+    /**
+     * \brief Returns true if the name is valid.
+     * \return true if the name is valid
+     */
+    bool isValid() const {
+        return !names.empty();
+    }
+
+    /**
+     * \brief Returns true if the name starts with a double colon.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return true if the name starts with a double colon
+     */
+    bool isRoot() const {
+        assert(isValid());
+        return root;
+    }
+
+    /**
+     * \brief Returns an iterator to the first identifier of the name.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return returns an iterator to the first identifier of the name
+     */
+    Iterator begin() const {
+        assert(isValid());
+        return names.begin();
+    }
+
+    /**
+     * \brief Returns an iterator to the element following the last identifier of the name.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return returns an iterator to the element following the last identifier of the name
+     */
+    Iterator end() const {
+        assert(isValid());
+        return names.end();
+    }
+
+    /**
+     * \brief Returns the last token in the name.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return the last identifier in the name
+     */
+    const Id &last() const {
+        assert(isValid());
+        return names[names.size() - 1];
+    }
+
+    /**
+     * \brief Returns true if the name is a single identifier with no double colons.
+     *
+     * It is illegal to call this method on an invalid name.
+     * \return true if the name is a single identifier with no double colons.
+     */
+    bool isSimple() const {
+        assert(isValid());
+        return !root && names.size() == 1;
     }
 
 private:
+    explicit Name(SourceLocation location) : start(location), root(false) {
+        assert(!isValid());
+    }
+
     Name(const Name &) = delete;
     Name &operator=(const Name &) = delete;
+
+private:
+    SourceLocation start;
+    bool root;
+    std::vector<Id> names;
 };
 
 } // namespace ast
+
+/**
+ * \brief Sets the value of a parameter of the message.
+ *
+ * The value will replace the next occurrence of '%s' in the message.
+ * \param b the diagnostic message builder
+ * \param name the value of the parameter, must be a valid name
+ */
+template<>
+inline void toDiagArg(DiagBuilder &b, const ast::Name &name) {
+    assert(name.isValid());
+    std::ostringstream str;
+
+    auto it = name.begin();
+    if (!name.isRoot()) {
+        str << b.getStringTable().get((it++)->str);
+    }
+    while (it != name.end()) {
+        str << "::" << b.getStringTable().get((it++)->str);
+    }
+    b << str.str();
+}
+
 } // namespace comp
 } // namespace qore
 

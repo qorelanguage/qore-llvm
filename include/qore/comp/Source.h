@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <cassert>
 #include <string>
+#include <utility>
 #include <vector>
 #include "qore/comp/SourceLocation.h"
 

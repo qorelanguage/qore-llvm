@@ -35,7 +35,7 @@ namespace comp {
 
 void Parser::recoverSkipToCurlyRight() {
     int cnt = 0;
-    DisableDiag dd(diagMgr);
+    DisableDiag dd(ctx.getDiagMgr());
     while (true) {
         switch (tokenType()) {
             case TokenType::EndOfFile:
@@ -59,7 +59,7 @@ void Parser::recoverSkipToCurlyRight() {
 
 void Parser::recoverSkipToSemicolon() {
     int cnt = 0;
-    DisableDiag dd(diagMgr);
+    DisableDiag dd(ctx.getDiagMgr());
     while (true) {
         switch (tokenType()) {
             case TokenType::EndOfFile:

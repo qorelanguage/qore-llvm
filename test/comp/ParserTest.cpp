@@ -35,10 +35,10 @@ class ParserTest : public qtif::LineTest {
 };
 
 TEST_P(ParserTest, Run) {
-    DirectiveProcessor dp(diagMgr, srcMgr, getSrc());
-    Parser parser(diagMgr, dp);
+    DirectiveProcessor dp(ctx, getSrc());
+    Parser parser(ctx, dp);
     ast::Script::Ptr script = parser.parseScript();
-    ast::dump(srcMgr, output, *script);
+    ast::dump(ctx, output, *script);
 }
 
 QTIF_TEST_CASE(ParserTest, "parser/");

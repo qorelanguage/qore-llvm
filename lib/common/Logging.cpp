@@ -34,6 +34,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <string>
 
 namespace qore {
 namespace log {

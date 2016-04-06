@@ -27,16 +27,17 @@
 #define TEST_QTIF_LINETEST_H_
 
 #include <memory>
-#include "qore/comp/DiagManager.h"
+#include <string>
+#include <vector>
+#include "qore/comp/Context.h"
 #include "qore/comp/Source.h"
-#include "qore/comp/SourceManager.h"
 #include "AbstractTest.h"
 
 namespace qtif {
 
 class LineTestOutput {
 public:
-    LineTestOutput(class LineTest &lineTest) : lineTest(lineTest) {
+    explicit LineTestOutput(class LineTest &lineTest) : lineTest(lineTest) {
     }
 
     LineTestOutput &operator<<(char c);
@@ -58,7 +59,7 @@ private:
 
 class LineTestDiagProcessor : public qore::comp::IDiagProcessor {
 public:
-    LineTestDiagProcessor(class LineTest &lineTest) : lineTest(lineTest) {
+    explicit LineTestDiagProcessor(class LineTest &lineTest) : lineTest(lineTest) {
     }
 
     void process(qore::comp::DiagRecord &record) override;
@@ -86,7 +87,7 @@ private:
 class LineTest : public AbstractTest {
 
 public:
-    LineTest(const std::string &includePath = "/");
+    explicit LineTest(const std::string &includePath = "/");
     ~LineTest();
     void SetUp() override;
     void verify() override;
@@ -98,8 +99,10 @@ public:
     }
 
 protected:
+    qore::comp::StringTable stringTable;
     qore::comp::DiagManager diagMgr;
     qore::comp::SourceManager srcMgr;
+    qore::comp::Context ctx;
     LineTestOutput output;
     LineTestDiagProcessor diagProcessor;
 

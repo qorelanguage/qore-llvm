@@ -26,6 +26,8 @@
 #ifndef TEST_QTIF_READER_H_
 #define TEST_QTIF_READER_H_
 
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace qtif {

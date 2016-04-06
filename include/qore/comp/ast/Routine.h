@@ -32,6 +32,9 @@
 #define INCLUDE_QORE_COMP_AST_ROUTINE_H_
 
 #include <tuple>
+#include <utility>
+#include <vector>
+#include "qore/comp/ast/Modifiers.h"
 #include "qore/comp/ast/Statement.h"
 
 namespace qore {
@@ -47,7 +50,7 @@ public:
     /**
      * \brief The type of one element of the parameter list: a triplet (type, name, default value (may be nullptr)).
      */
-    using Param = std::tuple<Type::Ptr, Token, Expression::Ptr>;
+    using Param = std::tuple<Type, Token, Expression::Ptr>;
 
     /**
      * \brief The type of one element of the base constructor invocation list.
@@ -56,8 +59,7 @@ public:
 
 public:
     Modifiers modifiers;                                    //!< The modifiers.
-    Type::Ptr type;                                         //!< The return type.
-    Name name;                                              //!< The name, may be empty.
+    Type type;                                              //!< The return type.
     std::vector<Param> params;                              //!< The parameters.
     std::vector<BaseCtorInvocation> baseCtors;              //!< The base constructor invocation list.
     CompoundStatement::Ptr body;                            //!< The body of the routine, nullptr for abstract methods.
@@ -76,7 +78,7 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return type->getStart();
+        return type.getStart();
     }
 
     SourceLocation getEnd() const override {
@@ -84,7 +86,7 @@ public:
     }
 
 private:
-    Routine() {
+    Routine() : type(Type::createInvalid()) {
     }
 };
 

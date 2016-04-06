@@ -35,16 +35,6 @@ namespace qore {
 namespace comp {
 namespace ast {
 
-class Script;
-class Namespace;
-class Class;
-class NamespaceConstant;
-class GlobalVariable;
-class Function;
-class Method;
-class ClassConstant;
-class MemberGroup;
-class Field;
 class EmptyStatement;
 class ExpressionStatement;
 class CompoundStatement;
@@ -78,9 +68,6 @@ class AssignmentExpression;
 class ListOperationExpression;
 class RegexExpression;
 class ClosureExpression;
-class NameType;
-class AsteriskType;
-class ImplicitType;
 
 /**
  * \brief Interface for expression visitors.
@@ -314,120 +301,6 @@ private:
     StatementVisitor(StatementVisitor &&) = delete;
     StatementVisitor &operator=(const StatementVisitor &) = delete;
     StatementVisitor &operator=(StatementVisitor &&) = delete;
-};
-
-/**
- * \brief Interface for visitors of declarations (namespaces, classes, globals, constants, functions).
- */
-class DeclarationVisitor {
-
-public:
-    virtual ~DeclarationVisitor() {}
-
-    /**
-     * \brief Called by a Script AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Script &node) = 0;
-
-    /**
-     * \brief Called by a Namespace AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Namespace &node) = 0;
-
-    /**
-     * \brief Called by a Class AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Class &node) = 0;
-
-    /**
-     * \brief Called by a NamespaceConstant AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(NamespaceConstant &node) = 0;
-
-    /**
-     * \brief Called by a GlobalVariable AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(GlobalVariable &node) = 0;
-
-    /**
-     * \brief Called by a Function AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Function &node) = 0;
-
-    /**
-     * \brief Called by a Method AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Method &node) = 0;
-
-    /**
-     * \brief Called by a ClassConstant AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(ClassConstant &node) = 0;
-
-    /**
-     * \brief Called by a MemberGroup AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(MemberGroup &node) = 0;
-
-    /**
-     * \brief Called by a Field AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(Field &node) = 0;
-
-protected:
-    DeclarationVisitor() = default;
-
-private:
-    DeclarationVisitor(const DeclarationVisitor &) = delete;
-    DeclarationVisitor(DeclarationVisitor &&) = delete;
-    DeclarationVisitor &operator=(const DeclarationVisitor &) = delete;
-    DeclarationVisitor &operator=(DeclarationVisitor &&) = delete;
-};
-
-/**
- * \brief Interface for visitors of types.
- */
-class TypeVisitor {
-
-public:
-    virtual ~TypeVisitor() {}
-
-    /**
-     * \brief Called by a NameType AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(NameType &node) = 0;
-
-    /**
-     * \brief Called by an AsteriskType AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(AsteriskType &node) = 0;
-
-    /**
-     * \brief Called by an ImplicitType AST node.
-     * \param node the node being visited
-     */
-    virtual void visit(ImplicitType &node) = 0;
-
-protected:
-    TypeVisitor() = default;
-
-private:
-    TypeVisitor(const TypeVisitor &) = delete;
-    TypeVisitor(TypeVisitor &&) = delete;
-    TypeVisitor &operator=(const TypeVisitor &) = delete;
-    TypeVisitor &operator=(TypeVisitor &&) = delete;
 };
 
 } // namespace ast

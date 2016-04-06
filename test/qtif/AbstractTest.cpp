@@ -25,6 +25,8 @@
 //------------------------------------------------------------------------------
 #include "AbstractTest.h"
 #include <fstream>
+#include <string>
+#include <vector>
 
 namespace qtif {
 

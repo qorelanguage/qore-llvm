@@ -29,6 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/Parser.h"
+#include <vector>
 
 namespace qore {
 namespace comp {
@@ -445,26 +446,34 @@ ast::Expression::Ptr Parser::primaryExpr() {
         case TokenType::KwSynchronized: {
             ast::Modifiers mods = modifiers();
             if (tokenType() == TokenType::KwSub) {
-                return closure(mods, ast::ImplicitType::create(location()));
+                return closure(mods, ast::Type::createImplicit(location()));
             }
             return closure(mods, type());
         }
         case TokenType::KwSub:
-            return closure(ast::Modifiers(), ast::ImplicitType::create(location()));
+            return closure(ast::Modifiers(), ast::Type::createImplicit(location()));
         case TokenType::Asterisk: {
-            ast::Type::Ptr t = type();
+            ast::Type t = type();
             if (tokenType() == TokenType::KwSub) {
                 return closure(ast::Modifiers(), std::move(t));
             }
-            return ast::VarDeclExpression::create(std::move(t), match(TokenType::Identifier));
+            if (tokenType() == TokenType::Identifier) {
+                String::Ref name = strVal();
+                return ast::VarDeclExpression::create(std::move(t), name, consume().location);
+            }
+            report(DiagId::ParserExpectedVariableName) << util::to_string(tokenType());
+            consume();
+            return ast::ErrorExpression::create(token);
         }
+        case TokenType::DoubleColon:
         case TokenType::Identifier: {
             ast::Name n = name();
             if (tokenType() == TokenType::KwSub) {
-                return closure(ast::Modifiers(), ast::NameType::create(std::move(n)));
+                return closure(ast::Modifiers(), ast::Type::createBasic(std::move(n)));
             }
             if (tokenType() == TokenType::Identifier) {
-                return ast::VarDeclExpression::create(ast::NameType::create(std::move(n)), consume());
+                String::Ref name = strVal();
+                return ast::VarDeclExpression::create(ast::Type::createBasic(std::move(n)), name, consume().location);
             }
             return ast::NameExpression::create(std::move(n));
         }
@@ -576,38 +585,58 @@ ast::Expression::Ptr Parser::list(Token openToken, ast::Expression::Ptr expr) {
 //primary_expr
 //    | modifiers type KwSub param_list block
 //    | modifiers KwSub param_list block
-ast::ClosureExpression::Ptr Parser::closure(ast::Modifiers mods, ast::Type::Ptr type) {
+ast::ClosureExpression::Ptr Parser::closure(ast::Modifiers mods, ast::Type type) {
     LOG_FUNCTION();
     match(TokenType::KwSub);
-    return ast::ClosureExpression::create(routine(mods, std::move(type), ast::Name()));
+    return ast::ClosureExpression::create(routine(mods, std::move(type)));
 }
 
 //name
+//    : names
+//    | '::' names
+//    ;
+//names
 //    : IDENTIFIER
 //    | IDENTIFIER '::' name
 //    ;
 ast::Name Parser::name() {
     LOG_FUNCTION();
-    ast::Name name;
-    name.tokens.push_back(match(TokenType::Identifier));
+    SourceLocation start = location();
+    bool root;
+    std::vector<ast::Name::Id> names;
+    if (tokenType() == TokenType::DoubleColon) {
+        root = true;
+    } else if (tokenType() == TokenType::Identifier) {
+        root = false;
+        names.emplace_back(strVal(), location());
+        consume();
+    } else {
+        report(DiagId::ParserExpectedName);
+        return ast::Name::invalid(start);
+    }
     while (tokenType() == TokenType::DoubleColon) {
         consume();
-        name.tokens.push_back(match(TokenType::Identifier));
+        if (tokenType() != TokenType::Identifier) {
+            report(DiagId::ParserExpectedName);
+            return ast::Name::invalid(start);
+        }
+        names.emplace_back(strVal(), location());
+        consume();
     }
-    return name;
+    return ast::Name(start, root, std::move(names));
 }
 
 //type
 //    : name
 //    | '*' name
 //    ;
-ast::Type::Ptr Parser::type() {
+ast::Type Parser::type() {
     LOG_FUNCTION();
     if (tokenType() == TokenType::Asterisk) {
         SourceLocation l = consume().location;
-        return ast::AsteriskType::create(l, name());
+        return ast::Type::createAsterisk(l, name());
     }
-    return ast::NameType::create(name());
+    return ast::Type::createBasic(name());
 }
 
 //arg_list

@@ -32,6 +32,8 @@
 #define INCLUDE_QORE_COMP_AST_EXPRESSION_H_
 
 #include <cassert>
+#include <utility>
+#include <vector>
 #include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Type.h"
 #include "qore/comp/ast/Visitor.h"
@@ -166,7 +168,6 @@ public:
 
 private:
     explicit NameExpression(Name name) : name(std::move(name)) {
-        assert(!this->name.tokens.empty());
     }
 };
 
@@ -269,8 +270,9 @@ private:
 class VarDeclExpression : public Expression {
 
 public:
-    Type::Ptr type;                                         //!< The type.
-    Token name;                                             //!< The name.
+    Type type;                                              //!< The type of the variable.
+    String::Ref name;                                       //!< The name of the variable.
+    SourceLocation location;                                //!< The location of the name.
 
 public:
     using Ptr = std::unique_ptr<VarDeclExpression>;         //!< Pointer type.
@@ -278,12 +280,13 @@ public:
 public:
     /**
      * \brief Allocates a new node.
-     * \param type the type
-     * \param name the name
+     * \param type the type of the variable
+     * \param name the name of the variable
+     * \param location the location of the name
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Type::Ptr type, Token name) {
-        return Ptr(new VarDeclExpression(std::move(type), name));
+    static Ptr create(Type type, String::Ref name, SourceLocation location) {
+        return Ptr(new VarDeclExpression(std::move(type), name, location));
     }
 
     void accept(ExpressionVisitor &v) override {
@@ -291,15 +294,16 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return type->getStart();
+        return type.getStart();
     }
 
     SourceLocation getEnd() const override {
-        return name.location;
+        return location;
     }
 
 private:
-    explicit VarDeclExpression(Type::Ptr type, Token name) : type(std::move(type)), name(name) {
+    explicit VarDeclExpression(Type type, String::Ref name, SourceLocation location)
+            : type(std::move(type)), name(name), location(location) {
     }
 };
 
@@ -310,7 +314,7 @@ class CastExpression : public Expression {
 
 public:
     SourceLocation start;                                   //!< The starting location.
-    Type::Ptr type;                                         //!< The type.
+    Type type;                                              //!< The type.
     Expression::Ptr expression;                             //!< The expression.
     SourceLocation end;                                     //!< The ending location.
 
@@ -339,7 +343,7 @@ public:
     }
 
 private:
-    CastExpression() {
+    CastExpression() : type(Type::createInvalid()) {
     }
 };
 

@@ -1,0 +1,19 @@
+namespace a;
+namespace b {
+    namespace a;
+    namespace b;
+    namespace a::b;
+}
+namespace a::x;
+namespace b::b {
+    namespace b;
+}
+#$$$
+-root namespace
+  -namespace a @1:11
+    -namespace x @7:14
+  -namespace b @2:11
+    -namespace a @3:15
+      -namespace b @5:18
+    -namespace b @4:15
+      -namespace b @9:15

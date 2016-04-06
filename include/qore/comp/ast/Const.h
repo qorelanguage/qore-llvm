@@ -41,7 +41,7 @@ namespace ast {
 /**
  * \brief Represents a constant.
  */
-class Constant : public Node {
+class Constant : public Declaration {
 
 public:
     SourceLocation start;                                   //!< The starting location.
@@ -61,6 +61,10 @@ public:
         return Ptr(new Constant());
     }
 
+    Kind getKind() const override {
+        return Kind::Constant;
+    }
+
     SourceLocation getStart() const override {
         return start;
     }
@@ -70,7 +74,7 @@ public:
     }
 
 private:
-    Constant() {
+    Constant() : name(Name::invalid()) {
     }
 };
 

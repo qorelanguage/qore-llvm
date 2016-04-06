@@ -1,10 +1,16 @@
 =;
+*int =;
 #$$$
 #$!ParserExpectedPrimaryExpression@1:1
--Script@1:1-2:1
+#$!ParserExpectedVariableName@2:6
+-Script@1:1-3:1
   .members:
   .statements:
     -ExpressionStatement@1:1-1:2
       .expression:
         -ErrorExpression@1:1-1:1
+          .token: Equals =
+    -ExpressionStatement@2:1-2:7
+      .expression:
+        -ErrorExpression@2:6-2:6
           .token: Equals =

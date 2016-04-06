@@ -64,7 +64,8 @@ std::ostream &operator<<(std::ostream &o, DiagId id);
  */
 enum class DiagLevel {
     Error,          //!< Error
-    Warning         //!< Warning
+    Warning,        //!< Warning
+    Info,           //!< Info
 };
 
 /**

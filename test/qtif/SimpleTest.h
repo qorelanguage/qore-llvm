@@ -26,6 +26,7 @@
 #ifndef TEST_QTIF_SIMPLETEST_H_
 #define TEST_QTIF_SIMPLETEST_H_
 
+#include <string>
 #include "AbstractTest.h"
 
 namespace qtif {

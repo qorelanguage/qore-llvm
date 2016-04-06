@@ -1,14 +1,44 @@
+//--------------------------------------------------------------------*- C++ -*-
+//
+//  Qore Programming Language
+//
+//  Copyright (C) 2015 Qore Technologies
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+//------------------------------------------------------------------------------
 #include <iostream>
+#include <string>
+#include <utility>
 #include "qore/common/Logging.h"
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/ast/Dump.h"
+#include "qore/comp/semantic/Analyzer.h"
+#include "qore/comp/semantic/Dump.h"
 #if QORE_USE_LLVM
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #endif
 
-using namespace qore::comp;
+namespace qore {
+namespace comp {
 
 /**
  * \brief Basic DiagProcessor that writes messages to the standard error stream.
@@ -38,7 +68,7 @@ private:
 class StdinWrapper : public ITokenStream {
 
 public:
-    StdinWrapper(DiagManager &diagMgr, SourceManager &srcMgr) : src(srcMgr.createFromString("<stdin>", "")), dp(diagMgr, srcMgr, src) {
+    explicit StdinWrapper(Context &ctx) : src(ctx.getSrcMgr().createFromString("<stdin>", "")), dp(ctx, src) {
     }
 
     Token read(Mode mode) override {
@@ -61,6 +91,38 @@ private:
     Source &src;
     DirectiveProcessor dp;
 };
+
+void test() {
+    StringTable stringTable;
+    DiagManager diagMgr(stringTable);
+    SourceManager srcMgr(diagMgr);
+    DiagPrinter diagPrinter(srcMgr);
+    diagMgr.addProcessor(&diagPrinter);
+    Context ctx(stringTable, diagMgr, srcMgr);
+//    DirectiveProcessor dp(ctx, srcMgr.createFromFile(argv[1]));
+    DirectiveProcessor dp(ctx, srcMgr.createFromString("<noname>", R"(
+namespace a;
+namespace a::x::b;
+our int i;
+
+string s = "A";
+s = s + i;
+i = i + 1;
+
+)"));
+//    StdinWrapper dp(dctx);
+
+    Parser parser(ctx, dp);
+    ast::Script::Ptr script = parser.parseScript();
+    ast::dump(ctx, std::cout, *script);
+
+    semantic::Analyzer analyzer(ctx);
+    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
+    semantic::dump(ctx, std::cout, *root);
+}
+
+} // namespace comp
+} // namespace qore
 /// \endcond NoDoxygen
 
 #ifdef QORE_LOGGING
@@ -71,12 +133,13 @@ class LogFilter : public qore::log::Logger {
 
 public:
     bool filter(const std::string &component) override {
-        return component.find("Parser") != std::string::npos;
+        return component.find("Parser") == std::string::npos && component.find("Scanner") == std::string::npos
+                && component.find("DirectiveProcessor") == std::string::npos;
     }
 };
 #endif
 
-int main() {
+int main(int argc, char *argv[]) {
 #ifdef QORE_LOGGING
     LogFilter logFilter;
     qore::log::LoggerManager::set(&logFilter);
@@ -89,16 +152,7 @@ int main() {
     module->dump();
 #endif
 
-    DiagManager diagMgr;
-    SourceManager srcMgr(diagMgr);
-    DiagPrinter diagPrinter(srcMgr);
-    diagMgr.addProcessor(&diagPrinter);
-    DirectiveProcessor dp(diagMgr, srcMgr, srcMgr.createFromString("<noname>", "(*a::b sub(int i = 5, *hash h) { 0; });a;"));
-//    StdinWrapper dp(diagMgr, srcMgr);
-
-    Parser parser(diagMgr, dp);
-    ast::Script::Ptr script = parser.parseScript();
-    ast::dump(srcMgr, std::cout, *script);
+    qore::comp::test();
 
     return 0;
 }

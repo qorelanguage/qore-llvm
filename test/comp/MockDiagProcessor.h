@@ -43,9 +43,10 @@ public:
 };
 
 struct DiagManagerHelper {
-    DiagManagerHelper() {
+    DiagManagerHelper() : diagMgr(stringTable) {
         diagMgr.addProcessor(&mockDiagProcessor);
     }
+    StringTable stringTable;
     DiagManager diagMgr;
     MockDiagProcessor mockDiagProcessor;
 };

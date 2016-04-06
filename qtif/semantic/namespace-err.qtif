@@ -1,0 +1,17 @@
+namespace ;
+namespace ::a;
+namespace a;
+namespace a::x::y;
+class x;
+namespace x;
+namespace b::x;
+#$$$
+#$!ParserExpectedName@1:11
+#$!SemaInvalidNamespaceMemberName@2:11
+#$!SemaNamespaceNotFound@4:14-namespace x not found in namespace ::a
+#$!SemaDuplicateNamespaceName@6:11
+#$!SemaPreviousDeclaration@5:7
+#$!SemaNamespaceNotFound@7:11-namespace b not found in the root namespace
+-root namespace
+  -namespace a @3:11
+  -class x @5:7

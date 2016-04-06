@@ -39,17 +39,20 @@
 /**
  * \brief Marks unreachable point in the code.
  *
- * In debug version, prints a message and aborts. In release version has undefined behavior.
+ * In debug version, prints a message and aborts. In release version it has undefined behavior.
  * \param M a message to print
  */
 #ifdef QORE_COVERAGE
 class Unreachable {};
-#define QORE_UNREACHABLE(M) throw Unreachable();
+#define QORE_UNREACHABLE(M) LOG("FATAL: Unreachable in " << __PRETTY_FUNCTION__ << " - " << M); throw Unreachable();
 #elif !defined(NDEBUG)
-#define QORE_UNREACHABLE(M)  CLOG("", "FATAL: Unreachable executed in " << __PRETTY_FUNCTION__ << " - " << M); abort();
+#define QORE_UNREACHABLE(M) LOG("FATAL: Unreachable in " << __PRETTY_FUNCTION__ << " - " << M); abort();
 #else
 #define QORE_UNREACHABLE(M) __builtin_unreachable()
 #endif
+
+class NotImplemented {};
+#define QORE_NOT_IMPLEMENTED(M) LOG(__PRETTY_FUNCTION__ << " - NOT IMPLEMENTED: " << M); throw NotImplemented();
 
 /**
  * \brief Helper macro for constructing messages for FatalError exception.
@@ -89,4 +92,4 @@ private:
 
 } // namespace qore
 
-#endif /* INCLUDE_QORE_COMMON_EXCEPTIONS_H_ */
+#endif // INCLUDE_QORE_COMMON_EXCEPTIONS_H_

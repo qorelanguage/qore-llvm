@@ -31,8 +31,9 @@
 #ifndef INCLUDE_QORE_COMP_SCANNER_H_
 #define INCLUDE_QORE_COMP_SCANNER_H_
 
+#include <string>
 #include <unordered_map>
-#include "qore/comp/DiagManager.h"
+#include "qore/comp/Context.h"
 #include "qore/comp/Source.h"
 #include "qore/comp/Token.h"
 
@@ -47,9 +48,10 @@ class Scanner {
 public:
     /**
      * \brief Constructs the scanner.
-     * \param diagMgr used for reporting diagnostic messages
+     * \param ctx the compiler context
      */
-    explicit Scanner(DiagManager &diagMgr);
+    explicit Scanner(Context &ctx) : ctx(ctx) {
+    }
 
     /**
      * \brief Reads the next token from the source script.
@@ -70,7 +72,7 @@ public:
     /**
      * \brief Reads a line comment from the source.
      *
-     * Consumes all characters that are part of the comment, but leaves the terminating new line character.
+     * Consumes all characters that are part of the comment, but leaves the terminating newline character.
      * \param src the source which must be positioned after the '#' character
      */
     void readLineComment(Source &src);
@@ -135,7 +137,7 @@ private:
     Scanner &operator=(Scanner &&) = delete;
 
 private:
-    DiagManager &diagMgr;
+    Context &ctx;
 
     static const std::unordered_map<std::string, TokenType> Keywords;
 };
@@ -143,4 +145,4 @@ private:
 } //namespace comp
 } //namespace qore
 
-#endif /* INCLUDE_QORE_COMP_SCANNER_H_ */
+#endif // INCLUDE_QORE_COMP_SCANNER_H_
