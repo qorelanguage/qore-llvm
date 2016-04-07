@@ -60,25 +60,38 @@ struct GlobalVariable;
 struct Exception {
 };
 
-enum class Type {       //aka QAny::Kind - will be returned by a virtual method in QAny
-    Bool,               //               - they represent classes derived from QAny
+enum class Type {
+    Any,
+    Nothing,
+    Bool,
     Int,
+    SoftInt,
     Float,
     Number,
     String,
+    SoftString,
     List,
     Hash,
     Object,
 };
 
+enum class Op {
+    Plus,
+    PlusEq,
+};
+
 enum class Operator {
     IntPlusInt,
     StringPlusString,
+    AnyPlusAny,
+    AnyPlusEqAny,
 };
 
 enum class Conversion {
     Identity,
     IntToString,
+    StringToInt,
+    BoxInt,
 };
 
 } // namespace rt

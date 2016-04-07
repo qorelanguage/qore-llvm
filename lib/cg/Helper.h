@@ -76,9 +76,11 @@ public:
         lf_createString = createFunction("createString", lt_qptr, llvm::Type::getInt8PtrTy(ctx), lt_qsize);
 
         functions[&ir::Functions::IntToString] = createFunction("convertIntToString", lt_qptr, lt_qint);
+        functions[&ir::Functions::StringToInt] = createFunction("convertStringToInt", lt_qint, lt_qptr);
         functions[&ir::Functions::StringPlusString] = createFunction("opAddStringString", lt_qptr, lt_qptr, lt_qptr);
         functions[&ir::Functions::BoxInt] = createFunction("int_box", lt_qptr, lt_qint);
         functions[&ir::Functions::AnyPlusAny] = createFunction("op_add_any_any", lt_qptr, lt_qptr, lt_qptr);
+        functions[&ir::Functions::AnyPlusEqAny] = createFunction("op_addeq_any_any", lt_qptr, lt_qptr, lt_qptr);
     }
 
     llvm::Function *createFunction(const std::string &name, llvm::Type *ret) {

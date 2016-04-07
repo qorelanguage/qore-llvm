@@ -42,7 +42,7 @@ class Type {
 
 public:
     enum class Kind {
-        Builtin, Any, Nothing
+        Builtin
     };
 
 public:
@@ -93,43 +93,15 @@ private:
     friend class Types;
 };
 
-class AnyType : public Type {
-
-public:
-    Kind getKind() const override {
-        return Kind::Any;
-    }
-
-private:
-    AnyType() : Type(rt::qvalue_type::Ptr) {
-    }
-
-private:
-    friend class Types;
-};
-
-class NothingType : public Type {
-
-public:
-    Kind getKind() const override {
-        return Kind::Nothing;
-    }
-
-private:
-    NothingType() : Type(rt::qvalue_type::Ptr) {
-    }
-
-private:
-    friend class Types;
-};
-
 class Types {
 
 public:
-    static AnyType Any;
-    static NothingType Nothing;
+    static BuiltinType Any;
+    static BuiltinType Nothing;
     static BuiltinType Int;
+    static BuiltinType SoftInt;
     static BuiltinType String;
+    static BuiltinType SoftString;
 };
 
 } // namespace ir

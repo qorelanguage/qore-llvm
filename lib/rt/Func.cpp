@@ -30,6 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/rt/Func.h"
 #include <cassert>
+#include <iostream>
 #include <string>
 #include "qore/common/Exceptions.h"
 #include "qore/common/Logging.h"
@@ -111,6 +112,7 @@ private:
 
     friend qptr createString(const char *, qsize);
     friend qptr convertIntToString(qint i);
+    friend qint convertStringToInt(qptr p);
     friend qptr opAddStringString(qptr l, qptr r);
 };
 
@@ -121,6 +123,15 @@ qptr createString(const char *data, qsize length) {
 qptr convertIntToString(qint i) {
     LOG("convertIntToString(" << i << ")");
     return new QString(std::to_string(i));
+}
+
+qint convertStringToInt(qptr p) {
+    assert(p->getType() == Type::String);
+    LOG("convertStringToInt(" << p << ")");
+    qint i;
+    std::stringstream str(static_cast<QString *>(p)->str);
+    str >> i;
+    return i;
 }
 
 qptr opAddStringString(qptr l, qptr r) {
@@ -258,7 +269,7 @@ extern "C" void combine(Exception &original, Exception &secondary) {
 //FIXME
 }
 
-qptr convert_any(qptr src, Type type) {
+static qptr convert_any(qptr src, Type type) {
     Conversion c = meta::findConversion(src->getType(), type);
     switch (c) {
         case Conversion::Identity:
@@ -270,27 +281,42 @@ qptr convert_any(qptr src, Type type) {
     }
 }
 
-qint convert_any_to_int(qptr src) {
-    Conversion c = meta::findConversion(src->getType(), Type::Int);
+static qint convert_any_to_softint(qptr src) {
+    Conversion c = meta::findConversion(src->getType(), Type::SoftInt);
     switch (c) {
         case Conversion::Identity:
             return int_unbox(src);
+        case Conversion::StringToInt:
+            return convertStringToInt(src);
         //float to int, etc.
         default:
             QORE_NOT_IMPLEMENTED("throw an exception");
     }
 }
 
-qptr op_add_any_any(qptr left, qptr right) {
-    Operator op = meta::findOperatorAdd(left->getType(), right->getType());
+qptr op_generic(Op o, qptr left, qptr right) {
+    Operator op = meta::findOperator(o, left->getType(), right->getType());
     switch (op) {
         case Operator::IntPlusInt:
-            return int_box(convert_any_to_int(left) + convert_any_to_int(right));
+            return int_box(convert_any_to_softint(left) + convert_any_to_softint(right));
         case Operator::StringPlusString:
+            //FIXME exception are not handled correctly
             return opAddStringString(convert_any(left, Type::String), convert_any(right, Type::String));
         default:
             QORE_NOT_IMPLEMENTED("throw an exception");
     }
+}
+
+qptr op_add_any_any(qptr left, qptr right) {
+    //left or right can be nullptr
+    LOG("op_add_any_any: " << left << " + " << right);
+    return op_generic(Op::Plus, left, right);
+}
+
+qptr op_addeq_any_any(qptr left, qptr right) {
+    //left or right can be nullptr
+    LOG("op_addeq_any_any: " << left << " + " << right);
+    return op_generic(Op::PlusEq, left, right);
 }
 
 } // namespace rt

@@ -33,18 +33,24 @@
 namespace qore {
 namespace ir {
 
-AnyType Types::Any;
-NothingType Types::Nothing;
+BuiltinType Types::Any(rt::Type::Any, rt::qvalue_type::Ptr);
+BuiltinType Types::Nothing(rt::Type::Nothing, rt::qvalue_type::None);
 BuiltinType Types::Int(rt::Type::Int, rt::qvalue_type::Int);
+BuiltinType Types::SoftInt(rt::Type::SoftInt, rt::qvalue_type::Int);
 BuiltinType Types::String(rt::Type::String, rt::qvalue_type::Ptr);
+BuiltinType Types::SoftString(rt::Type::SoftString, rt::qvalue_type::Ptr);
 
 OperatorFunction Functions::StringPlusString(rt::Operator::StringPlusString,
-        Types::String, Types::String, Types::String);
+        Types::String, Types::SoftString, Types::SoftString);
 OperatorFunction Functions::IntPlusInt(rt::Operator::IntPlusInt,
-        Types::Int, Types::Int, Types::Int);
+        Types::Int, Types::SoftInt, Types::SoftInt);
+OperatorFunction Functions::AnyPlusAny(rt::Operator::AnyPlusAny,
+        Types::Any, Types::Any, Types::Any);
+OperatorFunction Functions::AnyPlusEqAny(rt::Operator::AnyPlusEqAny,
+        Types::Any, Types::Any, Types::Any);
 ConversionFunction Functions::IntToString(rt::Conversion::IntToString, Types::String, Types::Int);
-BoxFunction Functions::BoxInt(Types::Int);
-AnyOperatorFunction Functions::AnyPlusAny;
+ConversionFunction Functions::StringToInt(rt::Conversion::StringToInt, Types::Int, Types::String);
+ConversionFunction Functions::BoxInt(rt::Conversion::BoxInt, Types::Any, Types::Int);
 
 } // namespace ir
 } // namespace qore

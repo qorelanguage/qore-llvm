@@ -87,12 +87,12 @@ our string s;
 s = "A";
 i = i + 1;
 s = s + i;
-i += 2;
+i += "2";
 s += i;
 
-#any a = 1;
-#a = a + 2;
-#a += "s";
+any a = 1;
+a = a + 2;
+a += "8";
 
 )";
 

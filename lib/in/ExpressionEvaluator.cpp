@@ -213,6 +213,10 @@ Value ExpressionEvaluator::invoke1(const ir::Function &f, rt::qvalue arg1) {
         switch (static_cast<const ir::ConversionFunction &>(f).getConversion()) {
             case rt::Conversion::IntToString:
                 return Value(rt::convertIntToString(arg1.i));
+            case rt::Conversion::StringToInt:
+                return Value(rt::convertStringToInt(arg1.p));
+            case rt::Conversion::BoxInt:
+                return Value(rt::int_box(arg1.i));
             default:
                 QORE_NOT_IMPLEMENTED("");
         }
@@ -229,13 +233,14 @@ Value ExpressionEvaluator::invoke2(const ir::Function &f, rt::qvalue arg1, rt::q
             case rt::Operator::IntPlusInt:
                 return Value(arg1.i + arg2.i);
             case rt::Operator::StringPlusString:
-                return Value(qore::rt::opAddStringString(arg1.p, arg2.p));
+                return Value(rt::opAddStringString(arg1.p, arg2.p));
+            case rt::Operator::AnyPlusAny:
+                return Value(qore::rt::op_add_any_any(arg1.p, arg2.p));
+            case rt::Operator::AnyPlusEqAny:
+                return Value(qore::rt::op_addeq_any_any(arg1.p, arg2.p));
             default:
                 QORE_NOT_IMPLEMENTED("");
         }
-    }
-    if (f == ir::Functions::AnyPlusAny) {
-        return Value(qore::rt::op_add_any_any(arg1.p, arg2.p));
     }
     QORE_NOT_IMPLEMENTED("");
 }

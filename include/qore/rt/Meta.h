@@ -37,7 +37,7 @@ namespace qore {
 namespace rt {
 namespace meta {
 
-Operator findOperatorAdd(Type l, Type r);
+Operator findOperator(Op o, Type l, Type r);
 Conversion findConversion(Type src, Type dest);
 
 } // namespace meta

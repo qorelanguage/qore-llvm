@@ -69,7 +69,7 @@ public:
     void visit(qore::comp::ast::BinaryExpression &node) {
         ir::Expression::Ptr left = eval(*node.left);
         ir::Expression::Ptr right = eval(*node.right);
-        const ir::Function &f = scope.resolveOperatorAdd(left->getType(), right->getType());
+        const ir::Function &f = scope.resolveOperator(rt::Op::Plus, left->getType(), right->getType());
         result = ir::InvokeExpression::create(
                 f,
                 convert(std::move(left), f.getArgType(0)),
@@ -116,10 +116,8 @@ public:
         } else if (node.op.type == qore::comp::TokenType::PlusEquals) {
             ir::Expression::Ptr left = eval(*node.left);
             ir::Expression::Ptr right = eval(*node.right);
-            const ir::Function &f = scope.resolveOperatorAdd(left->getType(), right->getType());
-            if (f.getRetType() != left->getType()) {
-                QORE_NOT_IMPLEMENTED("");           //e.g. int i; float f; i += f;
-            }
+            const ir::Function &f = scope.resolveOperator(rt::Op::PlusEq, left->getType(), right->getType());
+            assert(f.getRetType() == left->getType());
             result = ir::CompoundAssignmentExpression::create(
                     std::move(left),
                     f,

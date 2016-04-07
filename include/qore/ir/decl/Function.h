@@ -46,7 +46,7 @@ class Function {
 
 public:
     enum class Kind {
-        User, Operator, Conversion, Box, AnyOperator
+        User, Operator, Conversion
     };
 
 public:
@@ -224,75 +224,15 @@ private:
     friend class Functions;
 };
 
-class BoxFunction : public Function {
-
-public:
-    Kind getKind() const override {
-        return Kind::Box;
-    }
-
-    const Type &getRetType() const override {
-        return Types::Any;
-    }
-
-    const Index getArgCount() const override {
-        return 1;
-    }
-
-    const Type &getArgType(Index index) const override {
-        if (index == 0) {
-            return arg0Type;
-        }
-        QORE_NOT_IMPLEMENTED("");
-    }
-
-private:
-    explicit BoxFunction(const Type &arg0Type) : arg0Type(arg0Type)  {
-    }
-
-private:
-    const Type &arg0Type;
-
-    friend class Functions;
-};
-
-class AnyOperatorFunction : public Function {
-
-public:
-    Kind getKind() const override {
-        return Kind::AnyOperator;
-    }
-
-    const Type &getRetType() const override {
-        return Types::Any;
-    }
-
-    const Index getArgCount() const override {
-        return 2;
-    }
-
-    const Type &getArgType(Index index) const override {
-        if (index == 0 || index == 1) {
-            return Types::Any;
-        }
-        QORE_NOT_IMPLEMENTED("");
-    }
-
-private:
-    AnyOperatorFunction() {
-    }
-
-private:
-    friend class Functions;
-};
-
 class Functions {
 public:
     static OperatorFunction StringPlusString;
     static OperatorFunction IntPlusInt;
+    static OperatorFunction AnyPlusAny;
+    static OperatorFunction AnyPlusEqAny;
     static ConversionFunction IntToString;
-    static BoxFunction BoxInt;
-    static AnyOperatorFunction AnyPlusAny;
+    static ConversionFunction StringToInt;
+    static ConversionFunction BoxInt;
 };
 
 } // namespace ir

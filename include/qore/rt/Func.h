@@ -41,6 +41,8 @@ extern "C" void decRef(qptr ptr);                               //FIXME EXCEPTIO
 
 extern "C" qptr createString(const char *str, qsize len);       //THROWS, encoding
 extern "C" qptr convertIntToString(qint i);                     //THROWS
+extern "C" qint convertStringToInt(qptr p);                     //THROWS?
+
 extern "C" qptr opAddStringString(qptr left, qptr right);       //THROWS
 
 extern "C" GlobalVariable *gv_create(qvalue init);              //THROWS
@@ -56,6 +58,7 @@ extern "C" qptr int_box(qint i);
 extern "C" qint int_unbox(qptr p) noexcept;
 
 extern "C" qptr op_add_any_any(qptr left, qptr right);       //THROWS
+extern "C" qptr op_addeq_any_any(qptr left, qptr right);       //THROWS
 
 //XXX naming conventions
 

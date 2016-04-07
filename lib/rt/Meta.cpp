@@ -35,16 +35,27 @@ namespace qore {
 namespace rt {
 namespace meta {
 
-Operator findOperatorAdd(Type l, Type r) {
-    if (l == Type::Int) {
-        if (r == Type::Int) {
-            return Operator::IntPlusInt;
-        } else if (r == Type::String) {
+Operator findOperator(Op o, Type l, Type r) {
+    if (o == Op::Plus) {
+        if (l == Type::Any || r == Type::Any) {
+            return Operator::AnyPlusAny;
+        }
+        if (l == Type::String || r == Type::String) {
             return Operator::StringPlusString;
         }
-    } else if (l == Type::String) {
-        if (r == Type::Int || r == Type::String) {
+        if (l == Type::Int || r == Type::Int) {
+            return Operator::IntPlusInt;
+        }
+    }
+    if (o == Op::PlusEq) {
+        if (l == Type::Any) {
+            return Operator::AnyPlusEqAny;
+        }
+        if (l == Type::String) {
             return Operator::StringPlusString;
+        }
+        if (l == Type::Int) {
+            return Operator::IntPlusInt;
         }
     }
     QORE_NOT_IMPLEMENTED("Operator " << static_cast<int>(l) << " + " << static_cast<int>(r));
@@ -54,8 +65,29 @@ Conversion findConversion(Type src, Type dest) {
     if (src == dest) {
         return Conversion::Identity;
     }
-    if (src == Type::Int && dest == Type::String) {
-        return Conversion::IntToString;
+    if (dest == Type::SoftString) {
+        if (src == Type::String) {
+            return Conversion::Identity;
+        }
+        if (src == Type::Int) {
+            return Conversion::IntToString;
+        }
+    }
+    if (dest == Type::SoftInt) {
+        if (src == Type::String) {
+            return Conversion::StringToInt;
+        }
+        if (src == Type::Int) {
+            return Conversion::Identity;
+        }
+    }
+    if (dest == Type::Any) {
+        if (src == Type::Int) {
+            return Conversion::BoxInt;
+        }
+        if (src == Type::String) {
+            return Conversion::Identity;
+        }
     }
     QORE_NOT_IMPLEMENTED("Conversion " << static_cast<int>(src) << " to " << static_cast<int>(dest));
 }
