@@ -57,12 +57,11 @@ LValue LValueCompiler::compile(const ir::LocalVariableRefExpression &expr) {
 LValue LValueCompiler::compile(const ir::GlobalVariableRefExpression &expr) {
     LOG_FUNCTION();
     llvm::Value *g = builder.CreateLoad(scriptCompiler.getGlobal(expr.getGlobalVariable()));
-    qore::rt::qvalue_type type = expr.getGlobalVariable().getType().rtType;
 
     llvm::IRBuilder<> &b = builder;
     Helper &h = helper;
-    return LValue(type,
-            [&b, &h, g, type](){return h.fromQvaluePtr(b, b.CreateCall(h.lf_gv_write_lock, g), type); },
+    return LValue(expr.getGlobalVariable().getType().rtType,
+            [&b, &h, g](){return b.CreateCall(h.lf_gv_write_lock, g); },
             [&b, &h, g](){b.CreateCall(h.lf_gv_write_unlock, g);});
 }
 

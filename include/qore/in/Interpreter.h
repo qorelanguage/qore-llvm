@@ -55,12 +55,12 @@ public:
     void execute(Locals &locals, const ir::Statement &stmt);
 
     rt::GlobalVariable *getGlobalVariableValue(const ir::GlobalVariable &gv) const;
-    rt::qptr getStringLiteralValue(const ir::StringLiteral &sl) const;
+    rt::qvalue getStringLiteralValue(const ir::StringLiteral &sl) const;
 
     static void run(const ir::Script &script, const ir::UserFunction &f);
 
 private:
-    std::unordered_map<const ir::StringLiteral *, rt::qptr> strings;
+    std::unordered_map<const ir::StringLiteral *, rt::qvalue> strings;
     std::unordered_map<const ir::GlobalVariable *, rt::GlobalVariable *> globals;
 };
 

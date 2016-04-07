@@ -56,8 +56,8 @@ public:
         lt_qvalue_ptr = lt_qvalue->getPointerTo();
         lt_GlobalVariable_ptr = llvm::StructType::create(ctx, "GlobalVariable")->getPointerTo();
 
-        lf_incRef = createFunction("incRef", lt_void, lt_qptr);
-        lf_decRef = createFunction("decRef", lt_void, lt_qptr);
+        lf_incRef = createFunction("incRef", lt_void, lt_qvalue);
+        lf_decRef = createFunction("decRef", lt_void, lt_qvalue);
 
         lf_gv_create = createFunction("gv_create", lt_GlobalVariable_ptr, lt_qvalue);
         lf_gv_free = createFunction("gv_free", lt_qvalue, lt_GlobalVariable_ptr);
@@ -66,21 +66,18 @@ public:
         lf_gv_write_lock = createFunction("gv_write_lock", lt_qvalue_ptr, lt_GlobalVariable_ptr);
         lf_gv_write_unlock = createFunction("gv_write_unlock", lt_void, lt_GlobalVariable_ptr);
 
-        lf_qvalue_to_qint = createFunction("qvalue_to_qint", lt_qint, lt_qvalue);
-        lf_qvalue_ptr_to_qint_ptr = createFunction("qvalue_ptr_to_qint_ptr", lt_qint->getPointerTo(0), lt_qvalue_ptr);
         lf_qint_to_qvalue = createFunction("qint_to_qvalue", lt_qvalue, lt_qint);
-        lf_qvalue_ptr_to_qptr_ptr = createFunction("qvalue_ptr_to_qptr_ptr", lt_qptr->getPointerTo(0), lt_qvalue_ptr);
-        lf_qvalue_to_qptr = createFunction("qvalue_to_qptr", lt_qptr, lt_qvalue);
-        lf_qptr_to_qvalue = createFunction("qptr_to_qvalue", lt_qvalue, lt_qptr);
 
-        lf_createString = createFunction("createString", lt_qptr, llvm::Type::getInt8PtrTy(ctx), lt_qsize);
+        lf_createString = createFunction("createString", lt_qvalue, llvm::Type::getInt8PtrTy(ctx), lt_qsize);
 
-        functions[&ir::Functions::IntToString] = createFunction("convertIntToString", lt_qptr, lt_qint);
-        functions[&ir::Functions::StringToInt] = createFunction("convertStringToInt", lt_qint, lt_qptr);
-        functions[&ir::Functions::StringPlusString] = createFunction("opAddStringString", lt_qptr, lt_qptr, lt_qptr);
-        functions[&ir::Functions::BoxInt] = createFunction("int_box", lt_qptr, lt_qint);
-        functions[&ir::Functions::AnyPlusAny] = createFunction("op_add_any_any", lt_qptr, lt_qptr, lt_qptr);
-        functions[&ir::Functions::AnyPlusEqAny] = createFunction("op_addeq_any_any", lt_qptr, lt_qptr, lt_qptr);
+        functions[&ir::Functions::IntToString] = createFunction("convertIntToString", lt_qvalue, lt_qvalue);
+        functions[&ir::Functions::StringToInt] = createFunction("convertStringToInt", lt_qvalue, lt_qvalue);
+        functions[&ir::Functions::StringPlusString] = createFunction("opAddStringString", lt_qvalue, lt_qvalue,
+                lt_qvalue);
+        functions[&ir::Functions::IntPlusInt] = createFunction("opAddIntInt", lt_qvalue, lt_qvalue, lt_qvalue);
+        functions[&ir::Functions::BoxInt] = createFunction("int_box", lt_qvalue, lt_qvalue);
+        functions[&ir::Functions::AnyPlusAny] = createFunction("op_add_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
+        functions[&ir::Functions::AnyPlusEqAny] = createFunction("op_addeq_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
     }
 
     llvm::Function *createFunction(const std::string &name, llvm::Type *ret) {
@@ -102,55 +99,7 @@ public:
                 llvm::Function::ExternalLinkage, name, module.get());
     }
 
-    llvm::Value *fromQvalue(llvm::IRBuilder<> &builder, llvm::Value *value, qore::rt::qvalue_type type) {
-        switch (type) {
-            case qore::rt::qvalue_type::Int:
-                return builder.CreateCall(lf_qvalue_to_qint, value);
-            case qore::rt::qvalue_type::Ptr:
-                return builder.CreateCall(lf_qvalue_to_qptr, value);
-            default:
-                QORE_NOT_IMPLEMENTED("");
-        }
-    }
-
-    llvm::Value *fromQvaluePtr(llvm::IRBuilder<> &builder, llvm::Value *value, qore::rt::qvalue_type type) {
-        switch (type) {
-            case qore::rt::qvalue_type::Int:
-                return builder.CreateCall(lf_qvalue_ptr_to_qint_ptr, value);
-            case qore::rt::qvalue_type::Ptr:
-                return builder.CreateCall(lf_qvalue_ptr_to_qptr_ptr, value);
-            default:
-                QORE_NOT_IMPLEMENTED("");
-        }
-    }
-
-    llvm::Value *toQvalue(llvm::IRBuilder<> &builder, llvm::Value *value, rt::qvalue_type type) {
-        switch (type) {
-            case rt::qvalue_type::Int:
-                return builder.CreateCall(lf_qint_to_qvalue, value);
-            case rt::qvalue_type::Ptr:
-                return builder.CreateCall(lf_qptr_to_qvalue, value);
-            default:
-                QORE_UNREACHABLE("Invalid qvalue_type: " << static_cast<int>(type));
-        }
-    }
-
-    llvm::Type *mapType(qore::rt::qvalue_type type) {
-        switch (type) {
-            case qore::rt::qvalue_type::Int:
-                return lt_qint;
-            case qore::rt::qvalue_type::Ptr:
-                return lt_qptr;
-            default:
-                QORE_NOT_IMPLEMENTED("type " << static_cast<char>(type));
-        }
-    }
-
     llvm::Value *call(llvm::IRBuilder<> builder, const ir::Function &f, llvm::ArrayRef<llvm::Value *> args) const {
-        if (f == ir::Functions::IntPlusInt) {
-            assert(args.size() == 2);
-            return builder.CreateAdd(args[0], args[1]);
-        }
         auto it = functions.find(&f);
         if (it != functions.end()) {
             return builder.CreateCall(it->second, args);
@@ -180,12 +129,7 @@ public:
     llvm::Function *lf_gv_write_lock;
     llvm::Function *lf_gv_write_unlock;
 
-    llvm::Function *lf_qvalue_to_qint;
-    llvm::Function *lf_qvalue_ptr_to_qint_ptr;
     llvm::Function *lf_qint_to_qvalue;
-    llvm::Function *lf_qvalue_to_qptr;
-    llvm::Function *lf_qvalue_ptr_to_qptr_ptr;
-    llvm::Function *lf_qptr_to_qvalue;
 
     llvm::Function *lf_createString;
 

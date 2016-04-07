@@ -45,7 +45,7 @@ Interpreter::~Interpreter() {
     for (auto &p : globals) {
         rt::qvalue v = rt::gv_free(p.second);
         if (p.first->getType().rtType == rt::qvalue_type::Ptr) {
-            rt::decRef(v.p);
+            rt::decRef(v);
         }
     }
     for (auto &p : strings) {
@@ -80,7 +80,7 @@ rt::GlobalVariable *Interpreter::getGlobalVariableValue(const ir::GlobalVariable
     return it->second;
 }
 
-rt::qptr Interpreter::getStringLiteralValue(const ir::StringLiteral &sl) const {
+rt::qvalue Interpreter::getStringLiteralValue(const ir::StringLiteral &sl) const {
     auto it = strings.find(&sl);
     assert(it != strings.end());
     return it->second;
@@ -110,7 +110,7 @@ void Interpreter::run(const ir::Script &script, const ir::UserFunction &f) {
         if (lv->getType().rtType == rt::qvalue_type::Ptr) {
             rt::qvalue v = locals.get(*lv);
             if (v.p) {
-                rt::decRef(v.p);
+                rt::decRef(v);
             }
         }
     }

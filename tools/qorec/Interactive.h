@@ -103,9 +103,7 @@ public:
         for (auto &lv : topLevelLocals) {
             if (lv->getType().rtType == rt::qvalue_type::Ptr) {
                 rt::qvalue v = locals.get(*lv);
-                if (v.p) {
-                    rt::decRef(v.p);      //TODO exceptions
-                }
+                rt::decRef(v);      //TODO exceptions
             }
         }
     }

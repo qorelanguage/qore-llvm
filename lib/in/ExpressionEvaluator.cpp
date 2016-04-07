@@ -83,14 +83,19 @@ LValue ExpressionEvaluator::evaluateLValue(const ir::Expression &expr) {
 Value ExpressionEvaluator::evaluate(const ir::GlobalVariableRefExpression &expr) {
     LOG_FUNCTION();
     rt::GlobalVariable *gv = interpreter.getGlobalVariableValue(expr.getGlobalVariable());
-    Value v(rt::gv_read_lock(gv), expr.getGlobalVariable().getType().rtType);
+    rt::qvalue p = rt::gv_read_lock(gv);
+    if (expr.getGlobalVariable().getType().rtType == rt::qvalue_type::Ptr) {
+        rt::incRef(p);
+    }
     rt::gv_read_unlock(gv);
-    return v;
+    return Value(p, expr.getGlobalVariable().getType().rtType);
 }
 
 Value ExpressionEvaluator::evaluate(const ir::IntLiteralExpression &expr) {
     LOG_FUNCTION();
-    return Value(expr.getValue());
+    rt::qvalue v;
+    v.i = expr.getValue();
+    return Value(v, rt::qvalue_type::Int);
 }
 
 Value ExpressionEvaluator::evaluate(const ir::InvokeExpression &expr) {
@@ -142,20 +147,25 @@ Value ExpressionEvaluator::evaluate(const ir::InvokeExpression &expr) {
 
 Value ExpressionEvaluator::evaluate(const ir::LocalVariableRefExpression &expr) {
     LOG_FUNCTION();
-    return Value(locals.get(expr.getLocalVariable()), expr.getLocalVariable().getType().rtType);
+    rt::qvalue p = locals.get(expr.getLocalVariable());
+    if (expr.getLocalVariable().getType().rtType == rt::qvalue_type::Ptr) {
+        rt::incRef(p);
+    }
+    return Value(p, expr.getLocalVariable().getType().rtType);
 }
 
 Value ExpressionEvaluator::evaluate(const ir::NothingLiteralExpression &expr) {
     LOG_FUNCTION();
-    rt::qptr s = nullptr;
-    return Value(s);
+    rt::qvalue v;
+    v.p = nullptr;
+    return Value(v, rt::qvalue_type::Ptr);
 }
 
 Value ExpressionEvaluator::evaluate(const ir::StringLiteralRefExpression &expr) {
     LOG_FUNCTION();
-    rt::qptr s = interpreter.getStringLiteralValue(expr.getStringLiteral());
+    rt::qvalue s = interpreter.getStringLiteralValue(expr.getStringLiteral());
     rt::incRef(s);
-    return Value(s);
+    return Value(s, rt::qvalue_type::Ptr);
 }
 
 void ExpressionEvaluator::evaluateNoValue(const ir::AssignmentExpression &expr) {
@@ -212,17 +222,14 @@ Value ExpressionEvaluator::invoke1(const ir::Function &f, rt::qvalue arg1) {
     if (f.getKind() == ir::Function::Kind::Conversion) {
         switch (static_cast<const ir::ConversionFunction &>(f).getConversion()) {
             case rt::Conversion::IntToString:
-                return Value(rt::convertIntToString(arg1.i));
+                return Value(rt::convertIntToString(arg1), f.getRetType().rtType);
             case rt::Conversion::StringToInt:
-                return Value(rt::convertStringToInt(arg1.p));
+                return Value(rt::convertStringToInt(arg1), f.getRetType().rtType);
             case rt::Conversion::BoxInt:
-                return Value(rt::int_box(arg1.i));
+                return Value(rt::int_box(arg1), f.getRetType().rtType);
             default:
                 QORE_NOT_IMPLEMENTED("");
         }
-    }
-    if (f == ir::Functions::BoxInt) {
-        return Value(rt::int_box(arg1.i));
     }
     QORE_NOT_IMPLEMENTED("");
 }
@@ -231,13 +238,13 @@ Value ExpressionEvaluator::invoke2(const ir::Function &f, rt::qvalue arg1, rt::q
     if (f.getKind() == ir::Function::Kind::Operator) {
         switch (static_cast<const ir::OperatorFunction &>(f).getOperator()) {
             case rt::Operator::IntPlusInt:
-                return Value(arg1.i + arg2.i);
+                return Value(rt::opAddIntInt(arg1, arg2), f.getRetType().rtType);
             case rt::Operator::StringPlusString:
-                return Value(rt::opAddStringString(arg1.p, arg2.p));
+                return Value(rt::opAddStringString(arg1, arg2), f.getRetType().rtType);
             case rt::Operator::AnyPlusAny:
-                return Value(qore::rt::op_add_any_any(arg1.p, arg2.p));
+                return Value(qore::rt::op_add_any_any(arg1, arg2), f.getRetType().rtType);
             case rt::Operator::AnyPlusEqAny:
-                return Value(qore::rt::op_addeq_any_any(arg1.p, arg2.p));
+                return Value(qore::rt::op_addeq_any_any(arg1, arg2), f.getRetType().rtType);
             default:
                 QORE_NOT_IMPLEMENTED("");
         }

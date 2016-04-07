@@ -36,14 +36,15 @@
 namespace qore {
 namespace rt {
 
-extern "C" void incRef(qptr ptr) noexcept;
-extern "C" void decRef(qptr ptr);                               //FIXME EXCEPTIONS!!!
+extern "C" void incRef(qvalue ptr) noexcept;
+extern "C" void decRef(qvalue ptr);                               //FIXME EXCEPTIONS!!!
 
-extern "C" qptr createString(const char *str, qsize len);       //THROWS, encoding
-extern "C" qptr convertIntToString(qint i);                     //THROWS
-extern "C" qint convertStringToInt(qptr p);                     //THROWS?
+extern "C" qvalue createString(const char *str, qsize len);       //THROWS, encoding
+extern "C" qvalue convertIntToString(qvalue i);                     //THROWS
+extern "C" qvalue convertStringToInt(qvalue p);                     //THROWS?
 
-extern "C" qptr opAddStringString(qptr left, qptr right);       //THROWS
+extern "C" qvalue opAddIntInt(qvalue left, qvalue right);       //THROWS
+extern "C" qvalue opAddStringString(qvalue left, qvalue right);       //THROWS
 
 extern "C" GlobalVariable *gv_create(qvalue init);              //THROWS
 extern "C" qvalue gv_free(GlobalVariable *gv) noexcept;
@@ -54,22 +55,22 @@ extern "C" void gv_write_unlock(GlobalVariable *gv) noexcept;
 
 extern "C" void combine(Exception &original, Exception &secondary);
 
-extern "C" qptr int_box(qint i);
-extern "C" qint int_unbox(qptr p) noexcept;
+extern "C" qvalue int_box(qvalue i);
+extern "C" qvalue int_unbox(qvalue p) noexcept;
 
-extern "C" qptr op_add_any_any(qptr left, qptr right);       //THROWS
-extern "C" qptr op_addeq_any_any(qptr left, qptr right);       //THROWS
+extern "C" qvalue op_add_any_any(qvalue left, qvalue right);       //THROWS
+extern "C" qvalue op_addeq_any_any(qvalue left, qvalue right);       //THROWS
 
 //XXX naming conventions
 
 
 //these are used internally by llvm code gen, declarations are not necessary
-extern "C" qint qvalue_to_qint(qvalue v) noexcept;
-extern "C" qint *qvalue_ptr_to_qint_ptr(qvalue *v) noexcept;
-extern "C" qptr qvalue_to_qptr(qvalue v) noexcept;
-extern "C" qptr *qvalue_ptr_to_qptr_ptr(qvalue *v) noexcept;
-extern "C" qvalue qint_to_qvalue(qint i) noexcept;
-extern "C" qvalue qptr_to_qvalue(qptr p) noexcept;
+//extern "C" qint qvalue_to_qint(qvalue v) noexcept;
+//extern "C" qint *qvalue_ptr_to_qint_ptr(qvalue *v) noexcept;
+//extern "C" qptr qvalue_to_qptr(qvalue v) noexcept;
+//extern "C" qptr *qvalue_ptr_to_qptr_ptr(qvalue *v) noexcept;
+//extern "C" qvalue qint_to_qvalue(qint i) noexcept;
+//extern "C" qvalue qptr_to_qvalue(qptr p) noexcept;
 
 } // namespace rt
 } // namespace qore

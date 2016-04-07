@@ -63,23 +63,23 @@ private:
 private:
     qsize refCount;
 
-    friend void incRef(qptr) noexcept;
-    friend void decRef(qptr);
+    friend void incRef(qvalue) noexcept;
+    friend void decRef(qvalue);
 };
 
-void incRef(qptr p) noexcept {
-    if (p) {
-        LOG(p << " refInc: " << p->refCount << "->" << (p->refCount + 1));
+void incRef(qvalue p) noexcept {
+    if (p.p) {
+        LOG(p.p << " refInc: " << p.p->refCount << "->" << (p.p->refCount + 1));
         //XXX atomic
-        ++p->refCount;
+        ++p.p->refCount;
     }
 }
 
-void decRef(qptr p) {
-    if (p) {
-        LOG(p << " refDec: " << p->refCount << "->" << (p->refCount - 1));
-        if (!--p->refCount) {
-            delete p;
+void decRef(qvalue p) {
+    if (p.p) {
+        LOG(p.p << " refDec: " << p.p->refCount << "->" << (p.p->refCount - 1));
+        if (!--p.p->refCount) {
+            delete p.p;
         }
     }
 }
@@ -110,36 +110,47 @@ protected:
 private:
     std::string str;
 
-    friend qptr createString(const char *, qsize);
-    friend qptr convertIntToString(qint i);
-    friend qint convertStringToInt(qptr p);
-    friend qptr opAddStringString(qptr l, qptr r);
+    friend qvalue createString(const char *, qsize);
+    friend qvalue convertIntToString(qvalue i);
+    friend qvalue convertStringToInt(qvalue p);
+    friend qvalue opAddStringString(qvalue left, qvalue right);
 };
 
-qptr createString(const char *data, qsize length) {
-    return new QString(std::string(data, length));
+qvalue createString(const char *data, qsize length) {
+    qvalue v;
+    v.p = new QString(std::string(data, length));
+    return v;
 }
 
-qptr convertIntToString(qint i) {
-    LOG("convertIntToString(" << i << ")");
-    return new QString(std::to_string(i));
+qvalue convertIntToString(qvalue i) {
+    LOG("convertIntToString(" << i.i << ")");
+    qvalue v;
+    v.p = new QString(std::to_string(i.i));
+    return v;
 }
 
-qint convertStringToInt(qptr p) {
-    assert(p->getType() == Type::String);
-    LOG("convertStringToInt(" << p << ")");
-    qint i;
-    std::stringstream str(static_cast<QString *>(p)->str);
-    str >> i;
-    return i;
+qvalue convertStringToInt(qvalue p) {
+    assert(p.p->getType() == Type::String);
+    LOG("convertStringToInt(" << p.p << ")");
+    qvalue v;
+    std::stringstream str(static_cast<QString *>(p.p)->str);
+    str >> v.i;
+    return v;
 }
 
-qptr opAddStringString(qptr l, qptr r) {
-    assert(l->getType() == Type::String && r->getType() == Type::String);
-    LOG("opAddStringString(" << l << ", " << r << ")");
-    return new QString(static_cast<QString *>(l)->str + static_cast<QString *>(r)->str);
+qvalue opAddIntInt(qvalue left, qvalue right) {
+    qvalue v;
+    v.i = left.i + right.i;
+    return v;
 }
 
+qvalue opAddStringString(qvalue left, qvalue right) {
+    assert(left.p->getType() == Type::String && right.p->getType() == Type::String);
+    LOG("opAddStringString(" << left.p << ", " << right.p << ")");
+    qvalue v;
+    v.p = new QString(static_cast<QString *>(left.p)->str + static_cast<QString *>(right.p)->str);
+    return v;
+}
 
 
 ///////////////////////////////////////////////////////////////
@@ -168,18 +179,22 @@ protected:
 private:
     qint i;
 
-    friend qptr int_box(qint i);
-    friend qint int_unbox(qptr p) noexcept;
+    friend qvalue int_box(qvalue i);
+    friend qvalue int_unbox(qvalue p) noexcept;
 };
 
-qptr int_box(qint i) {
+qvalue int_box(qvalue i) {
     //XXX instances can be cached if QInt is immutable
-    return new QInt(i);
+    qvalue v;
+    v.p = new QInt(i.i);
+    return v;
 }
 
-qint int_unbox(qptr p) noexcept {
-    assert(p->getType() == Type::Int);
-    return static_cast<QInt *>(p)->i;
+qvalue int_unbox(qvalue p) noexcept {
+    assert(p.p->getType() == Type::Int);
+    qvalue v;
+    v.i = static_cast<QInt *>(p.p)->i;
+    return v;
 }
 
 
@@ -237,31 +252,9 @@ void gv_write_unlock(GlobalVariable *gv) noexcept {
     LOG("GlobalVariable " << gv << " write unlock");
 }
 
-extern "C" qint qvalue_to_qint(qvalue v) noexcept {
-    return v.i;
-}
-
-extern "C" qint *qvalue_ptr_to_qint_ptr(qvalue *v) noexcept {
-    return &v->i;
-}
-
-extern "C" qptr qvalue_to_qptr(qvalue v) noexcept {
-    return v.p;
-}
-
-extern "C" qptr *qvalue_ptr_to_qptr_ptr(qvalue *v) noexcept {
-    return &v->p;
-}
-
 extern "C" qvalue qint_to_qvalue(qint i) noexcept {
     qvalue v;
     v.i = i;
-    return v;
-}
-
-extern "C" qvalue qptr_to_qvalue(qptr p) noexcept {
-    qvalue v;
-    v.p = p;
     return v;
 }
 
@@ -269,8 +262,8 @@ extern "C" void combine(Exception &original, Exception &secondary) {
 //FIXME
 }
 
-static qptr convert_any(qptr src, Type type) {
-    Conversion c = meta::findConversion(src->getType(), type);
+static qvalue convert_any(qvalue src, Type type) {
+    Conversion c = meta::findConversion(src.p->getType(), type);
     switch (c) {
         case Conversion::Identity:
             return src;
@@ -281,8 +274,8 @@ static qptr convert_any(qptr src, Type type) {
     }
 }
 
-static qint convert_any_to_softint(qptr src) {
-    Conversion c = meta::findConversion(src->getType(), Type::SoftInt);
+static qvalue convert_any_to_softint(qvalue src) {
+    Conversion c = meta::findConversion(src.p->getType(), Type::SoftInt);
     switch (c) {
         case Conversion::Identity:
             return int_unbox(src);
@@ -294,11 +287,11 @@ static qint convert_any_to_softint(qptr src) {
     }
 }
 
-qptr op_generic(Op o, qptr left, qptr right) {
-    Operator op = meta::findOperator(o, left->getType(), right->getType());
+qvalue op_generic(Op o, qvalue left, qvalue right) {
+    Operator op = meta::findOperator(o, left.p->getType(), right.p->getType());
     switch (op) {
         case Operator::IntPlusInt:
-            return int_box(convert_any_to_softint(left) + convert_any_to_softint(right));
+            return int_box(opAddIntInt(convert_any_to_softint(left), convert_any_to_softint(right)));
         case Operator::StringPlusString:
             //FIXME exception are not handled correctly
             return opAddStringString(convert_any(left, Type::String), convert_any(right, Type::String));
@@ -307,15 +300,15 @@ qptr op_generic(Op o, qptr left, qptr right) {
     }
 }
 
-qptr op_add_any_any(qptr left, qptr right) {
+qvalue op_add_any_any(qvalue left, qvalue right) {
     //left or right can be nullptr
-    LOG("op_add_any_any: " << left << " + " << right);
+    LOG("op_add_any_any: " << left.p << " + " << right.p);
     return op_generic(Op::Plus, left, right);
 }
 
-qptr op_addeq_any_any(qptr left, qptr right) {
+qvalue op_addeq_any_any(qvalue left, qvalue right) {
     //left or right can be nullptr
-    LOG("op_addeq_any_any: " << left << " + " << right);
+    LOG("op_addeq_any_any: " << left.p << " + " << right.p);
     return op_generic(Op::PlusEq, left, right);
 }
 

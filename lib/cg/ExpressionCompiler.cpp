@@ -83,17 +83,18 @@ Value ExpressionCompiler::compile(const ir::GlobalVariableRefExpression &expr) {
     LOG_FUNCTION();
     llvm::Value *g = builder.CreateLoad(scriptCompiler.getGlobal(expr.getGlobalVariable()));
     llvm::Value *qv = builder.CreateCall(helper.lf_gv_read_lock, g);
-    llvm::Value *v = helper.fromQvalue(builder, qv, expr.getGlobalVariable().getType().rtType);
     if (expr.getGlobalVariable().getType().rtType == qore::rt::qvalue_type::Ptr) {
-        builder.CreateCall(helper.lf_incRef, v);
+        builder.CreateCall(helper.lf_incRef, qv);
     }
     builder.CreateCall(helper.lf_gv_read_unlock, g);
-    return Value(expr.getGlobalVariable().getType().rtType, v);
+    return Value(expr.getGlobalVariable().getType().rtType, qv);
 }
 
 Value ExpressionCompiler::compile(const ir::IntLiteralExpression &expr) {
     LOG_FUNCTION();
-    return Value(rt::qvalue_type::Int, llvm::ConstantInt::get(helper.lt_qint, expr.getValue(), true));
+
+    return Value(rt::qvalue_type::Int, builder.CreateCall(helper.lf_qint_to_qvalue,
+            llvm::ConstantInt::get(helper.lt_qint, expr.getValue(), true)));
 }
 
 Value ExpressionCompiler::compile(const ir::InvokeExpression &expr) {

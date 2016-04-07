@@ -42,31 +42,18 @@ struct Value {
     }
 
     Value(rt::qvalue value, rt::qvalue_type type) : value(value), type(type) {
-        if (type == rt::qvalue_type::Ptr) {
-            rt::incRef(value.p);
-        }
-    }
-
-    explicit Value(rt::qint i) {
-        value.i = i;
-        type = rt::qvalue_type::Int;
-    }
-
-    explicit Value(rt::qptr p) {
-        value.p = p;
-        type = rt::qvalue_type::Ptr;
     }
 
     void cleanup() {
         if (type == rt::qvalue_type::Ptr) {
-            rt::decRef(value.p);
+            rt::decRef(value);
         }
     }
 
     void cleanup(rt::Exception &e) noexcept {
         if (type == rt::qvalue_type::Ptr) {
             try {
-                rt::decRef(value.p);
+                rt::decRef(value);
             } catch (rt::Exception &e2) {
                 rt::combine(e, e2);
             }

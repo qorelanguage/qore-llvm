@@ -52,8 +52,8 @@ void ScriptCompiler::addStringLiteral(const ir::StringLiteral &sl) {
     llvm::GlobalVariable *str = new llvm::GlobalVariable(*helper.module, val->getType(), true,
             llvm::GlobalValue::PrivateLinkage, val, llvm::Twine("str").concat(llvm::Twine(id)));
     str->setUnnamedAddr(true);
-    llvm::GlobalVariable *lit = new llvm::GlobalVariable(*helper.module, helper.lt_qptr, false,
-            llvm::GlobalValue::InternalLinkage, llvm::Constant::getNullValue(helper.lt_qptr),
+    llvm::GlobalVariable *lit = new llvm::GlobalVariable(*helper.module, helper.lt_qvalue, false,
+            llvm::GlobalValue::InternalLinkage, llvm::Constant::getNullValue(helper.lt_qvalue),
             llvm::Twine("lit").concat(llvm::Twine(id)));
     llvm::Value *args[2];
     args[0] = bInit.CreateConstGEP2_32(nullptr, str, 0, 0);
@@ -77,15 +77,14 @@ void ScriptCompiler::addGlobalVariable(const ir::GlobalVariable &gv) {
     ExpressionCompiler expressionCompiler(*this, helper, locals, bInit);
     Value initValue = expressionCompiler.compile(gv.getInitExpression());
     assert(initValue.type == gv.getType().rtType);
-    llvm::Value *gg = bInit.CreateCall(helper.lf_gv_create,
-            helper.toQvalue(bInit, initValue.value, gv.getType().rtType));
+    llvm::Value *gg = bInit.CreateCall(helper.lf_gv_create, initValue.value);
     bInit.CreateStore(gg, g);
 
     llvm::LoadInst *load = bDone.CreateLoad(g);
     llvm::Value *val = bDone.CreateCall(helper.lf_gv_free, load);
 
     if (gv.getType().rtType == qore::rt::qvalue_type::Ptr) {
-        bDone.CreateCall(helper.lf_decRef, bDone.CreateCall(helper.lf_qvalue_to_qptr, val));
+        bDone.CreateCall(helper.lf_decRef, val);
     }
     bDone.SetInsertPoint(load);
 
@@ -108,7 +107,7 @@ void ScriptCompiler::compile(const ir::UserFunction &f) {
     llvm::IRBuilder<> builder(llvm::BasicBlock::Create(helper.ctx, "entry", func));
 
     for (auto &lv : f.getLocalVariables()) {
-        locals.add(*lv, builder.CreateAlloca(helper.mapType(lv->getType().rtType), nullptr, lv->getName()));
+        locals.add(*lv, builder.CreateAlloca(helper.lt_qvalue, nullptr, lv->getName()));
     }
 
     StatementCompiler statementCompiler(*this, helper, locals, builder);
