@@ -63,15 +63,6 @@ extern "C" qvalue op_addeq_any_any(qvalue left, qvalue right);       //THROWS
 
 //XXX naming conventions
 
-
-//these are used internally by llvm code gen, declarations are not necessary
-//extern "C" qint qvalue_to_qint(qvalue v) noexcept;
-//extern "C" qint *qvalue_ptr_to_qint_ptr(qvalue *v) noexcept;
-//extern "C" qptr qvalue_to_qptr(qvalue v) noexcept;
-//extern "C" qptr *qvalue_ptr_to_qptr_ptr(qvalue *v) noexcept;
-//extern "C" qvalue qint_to_qvalue(qint i) noexcept;
-//extern "C" qvalue qptr_to_qvalue(qptr p) noexcept;
-
 } // namespace rt
 } // namespace qore
 

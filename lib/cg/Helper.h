@@ -70,6 +70,7 @@ public:
 
         lf_createString = createFunction("createString", lt_qvalue, llvm::Type::getInt8PtrTy(ctx), lt_qsize);
 
+        //FIXME this can be done generically using rt::meta::*Desc
         functions[&ir::Functions::IntToString] = createFunction("convertIntToString", lt_qvalue, lt_qvalue);
         functions[&ir::Functions::StringToInt] = createFunction("convertStringToInt", lt_qvalue, lt_qvalue);
         functions[&ir::Functions::StringPlusString] = createFunction("opAddStringString", lt_qvalue, lt_qvalue,

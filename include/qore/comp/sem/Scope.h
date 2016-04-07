@@ -72,6 +72,8 @@ public:
 
     const ir::Function &resolveOperator(rt::Op o, const ir::Type &l, const ir::Type &r) {
         if (l.getKind() == ir::Type::Kind::Builtin && r.getKind() == ir::Type::Kind::Builtin) {
+            //FIXME catch exception end report diagnostic
+            //FIXME this switch should be replaced by a direct lookup
             switch (rt::meta::findOperator(o, static_cast<const ir::BuiltinType &>(l).getRuntimeType(),
                     static_cast<const ir::BuiltinType &>(r).getRuntimeType())) {
                 case rt::Operator::IntPlusInt:

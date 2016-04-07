@@ -264,40 +264,23 @@ extern "C" void combine(Exception &original, Exception &secondary) {
 
 static qvalue convert_any(qvalue src, Type type) {
     Conversion c = meta::findConversion(src.p->getType(), type);
-    switch (c) {
-        case Conversion::Identity:
-            return src;
-        case Conversion::IntToString:
-            return convertIntToString(int_unbox(src));
-        default:
-            QORE_NOT_IMPLEMENTED("throw an exception");
+    if (src.p->getType() == Type::Int) {
+        src = int_unbox(src);
     }
-}
-
-static qvalue convert_any_to_softint(qvalue src) {
-    Conversion c = meta::findConversion(src.p->getType(), Type::SoftInt);
-    switch (c) {
-        case Conversion::Identity:
-            return int_unbox(src);
-        case Conversion::StringToInt:
-            return convertStringToInt(src);
-        //float to int, etc.
-        default:
-            QORE_NOT_IMPLEMENTED("throw an exception");
-    }
+    const meta::ConversionDesc &desc = meta::ConversionTable[static_cast<int>(c)];
+    return desc.f(src);
 }
 
 qvalue op_generic(Op o, qvalue left, qvalue right) {
     Operator op = meta::findOperator(o, left.p->getType(), right.p->getType());
-    switch (op) {
-        case Operator::IntPlusInt:
-            return int_box(opAddIntInt(convert_any_to_softint(left), convert_any_to_softint(right)));
-        case Operator::StringPlusString:
-            //FIXME exception are not handled correctly
-            return opAddStringString(convert_any(left, Type::String), convert_any(right, Type::String));
-        default:
-            QORE_NOT_IMPLEMENTED("throw an exception");
+    const meta::BinaryOperatorDesc &desc = meta::BinaryOperatorTable[static_cast<int>(op)];
+
+    //FIXME exception are not handled correctly
+    qvalue ret = desc.f(convert_any(left, desc.leftType), convert_any(right, desc.rightType));
+    if (desc.retType == Type::Int) {
+        ret = int_box(ret);
     }
+    return ret;
 }
 
 qvalue op_add_any_any(qvalue left, qvalue right) {

@@ -33,6 +33,7 @@
 namespace qore {
 namespace ir {
 
+//FIXME remove this
 BuiltinType Types::Any(rt::Type::Any, rt::qvalue_type::Ptr);
 BuiltinType Types::Nothing(rt::Type::Nothing, rt::qvalue_type::None);
 BuiltinType Types::Int(rt::Type::Int, rt::qvalue_type::Int);

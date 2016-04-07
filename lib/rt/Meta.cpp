@@ -29,11 +29,38 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/rt/Meta.h"
+#include "qore/rt/Func.h"
 #include "qore/common/Exceptions.h"
 
 namespace qore {
 namespace rt {
 namespace meta {
+
+static qvalue conv_id(qvalue v) {
+    return v;
+}
+
+#define C(F, RET, ARG)              { F, Type::RET, Type::ARG }
+#define BO(F, RET, LEFT, RIGHT)     { F, Type::RET, Type::LEFT, Type::RIGHT }
+
+//Warning - entries must be in the same order as rt::Conversion
+ConversionDesc ConversionTable[] = {
+        C(conv_id, Any, Any),
+        C(convertIntToString, String, Int),
+        C(convertStringToInt, Int, String),
+        C(int_box, Any, Int),
+};
+
+//Warning - entries must be in the same order as rt::Operator
+BinaryOperatorDesc BinaryOperatorTable[] = {
+        BO(opAddIntInt, Int, SoftInt, SoftInt),
+        BO(opAddStringString, String, SoftString, SoftString),
+        BO(op_add_any_any, Any, Any, Any),
+        BO(op_addeq_any_any, Any, Any, Any),
+};
+
+#undef C
+#undef BO
 
 Operator findOperator(Op o, Type l, Type r) {
     if (o == Op::Plus) {
@@ -62,6 +89,7 @@ Operator findOperator(Op o, Type l, Type r) {
 }
 
 Conversion findConversion(Type src, Type dest) {
+    //XXX can be replaced with a table
     if (src == dest) {
         return Conversion::Identity;
     }

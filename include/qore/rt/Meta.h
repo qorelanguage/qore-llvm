@@ -37,6 +37,32 @@ namespace qore {
 namespace rt {
 namespace meta {
 
+struct ConversionDesc {
+    using F = qvalue(qvalue);
+
+    const F &f;
+    const Type retType;
+    const Type argType;
+
+private:
+    ConversionDesc() = delete;
+};
+
+struct BinaryOperatorDesc {
+    using F = qvalue(qvalue, qvalue);
+
+    const F &f;
+    const Type retType;
+    const Type leftType;
+    const Type rightType;
+
+private:
+    BinaryOperatorDesc() = delete;
+};
+
+extern ConversionDesc ConversionTable[];
+extern BinaryOperatorDesc BinaryOperatorTable[];
+
 Operator findOperator(Op o, Type l, Type r);
 Conversion findConversion(Type src, Type dest);
 

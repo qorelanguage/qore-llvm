@@ -163,8 +163,9 @@ public:
         QORE_NOT_IMPLEMENTED("");
     }
 
-    rt::Operator getOperator() const {
-        return op;
+    rt::meta::BinaryOperatorDesc::F &getPtr() const {
+        //FIXME return rt::meta::getDesc(op).f;
+        return rt::meta::BinaryOperatorTable[static_cast<int>(op)].f;
     }
 
 private:
@@ -207,8 +208,9 @@ public:
         QORE_NOT_IMPLEMENTED("");
     }
 
-    rt::Conversion getConversion() const {
-        return conv;
+    rt::meta::ConversionDesc::F &getPtr() const {
+        //FIXME return rt::meta::getDesc(op).f;
+        return rt::meta::ConversionTable[static_cast<int>(conv)].f;
     }
 
 private:

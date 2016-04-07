@@ -220,34 +220,16 @@ void ExpressionEvaluator::evaluateNoValue(const ir::LifetimeStartExpression &exp
 
 Value ExpressionEvaluator::invoke1(const ir::Function &f, rt::qvalue arg1) {
     if (f.getKind() == ir::Function::Kind::Conversion) {
-        switch (static_cast<const ir::ConversionFunction &>(f).getConversion()) {
-            case rt::Conversion::IntToString:
-                return Value(rt::convertIntToString(arg1), f.getRetType().rtType);
-            case rt::Conversion::StringToInt:
-                return Value(rt::convertStringToInt(arg1), f.getRetType().rtType);
-            case rt::Conversion::BoxInt:
-                return Value(rt::int_box(arg1), f.getRetType().rtType);
-            default:
-                QORE_NOT_IMPLEMENTED("");
-        }
+        auto fff = static_cast<const ir::ConversionFunction &>(f).getPtr();
+        return Value(fff(arg1), f.getRetType().rtType);
     }
     QORE_NOT_IMPLEMENTED("");
 }
 
 Value ExpressionEvaluator::invoke2(const ir::Function &f, rt::qvalue arg1, rt::qvalue arg2) {
     if (f.getKind() == ir::Function::Kind::Operator) {
-        switch (static_cast<const ir::OperatorFunction &>(f).getOperator()) {
-            case rt::Operator::IntPlusInt:
-                return Value(rt::opAddIntInt(arg1, arg2), f.getRetType().rtType);
-            case rt::Operator::StringPlusString:
-                return Value(rt::opAddStringString(arg1, arg2), f.getRetType().rtType);
-            case rt::Operator::AnyPlusAny:
-                return Value(qore::rt::op_add_any_any(arg1, arg2), f.getRetType().rtType);
-            case rt::Operator::AnyPlusEqAny:
-                return Value(qore::rt::op_addeq_any_any(arg1, arg2), f.getRetType().rtType);
-            default:
-                QORE_NOT_IMPLEMENTED("");
-        }
+        auto fff = static_cast<const ir::OperatorFunction &>(f).getPtr();
+        return Value(fff(arg1, arg2), f.getRetType().rtType);
     }
     QORE_NOT_IMPLEMENTED("");
 }
