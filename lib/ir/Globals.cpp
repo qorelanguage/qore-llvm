@@ -34,12 +34,12 @@ namespace qore {
 namespace ir {
 
 //FIXME remove this
-BuiltinType Types::Any(rt::Type::Any, rt::qvalue_type::Ptr);
-BuiltinType Types::Nothing(rt::Type::Nothing, rt::qvalue_type::None);
-BuiltinType Types::Int(rt::Type::Int, rt::qvalue_type::Int);
-BuiltinType Types::SoftInt(rt::Type::SoftInt, rt::qvalue_type::Int);
-BuiltinType Types::String(rt::Type::String, rt::qvalue_type::Ptr);
-BuiltinType Types::SoftString(rt::Type::SoftString, rt::qvalue_type::Ptr);
+BuiltinType Types::Any(rt::Type::Any, false);
+BuiltinType Types::Nothing(rt::Type::Nothing, true);
+BuiltinType Types::Int(rt::Type::Int, true);
+BuiltinType Types::SoftInt(rt::Type::SoftInt, true);
+BuiltinType Types::String(rt::Type::String, false);
+BuiltinType Types::SoftString(rt::Type::SoftString, false);
 
 OperatorFunction Functions::StringPlusString(rt::Operator::StringPlusString,
         Types::String, Types::SoftString, Types::SoftString);

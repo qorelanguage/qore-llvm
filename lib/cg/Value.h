@@ -35,10 +35,9 @@ namespace qore {
 namespace cg {
 
 struct Value {
-    Value(rt::qvalue_type type, llvm::Value *value) : type(type), value(value) {
+    explicit Value(llvm::Value *value) : value(value) {
     }
 
-    rt::qvalue_type type;
     llvm::Value *value;
 };
 

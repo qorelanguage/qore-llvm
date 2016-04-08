@@ -51,7 +51,7 @@ LValue LValueCompiler::compile(const ir::Expression &expr) {
 LValue LValueCompiler::compile(const ir::LocalVariableRefExpression &expr) {
     LOG_FUNCTION();
     llvm::Value *ptr = locals.get(expr.getLocalVariable());
-    return LValue(expr.getLocalVariable().getType().rtType, [ptr](){return ptr;});
+    return LValue([ptr](){return ptr;});
 }
 
 LValue LValueCompiler::compile(const ir::GlobalVariableRefExpression &expr) {
@@ -60,7 +60,7 @@ LValue LValueCompiler::compile(const ir::GlobalVariableRefExpression &expr) {
 
     llvm::IRBuilder<> &b = builder;
     Helper &h = helper;
-    return LValue(expr.getGlobalVariable().getType().rtType,
+    return LValue(
             [&b, &h, g](){return b.CreateCall(h.lf_gv_write_lock, g); },
             [&b, &h, g](){b.CreateCall(h.lf_gv_write_unlock, g);});
 }

@@ -41,14 +41,11 @@ namespace in {
 struct LValue {
     using Unlock = std::function<void()>;   //must not throw
 
-    LValue(rt::qvalue *ptr, const ir::Type &type, Unlock unlock = nop) : ptr(ptr), type(type.rtType), unlock(unlock) {
-    }
-
-    LValue(rt::qvalue *ptr, rt::qvalue_type type, Unlock unlock = nop) : ptr(ptr), type(type), unlock(unlock) {
+    explicit LValue(rt::qvalue *ptr, Unlock unlock = nop) : ptr(ptr), unlock(unlock) {
     }
 
     rt::qvalue *ptr;
-    rt::qvalue_type type;
+    //rt::qvalue_type type;
     Unlock unlock;
 
 private:

@@ -83,17 +83,17 @@ Value ExpressionCompiler::compile(const ir::GlobalVariableRefExpression &expr) {
     LOG_FUNCTION();
     llvm::Value *g = builder.CreateLoad(scriptCompiler.getGlobal(expr.getGlobalVariable()));
     llvm::Value *qv = builder.CreateCall(helper.lf_gv_read_lock, g);
-    if (expr.getGlobalVariable().getType().rtType == qore::rt::qvalue_type::Ptr) {
+    if (!expr.getGlobalVariable().getType().isPrimitive()) {
         builder.CreateCall(helper.lf_incRef, qv);
     }
     builder.CreateCall(helper.lf_gv_read_unlock, g);
-    return Value(expr.getGlobalVariable().getType().rtType, qv);
+    return Value(qv);
 }
 
 Value ExpressionCompiler::compile(const ir::IntLiteralExpression &expr) {
     LOG_FUNCTION();
 
-    return Value(rt::qvalue_type::Int, builder.CreateCall(helper.lf_qint_to_qvalue,
+    return Value(builder.CreateCall(helper.lf_qint_to_qvalue,
             llvm::ConstantInt::get(helper.lt_qint, expr.getValue(), true)));
 }
 
@@ -110,32 +110,32 @@ Value ExpressionCompiler::compile(const ir::InvokeExpression &expr) {
     }
     llvm::Value *r = scriptCompiler.call(builder, f, args);
     for (ir::Function::Index i = f.getArgCount(); i > 0; --i) {
-        if (f.getArgType(i - 1).rtType == rt::qvalue_type::Ptr) {
+        if (!f.getArgType(i - 1).isPrimitive()) {
             builder.CreateCall(helper.lf_decRef, args[i - 1]);
         }
     }
-    return Value(f.getRetType().rtType, r);
+    return Value(r);
 }
 
 Value ExpressionCompiler::compile(const ir::LocalVariableRefExpression &expr) {
     LOG_FUNCTION();
     llvm::Value *v = builder.CreateLoad(locals.get(expr.getLocalVariable()));
-    if (expr.getLocalVariable().getType().rtType == qore::rt::qvalue_type::Ptr) {
+    if (!expr.getLocalVariable().getType().isPrimitive()) {
         builder.CreateCall(helper.lf_incRef, v);
     }
-    return Value(expr.getLocalVariable().getType().rtType, v);
+    return Value(v);
 }
 
 Value ExpressionCompiler::compile(const ir::NothingLiteralExpression &expr) {
     LOG_FUNCTION();
-    return Value(rt::qvalue_type::Ptr, llvm::Constant::getNullValue(helper.lt_qptr));
+    return Value(llvm::Constant::getNullValue(helper.lt_qptr));
 }
 
 Value ExpressionCompiler::compile(const ir::StringLiteralRefExpression &expr) {
     LOG_FUNCTION();
     llvm::LoadInst *load = builder.CreateLoad(scriptCompiler.getString(expr.getStringLiteral()));
     builder.CreateCall(helper.lf_incRef, load);
-    return Value(rt::qvalue_type::Ptr, load);
+    return Value(load);
 }
 
 void ExpressionCompiler::compileNoValue(const ir::AssignmentExpression &expr) {
@@ -143,7 +143,7 @@ void ExpressionCompiler::compileNoValue(const ir::AssignmentExpression &expr) {
     Value newValue = compile(expr.getRight());
     //push cleanup of newValue
     LValue left = compileLValue(expr.getLeft());
-    assert(left.type == newValue.type);
+    assert(expr.getLeft().getType() == expr.getRight().getType());
     llvm::Value *ptr = left.lock();
     //push unlock of var
     llvm::Value *oldValue = builder.CreateLoad(ptr);
@@ -153,7 +153,7 @@ void ExpressionCompiler::compileNoValue(const ir::AssignmentExpression &expr) {
     left.unlock();
     //pop unlock of var
 
-    if (left.type == qore::rt::qvalue_type::Ptr) {
+    if (!expr.getLeft().getType().isPrimitive()) {
         builder.CreateCall(helper.lf_decRef, oldValue);
     }
     //pop cleanup of oldValue
@@ -182,12 +182,12 @@ void ExpressionCompiler::compileNoValue(const ir::CompoundAssignmentExpression &
     lll.unlock();
     //pop unlock of var
 
-    if (lll.type == rt::qvalue_type::Ptr) {
+    if (!expr.getLeft().getType().isPrimitive()) {
         builder.CreateCall(helper.lf_decRef, old);
     }
     //pop cleanup of old
 
-    if (right.type == rt::qvalue_type::Ptr) {
+    if (!expr.getRight().getType().isPrimitive()) {
         builder.CreateCall(helper.lf_decRef, right.value);
     }
     //pop cleanup of right
@@ -196,7 +196,7 @@ void ExpressionCompiler::compileNoValue(const ir::CompoundAssignmentExpression &
 void ExpressionCompiler::compileNoValue(const ir::LifetimeStartExpression &expr) {
     LOG_FUNCTION();
     Value init = compile(expr.getInitExpression());
-    assert(init.type == expr.getLocalVariable().getType().rtType);
+    assert(expr.getInitExpression().getType() == expr.getLocalVariable().getType());
     builder.CreateStore(init.value, locals.get(expr.getLocalVariable()));
     //push cleanup of locals[stmt->v]
 }

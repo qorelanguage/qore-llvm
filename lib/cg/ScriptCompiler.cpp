@@ -76,14 +76,14 @@ void ScriptCompiler::addGlobalVariable(const ir::GlobalVariable &gv) {
     Locals locals;
     ExpressionCompiler expressionCompiler(*this, helper, locals, bInit);
     Value initValue = expressionCompiler.compile(gv.getInitExpression());
-    assert(initValue.type == gv.getType().rtType);
+    assert(gv.getInitExpression().getType() == gv.getType());
     llvm::Value *gg = bInit.CreateCall(helper.lf_gv_create, initValue.value);
     bInit.CreateStore(gg, g);
 
     llvm::LoadInst *load = bDone.CreateLoad(g);
     llvm::Value *val = bDone.CreateCall(helper.lf_gv_free, load);
 
-    if (gv.getType().rtType == qore::rt::qvalue_type::Ptr) {
+    if (!gv.getType().isPrimitive()) {
         bDone.CreateCall(helper.lf_decRef, val);
     }
     bDone.SetInsertPoint(load);
@@ -117,7 +117,7 @@ void ScriptCompiler::compile(const ir::UserFunction &f) {
 
     //these should be in the intermediate code explicitly
     for (auto &lv : f.getLocalVariables()) {
-        if (lv->getType().rtType == rt::qvalue_type::Ptr) {
+        if (!lv->getType().isPrimitive()) {
             builder.CreateCall(helper.lf_decRef, builder.CreateLoad(locals.get(*lv)));
         }
     }

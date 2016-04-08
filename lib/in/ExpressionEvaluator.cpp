@@ -84,18 +84,18 @@ Value ExpressionEvaluator::evaluate(const ir::GlobalVariableRefExpression &expr)
     LOG_FUNCTION();
     rt::GlobalVariable *gv = interpreter.getGlobalVariableValue(expr.getGlobalVariable());
     rt::qvalue p = rt::gv_read_lock(gv);
-    if (expr.getGlobalVariable().getType().rtType == rt::qvalue_type::Ptr) {
+    if (!expr.getGlobalVariable().getType().isPrimitive()) {
         rt::incRef(p);
     }
     rt::gv_read_unlock(gv);
-    return Value(p, expr.getGlobalVariable().getType().rtType);
+    return Value(p, !expr.getGlobalVariable().getType().isPrimitive());
 }
 
 Value ExpressionEvaluator::evaluate(const ir::IntLiteralExpression &expr) {
     LOG_FUNCTION();
     rt::qvalue v;
     v.i = expr.getValue();
-    return Value(v, rt::qvalue_type::Int);
+    return Value(v, false);
 }
 
 Value ExpressionEvaluator::evaluate(const ir::InvokeExpression &expr) {
@@ -148,24 +148,24 @@ Value ExpressionEvaluator::evaluate(const ir::InvokeExpression &expr) {
 Value ExpressionEvaluator::evaluate(const ir::LocalVariableRefExpression &expr) {
     LOG_FUNCTION();
     rt::qvalue p = locals.get(expr.getLocalVariable());
-    if (expr.getLocalVariable().getType().rtType == rt::qvalue_type::Ptr) {
+    if (!expr.getLocalVariable().getType().isPrimitive()) {
         rt::incRef(p);
     }
-    return Value(p, expr.getLocalVariable().getType().rtType);
+    return Value(p, !expr.getLocalVariable().getType().isPrimitive());
 }
 
 Value ExpressionEvaluator::evaluate(const ir::NothingLiteralExpression &expr) {
     LOG_FUNCTION();
     rt::qvalue v;
     v.p = nullptr;
-    return Value(v, rt::qvalue_type::Ptr);
+    return Value(v, true);      //or false?
 }
 
 Value ExpressionEvaluator::evaluate(const ir::StringLiteralRefExpression &expr) {
     LOG_FUNCTION();
     rt::qvalue s = interpreter.getStringLiteralValue(expr.getStringLiteral());
     rt::incRef(s);
-    return Value(s, rt::qvalue_type::Ptr);
+    return Value(s, true);
 }
 
 void ExpressionEvaluator::evaluateNoValue(const ir::AssignmentExpression &expr) {
@@ -173,7 +173,6 @@ void ExpressionEvaluator::evaluateNoValue(const ir::AssignmentExpression &expr) 
     Value right = evaluate(expr.getRight());
     try {
         LValue left = evaluateLValue(expr.getLeft());
-        assert(left.type == right.type);
         std::swap(*left.ptr, right.value);
         left.unlock();
     } catch (rt::Exception &e) {
@@ -192,7 +191,6 @@ void ExpressionEvaluator::evaluateNoValue(const ir::CompoundAssignmentExpression
             LValue left = evaluateLValue(expr.getLeft());
             try {
                 newValue = invoke2(expr.getFunction(), *left.ptr, right.value);
-                assert(left.type == newValue.type);
                 std::swap(*left.ptr, newValue.value);
             } catch (rt::Exception &e) {
                 left.unlock();
@@ -214,14 +212,13 @@ void ExpressionEvaluator::evaluateNoValue(const ir::CompoundAssignmentExpression
 void ExpressionEvaluator::evaluateNoValue(const ir::LifetimeStartExpression &expr) {
     LOG_FUNCTION();
     Value v = evaluate(expr.getInitExpression());
-    assert(v.type == expr.getLocalVariable().getType().rtType);
     *locals.getPtr(expr.getLocalVariable()) = v.value;
 }
 
 Value ExpressionEvaluator::invoke1(const ir::Function &f, rt::qvalue arg1) {
     if (f.getKind() == ir::Function::Kind::Conversion) {
         auto fff = static_cast<const ir::ConversionFunction &>(f).getPtr();
-        return Value(fff(arg1), f.getRetType().rtType);
+        return Value(fff(arg1), !f.getRetType().isPrimitive());
     }
     QORE_NOT_IMPLEMENTED("");
 }
@@ -229,7 +226,7 @@ Value ExpressionEvaluator::invoke1(const ir::Function &f, rt::qvalue arg1) {
 Value ExpressionEvaluator::invoke2(const ir::Function &f, rt::qvalue arg1, rt::qvalue arg2) {
     if (f.getKind() == ir::Function::Kind::Operator) {
         auto fff = static_cast<const ir::OperatorFunction &>(f).getPtr();
-        return Value(fff(arg1, arg2), f.getRetType().rtType);
+        return Value(fff(arg1, arg2), !f.getRetType().isPrimitive());
     }
     QORE_NOT_IMPLEMENTED("");
 }

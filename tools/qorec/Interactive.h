@@ -101,7 +101,7 @@ public:
 
     ~TopLevelScope() {
         for (auto &lv : topLevelLocals) {
-            if (lv->getType().rtType == rt::qvalue_type::Ptr) {
+            if (!lv->getType().isPrimitive()) {
                 rt::qvalue v = locals.get(*lv);
                 rt::decRef(v);      //TODO exceptions
             }

@@ -51,10 +51,6 @@ union qvalue {
     qptr p;
 };
 
-enum class qvalue_type {
-    None, Bool, Int, Float, Ptr
-};
-
 struct GlobalVariable;
 
 struct Exception {

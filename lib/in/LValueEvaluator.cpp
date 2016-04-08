@@ -54,12 +54,12 @@ LValue LValueEvaluator::evaluate(const ir::GlobalVariableRefExpression &expr) {
     LOG_FUNCTION();
     rt::GlobalVariable *gv = interpreter.getGlobalVariableValue(expr.getGlobalVariable());
     rt::qvalue *ptr = qore::rt::gv_write_lock(gv);
-    return LValue(ptr, expr.getGlobalVariable().getType(), [&gv](){qore::rt::gv_write_unlock(gv);});
+    return LValue(ptr, [&gv](){qore::rt::gv_write_unlock(gv);});
 }
 
 LValue LValueEvaluator::evaluate(const ir::LocalVariableRefExpression &expr) {
     LOG_FUNCTION();
-    return LValue(locals.getPtr(expr.getLocalVariable()), expr.getLocalVariable().getType());
+    return LValue(locals.getPtr(expr.getLocalVariable()));
 }
 
 } // namespace in

@@ -38,10 +38,9 @@ struct LValue {
     using Lock = std::function<llvm::Value*()>;
     using Unlock = std::function<void()>;
 
-    LValue(rt::qvalue_type type, Lock lock, Unlock unlock = nop) : type(type), lock(lock), unlock(unlock) {
+    explicit LValue(Lock lock, Unlock unlock = nop) : lock(lock), unlock(unlock) {
     }
 
-    rt::qvalue_type type;
     Lock lock;
     Unlock unlock;
 

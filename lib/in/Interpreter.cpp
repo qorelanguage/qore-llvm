@@ -44,7 +44,7 @@ Interpreter::Interpreter() {
 Interpreter::~Interpreter() {
     for (auto &p : globals) {
         rt::qvalue v = rt::gv_free(p.second);
-        if (p.first->getType().rtType == rt::qvalue_type::Ptr) {
+        if (!p.first->getType().isPrimitive()) {
             rt::decRef(v);
         }
     }
@@ -107,7 +107,7 @@ void Interpreter::run(const ir::Script &script, const ir::UserFunction &f) {
     }
     //FIXME cleanup locals when an exception is thrown
     for (auto &lv : f.getLocalVariables()) {
-        if (lv->getType().rtType == rt::qvalue_type::Ptr) {
+        if (!lv->getType().isPrimitive()) {
             rt::qvalue v = locals.get(*lv);
             if (v.p) {
                 rt::decRef(v);

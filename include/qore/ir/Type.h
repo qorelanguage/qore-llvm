@@ -58,8 +58,12 @@ public:
         return !(*this == other);
     }
 
+    bool isPrimitive() const {
+        return primitive;
+    }
+
 protected:
-    explicit Type(rt::qvalue_type rtType) : rtType(rtType) {
+    explicit Type(bool primitive) : primitive(primitive) {
     }
 
 private:
@@ -68,9 +72,8 @@ private:
     Type &operator=(const Type &) = delete;
     Type &operator=(Type &&) = delete;
 
-public:
-    rt::qvalue_type rtType; //FIXME public
-
+private:
+    bool primitive;
 };
 
 class BuiltinType : public Type {
@@ -85,7 +88,7 @@ public:
     }
 
 private:
-    BuiltinType(rt::Type runtimeType, rt::qvalue_type rtType) : Type(rtType), runtimeType(runtimeType) {
+    BuiltinType(rt::Type runtimeType, bool primitive) : Type(primitive), runtimeType(runtimeType) {
     }
 
 private:

@@ -38,20 +38,20 @@ namespace in {
 
 struct Value {
 
-    Value() : type(rt::qvalue_type::None) {
+    Value() : needsDeref(false) {
     }
 
-    Value(rt::qvalue value, rt::qvalue_type type) : value(value), type(type) {
+    Value(rt::qvalue value, bool needsDeref) : value(value), needsDeref(needsDeref) {
     }
 
     void cleanup() {
-        if (type == rt::qvalue_type::Ptr) {
+        if (needsDeref) {
             rt::decRef(value);
         }
     }
 
     void cleanup(rt::Exception &e) noexcept {
-        if (type == rt::qvalue_type::Ptr) {
+        if (needsDeref) {
             try {
                 rt::decRef(value);
             } catch (rt::Exception &e2) {
@@ -61,7 +61,7 @@ struct Value {
     }
 
     rt::qvalue value;
-    rt::qvalue_type type;
+    bool needsDeref;            //it actually means "the 'p' member of the qvalue union is the active member"
 };
 
 } // namespace in
