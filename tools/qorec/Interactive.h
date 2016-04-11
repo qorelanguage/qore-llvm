@@ -222,7 +222,7 @@ void interactive() {
 
     ir::Script script;
     comp::sem::Analyzer a(ctx);
-    MyInterpreter interpreter;      //XXX interpreter has ptrs to script which it uses in dtor
+    MyInterpreter interpreter;
     InteractiveGlobalScope globalScope(ctx, script, interpreter);
     TopLevelScope topLevelScope(ctx, globalScope);
 

@@ -46,7 +46,7 @@ class Function {
 
 public:
     enum class Kind {
-        User, Operator, Conversion
+        User
     };
 
 public:
@@ -138,104 +138,6 @@ private:
     std::vector<Statement::Ptr> statements;
 };
 
-class OperatorFunction : public Function {
-
-public:
-    Kind getKind() const override {
-        return Kind::Operator;
-    }
-
-    const Type &getRetType() const override {
-        return retType;
-    }
-
-    const Index getArgCount() const override {
-        return arg1Type == nullptr ? 1 : 2;
-    }
-
-    const Type &getArgType(Index index) const override {
-        if (index == 0) {
-            return arg0Type;
-        }
-        if (index == 1 && arg1Type) {
-            return *arg1Type;
-        }
-        QORE_NOT_IMPLEMENTED("");
-    }
-
-    rt::meta::BinaryOperatorDesc::F &getPtr() const {
-        //FIXME return rt::meta::getDesc(op).f;
-        return rt::meta::BinaryOperatorTable[static_cast<int>(op)].f;
-    }
-
-private:
-    OperatorFunction(rt::Operator op, const Type &retType, const Type &arg0Type)
-            : op(op), retType(retType), arg0Type(arg0Type), arg1Type(nullptr) {
-    }
-
-    OperatorFunction(rt::Operator op, const Type &retType, const Type &arg0Type, const Type &arg1Type)
-            : op(op), retType(retType), arg0Type(arg0Type), arg1Type(&arg1Type) {
-    }
-
-private:
-    rt::Operator op;
-    const Type &retType;
-    const Type &arg0Type;
-    const Type *arg1Type;
-
-    friend class Functions;
-};
-
-class ConversionFunction : public Function {
-
-public:
-    Kind getKind() const override {
-        return Kind::Conversion;
-    }
-
-    const Type &getRetType() const override {
-        return retType;
-    }
-
-    const Index getArgCount() const override {
-        return 1;
-    }
-
-    const Type &getArgType(Index index) const override {
-        if (index == 0) {
-            return arg0Type;
-        }
-        QORE_NOT_IMPLEMENTED("");
-    }
-
-    rt::meta::ConversionDesc::F &getPtr() const {
-        //FIXME return rt::meta::getDesc(op).f;
-        return rt::meta::ConversionTable[static_cast<int>(conv)].f;
-    }
-
-private:
-    ConversionFunction(rt::Conversion conv, const Type &retType, const Type &arg0Type)
-            : conv(conv), retType(retType), arg0Type(arg0Type)  {
-    }
-
-private:
-    rt::Conversion conv;
-    const Type &retType;
-    const Type &arg0Type;
-
-    friend class Functions;
-};
-
-class Functions {
-public:
-    static OperatorFunction StringPlusString;
-    static OperatorFunction IntPlusInt;
-    static OperatorFunction AnyPlusAny;
-    static OperatorFunction AnyPlusEqAny;
-    static ConversionFunction IntToString;
-    static ConversionFunction StringToInt;
-    static ConversionFunction BoxInt;
-};
 
 } // namespace ir
 } // namespace qore

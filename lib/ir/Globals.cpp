@@ -41,17 +41,5 @@ BuiltinType Types::SoftInt(rt::Type::SoftInt, true);
 BuiltinType Types::String(rt::Type::String, false);
 BuiltinType Types::SoftString(rt::Type::SoftString, false);
 
-OperatorFunction Functions::StringPlusString(rt::Operator::StringPlusString,
-        Types::String, Types::SoftString, Types::SoftString);
-OperatorFunction Functions::IntPlusInt(rt::Operator::IntPlusInt,
-        Types::Int, Types::SoftInt, Types::SoftInt);
-OperatorFunction Functions::AnyPlusAny(rt::Operator::AnyPlusAny,
-        Types::Any, Types::Any, Types::Any);
-OperatorFunction Functions::AnyPlusEqAny(rt::Operator::AnyPlusEqAny,
-        Types::Any, Types::Any, Types::Any);
-ConversionFunction Functions::IntToString(rt::Conversion::IntToString, Types::String, Types::Int);
-ConversionFunction Functions::StringToInt(rt::Conversion::StringToInt, Types::Int, Types::String);
-ConversionFunction Functions::BoxInt(rt::Conversion::BoxInt, Types::Any, Types::Int);
-
 } // namespace ir
 } // namespace qore
