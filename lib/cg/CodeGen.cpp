@@ -40,25 +40,12 @@
 namespace qore {
 namespace cg {
 
-void CodeGen::process(const ir::Script &script) {
+void CodeGen::process(as::S &script) {
     Helper helper;
 
-    ScriptCompiler scriptCompiler(helper);
+    ScriptCompiler scriptCompiler(helper, script);
 
-    for (auto &sl : script.getStringLiterals()) {
-        scriptCompiler.addStringLiteral(*sl);
-    }
-
-    //create functions before globals (they may be needed by initializer expressions)
-    for (auto &f : script.getFunctions()) {
-        scriptCompiler.addFunction(*f);
-    }
-
-    for (auto &gv : script.getGlobalVariables()) {
-        scriptCompiler.addGlobalVariable(*gv);
-    }
-
-    for (auto &f : script.getFunctions()) {
+    for (auto &f : script.functions) {
         scriptCompiler.compile(*f);
     }
 

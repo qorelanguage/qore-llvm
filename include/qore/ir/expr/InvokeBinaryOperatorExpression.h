@@ -25,42 +25,55 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief CompoundAssignmentExpression definition.
+/// \brief InvokeBinaryOperatorExpression definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_IR_EXPR_COMPOUNDASSIGNMENTEXPRESSION_H_
-#define INCLUDE_QORE_IR_EXPR_COMPOUNDASSIGNMENTEXPRESSION_H_
+#ifndef INCLUDE_QORE_IR_EXPR_INVOKEBINARYOPERATOREXPRESSION_H_
+#define INCLUDE_QORE_IR_EXPR_INVOKEBINARYOPERATOREXPRESSION_H_
 
+#include <cassert>
+#include <vector>
+#include "qore/common/Exceptions.h"
 #include "qore/ir/decl/Function.h"
 #include "qore/ir/expr/Expression.h"
 
 namespace qore {
 namespace ir {
 
-class CompoundAssignmentExpression : public Expression {
+class InvokeBinaryOperatorExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<CompoundAssignmentExpression>;
+    using Ptr = std::unique_ptr<InvokeBinaryOperatorExpression>;
 
 public:
-    static Ptr create(Expression::Ptr left, const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr right) {
-        return Ptr(new CompoundAssignmentExpression(std::move(left), desc, std::move(right)));
+    static Ptr create(const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr left, Expression::Ptr right) {
+        return Ptr(new InvokeBinaryOperatorExpression(desc, std::move(left), std::move(right)));
     }
 
     Kind getKind() const override {
-        return Kind::CompoundAssignment;
+        return Kind::InvokeBinaryOperator;
     }
 
     const Type &getType() const override {
-        return left->getType();
-    }
-
-    const Expression &getLeft() const {
-        return *left;
+        //FIXME rt::Type vs ir::Type
+        switch (desc.retType) {
+            case rt::Type::Any:
+                return Types::Any;
+            case rt::Type::Int:
+                return Types::Int;
+            case rt::Type::String:
+                return Types::String;
+            default:
+                QORE_NOT_IMPLEMENTED("");
+        }
     }
 
     const rt::meta::BinaryOperatorDesc &getDesc() const {
         return desc;
+    }
+
+    const Expression &getLeft() const {
+        return *left;
     }
 
     const Expression &getRight() const {
@@ -68,17 +81,17 @@ public:
     }
 
 private:
-    CompoundAssignmentExpression(Expression::Ptr left, const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr right)
-            : left(std::move(left)), desc(desc), right(std::move(right)) {
+    InvokeBinaryOperatorExpression(const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr left,
+            Expression::Ptr right) : desc(desc), left(std::move(left)), right(std::move(right)) {
     }
 
 private:
-    Expression::Ptr left;
     const rt::meta::BinaryOperatorDesc &desc;
+    Expression::Ptr left;
     Expression::Ptr right;
 };
 
 } // namespace ir
 } // namespace qore
 
-#endif // INCLUDE_QORE_IR_EXPR_COMPOUNDASSIGNMENTEXPRESSION_H_
+#endif // INCLUDE_QORE_IR_EXPR_INVOKEBINARYOPERATOREXPRESSION_H_

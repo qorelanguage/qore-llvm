@@ -41,6 +41,8 @@ class Statement {
 public:
     enum class Kind {
         Expression,
+        GlobalVariableInitialization,
+        GlobalVariableFinalization,
     };
 
 public:

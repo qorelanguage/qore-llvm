@@ -46,6 +46,8 @@ public:
         GlobalVariableRef,
         IntLiteral,
         Invoke,
+        InvokeBinaryOperator,
+        InvokeConversion,
         LifetimeStart,
         LocalVariableRef,
         NothingLiteral,

@@ -69,28 +69,88 @@ private:
     qore::comp::DirectiveProcessor dp;
 };
 
+class MyInterpreter {
+
+public:
+    MyInterpreter() : f(as::F::create("qmain")), fa(*f) {
+    }
+
+    ~MyInterpreter() {
+        for (unsigned i = 0; i < globals.size(); ++i) {
+            rt::qvalue v = rt::gv_free(globals[i]);
+            if (globalsPtr[i]) {
+                rt::decRef(v);
+            }
+        }
+        for (rt::qvalue v : strings) {
+            rt::decRef(v);
+        }
+    }
+
+    void xxx(ir::Statement::Ptr stmt) {
+        assert(stmt->getKind() == qore::ir::Statement::Kind::Expression);
+
+        as::Builder b(*f);
+        comp::sem::ExpressionAnalyzer2 ea2(fa, b);
+        ea2.evaluateNoValue(static_cast<const qore::ir::ExpressionStatement &>(*stmt).getExpression());
+        fa.done();
+        b.createRetVoid();
+
+        in::FunctionInterpreter fi(*f, strings, globals, locals);
+        fi.run();
+        locals = fi.getLocals();
+        f->empty();
+    }
+
+public:
+    std::vector<rt::qvalue> strings;
+    std::vector<rt::GlobalVariable *> globals;
+    std::vector<bool> globalsPtr;
+    std::vector<rt::qvalue> locals;
+    as::F::Ptr f;
+    comp::sem::FA fa;
+};
 
 class InteractiveGlobalScope : public comp::sem::GlobalScope {
 
 public:
-    InteractiveGlobalScope(comp::Context &ctx, ir::Script &script, in::Interpreter &interpreter)
+    InteractiveGlobalScope(comp::Context &ctx, ir::Script &script, MyInterpreter &interpreter)
             : GlobalScope(ctx, script), interpreter(interpreter) {
     }
 
     const ir::StringLiteral &createStringLiteral(const std::string &value) override {
         const qore::ir::StringLiteral &sl = GlobalScope::createStringLiteral(value);
-        interpreter.addStringLiteral(sl);
+        assert(sl.getId() == interpreter.strings.size());
+        interpreter.strings.push_back(rt::createString(sl.getValue().c_str(), sl.getValue().length()));
         return sl;
     }
 
-    comp::sem::Symbol declareGlobalVariable(comp::ast::Name &name, const ir::Type &type) override {
-        comp::sem::Symbol gv = GlobalScope::declareGlobalVariable(name, type);
-        interpreter.addGlobalVariable(gv.asGlobal());
-        return gv;
+protected:
+    void addGlobalVariableInitializer(const ir::GlobalVariable &gv, ir::Expression::Ptr init) override {
+        assert(gv.getId() == interpreter.globals.size());
+        interpreter.globals.push_back(nullptr);
+        interpreter.globalsPtr.push_back(!gv.getType().isPrimitive());
+
+        as::F::Ptr f = as::F::create("qinit");
+        as::Builder b(*f);
+        comp::sem::FA fa(*f);
+        as::Id temp = fa.getTemp();
+
+        comp::sem::ExpressionAnalyzer2 ea(fa, b);
+        ea.evaluate(temp, *init);
+        b.createMakeGlobal(gv.getId(), temp);
+
+        fa.doneTemp(temp);
+
+        fa.done();
+        b.createRetVoid();
+
+        in::FunctionInterpreter fi(*f, interpreter.strings, interpreter.globals);
+        fi.run();
     }
 
 public:
-    in::Interpreter &interpreter;
+    MyInterpreter &interpreter;
 };
 
 class TopLevelScope : public comp::sem::BlockScope {
@@ -100,12 +160,13 @@ public:
     }
 
     ~TopLevelScope() {
-        for (auto &lv : topLevelLocals) {
-            if (!lv->getType().isPrimitive()) {
-                rt::qvalue v = locals.get(*lv);
-                rt::decRef(v);      //TODO exceptions
-            }
-        }
+// TODO cleanup locals
+//        for (auto &lv : topLevelLocals) {
+//            if (!lv->getType().isPrimitive()) {
+//                rt::qvalue v = locals.get(*lv);
+//                rt::decRef(v);      //TODO exceptions
+//            }
+//        }
     }
 
     const ir::Type &resolveType(comp::ast::Type &node) override {
@@ -118,7 +179,7 @@ public:
         ir::LocalVariable::Ptr ptr = ir::LocalVariable::create(n, type);
         const ir::LocalVariable &lv = *ptr;
         topLevelLocals.push_back(std::move(ptr));
-        locals.add(lv);
+        //lv.setShared();
         comp::sem::Symbol s = comp::sem::Symbol(lv);
         symbols[n] = s;
         return s;
@@ -144,9 +205,6 @@ private:
     Scope &parent;
     std::unordered_map<std::string, comp::sem::Symbol> symbols;
     std::vector<ir::LocalVariable::Ptr> topLevelLocals;
-
-public:
-    in::Locals locals;
 };
 
 void interactive() {
@@ -164,7 +222,7 @@ void interactive() {
 
     ir::Script script;
     comp::sem::Analyzer a(ctx);
-    in::Interpreter interpreter;      //XXX interpreter has ptrs to script which it uses in dtor
+    MyInterpreter interpreter;      //XXX interpreter has ptrs to script which it uses in dtor
     InteractiveGlobalScope globalScope(ctx, script, interpreter);
     TopLevelScope topLevelScope(ctx, globalScope);
 
@@ -173,8 +231,8 @@ void interactive() {
         if (declOrStmt.decl) {
             a.doDecl(*declOrStmt.decl, globalScope);
         } else if (declOrStmt.stmt) {
-            a.doStmt(*declOrStmt.stmt, topLevelScope, [&interpreter, &topLevelScope](ir::Statement::Ptr stmt){
-                interpreter.execute(topLevelScope.locals, *stmt);
+            a.doStmt(*declOrStmt.stmt, topLevelScope, [&interpreter](ir::Statement::Ptr stmt){
+                interpreter.xxx(std::move(stmt));
             });
         } else {
             break;

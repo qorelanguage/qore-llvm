@@ -28,35 +28,17 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#include "StatementCompiler.h"
-#include "ExpressionCompiler.h"
+#ifndef INCLUDE_QORE_AS_ID_H_
+#define INCLUDE_QORE_AS_ID_H_
 
 namespace qore {
-namespace cg {
+namespace as {
 
-StatementCompiler::StatementCompiler(ScriptCompiler &scriptCompiler, Helper &helper, Locals &locals,
-        llvm::IRBuilder<> builder) : scriptCompiler(scriptCompiler), helper(helper), locals(locals), builder(builder) {
+using Id = unsigned int;
+
+constexpr Id InvalidId = -1;
+
+}
 }
 
-void StatementCompiler::compile(const ir::Statement &stmt) {
-    switch (stmt.getKind()) {
-        case ir::Statement::Kind::Expression:
-            return compile(static_cast<const ir::ExpressionStatement &>(stmt));
-        default:
-            QORE_UNREACHABLE("Invalid Statement::Kind: " << static_cast<int>(stmt.getKind()));
-    }
-}
-
-void StatementCompiler::compile(const ir::ExpressionStatement &stmt) {
-    LOG_FUNCTION();
-    ExpressionCompiler expressionCompiler(scriptCompiler, helper, locals, builder);
-    expressionCompiler.compileNoValue(stmt.getExpression());
-}
-
-Value StatementCompiler::evaluate(const ir::Expression &expr) {
-    ExpressionCompiler expressionCompiler(scriptCompiler, helper, locals, builder);
-    return expressionCompiler.compile(expr);
-}
-
-} // namespace cg
-} // namespace qore
+#endif // INCLUDE_QORE_AS_ID_H_

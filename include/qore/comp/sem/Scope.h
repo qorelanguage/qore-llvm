@@ -70,42 +70,19 @@ public:
         QORE_NOT_IMPLEMENTED("Default value");
     }
 
-    const ir::Function &resolveOperator(rt::Op o, const ir::Type &l, const ir::Type &r) {
+    const rt::meta::BinaryOperatorDesc &resolveOperator(rt::Op o, const ir::Type &l, const ir::Type &r) {
         if (l.getKind() == ir::Type::Kind::Builtin && r.getKind() == ir::Type::Kind::Builtin) {
-            //FIXME catch exception end report diagnostic
-            //FIXME this switch should be replaced by a direct lookup
-            switch (rt::meta::findOperator(o, static_cast<const ir::BuiltinType &>(l).getRuntimeType(),
-                    static_cast<const ir::BuiltinType &>(r).getRuntimeType())) {
-                case rt::Operator::IntPlusInt:
-                    return ir::Functions::IntPlusInt;
-                case rt::Operator::StringPlusString:
-                    return ir::Functions::StringPlusString;
-                case rt::Operator::AnyPlusAny:
-                    return ir::Functions::AnyPlusAny;
-                case rt::Operator::AnyPlusEqAny:
-                    return ir::Functions::AnyPlusEqAny;
-                default:
-                    QORE_NOT_IMPLEMENTED("");
-            }
+            //FIXME catch exception and report diagnostic
+            return rt::meta::findOperator(o, static_cast<const ir::BuiltinType &>(l).getRuntimeType(),
+                    static_cast<const ir::BuiltinType &>(r).getRuntimeType());
         }
         QORE_NOT_IMPLEMENTED("");
     }
 
-    const ir::Function *resolveConversion(const ir::Type &src, const ir::Type &dst) {
-        if (src.getKind() == ir::Type::Kind::Builtin && dst.getKind() == ir::Type::Kind::Builtin) {
-            switch (rt::meta::findConversion(static_cast<const ir::BuiltinType &>(src).getRuntimeType(),
-                    static_cast<const ir::BuiltinType &>(dst).getRuntimeType())) {
-                case rt::Conversion::Identity:
-                    return nullptr;
-                case rt::Conversion::IntToString:
-                    return &ir::Functions::IntToString;
-                case rt::Conversion::StringToInt:
-                    return &ir::Functions::StringToInt;
-                case rt::Conversion::BoxInt:
-                    return &ir::Functions::BoxInt;
-                default:
-                    QORE_NOT_IMPLEMENTED("");
-            }
+    const rt::meta::ConversionDesc &resolveConversion(const ir::Type &src, rt::Type dst) {
+        if (src.getKind() == ir::Type::Kind::Builtin) {
+            //FIXME catch exception and report diagnostic
+            return rt::meta::findConversion(static_cast<const ir::BuiltinType &>(src).getRuntimeType(), dst);
         }
         QORE_NOT_IMPLEMENTED("");
     }

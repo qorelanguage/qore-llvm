@@ -33,6 +33,7 @@
 
 #include <memory>
 #include <string>
+#include "qore/as/Id.h"
 
 namespace qore {
 namespace ir {
@@ -43,8 +44,12 @@ public:
     using Ptr = std::unique_ptr<StringLiteral>;
 
 public:
-    static Ptr create(std::string value) {
-        return Ptr(new StringLiteral(std::move(value)));
+    static Ptr create(as::Id id, std::string value) {
+        return Ptr(new StringLiteral(id, std::move(value)));
+    }
+
+    as::Id getId() const {
+        return id;
     }
 
     const std::string &getValue() const {
@@ -52,7 +57,7 @@ public:
     }
 
 private:
-    explicit StringLiteral(std::string value) : value(std::move(value)) {
+    StringLiteral(as::Id id, std::string value) : id(id), value(std::move(value)) {
     }
 
 private:
@@ -62,6 +67,7 @@ private:
     StringLiteral &operator=(StringLiteral &&) = delete;
 
 private:
+    as::Id id;
     std::string value;
 };
 

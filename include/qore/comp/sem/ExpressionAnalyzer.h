@@ -36,6 +36,8 @@
 #include "qore/ir/expr/CompoundAssignmentExpression.h"
 #include "qore/ir/expr/GlobalVariableRefExpression.h"
 #include "qore/ir/expr/InvokeExpression.h"
+#include "qore/ir/expr/InvokeBinaryOperatorExpression.h"
+#include "qore/ir/expr/InvokeConversionExpression.h"
 #include "qore/ir/expr/LifetimeStartExpression.h"
 #include "qore/ir/expr/LocalVariableRefExpression.h"
 #include "qore/comp/sem/Scope.h"
@@ -69,11 +71,12 @@ public:
     void visit(qore::comp::ast::BinaryExpression &node) {
         ir::Expression::Ptr left = eval(*node.left);
         ir::Expression::Ptr right = eval(*node.right);
-        const ir::Function &f = scope.resolveOperator(rt::Op::Plus, left->getType(), right->getType());
-        result = ir::InvokeExpression::create(
-                f,
-                convert(std::move(left), f.getArgType(0)),
-                convert(std::move(right), f.getArgType(1)));
+        const rt::meta::BinaryOperatorDesc &desc
+            = scope.resolveOperator(rt::Op::Plus, left->getType(), right->getType());
+        result = ir::InvokeBinaryOperatorExpression::create(
+                desc,
+                convert(std::move(left), desc.leftType),
+                convert(std::move(right), desc.rightType));
     }
 
     void visit(qore::comp::ast::NameExpression &node) {
@@ -116,12 +119,12 @@ public:
         } else if (node.op.type == qore::comp::TokenType::PlusEquals) {
             ir::Expression::Ptr left = eval(*node.left);
             ir::Expression::Ptr right = eval(*node.right);
-            const ir::Function &f = scope.resolveOperator(rt::Op::PlusEq, left->getType(), right->getType());
-            assert(f.getRetType() == left->getType());
+            const rt::meta::BinaryOperatorDesc &desc
+                = scope.resolveOperator(rt::Op::PlusEq, left->getType(), right->getType());
             result = ir::CompoundAssignmentExpression::create(
                     std::move(left),
-                    f,
-                    convert(std::move(right), f.getArgType(1)));
+                    desc,
+                    convert(std::move(right), desc.rightType));
         } else {
             QORE_NOT_IMPLEMENTED("");
         }
@@ -157,11 +160,18 @@ private:
     }
 
     ir::Expression::Ptr convert(ir::Expression::Ptr expr, const ir::Type &type) {
-        const ir::Function *f = scope.resolveConversion(expr->getType(), type);
-        if (!f) {
+        if (type.getKind() != ir::Type::Kind::Builtin) {
+            QORE_NOT_IMPLEMENTED("");
+        }
+        return convert(std::move(expr), static_cast<const ir::BuiltinType &>(type).getRuntimeType());
+    }
+
+    ir::Expression::Ptr convert(ir::Expression::Ptr expr, rt::Type type) {
+        const rt::meta::ConversionDesc &desc = scope.resolveConversion(expr->getType(), type);
+        if (desc.conversion == rt::Conversion::Identity) {
             return std::move(expr);
         }
-        return ir::InvokeExpression::create(*f, std::move(expr));
+        return ir::InvokeConversionExpression::create(desc, std::move(expr));
     }
 
 private:

@@ -25,44 +25,68 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Locals definition.
+/// \brief InvokeConversionExpression definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_IN_LOCALS_H_
-#define INCLUDE_QORE_IN_LOCALS_H_
+#ifndef INCLUDE_QORE_IR_EXPR_INVOKECONVERSIONEXPRESSION_H_
+#define INCLUDE_QORE_IR_EXPR_INVOKECONVERSIONEXPRESSION_H_
 
 #include <cassert>
-#include <unordered_map>
-#include "qore/ir/decl/LocalVariable.h"
-#include "qore/rt/Types.h"
+#include <vector>
+#include "qore/common/Exceptions.h"
+#include "qore/ir/decl/Function.h"
+#include "qore/ir/expr/Expression.h"
 
 namespace qore {
-namespace in {
+namespace ir {
 
-class Locals {
+class InvokeConversionExpression : public Expression {
 
 public:
-    void add(const ir::LocalVariable &lv) {
-        locals[&lv].p = nullptr;
+    using Ptr = std::unique_ptr<InvokeConversionExpression>;
+
+public:
+    static Ptr create(const rt::meta::ConversionDesc &desc, Expression::Ptr arg) {
+        return Ptr(new InvokeConversionExpression(desc, std::move(arg)));
     }
 
-    rt::qvalue get(const ir::LocalVariable &lv) const {
-        auto it = locals.find(&lv);
-        assert(it != locals.end());
-        return it->second;
+    Kind getKind() const override {
+        return Kind::InvokeConversion;
     }
 
-    rt::qvalue *getPtr(const ir::LocalVariable &lv) {
-        auto it = locals.find(&lv);
-        assert(it != locals.end());
-        return &it->second;
+    const Type &getType() const override {
+        //FIXME rt::Type vs ir::Type
+        switch (desc.retType) {
+            case rt::Type::Any:
+                return Types::Any;
+            case rt::Type::Int:
+                return Types::Int;
+            case rt::Type::String:
+                return Types::String;
+            default:
+                QORE_NOT_IMPLEMENTED("");
+        }
+    }
+
+    const rt::meta::ConversionDesc &getDesc() const {
+        return desc;
+    }
+
+    const Expression &getArg() const {
+        return *arg;
     }
 
 private:
-    std::unordered_map<const ir::LocalVariable *, rt::qvalue> locals;
+    InvokeConversionExpression(const rt::meta::ConversionDesc &desc, Expression::Ptr arg)
+            : desc(desc), arg(std::move(arg)) {
+    }
+
+private:
+    const rt::meta::ConversionDesc &desc;
+    Expression::Ptr arg;
 };
 
-} // namespace in
+} // namespace ir
 } // namespace qore
 
-#endif // INCLUDE_QORE_IN_LOCALS_H_
+#endif // INCLUDE_QORE_IR_EXPR_INVOKECONVERSIONEXPRESSION_H_

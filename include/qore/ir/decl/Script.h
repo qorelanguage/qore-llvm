@@ -50,15 +50,15 @@ public:
     }
 
     //TODO StrRef, Type, Loc
-    const GlobalVariable &createGlobalVariable(std::string name, const Type &type, Expression::Ptr init) {
-        GlobalVariable::Ptr ptr = GlobalVariable::create(std::move(name), type, std::move(init));
+    const GlobalVariable &createGlobalVariable(std::string name, const Type &type) {
+        GlobalVariable::Ptr ptr = GlobalVariable::create(globals.size(), std::move(name), type);
         GlobalVariable &gv = *ptr;
         globals.push_back(std::move(ptr));
         return gv;
     }
 
     const StringLiteral &createStringLiteral(std::string value) {
-        StringLiteral::Ptr ptr = StringLiteral::create(std::move(value));
+        StringLiteral::Ptr ptr = StringLiteral::create(strings.size(), std::move(value));
         StringLiteral &sl = *ptr;
         strings.push_back(std::move(ptr));
         return sl;

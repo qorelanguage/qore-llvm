@@ -234,22 +234,30 @@ qvalue gv_free(GlobalVariable *gv) noexcept {
     return v;
 }
 
-qvalue gv_read_lock(GlobalVariable *gv) noexcept {
+void gv_read_lock(GlobalVariable *gv) noexcept {
     LOG("GlobalVariable " << gv << " read lock");
-    return gv->value;
 }
 
 void gv_read_unlock(GlobalVariable *gv) noexcept {
     LOG("GlobalVariable " << gv << " read unlock");
 }
 
-qvalue *gv_write_lock(GlobalVariable *gv) noexcept {
+void gv_write_lock(GlobalVariable *gv) noexcept {
     LOG("GlobalVariable " << gv << " write lock");
-    return &gv->value;
 }
 
 void gv_write_unlock(GlobalVariable *gv) noexcept {
     LOG("GlobalVariable " << gv << " write unlock");
+}
+
+qvalue gv_get(GlobalVariable *gv) noexcept {
+    LOG("GlobalVariable " << gv << " get");
+    return gv->value;
+}
+
+void gv_set(GlobalVariable *gv, qvalue v) noexcept {
+    LOG("GlobalVariable " << gv << " set");
+    gv->value = v;
 }
 
 extern "C" qvalue qint_to_qvalue(qint i) noexcept {
@@ -263,19 +271,17 @@ extern "C" void combine(Exception &original, Exception &secondary) {
 }
 
 static qvalue convert_any(qvalue src, Type type) {
-    Conversion c = meta::findConversion(src.p->getType(), type);
+    const meta::ConversionDesc &desc = meta::findConversion(src.p->getType(), type);
     if (src.p->getType() == Type::Int) {
         src = int_unbox(src);
     }
-    const meta::ConversionDesc &desc = meta::ConversionTable[static_cast<int>(c)];
     return desc.f(src);
 }
 
 qvalue op_generic(Op o, qvalue left, qvalue right) {
-    Operator op = meta::findOperator(o, left.p->getType(), right.p->getType());
-    const meta::BinaryOperatorDesc &desc = meta::BinaryOperatorTable[static_cast<int>(op)];
+    const meta::BinaryOperatorDesc &desc = meta::findOperator(o, left.p->getType(), right.p->getType());
 
-    //FIXME exception are not handled correctly
+    //FIXME exceptions are not handled correctly
     qvalue ret = desc.f(convert_any(left, desc.leftType), convert_any(right, desc.rightType));
     if (desc.retType == Type::Int) {
         ret = int_box(ret);

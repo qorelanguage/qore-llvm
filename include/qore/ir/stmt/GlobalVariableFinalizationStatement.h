@@ -25,42 +25,47 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief LValueEvaluator implementation.
+/// \brief ExpressionStatement definition.
 ///
 //------------------------------------------------------------------------------
-#include "LValueEvaluator.h"
-#include "qore/common/Exceptions.h"
-#include "qore/rt/Func.h"
+#ifndef INCLUDE_QORE_IR_STMT_GLOBALVARIABLEFINALIZATIONSTATEMENT_H_
+#define INCLUDE_QORE_IR_STMT_GLOBALVARIABLEFINALIZATIONSTATEMENT_H_
+
+#include "qore/ir/expr/Expression.h"
+#include "qore/ir/stmt/Statement.h"
+#include "qore/ir/decl/GlobalVariable.h"
 
 namespace qore {
-namespace in {
+namespace ir {
 
-LValueEvaluator::LValueEvaluator(Interpreter &interpreter, Locals &locals) : interpreter(interpreter),
-        locals(locals) {
-}
+class GlobalVariableFinalizationStatement : public Statement {
 
-LValue LValueEvaluator::evaluate(const ir::Expression &expr) {
-    switch (expr.getKind()) {
-        case ir::Expression::Kind::LocalVariableRef:
-            return evaluate(static_cast<const ir::LocalVariableRefExpression &>(expr));
-        case ir::Expression::Kind::GlobalVariableRef:
-            return evaluate(static_cast<const ir::GlobalVariableRefExpression &>(expr));
-        default:
-            QORE_UNREACHABLE("Invalid Expression::Kind: " << static_cast<int>(expr.getKind()));
+public:
+    using Ptr = std::unique_ptr<GlobalVariableFinalizationStatement>;
+
+public:
+    static Ptr create(const ir::GlobalVariable &globalVariable) {
+        return Ptr(new GlobalVariableFinalizationStatement(globalVariable));
     }
-}
 
-LValue LValueEvaluator::evaluate(const ir::GlobalVariableRefExpression &expr) {
-    LOG_FUNCTION();
-    rt::GlobalVariable *gv = interpreter.getGlobalVariableValue(expr.getGlobalVariable());
-    rt::qvalue *ptr = qore::rt::gv_write_lock(gv);
-    return LValue(ptr, [&gv](){qore::rt::gv_write_unlock(gv);});
-}
+    Kind getKind() const override {
+        return Kind::GlobalVariableFinalization;
+    }
 
-LValue LValueEvaluator::evaluate(const ir::LocalVariableRefExpression &expr) {
-    LOG_FUNCTION();
-    return LValue(locals.getPtr(expr.getLocalVariable()));
-}
+    const ir::GlobalVariable &getGlobalVariable() const {
+        return globalVariable;
+    }
 
-} // namespace in
+private:
+    explicit GlobalVariableFinalizationStatement(const ir::GlobalVariable &globalVariable)
+            : globalVariable(globalVariable) {
+    }
+
+private:
+    const ir::GlobalVariable &globalVariable;
+};
+
+} // namespace ir
 } // namespace qore
+
+#endif // INCLUDE_QORE_IR_STMT_GLOBALVARIABLEFINALIZATIONSTATEMENT_H_

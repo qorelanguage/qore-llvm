@@ -31,10 +31,12 @@
 #ifndef LIB_CG_SCRIPTCOMPILER_H_
 #define LIB_CG_SCRIPTCOMPILER_H_
 
-#include <unordered_map>
+#include <string>
+#include <vector>
 #include "qore/ir/decl/Function.h"
 #include "qore/ir/decl/GlobalVariable.h"
 #include "qore/ir/decl/StringLiteral.h"
+#include "qore/as/as.h"
 #include "Helper.h"
 
 namespace qore {
@@ -43,43 +45,22 @@ namespace cg {
 class ScriptCompiler {
 
 public:
-    explicit ScriptCompiler(Helper &helper);
+    ScriptCompiler(Helper &helper, as::S &script);
+    void compile(as::F &f);
 
-    llvm::GlobalVariable *getString(const ir::StringLiteral &sl) const {
-        auto it = strings.find(&sl);
-        assert(it != strings.end());
-        return it->second;
-    }
+private:
+    void addStringLiteral(as::Id id, const std::string value);
 
-    llvm::GlobalVariable *getGlobal(const ir::GlobalVariable &gv) const {
-        auto it = globals.find(&gv);
-        assert(it != globals.end());
-        return it->second;
-    }
-
-    llvm::Value *call(llvm::IRBuilder<> builder, const ir::Function &f, llvm::ArrayRef<llvm::Value *> args) const {
-        llvm::Value *v = helper.call(builder, f, args);
-        if (v) {
-            return v;
-        }
-        auto it = functions.find(&f);
-        assert(it != functions.end());
-        return builder.CreateCall(it->second, args);
-    }
-
-    void addStringLiteral(const ir::StringLiteral &sl);
-    void addGlobalVariable(const ir::GlobalVariable &gv);
-    void addFunction(const ir::UserFunction &f);
-    void compile(const ir::UserFunction &f);
+    void doBlock();
 
 private:
     Helper &helper;
     llvm::IRBuilder<> bInit;
     llvm::IRBuilder<> bDone;
 
-    std::unordered_map<const ir::StringLiteral *, llvm::GlobalVariable *> strings;
-    std::unordered_map<const ir::GlobalVariable *, llvm::GlobalVariable *> globals;
-    std::unordered_map<const ir::Function *, llvm::Function *> functions;
+    std::vector<llvm::GlobalVariable *> strings;
+    std::vector<llvm::GlobalVariable *> globals;
+    std::unordered_map<as::F *, llvm::Function *> functions;
 };
 
 } // namespace cg

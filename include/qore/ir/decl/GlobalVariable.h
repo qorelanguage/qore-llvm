@@ -35,6 +35,7 @@
 #include <string>
 #include "qore/ir/expr/Expression.h"
 #include "qore/ir/Type.h"
+#include "qore/as/Id.h"
 
 namespace qore {
 namespace ir {
@@ -45,11 +46,15 @@ public:
     using Ptr = std::unique_ptr<GlobalVariable>;
 
 public:
-    static Ptr create(std::string name, const Type &type, Expression::Ptr initExpression) {
-        return Ptr(new GlobalVariable(std::move(name), type, std::move(initExpression)));
+    static Ptr create(as::Id id, std::string name, const Type &type) {
+        return Ptr(new GlobalVariable(id, std::move(name), type));
     }
 
 public:
+    as::Id getId() const {
+        return id;
+    }
+
     const std::string &getName() const {
         return name;
     }
@@ -58,13 +63,8 @@ public:
         return type;
     }
 
-    const Expression &getInitExpression() const {
-        return *initExpression;
-    }
-
 private:
-    GlobalVariable(std::string name, const Type &type, Expression::Ptr initExpression) : name(std::move(name)),
-            type(type), initExpression(std::move(initExpression)) {
+    GlobalVariable(as::Id id, std::string name, const Type &type) : id(id), name(std::move(name)), type(type) {
     }
 
 private:
@@ -74,9 +74,9 @@ private:
     GlobalVariable &operator=(GlobalVariable &&) = delete;
 
 private:
+    as::Id id;
     std::string name;
     const Type &type;
-    Expression::Ptr initExpression;
 };
 
 } // namespace ir

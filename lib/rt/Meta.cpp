@@ -40,15 +40,15 @@ static qvalue conv_id(qvalue v) {
     return v;
 }
 
-#define C(F, RET, ARG)              { F, Type::RET, Type::ARG }
+#define C(C, F, RET, ARG)           { Conversion::C, F, Type::RET, Type::ARG }
 #define BO(F, RET, LEFT, RIGHT)     { F, Type::RET, Type::LEFT, Type::RIGHT }
 
 //Warning - entries must be in the same order as rt::Conversion
 ConversionDesc ConversionTable[] = {
-        C(conv_id, Any, Any),
-        C(convertIntToString, String, Int),
-        C(convertStringToInt, Int, String),
-        C(int_box, Any, Int),
+        C(Identity, conv_id, Any, Any),
+        C(IntToString, convertIntToString, String, Int),
+        C(StringToInt, convertStringToInt, Int, String),
+        C(BoxInt, int_box, Any, Int),
 };
 
 //Warning - entries must be in the same order as rt::Operator
@@ -62,7 +62,7 @@ BinaryOperatorDesc BinaryOperatorTable[] = {
 #undef C
 #undef BO
 
-Operator findOperator(Op o, Type l, Type r) {
+static Operator findOperatorImpl(Op o, Type l, Type r) {
     if (o == Op::Plus) {
         if (l == Type::Any || r == Type::Any) {
             return Operator::AnyPlusAny;
@@ -88,7 +88,11 @@ Operator findOperator(Op o, Type l, Type r) {
     QORE_NOT_IMPLEMENTED("Operator " << static_cast<int>(l) << " + " << static_cast<int>(r));
 }
 
-Conversion findConversion(Type src, Type dest) {
+const BinaryOperatorDesc &findOperator(Op o, Type l, Type r) {
+    return rt::meta::BinaryOperatorTable[static_cast<int>(findOperatorImpl(o, l, r))];
+}
+
+Conversion findConversionImpl(Type src, Type dest) {
     //XXX can be replaced with a table
     if (src == dest) {
         return Conversion::Identity;
@@ -118,6 +122,10 @@ Conversion findConversion(Type src, Type dest) {
         }
     }
     QORE_NOT_IMPLEMENTED("Conversion " << static_cast<int>(src) << " to " << static_cast<int>(dest));
+}
+
+const ConversionDesc &findConversion(Type src, Type dest) {
+    return rt::meta::ConversionTable[static_cast<int>(findConversionImpl(src, dest))];
 }
 
 } // namespace meta

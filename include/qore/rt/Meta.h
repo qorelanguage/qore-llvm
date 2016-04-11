@@ -40,6 +40,7 @@ namespace meta {
 struct ConversionDesc {
     using F = qvalue(qvalue);
 
+    const Conversion conversion;
     const F &f;
     const Type retType;
     const Type argType;
@@ -63,8 +64,8 @@ private:
 extern ConversionDesc ConversionTable[];
 extern BinaryOperatorDesc BinaryOperatorTable[];
 
-Operator findOperator(Op o, Type l, Type r);
-Conversion findConversion(Type src, Type dest);
+const BinaryOperatorDesc &findOperator(Op o, Type l, Type r);
+const ConversionDesc &findConversion(Type src, Type dest);
 
 } // namespace meta
 } // namespace rt

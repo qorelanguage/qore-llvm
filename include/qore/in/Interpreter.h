@@ -33,13 +33,13 @@
 
 #include <unordered_map>
 #include <vector>
-#include "qore/in/Locals.h"
 #include "qore/ir/decl/Function.h"
 #include "qore/ir/decl/GlobalVariable.h"
 #include "qore/ir/decl/Script.h"
 #include "qore/ir/decl/StringLiteral.h"
 #include "qore/ir/stmt/Statement.h"
 #include "qore/rt/Types.h"
+#include "qore/in/FunctionInterpreter.h"
 
 namespace qore {
 namespace in {
@@ -47,21 +47,29 @@ namespace in {
 class Interpreter {
 
 public:
-    Interpreter();
-    ~Interpreter();
+    explicit Interpreter(as::S &script) {
+        strings.reserve(script.strings.size());
+        for (auto &s : script.strings) {
+            strings.push_back(rt::createString(s.c_str(), s.length()));
+        }
 
-    void addStringLiteral(const ir::StringLiteral &sl);
-    void addGlobalVariable(const ir::GlobalVariable &gv);
-    void execute(Locals &locals, const ir::Statement &stmt);
+        globals.resize(script.globalCount);
+    }
 
-    rt::GlobalVariable *getGlobalVariableValue(const ir::GlobalVariable &gv) const;
-    rt::qvalue getStringLiteralValue(const ir::StringLiteral &sl) const;
+    ~Interpreter() {
+        for (rt::qvalue v : strings) {
+            rt::decRef(v);
+        }
+    }
 
-    static void run(const ir::Script &script, const ir::UserFunction &f);
+    void run(as::F &f) {
+        FunctionInterpreter fi(f, strings, globals);
+        fi.run();
+    }
 
 private:
-    std::unordered_map<const ir::StringLiteral *, rt::qvalue> strings;
-    std::unordered_map<const ir::GlobalVariable *, rt::GlobalVariable *> globals;
+    std::vector<rt::qvalue> strings;
+    std::vector<rt::GlobalVariable *> globals;
 };
 
 } // namespace in

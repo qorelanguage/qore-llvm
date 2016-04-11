@@ -56,29 +56,47 @@ public:
         lt_qvalue_ptr = lt_qvalue->getPointerTo();
         lt_GlobalVariable_ptr = llvm::StructType::create(ctx, "GlobalVariable")->getPointerTo();
 
+        lt_char_ptr = llvm::Type::getInt8PtrTy(ctx);
+        lt_int32 = llvm::Type::getInt32Ty(ctx);
+        lt_exc = llvm::StructType::get(lt_char_ptr, lt_int32, nullptr);
+
+        lf_personality = llvm::Function::Create(llvm::FunctionType::get(lt_int32, true),
+                llvm::Function::ExternalLinkage, "__gxx_personality_v0", module.get());
+
+
         lf_incRef = createFunction("incRef", lt_void, lt_qvalue);
         lf_decRef = createFunction("decRef", lt_void, lt_qvalue);
+        lf_decRefNoexcept = createFunction("decRefNoexcept", lt_void, lt_qvalue, lt_qvalue);
 
         lf_gv_create = createFunction("gv_create", lt_GlobalVariable_ptr, lt_qvalue);
         lf_gv_free = createFunction("gv_free", lt_qvalue, lt_GlobalVariable_ptr);
-        lf_gv_read_lock = createFunction("gv_read_lock", lt_qvalue, lt_GlobalVariable_ptr);
+        lf_gv_read_lock = createFunction("gv_read_lock", lt_void, lt_GlobalVariable_ptr);
         lf_gv_read_unlock = createFunction("gv_read_unlock", lt_void, lt_GlobalVariable_ptr);
-        lf_gv_write_lock = createFunction("gv_write_lock", lt_qvalue_ptr, lt_GlobalVariable_ptr);
+        lf_gv_write_lock = createFunction("gv_write_lock", lt_void, lt_GlobalVariable_ptr);
         lf_gv_write_unlock = createFunction("gv_write_unlock", lt_void, lt_GlobalVariable_ptr);
+        lf_gv_get = createFunction("gv_get", lt_qvalue, lt_GlobalVariable_ptr);
+        lf_gv_set = createFunction("gv_set", lt_void, lt_GlobalVariable_ptr, lt_qvalue);
 
         lf_qint_to_qvalue = createFunction("qint_to_qvalue", lt_qvalue, lt_qint);
 
-        lf_createString = createFunction("createString", lt_qvalue, llvm::Type::getInt8PtrTy(ctx), lt_qsize);
+        lf_createString = createFunction("createString", lt_qvalue, lt_char_ptr, lt_qsize);
 
         //FIXME this can be done generically using rt::meta::*Desc
-        functions[&ir::Functions::IntToString] = createFunction("convertIntToString", lt_qvalue, lt_qvalue);
-        functions[&ir::Functions::StringToInt] = createFunction("convertStringToInt", lt_qvalue, lt_qvalue);
-        functions[&ir::Functions::StringPlusString] = createFunction("opAddStringString", lt_qvalue, lt_qvalue,
-                lt_qvalue);
-        functions[&ir::Functions::IntPlusInt] = createFunction("opAddIntInt", lt_qvalue, lt_qvalue, lt_qvalue);
-        functions[&ir::Functions::BoxInt] = createFunction("int_box", lt_qvalue, lt_qvalue);
-        functions[&ir::Functions::AnyPlusAny] = createFunction("op_add_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
-        functions[&ir::Functions::AnyPlusEqAny] = createFunction("op_addeq_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
+        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::IntToString)]
+                      = createFunction("convertIntToString", lt_qvalue, lt_qvalue);
+        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::StringToInt)]
+                      = createFunction("convertStringToInt", lt_qvalue, lt_qvalue);
+        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::BoxInt)]
+                      = createFunction("int_box", lt_qvalue, lt_qvalue);
+
+        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::StringPlusString)]
+                       = createFunction("opAddStringString", lt_qvalue, lt_qvalue, lt_qvalue);
+        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::IntPlusInt)]
+                       = createFunction("opAddIntInt", lt_qvalue, lt_qvalue, lt_qvalue);
+        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::AnyPlusAny)]
+                       = createFunction("op_add_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
+        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::AnyPlusEqAny)]
+                       = createFunction("op_addeq_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
     }
 
     llvm::Function *createFunction(const std::string &name, llvm::Type *ret) {
@@ -100,14 +118,6 @@ public:
                 llvm::Function::ExternalLinkage, name, module.get());
     }
 
-    llvm::Value *call(llvm::IRBuilder<> builder, const ir::Function &f, llvm::ArrayRef<llvm::Value *> args) const {
-        auto it = functions.find(&f);
-        if (it != functions.end()) {
-            return builder.CreateCall(it->second, args);
-        }
-        return nullptr;
-    }
-
 public:
     llvm::LLVMContext &ctx;
     std::unique_ptr<llvm::Module> module;
@@ -119,9 +129,13 @@ public:
     llvm::Type *lt_qvalue;
     llvm::Type *lt_qvalue_ptr;
     llvm::Type *lt_GlobalVariable_ptr;
+    llvm::Type *lt_char_ptr;
+    llvm::Type *lt_int32;
+    llvm::Type *lt_exc;
 
     llvm::Function *lf_incRef;
     llvm::Function *lf_decRef;
+    llvm::Function *lf_decRefNoexcept;
 
     llvm::Function *lf_gv_create;
     llvm::Function *lf_gv_free;
@@ -129,13 +143,17 @@ public:
     llvm::Function *lf_gv_read_unlock;
     llvm::Function *lf_gv_write_lock;
     llvm::Function *lf_gv_write_unlock;
+    llvm::Function *lf_gv_get;
+    llvm::Function *lf_gv_set;
 
     llvm::Function *lf_qint_to_qvalue;
 
     llvm::Function *lf_createString;
 
-private:
-    std::unordered_map<const ir::Function *, llvm::Function *> functions;
+    llvm::Function *lf_personality;
+
+    std::unordered_map<const rt::meta::ConversionDesc *, llvm::Function *> convFunctions;
+    std::unordered_map<const rt::meta::BinaryOperatorDesc *, llvm::Function *> binOpFunctions;
 };
 
 } // namespace cg

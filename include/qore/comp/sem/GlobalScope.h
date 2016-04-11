@@ -84,12 +84,17 @@ public:
     virtual Symbol declareGlobalVariable(ast::Name &name, const ir::Type &type) {
         if (name.isSimple()) {
             const std::string &n = ctx.getStringTable().get(name.last().str);
-            Symbol s = Symbol(script.createGlobalVariable(n, type, defaultFor(type)));
+            const ir::GlobalVariable &gv = script.createGlobalVariable(n, type);
+            addGlobalVariableInitializer(gv, defaultFor(type));
+            Symbol s = Symbol(gv);
             symbols[n] = s;
             return s;
         }
         QORE_NOT_IMPLEMENTED("");
     }
+
+protected:
+    virtual void addGlobalVariableInitializer(const ir::GlobalVariable &gv, ir::Expression::Ptr init) = 0;
 
 private:
     Context &ctx;

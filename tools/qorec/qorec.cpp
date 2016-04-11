@@ -62,14 +62,22 @@ void test(bool file, std::string str) {
 
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
-    LOG("-------------------------------------------------------------------------------")
+    LOG("-------------------------------------------------------------------------------");
     qore::ir::Script scr;
-    qore::ir::UserFunction &main = qore::comp::sem::analyze(ctx, scr, *script);
-    //XXX dump
-    LOG("-------------------------------------------------------------------------------")
-    qore::in::Interpreter::run(scr, main);
-    LOG("-------------------------------------------------------------------------------")
-    qore::cg::CodeGen::process(scr);
+    qore::comp::sem::analyze(ctx, scr, *script);
+
+    qore::as::S sss;
+    qore::comp::sem::analyze2(sss, scr);
+
+    LOG("-------------------------------------------------------------------------------");
+    {
+        qore::in::Interpreter i(sss);
+        i.run(*sss.qinit);
+        i.run(*sss.qmain);
+        i.run(*sss.qdone);
+    }
+    LOG("-------------------------------------------------------------------------------");
+    qore::cg::CodeGen::process(sss);
 }
 
 /// \endcond NoDoxygen
@@ -96,7 +104,11 @@ a += "8";
 
 )";
 
+//    std::istringstream stream(src);
+//    std::streambuf* cin_backup = std::cin.rdbuf(stream.rdbuf());
 //    qore::interactive();
+//    std::cin.rdbuf(cin_backup);
+
 //    test(true, argv[1]);
     test(false, src);
 

@@ -48,10 +48,12 @@ extern "C" qvalue opAddStringString(qvalue left, qvalue right);       //THROWS
 
 extern "C" GlobalVariable *gv_create(qvalue init);              //THROWS
 extern "C" qvalue gv_free(GlobalVariable *gv) noexcept;
-extern "C" qvalue gv_read_lock(GlobalVariable *gv) noexcept;
+extern "C" void gv_read_lock(GlobalVariable *gv) noexcept;
 extern "C" void gv_read_unlock(GlobalVariable *gv) noexcept;
-extern "C" qvalue *gv_write_lock(GlobalVariable *gv) noexcept;
+extern "C" void gv_write_lock(GlobalVariable *gv) noexcept;
 extern "C" void gv_write_unlock(GlobalVariable *gv) noexcept;
+extern "C" qvalue gv_get(GlobalVariable *gv) noexcept;
+extern "C" void gv_set(GlobalVariable *gv, qvalue v) noexcept;
 
 extern "C" void combine(Exception &original, Exception &secondary);
 
@@ -60,6 +62,8 @@ extern "C" qvalue int_unbox(qvalue p) noexcept;
 
 extern "C" qvalue op_add_any_any(qvalue left, qvalue right);       //THROWS
 extern "C" qvalue op_addeq_any_any(qvalue left, qvalue right);       //THROWS
+
+extern "C" qvalue qint_to_qvalue(qint i) noexcept;
 
 //XXX naming conventions
 

@@ -25,46 +25,52 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Value definition.
+/// \brief ExpressionStatement definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef LIB_IN_VALUE_H_
-#define LIB_IN_VALUE_H_
+#ifndef INCLUDE_QORE_IR_STMT_GLOBALVARIABLEINITIALIZATIONSTATEMENT_H_
+#define INCLUDE_QORE_IR_STMT_GLOBALVARIABLEINITIALIZATIONSTATEMENT_H_
 
-#include "qore/rt/Func.h"
+#include "qore/ir/expr/Expression.h"
+#include "qore/ir/stmt/Statement.h"
+#include "qore/ir/decl/GlobalVariable.h"
 
 namespace qore {
-namespace in {
+namespace ir {
 
-struct Value {
+class GlobalVariableInitializationStatement : public Statement {
 
-    Value() : needsDeref(false) {
+public:
+    using Ptr = std::unique_ptr<GlobalVariableInitializationStatement>;
+
+public:
+    static Ptr create(const ir::GlobalVariable &globalVariable, Expression::Ptr expression) {
+        return Ptr(new GlobalVariableInitializationStatement(globalVariable, std::move(expression)));
     }
 
-    Value(rt::qvalue value, bool needsDeref) : value(value), needsDeref(needsDeref) {
+    Kind getKind() const override {
+        return Kind::GlobalVariableInitialization;
     }
 
-    void cleanup() {
-        if (needsDeref) {
-            rt::decRef(value);
-        }
+    const ir::GlobalVariable &getGlobalVariable() const {
+        return globalVariable;
     }
 
-    void cleanup(rt::Exception &e) noexcept {
-        if (needsDeref) {
-            try {
-                rt::decRef(value);
-            } catch (rt::Exception &e2) {
-                rt::combine(e, e2);
-            }
-        }
+    const Expression &getExpression() const {
+        return *expression;
     }
 
-    rt::qvalue value;
-    bool needsDeref;            //it actually means "the 'p' member of the qvalue union is the active member"
+private:
+    GlobalVariableInitializationStatement(const ir::GlobalVariable &globalVariable, Expression::Ptr expression)
+            : globalVariable(globalVariable), expression(std::move(expression)) {
+    }
+
+private:
+    const ir::GlobalVariable &globalVariable;
+    Expression::Ptr expression;
 };
 
-} // namespace in
+} // namespace ir
 } // namespace qore
 
-#endif // LIB_IN_VALUE_H_
+#endif // INCLUDE_QORE_IR_STMT_GLOBALVARIABLEINITIALIZATIONSTATEMENT_H_
