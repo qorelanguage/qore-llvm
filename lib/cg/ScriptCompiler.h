@@ -49,7 +49,7 @@ public:
     void compile(as::F &f);
 
 private:
-    void addStringLiteral(as::Id id, const std::string value);
+    void addStringLiteral(as::Id id, const std::string &value);
 
     void doBlock();
 

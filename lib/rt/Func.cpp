@@ -203,16 +203,6 @@ qvalue int_unbox(qvalue p) noexcept {
 /// GlobalVariable
 ///////////////////////////////////////////////////////////////
 class RwLock {
-public:
-    void readLock() {
-        LOG("READ LOCK");
-    }
-    void writeLock() {
-        LOG("WRITE LOCK");
-    }
-    void unlock() {
-        LOG("UNLOCK");
-    }
 };
 
 struct GlobalVariable {
@@ -266,9 +256,9 @@ extern "C" qvalue qint_to_qvalue(qint i) noexcept {
     return v;
 }
 
-extern "C" void combine(Exception &original, Exception &secondary) {
-//FIXME
-}
+//extern "C" void combine(Exception &original, Exception &secondary) {
+////FIXME
+//}
 
 static qvalue convert_any(qvalue src, Type type) {
     const meta::ConversionDesc &desc = meta::findConversion(src.p->getType(), type);

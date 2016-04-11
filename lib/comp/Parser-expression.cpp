@@ -661,7 +661,6 @@ ast::ArgList::Ptr Parser::argList() {
 }
 
 ast::VarDeclExpression::Ptr Parser::varDecl(ast::Type type) {
-    assert(tokenType() == TokenType::Identifier);
     String::Ref name = strVal();
     SourceLocation location = consume().location;
     ast::Expression::Ptr initializer;

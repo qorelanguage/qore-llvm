@@ -55,7 +55,7 @@ extern "C" void gv_write_unlock(GlobalVariable *gv) noexcept;
 extern "C" qvalue gv_get(GlobalVariable *gv) noexcept;
 extern "C" void gv_set(GlobalVariable *gv, qvalue v) noexcept;
 
-extern "C" void combine(Exception &original, Exception &secondary);
+//extern "C" void combine(Exception &original, Exception &secondary);
 
 extern "C" qvalue int_box(qvalue i);
 extern "C" qvalue int_unbox(qvalue p) noexcept;

@@ -70,7 +70,7 @@ ScriptCompiler::ScriptCompiler(Helper &helper, as::S &script) : helper(helper), 
     }
 }
 
-void ScriptCompiler::addStringLiteral(as::Id id, const std::string value) {
+void ScriptCompiler::addStringLiteral(as::Id id, const std::string &value) {
     llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, value, true);
     llvm::GlobalVariable *str = new llvm::GlobalVariable(*helper.module, val->getType(), true,
             llvm::GlobalValue::PrivateLinkage, val, llvm::Twine("str").concat(llvm::Twine(id)));
@@ -95,7 +95,7 @@ class FunctionCompiler {
 public:
     FunctionCompiler(as::F &f, llvm::Function *func, Helper &helper, std::vector<llvm::GlobalVariable *> &strings,
             std::vector<llvm::GlobalVariable *> &globals) : f(f), func(func), helper(helper), strings(strings),
-            globals(globals), locals(f.localCount), temps(f.tempCount) {
+            globals(globals), locals(f.localCount), temps(f.tempCount), excSlot(nullptr) {
         func->setPersonalityFn(llvm::ConstantExpr::getBitCast(helper.lf_personality, helper.lt_char_ptr));
     }
 
