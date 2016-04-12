@@ -291,5 +291,9 @@ qvalue op_addeq_any_any(qvalue left, qvalue right) {
     return op_generic(Op::PlusEq, left, right);
 }
 
+qvalue any_to_string(qvalue a) {
+    return convert_any(a, Type::String);
+}
+
 } // namespace rt
 } // namespace qore

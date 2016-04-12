@@ -65,6 +65,8 @@ extern "C" qvalue op_addeq_any_any(qvalue left, qvalue right);       //THROWS
 
 extern "C" qvalue qint_to_qvalue(qint i) noexcept;
 
+extern "C" qvalue any_to_string(qvalue a);
+
 //XXX naming conventions
 
 } // namespace rt

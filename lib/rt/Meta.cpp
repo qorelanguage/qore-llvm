@@ -49,6 +49,7 @@ ConversionDesc ConversionTable[] = {
         C(IntToString, convertIntToString, String, Int),
         C(StringToInt, convertStringToInt, Int, String),
         C(BoxInt, int_box, Any, Int),
+        C(AnyToString, any_to_string, String, Any),
 };
 
 //Warning - entries must be in the same order as rt::Operator
@@ -97,12 +98,23 @@ Conversion findConversionImpl(Type src, Type dest) {
     if (src == dest) {
         return Conversion::Identity;
     }
+    if (dest == Type::String) {
+        if (src == Type::String) {
+            return Conversion::Identity;
+        }
+        if (src == Type::Any) {
+            return Conversion::AnyToString;
+        }
+    }
     if (dest == Type::SoftString) {
         if (src == Type::String) {
             return Conversion::Identity;
         }
         if (src == Type::Int) {
             return Conversion::IntToString;
+        }
+        if (src == Type::Any) {
+            return Conversion::AnyToString;
         }
     }
     if (dest == Type::SoftInt) {

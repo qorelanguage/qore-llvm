@@ -88,6 +88,7 @@ enum class Conversion {
     IntToString,
     StringToInt,
     BoxInt,
+    AnyToString,
 };
 
 } // namespace rt
