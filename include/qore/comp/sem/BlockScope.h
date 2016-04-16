@@ -91,7 +91,7 @@ public:
         for (auto it = locals.rbegin(); it != locals.rend(); ++it) {
             stmt->add(LifetimeEndStatement::create(*it->second));
         }
-        return stmt;
+        return std::move(stmt);
     }
 
 private:
