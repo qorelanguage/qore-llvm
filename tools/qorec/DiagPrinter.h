@@ -25,12 +25,13 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines a basic processor of diagnostic messages.
 ///
 //------------------------------------------------------------------------------
 #ifndef TOOLS_QOREC_DIAGPRINTER_H_
 #define TOOLS_QOREC_DIAGPRINTER_H_
 
+#include <iostream>
 #include <utility>
 
 namespace qore {
@@ -38,25 +39,25 @@ namespace qore {
 /**
  * \brief Basic DiagProcessor that writes messages to the standard error stream.
  */
-class DiagPrinter : public qore::comp::IDiagProcessor {
+class DiagPrinter : public comp::IDiagProcessor {
 
 public:
     /**
      * \brief Constructs the instance.
      * \param srcMgr used for decoding source locations
      */
-    explicit DiagPrinter(const qore::comp::SourceManager &srcMgr) : srcMgr(srcMgr) {
+    explicit DiagPrinter(const comp::SourceManager &srcMgr) : srcMgr(srcMgr) {
     }
 
-    void process(qore::comp::DiagRecord &record) override {
-        qore::comp::Source &src = srcMgr.get(record.location.sourceId);
+    void process(comp::DiagRecord &record) override {
+        comp::Source &src = srcMgr.get(record.location.sourceId);
         std::pair<int, int> l = src.decodeLocation(record.location.offset);
         std::cerr << src.getName() << ':' << l.first << ':' << l.second
                 << ": " << record.level << ": " << record.code << ": " << record.message << '\n';
     }
 
 private:
-    const qore::comp::SourceManager &srcMgr;
+    const comp::SourceManager &srcMgr;
 };
 
 } // namespace qore

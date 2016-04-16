@@ -58,8 +58,8 @@ public:
         return Ptr(new ClosureExpression(std::move(routine)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Closure;
     }
 
     SourceLocation getStart() const override {

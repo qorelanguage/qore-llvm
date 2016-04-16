@@ -33,6 +33,7 @@
 
 #include <vector>
 #include "qore/comp/ast/Expression.h"
+#include "qore/common/Exceptions.h"
 
 namespace qore {
 namespace comp {
@@ -44,13 +45,51 @@ namespace ast {
 class Statement : public Node {
 
 public:
+    enum class Kind {
+        Empty,
+        Expression,
+        Compound,
+        Return,
+        If,
+        Try,
+        Foreach,
+        Throw,
+        Simple,
+        ScopeGuard,
+        While,
+        DoWhile,
+        For,
+        Switch,
+    };
+
+public:
     using Ptr = std::unique_ptr<Statement>;                 //!< Pointer type.
 
-    /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
-     * \param visitor the visitor to call
-     */
-    virtual void accept(StatementVisitor &visitor) = 0;
+    virtual Kind getKind() const = 0;
+
+    template<typename R>
+    R accept(StatementVisitor<R> &v) {
+        #define CASE(K) case Kind::K: return v.visit(static_cast<K ## Statement &>(*this))
+        switch (getKind()) {
+            CASE(Empty);
+            CASE(Expression);
+            CASE(Compound);
+            CASE(Return);
+            CASE(If);
+            CASE(Try);
+            CASE(Foreach);
+            CASE(Throw);
+            CASE(Simple);
+            CASE(ScopeGuard);
+            CASE(While);
+            CASE(DoWhile);
+            CASE(For);
+            CASE(Switch);
+            default:
+                QORE_UNREACHABLE("");
+        }
+        #undef CASE
+    }
 };
 
 /**
@@ -74,8 +113,8 @@ public:
         return Ptr(new EmptyStatement(location));
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Empty;
     }
 
     SourceLocation getStart() const override {
@@ -114,8 +153,8 @@ public:
         return Ptr(new ExpressionStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Expression;
     }
 
     SourceLocation getStart() const override {
@@ -153,8 +192,8 @@ public:
         return Ptr(new CompoundStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Compound;
     }
 
     SourceLocation getStart() const override {
@@ -192,8 +231,8 @@ public:
         return Ptr(new ReturnStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Return;
     }
 
     SourceLocation getStart() const override {
@@ -232,8 +271,8 @@ public:
         return Ptr(new IfStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::If;
     }
 
     SourceLocation getStart() const override {
@@ -273,8 +312,8 @@ public:
         return Ptr(new TryStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Try;
     }
 
     SourceLocation getStart() const override {
@@ -314,8 +353,8 @@ public:
         return Ptr(new ForeachStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Foreach;
     }
 
     SourceLocation getStart() const override {
@@ -353,8 +392,8 @@ public:
         return Ptr(new ThrowStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Throw;
     }
 
     SourceLocation getStart() const override {
@@ -391,8 +430,8 @@ public:
         return Ptr(new SimpleStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Simple;
     }
 
     SourceLocation getStart() const override {
@@ -429,8 +468,8 @@ public:
         return Ptr(new ScopeGuardStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::ScopeGuard;
     }
 
     SourceLocation getStart() const override {
@@ -468,8 +507,8 @@ public:
         return Ptr(new WhileStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::While;
     }
 
     SourceLocation getStart() const override {
@@ -508,8 +547,8 @@ public:
         return Ptr(new DoWhileStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::DoWhile;
     }
 
     SourceLocation getStart() const override {
@@ -549,8 +588,8 @@ public:
         return Ptr(new ForStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::For;
     }
 
     SourceLocation getStart() const override {
@@ -614,8 +653,8 @@ public:
         return Ptr(new SwitchStatement());
     }
 
-    void accept(StatementVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Switch;
     }
 
     SourceLocation getStart() const override {

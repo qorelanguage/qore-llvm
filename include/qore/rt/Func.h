@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_RT_FUNC_H_
 
 #include "qore/rt/Types.h"
+#include "qore/Id.h"
 
 namespace qore {
 namespace rt {
@@ -39,21 +40,11 @@ namespace rt {
 extern "C" void incRef(qvalue ptr) noexcept;
 extern "C" void decRef(qvalue ptr);                               //FIXME EXCEPTIONS!!!
 
-extern "C" qvalue createString(const char *str, qsize len);       //THROWS, encoding
 extern "C" qvalue convertIntToString(qvalue i);                     //THROWS
 extern "C" qvalue convertStringToInt(qvalue p);                     //THROWS?
 
 extern "C" qvalue opAddIntInt(qvalue left, qvalue right);       //THROWS
 extern "C" qvalue opAddStringString(qvalue left, qvalue right);       //THROWS
-
-extern "C" GlobalVariable *gv_create(qvalue init);              //THROWS
-extern "C" qvalue gv_free(GlobalVariable *gv) noexcept;
-extern "C" void gv_read_lock(GlobalVariable *gv) noexcept;
-extern "C" void gv_read_unlock(GlobalVariable *gv) noexcept;
-extern "C" void gv_write_lock(GlobalVariable *gv) noexcept;
-extern "C" void gv_write_unlock(GlobalVariable *gv) noexcept;
-extern "C" qvalue gv_get(GlobalVariable *gv) noexcept;
-extern "C" void gv_set(GlobalVariable *gv, qvalue v) noexcept;
 
 //extern "C" void combine(Exception &original, Exception &secondary);
 
@@ -68,6 +59,21 @@ extern "C" qvalue qint_to_qvalue(qint i) noexcept;
 extern "C" qvalue any_to_string(qvalue a);
 
 //XXX naming conventions
+
+
+class Context;
+
+extern "C" void createString(Context &ctx, Id id, const char *str, qsize len);       //THROWS, encoding
+extern "C" qvalue loadString(Context &ctx, Id id) noexcept;
+
+extern "C" void createGlobal(Context &ctx, Id id, bool refCounted, qvalue initValue);
+
+extern "C" void gv_read_lock(Context &ctx, Id id) noexcept;
+extern "C" void gv_read_unlock(Context &ctx, Id id) noexcept;
+extern "C" void gv_write_lock(Context &ctx, Id id) noexcept;
+extern "C" void gv_write_unlock(Context &ctx, Id id) noexcept;
+extern "C" qvalue gv_get(Context &ctx, Id id) noexcept;
+extern "C" void gv_set(Context &ctx, Id id, qvalue v) noexcept;
 
 } // namespace rt
 } // namespace qore

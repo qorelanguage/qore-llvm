@@ -27,27 +27,37 @@
 #include "gmock/gmock.h"
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
-#include "qore/comp/semantic/Analyzer.h"
-#include "qore/comp/semantic/Dump.h"
+#include "qore/comp/sem/Analyzer.h"
+#include "qore/comp/sem/Dump.h"
 
 namespace qore {
 namespace comp {
-namespace semantic {
+namespace sem {
 
 class AnalyzerTest : public qtif::LineTest {
+};
+
+class AnalyzerCallbacksImpl : public AnalyzerCallbacks {
+    void addInitializer(Statement::Ptr stmt) {
+    }
 };
 
 TEST_P(AnalyzerTest, Run) {
     DirectiveProcessor dp(ctx, getSrc());
     Parser parser(ctx, dp);
-    ast::Script::Ptr script = parser.parseScript();
-    Analyzer analyzer(ctx);
-    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
-    semantic::dump(ctx, output, *root);
+    ast::Script::Ptr scriptNode = parser.parseScript();
+    AnalyzerCallbacksImpl cb;
+    as::Script script;
+    Analyzer analyzer(ctx, cb, script);
+    for (auto &decl : scriptNode->members) {
+        analyzer.processDeclaration(*decl);
+    }
+    analyzer.processPendingDeclarations();
+    dump(output, analyzer);
 }
 
 QTIF_TEST_CASE(AnalyzerTest, "semantic/");
 
-} // namespace semantic
+} // namespace sem
 } // namespace comp
 } // namespace qore

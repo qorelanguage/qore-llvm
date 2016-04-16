@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_CONTEXT_H_
 
 #include <string>
+#include <utility>
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/SourceManager.h"
 #include "qore/comp/String.h"
@@ -84,6 +85,18 @@ public:
      */
     DiagBuilder report(DiagId diagId, SourceLocation location) {
         return diagMgr.report(diagId, location);
+    }
+
+    const std::string &getString(String::Ref ref) const {
+        return stringTable.get(ref);
+    }
+
+    std::string decode(const SourceLocation &location) const {
+        assert(location.sourceId >= 0);
+        std::pair<int, int> l = srcMgr.get(location.sourceId).decodeLocation(location.offset);
+        std::ostringstream str;
+        str << l.first << ":" << l.second;
+        return str.str();
     }
 
 private:

@@ -54,11 +54,15 @@ public:
         lt_qsize = llvm::Type::getInt64Ty(ctx);
         lt_qvalue = llvm::StructType::create(lt_qint, "qvalue", false);
         lt_qvalue_ptr = lt_qvalue->getPointerTo();
-        lt_GlobalVariable_ptr = llvm::StructType::create(ctx, "GlobalVariable")->getPointerTo();
+        lt_Context = llvm::StructType::create(ctx, "Context");
+        lt_Context_ptr = lt_Context->getPointerTo();
 
         lt_char_ptr = llvm::Type::getInt8PtrTy(ctx);
         lt_int32 = llvm::Type::getInt32Ty(ctx);
+        lt_Id = llvm::Type::getInt32Ty(ctx);
         lt_exc = llvm::StructType::get(lt_char_ptr, lt_int32, nullptr);
+
+        lt_bool = llvm::Type::getInt1Ty(ctx);
 
         lf_personality = llvm::Function::Create(llvm::FunctionType::get(lt_int32, true),
                 llvm::Function::ExternalLinkage, "__gxx_personality_v0", module.get());
@@ -68,18 +72,20 @@ public:
         lf_decRef = createFunction("decRef", lt_void, lt_qvalue);
         lf_decRefNoexcept = createFunction("decRefNoexcept", lt_void, lt_qvalue, lt_qvalue);
 
-        lf_gv_create = createFunction("gv_create", lt_GlobalVariable_ptr, lt_qvalue);
-        lf_gv_free = createFunction("gv_free", lt_qvalue, lt_GlobalVariable_ptr);
-        lf_gv_read_lock = createFunction("gv_read_lock", lt_void, lt_GlobalVariable_ptr);
-        lf_gv_read_unlock = createFunction("gv_read_unlock", lt_void, lt_GlobalVariable_ptr);
-        lf_gv_write_lock = createFunction("gv_write_lock", lt_void, lt_GlobalVariable_ptr);
-        lf_gv_write_unlock = createFunction("gv_write_unlock", lt_void, lt_GlobalVariable_ptr);
-        lf_gv_get = createFunction("gv_get", lt_qvalue, lt_GlobalVariable_ptr);
-        lf_gv_set = createFunction("gv_set", lt_void, lt_GlobalVariable_ptr, lt_qvalue);
+        lf_gv_read_lock = createFunction("gv_read_lock", lt_void, lt_Context_ptr, lt_Id);
+        lf_gv_read_unlock = createFunction("gv_read_unlock", lt_void, lt_Context_ptr, lt_Id);
+        lf_gv_write_lock = createFunction("gv_write_lock", lt_void, lt_Context_ptr, lt_Id);
+        lf_gv_write_unlock = createFunction("gv_write_unlock", lt_void, lt_Context_ptr, lt_Id);
+        lf_gv_get = createFunction("gv_get", lt_qvalue, lt_Context_ptr, lt_Id);
+        lf_gv_set = createFunction("gv_set", lt_void, lt_Context_ptr, lt_Id, lt_qvalue);
 
         lf_qint_to_qvalue = createFunction("qint_to_qvalue", lt_qvalue, lt_qint);
 
-        lf_createString = createFunction("createString", lt_qvalue, lt_char_ptr, lt_qsize);
+        lf_createString = createFunction("createString", lt_void, lt_Context_ptr, lt_Id, lt_char_ptr, lt_qsize);
+        lf_loadString = createFunction("loadString", lt_qvalue, lt_Context_ptr, lt_Id);
+
+        lf_createGlobal = createFunction("createGlobal", lt_void, lt_Context_ptr, lt_Id, lt_bool, lt_qvalue);
+
 
         //FIXME this can be done generically using rt::meta::*Desc
         convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::IntToString)]
@@ -118,6 +124,30 @@ public:
                 llvm::Function::ExternalLinkage, name, module.get());
     }
 
+    llvm::Function *createFunction(const std::string &name, llvm::Type *ret, llvm::Type *arg1, llvm::Type *arg2,
+            llvm::Type *arg3) {
+        llvm::Type *args[3] = {arg1, arg2, arg3};
+        return llvm::Function::Create(
+                llvm::FunctionType::get(ret, args, false),
+                llvm::Function::ExternalLinkage, name, module.get());
+    }
+
+    llvm::Function *createFunction(const std::string &name, llvm::Type *ret, llvm::Type *arg1, llvm::Type *arg2,
+            llvm::Type *arg3, llvm::Type *arg4) {
+        llvm::Type *args[4] = {arg1, arg2, arg3, arg4};
+        return llvm::Function::Create(
+                llvm::FunctionType::get(ret, args, false),
+                llvm::Function::ExternalLinkage, name, module.get());
+    }
+
+    llvm::Value *wrapId(Id id) {
+        return llvm::ConstantInt::get(lt_Id, id, false);
+    }
+
+    llvm::Value *wrapBool(bool b) {
+        return llvm::ConstantInt::get(lt_bool, b, false);
+    }
+
 public:
     llvm::LLVMContext &ctx;
     std::unique_ptr<llvm::Module> module;
@@ -128,17 +158,18 @@ public:
     llvm::Type *lt_qsize;
     llvm::Type *lt_qvalue;
     llvm::Type *lt_qvalue_ptr;
-    llvm::Type *lt_GlobalVariable_ptr;
+    llvm::Type *lt_Context;
+    llvm::Type *lt_Context_ptr;
     llvm::Type *lt_char_ptr;
     llvm::Type *lt_int32;
     llvm::Type *lt_exc;
+    llvm::Type *lt_Id;
+    llvm::Type *lt_bool;
 
     llvm::Function *lf_incRef;
     llvm::Function *lf_decRef;
     llvm::Function *lf_decRefNoexcept;
 
-    llvm::Function *lf_gv_create;
-    llvm::Function *lf_gv_free;
     llvm::Function *lf_gv_read_lock;
     llvm::Function *lf_gv_read_unlock;
     llvm::Function *lf_gv_write_lock;
@@ -149,6 +180,8 @@ public:
     llvm::Function *lf_qint_to_qvalue;
 
     llvm::Function *lf_createString;
+    llvm::Function *lf_loadString;
+    llvm::Function *lf_createGlobal;
 
     llvm::Function *lf_personality;
 

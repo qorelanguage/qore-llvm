@@ -12,11 +12,15 @@ add_library(comp STATIC
     Source.cpp
     SourceManager.cpp
     Token.cpp
-    semantic/Analyzer.cpp
-    semantic/Namespace.cpp
-    semantic/TypeRegistry.cpp
+    sem/Analyzer.cpp
+    sem/Builder.cpp
+    sem/ClassScope.cpp
+    sem/FunctionOverloadPack.cpp
+    sem/NamespaceScope.cpp
+    as/Type.cpp
 )
 
 target_link_libraries(comp
     common
+    rt
 )

@@ -15,9 +15,9 @@ our N::C g2;
 #$!SemaAmbiguousClass@11:5
 -root namespace
   -namespace N @1:11
-    -class C @2:11
     -namespace N @4:15
       -class C @5:15
+    -class C @2:11
     -our <error> g @8:13
   -our <error> g1 @10:7
   -our <error> g2 @11:10

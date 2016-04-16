@@ -25,151 +25,185 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Definition of the semantic analyzer.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_ANALYZER_H_
 #define INCLUDE_QORE_COMP_SEM_ANALYZER_H_
 
-#include "qore/ir/stmt/ExpressionStatement.h"
-#include "qore/ir/stmt/GlobalVariableInitializationStatement.h"
-#include "qore/ir/stmt/GlobalVariableFinalizationStatement.h"
-#include "qore/comp/sem/GlobalScope.h"
-#include "qore/comp/sem/ExpressionAnalyzer.h"
-#include "qore/comp/sem/ExpressionAnalyzer2.h"
-#include "qore/as/as.h"
+#include <qore/comp/sem/Core.h>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+#include "qore/comp/Context.h"
+#include "qore/comp/as/Script.h"
+#include "qore/comp/ast/Declaration.h"
+#include "qore/comp/sem/NamespaceScope.h"
+#include "qore/comp/sem/stmt/Statement.h"
+#include "qore/comp/sem/Builder.h"
+#include "qore/comp/ast/Script.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-class Analyzer {
+
+class AnalyzerCallbacks {
 
 public:
-    using StmtConsumer = std::function<void(ir::Statement::Ptr)>;
+    virtual ~AnalyzerCallbacks() = default;
+
+    /*
+     * - interactive mode passes it through pass2 and runs it directly using interpreter
+     * - normal mode puts it in qinit
+     */
+    virtual void addInitializer(Statement::Ptr stmt) = 0;
+};
+
+class Analyzer : private Core {
 
 public:
-    explicit Analyzer(qore::comp::Context &ctx) : ctx(ctx) {
-    }
+    Analyzer(Context &ctx, AnalyzerCallbacks &callbacks, as::Script &script);
 
-    void doDecl(qore::comp::ast::Declaration &decl, qore::comp::sem::GlobalScope &scope) {
-        if (decl.getKind() == qore::comp::ast::Declaration::Kind::GlobalVariable) {
-            qore::comp::ast::GlobalVariable &gv = static_cast<qore::comp::ast::GlobalVariable &>(decl);
-            scope.declareGlobalVariable(gv.name, scope.resolveType(gv.type));
-        }
-    }
+    void processDeclaration(ast::Declaration &decl);
 
-    void doStmt(qore::comp::ast::Statement &stmt, qore::comp::sem::BlockScope &scope, StmtConsumer consumer) {
-        qore::comp::sem::ExpressionAnalyzer ea(ctx, scope);
-        static_cast<qore::comp::ast::ExpressionStatement &>(stmt).expression->accept(ea);
-        consumer(ir::ExpressionStatement::create(std::move(ea.result)));
+    void processPendingDeclarations();
+
+    /*
+     * transforms ast to ir (it does type checking, resolves all symbols and operators, decides
+     * which local variables need to be shared), adds closures to the queue (?)
+     */
+    Statement::Ptr doPass1(BlockScope &scope, ast::Statement &stmt);
+
+    /*
+     * transforms ir to as (exception safety, temporaries, ...)
+     */
+    void doPass2(Builder &builder, Statement &stmt);
+
+    //void finalizeScope ???
+
+    const NamespaceScope &getRootNamespace() {
+        return rootNamespace;
     }
 
 private:
-    qore::comp::Context &ctx;
-};
-
-class GlobalScope2 : public GlobalScope {
-
-public:
-    GlobalScope2(Context &ctx, ir::Script &script, ir::UserFunction &qinit, ir::UserFunction &qdone)
-            : GlobalScope(ctx, script), qinit(qinit), qdone(qdone) {
+    void addToQueue(ClassScope &c) override {
+        classQueue.push_back(&c);
     }
 
-protected:
-    void addGlobalVariableInitializer(const ir::GlobalVariable &gv, ir::Expression::Ptr init) override {
-        qinit.add(ir::GlobalVariableInitializationStatement::create(gv, std::move(init)));
-        qdone.add(ir::GlobalVariableFinalizationStatement::create(gv));
+    void addToQueue(GlobalVariableInfo &gv) override {
+        globalVariableQueue.push_back(&gv);
+    }
+
+    void addToQueue(FunctionOverloadPack &fp) override {
+        functionOverloadPackQueue.push_back(&fp);
+    }
+
+    void addToQueue(BlockScope &f, ast::Statement &stmt) override {
+        functionQueue.emplace_back(&f, &stmt);
+    }
+
+    const as::Type &resolveType(const NamespaceScope &scope, const ast::Type &node) const override;
+
+    as::GlobalVariable &createGlobalVariable(String::Ref name, SourceLocation location, const as::Type &type) override;
+
+    as::StringLiteral createStringLiteral(const std::string &value) override;
+
+    std::pair<const as::Type *, const as::Type *> createClassTypes(const ClassScope &c) override {
+        const as::Type &t1 = script.createType(rt::Type::Object, c.getFullName(), false);
+        const as::Type &t2 = script.createType(rt::Type::Object, c.getFullName(), true);
+        return std::make_pair(&t1, &t2);
     }
 
 private:
-    ir::UserFunction &qinit;
-    ir::UserFunction &qdone;
+    AnalyzerCallbacks &callbacks;
+    as::Script &script;
+    NamespaceScope rootNamespace;
+    std::vector<ClassScope *> classQueue;
+    std::vector<GlobalVariableInfo *> globalVariableQueue;
+    std::vector<FunctionOverloadPack *> functionOverloadPackQueue;
+    std::vector<std::pair<BlockScope *, ast::Statement *>> functionQueue;
+    std::map<String::Ref, std::pair<const as::Type *, const as::Type *>> builtinTypes;
+    std::unordered_map<std::string, as::StringLiteral> strings;
+
+    template<typename OS> friend void dump(OS, Analyzer &);
 };
 
-void analyze(Context &ctx, ir::Script &script, ast::Script &s) {
-    Analyzer a(ctx);
-    ir::UserFunction &qmain = script.createUserFunction("qmain");
-    ir::UserFunction &qinit = script.createUserFunction("qinit");
-    ir::UserFunction &qdone = script.createUserFunction("qdone");
-    GlobalScope2 globalScope(ctx, script, qinit, qdone);
-    BlockScopeImpl mainScope(ctx, globalScope, qmain);
+class ACB : public AnalyzerCallbacks {
 
-    for (auto &decl : s.members) {
-        a.doDecl(*decl, globalScope);
+public:
+    void addInitializer(Statement::Ptr stmt) override {
+        initializers.push_back(std::move(stmt));
     }
 
-    for (auto &stmt : s.statements) {
-        a.doStmt(*stmt, mainScope, [&qmain](ir::Statement::Ptr stmt){qmain.add(std::move(stmt));});
+    std::vector<Statement::Ptr> initializers;
+};
+
+class QMS : public Scope {      //temporary - simulates the scope of qmain
+
+public:
+    explicit QMS(const Scope &rootScope) : rootScope(rootScope) {
     }
 
-    //analyzer.finalize top level scope -> generate lifetime end for locals
-}
-
-void analyze2(as::S &sss, ir::Script &script) {
-    for (auto &sl : script.getStringLiterals()) {
-        assert(sl->getId() == sss.strings.size());
-        sss.strings.push_back(sl->getValue());
-        //assign ids here?
+    const as::Type &resolveType(ast::Type &node) const override {
+        return rootScope.resolveType(node);
     }
-    sss.globalCount = script.getGlobalVariables().size();
 
-    for (auto &ff : script.getFunctions()) {
-        if (ff->getKind() != qore::ir::Function::Kind::User) {
-            continue;
-        }
-        qore::ir::UserFunction &uf = static_cast<qore::ir::UserFunction &>(*ff);
-
-        as::F::Ptr fptr = as::F::create(uf.getName());
-        qore::as::F &f = *fptr;
-        sss.functions.push_back(std::move(fptr));
-        if (uf.getName() == "qmain") {
-            sss.qmain = &f;
-        } else if (uf.getName() == "qinit") {
-            sss.qinit = &f;
-        } else if (uf.getName() == "qdone") {
-            sss.qdone = &f;
-        }
-
-        qore::as::Builder b(f);
-        qore::comp::sem::FA fa(f);
-        for (auto &s : uf.getStatements()) {
-            switch (s->getKind()) {
-                case ir::Statement::Kind::GlobalVariableInitialization: {
-                    qore::ir::GlobalVariableInitializationStatement &stmt
-                            = static_cast<qore::ir::GlobalVariableInitializationStatement &>(*s);
-
-                    as::Id temp = fa.getTemp();
-                    qore::comp::sem::ExpressionAnalyzer2 ea2(fa, b);
-                    ea2.evaluate(temp, stmt.getExpression());
-                    b.createMakeGlobal(stmt.getGlobalVariable().getId(), temp);     //throws
-                    fa.doneTemp(temp);
-                    break;
-                }
-                case ir::Statement::Kind::GlobalVariableFinalization: {
-                    qore::ir::GlobalVariableFinalizationStatement &stmt
-                            = static_cast<qore::ir::GlobalVariableFinalizationStatement &>(*s);
-                    as::Id temp = fa.getTemp();
-                    b.createFreeGlobal(temp, stmt.getGlobalVariable().getId());
-                    if (!stmt.getGlobalVariable().getType().isPrimitive()) {
-                        b.createRefDec(temp, nullptr);      //throws
-                    }
-                    fa.doneTemp(temp);
-                    break;
-                }
-                case ir::Statement::Kind::Expression: {
-                    qore::comp::sem::ExpressionAnalyzer2 ea2(fa, b);
-                    ea2.evaluateNoValue(static_cast<const qore::ir::ExpressionStatement &>(*s).getExpression());
-                    break;
-                }
-                default:
-                    QORE_NOT_IMPLEMENTED("");
-            }
-        }
-        fa.done();
-        b.createRetVoid();
-        b.dump();
+    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+        std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(type);
+        LocalVariable &lv = *ptr;
+        locals.push_back(std::move(ptr));
+        return lv;
     }
+
+    Symbol resolveSymbol(ast::Name &name) const override {
+        return rootScope.resolveSymbol(name);
+    }
+
+private:
+    const Scope &rootScope;
+    std::vector<std::unique_ptr<LocalVariable>> locals;
+};
+
+
+inline as::Script::Ptr analyze(Context &ctx, ast::Script &node) {
+    as::Script::Ptr script = util::make_unique<as::Script>();
+
+    ACB cb;
+    Analyzer analyzer(ctx, cb, *script);
+
+    for (auto &decl : node.members) {
+        analyzer.processDeclaration(*decl);
+    }
+    analyzer.processPendingDeclarations();
+
+    //once we support functions, synthesize qmain and put it into funcQueue before calling processPendingDeclarations();
+    QMS qms(analyzer.getRootNamespace());
+    BlockScopeImpl topLevelScope(qms);
+
+    std::vector<Statement::Ptr> temp;
+    for (auto &stmt : node.statements) {
+        temp.push_back(analyzer.doPass1(topLevelScope, *stmt));
+    }
+    temp.push_back(topLevelScope.finalize());
+
+    FunctionBuilder mainBuilder("qmain");
+    for (auto &stmt : temp) {
+        analyzer.doPass2(mainBuilder, *stmt);
+    }
+    mainBuilder.createRetVoid();
+    mainBuilder.build(*script);
+
+    //qinit - pass2
+    FunctionBuilder initBuilder("qinit");
+    for (auto &stmt : cb.initializers) {
+        analyzer.doPass2(initBuilder, *stmt);
+    }
+    initBuilder.createRetVoid();
+    initBuilder.build(*script);
+
+    return script;
 }
 
 } // namespace sem

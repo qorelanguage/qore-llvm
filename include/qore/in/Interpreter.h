@@ -33,43 +33,64 @@
 
 #include <unordered_map>
 #include <vector>
-#include "qore/ir/decl/Function.h"
-#include "qore/ir/decl/GlobalVariable.h"
-#include "qore/ir/decl/Script.h"
-#include "qore/ir/decl/StringLiteral.h"
-#include "qore/ir/stmt/Statement.h"
 #include "qore/rt/Types.h"
+#include "qore/rt/Context.h"
 #include "qore/in/FunctionInterpreter.h"
+#include "qore/comp/as/Script.h"
 
 namespace qore {
 namespace in {
 
-class Interpreter {
+class X {
 
 public:
-    explicit Interpreter(as::S &script) {
-        strings.reserve(script.strings.size());
-        for (auto &s : script.strings) {
-            strings.push_back(rt::createString(s.c_str(), s.length()));
-        }
-
-        globals.resize(script.globalCount);
+    explicit X(comp::as::Function &f) : f(f), temps(f.getTempCount()), locals(f.getLocalCount()) {
     }
 
-    ~Interpreter() {
-        for (rt::qvalue v : strings) {
-            rt::decRef(v);
-        }
+    void setLocal(comp::as::LocalSlot slot, rt::qvalue value) {
+        locals[slot.getIndex()] = value;
     }
 
-    void run(as::F &f) {
-        FunctionInterpreter fi(f, strings, globals);
-        fi.run();
+    rt::qvalue getLocal(comp::as::LocalSlot slot) {
+        return locals[slot.getIndex()];
+    }
+
+    void setTemp(comp::as::Temp temp, rt::qvalue value) {
+        temps[temp.getIndex()] = value;
+    }
+
+    rt::qvalue getTemp(comp::as::Temp temp) {
+        return temps[temp.getIndex()];
+    }
+
+    comp::as::Block &getBlock(Id id) {
+        return f.getBlock(id);
     }
 
 private:
-    std::vector<rt::qvalue> strings;
-    std::vector<rt::GlobalVariable *> globals;
+    comp::as::Function &f;
+    std::vector<rt::qvalue> temps;
+    std::vector<rt::qvalue> locals;
+};
+
+class Interpreter {
+
+public:
+    static void interpret(comp::as::Script &script) {
+        rt::Context rtCtx;
+        run(rtCtx, script.getFunction("qinit"));
+        run(rtCtx, script.getFunction("qmain"));
+    }
+
+private:
+    Interpreter() {
+    }
+
+    static void run(rt::Context &ctx, comp::as::Function &f) {
+        X x(f);
+        FunctionInterpreter<X> fi(ctx, x);
+        fi.run(x.getBlock(0));
+    }
 };
 
 } // namespace in

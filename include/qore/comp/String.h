@@ -79,7 +79,7 @@ public:
      * \param ref a valid reference to the string table
      * \return the string value
      */
-    const std::string &get(String::Ref ref) {
+    const std::string &get(String::Ref ref) const {
         assert(ref > 0 && ref <= data.size());
         return data[ref - 1];
     }

@@ -666,7 +666,7 @@ ast::VarDeclExpression::Ptr Parser::varDecl(ast::Type type) {
     ast::Expression::Ptr initializer;
     if (tokenType() == TokenType::Equals) {
         consume();
-        initializer = condExpr();
+        initializer = assignmentExpr();
     }
     return ast::VarDeclExpression::create(std::move(type), name, location, std::move(initializer));
 }

@@ -34,6 +34,7 @@
 #include <cassert>
 #include <utility>
 #include <vector>
+#include "qore/common/Exceptions.h"
 #include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Type.h"
 #include "qore/comp/ast/Visitor.h"
@@ -48,13 +49,65 @@ namespace ast {
 class Expression : public Node {
 
 public:
+    enum class Kind {
+        Error,
+        Literal,
+        Name,
+        List,
+        Hash,
+        VarDecl,
+        Cast,
+        Call,
+        Unary,
+        Index,
+        Access,
+        New,
+        Binary,
+        Instanceof,
+        Conditional,
+        Assignment,
+        ListOperation,
+        Regex,
+        Closure,
+    };
+
+public:
     using Ptr = std::unique_ptr<Expression>;                //!< Pointer type.
+
+    virtual Kind getKind() const = 0;
 
     /**
      * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
      * \param visitor the visitor to call
      */
-    virtual void accept(ExpressionVisitor &visitor) = 0;
+    template<typename R>
+    R accept(ExpressionVisitor<R> &v) {
+        #define CASE(K) case Kind::K: return v.visit(static_cast<K ## Expression &>(*this))
+        switch (getKind()) {
+            CASE(Error);
+            CASE(Literal);
+            CASE(Name);
+            CASE(List);
+            CASE(Hash);
+            CASE(VarDecl);
+            CASE(Cast);
+            CASE(Call);
+            CASE(Unary);
+            CASE(Index);
+            CASE(Access);
+            CASE(New);
+            CASE(Binary);
+            CASE(Instanceof);
+            CASE(Conditional);
+            CASE(Assignment);
+            CASE(ListOperation);
+            CASE(Regex);
+            CASE(Closure);
+            default:
+                QORE_UNREACHABLE("");
+        }
+        #undef CASE
+    }
 };
 
 /**
@@ -78,8 +131,8 @@ public:
         return Ptr(new ErrorExpression(token));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Error;
     }
 
     SourceLocation getStart() const override {
@@ -116,8 +169,8 @@ public:
         return Ptr(new LiteralExpression(token));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Literal;
     }
 
     SourceLocation getStart() const override {
@@ -154,8 +207,8 @@ public:
         return Ptr(new NameExpression(std::move(name)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Name;
     }
 
     SourceLocation getStart() const override {
@@ -199,8 +252,8 @@ public:
         return Ptr(new ListExpression(startToken, std::move(data), endToken));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::List;
     }
 
     SourceLocation getStart() const override {
@@ -246,8 +299,8 @@ public:
         return Ptr(new HashExpression(startToken, std::move(data), endToken));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Hash;
     }
 
     SourceLocation getStart() const override {
@@ -291,8 +344,8 @@ public:
         return Ptr(new VarDeclExpression(std::move(type), name, location, std::move(initializer)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::VarDecl;
     }
 
     SourceLocation getStart() const override {
@@ -300,7 +353,7 @@ public:
     }
 
     SourceLocation getEnd() const override {
-        return location;
+        return initializer ? initializer->getEnd() : location;
     }
 
 private:
@@ -332,8 +385,8 @@ public:
         return Ptr(new CastExpression());
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Cast;
     }
 
     SourceLocation getStart() const override {
@@ -414,8 +467,8 @@ public:
         return Ptr(new CallExpression(std::move(calee), std::move(argList)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Call;
     }
 
     SourceLocation getStart() const override {
@@ -456,8 +509,8 @@ public:
         return Ptr(new UnaryExpression(std::move(expr), op, postfix));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Unary;
     }
 
     SourceLocation getStart() const override {
@@ -498,8 +551,8 @@ public:
         return Ptr(new IndexExpression(std::move(left), std::move(right), endToken));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Index;
     }
 
     SourceLocation getStart() const override {
@@ -539,8 +592,8 @@ public:
         return Ptr(new AccessExpression(std::move(expr), token));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Access;
     }
 
     SourceLocation getStart() const override {
@@ -581,8 +634,8 @@ public:
         return Ptr(new NewExpression(location, std::move(name), std::move(argList)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::New;
     }
 
     SourceLocation getStart() const override {
@@ -624,8 +677,8 @@ public:
         return Ptr(new BinaryExpression(std::move(left), op, std::move(right)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Binary;
     }
 
     SourceLocation getStart() const override {
@@ -665,8 +718,8 @@ public:
         return Ptr(new InstanceofExpression(std::move(expr), std::move(name)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Instanceof;
     }
 
     SourceLocation getStart() const override {
@@ -707,8 +760,8 @@ public:
         return Ptr(new ConditionalExpression(std::move(condition), std::move(exprTrue), std::move(exprFalse)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Conditional;
     }
 
     SourceLocation getStart() const override {
@@ -750,8 +803,8 @@ public:
         return Ptr(new AssignmentExpression(std::move(left), op, std::move(right)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Assignment;
     }
 
     SourceLocation getStart() const override {
@@ -791,8 +844,8 @@ public:
         return Ptr(new ListOperationExpression(op, std::move(args)));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::ListOperation;
     }
 
     SourceLocation getStart() const override {
@@ -834,8 +887,8 @@ public:
         return Ptr(new RegexExpression(std::move(left), op, regex));
     }
 
-    void accept(ExpressionVisitor &v) override {
-        v.visit(*this);
+    Kind getKind() const override {
+        return Kind::Regex;
     }
 
     SourceLocation getStart() const override {

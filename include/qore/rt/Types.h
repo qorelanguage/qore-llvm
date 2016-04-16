@@ -51,7 +51,7 @@ union qvalue {
     qptr p;
 };
 
-struct GlobalVariable;
+//struct GlobalVariable;
 
 struct Exception {
 };
@@ -69,6 +69,8 @@ enum class Type {
     List,
     Hash,
     Object,
+
+    Error,  //should this be here?
 };
 
 enum class Op {

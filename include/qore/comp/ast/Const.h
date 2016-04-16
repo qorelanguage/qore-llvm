@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_AST_CONST_H_
 #define INCLUDE_QORE_COMP_AST_CONST_H_
 
+#include "qore/comp/ast/Declaration.h"
 #include "qore/comp/ast/Modifiers.h"
 #include "qore/comp/ast/Expression.h"
 

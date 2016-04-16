@@ -40,14 +40,14 @@
 namespace qore {
 namespace cg {
 
-void CodeGen::process(as::S &script) {
+void CodeGen::process(comp::as::Script &script) {
     Helper helper;
 
     ScriptCompiler scriptCompiler(helper, script);
 
-    for (auto &f : script.functions) {
-        scriptCompiler.compile(*f);
-    }
+    //XXX for all functions
+    scriptCompiler.compile(script.getFunction("qinit"));
+    scriptCompiler.compile(script.getFunction("qmain"));
 
     std::unique_ptr<llvm::Module> module = std::move(helper.module);
 

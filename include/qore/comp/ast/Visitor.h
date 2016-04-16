@@ -72,6 +72,7 @@ class ClosureExpression;
 /**
  * \brief Interface for expression visitors.
  */
+template<typename R>
 class ExpressionVisitor {
 
 public:
@@ -81,115 +82,115 @@ public:
      * \brief Called by an ErrorExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(ErrorExpression &node) = 0;
+    virtual R visit(ErrorExpression &node) = 0;
 
     /**
      * \brief Called by a LiteralExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(LiteralExpression &node) = 0;
+    virtual R visit(LiteralExpression &node) = 0;
 
     /**
      * \brief Called by a NameExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(NameExpression &node) = 0;
+    virtual R visit(NameExpression &node) = 0;
 
     /**
      * \brief Called by a ListExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(ListExpression &node) = 0;
+    virtual R visit(ListExpression &node) = 0;
 
     /**
      * \brief Called by a HashExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(HashExpression &node) = 0;
+    virtual R visit(HashExpression &node) = 0;
 
     /**
      * \brief Called by a VarDeclExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(VarDeclExpression &node) = 0;
+    virtual R visit(VarDeclExpression &node) = 0;
 
     /**
      * \brief Called by a CastExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(CastExpression &node) = 0;
+    virtual R visit(CastExpression &node) = 0;
 
     /**
      * \brief Called by a CallExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(CallExpression &node) = 0;
+    virtual R visit(CallExpression &node) = 0;
 
     /**
      * \brief Called by a UnaryExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(UnaryExpression &node) = 0;
+    virtual R visit(UnaryExpression &node) = 0;
 
     /**
      * \brief Called by an IndexExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(IndexExpression &node) = 0;
+    virtual R visit(IndexExpression &node) = 0;
 
     /**
      * \brief Called by an AccessExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(AccessExpression &node) = 0;
+    virtual R visit(AccessExpression &node) = 0;
 
     /**
      * \brief Called by a NewExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(NewExpression &node) = 0;
+    virtual R visit(NewExpression &node) = 0;
 
     /**
      * \brief Called by a BinaryExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(BinaryExpression &node) = 0;
+    virtual R visit(BinaryExpression &node) = 0;
 
     /**
      * \brief Called by a InstanceofExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(InstanceofExpression &node) = 0;
+    virtual R visit(InstanceofExpression &node) = 0;
 
     /**
      * \brief Called by a ConditionalExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(ConditionalExpression &node) = 0;
+    virtual R visit(ConditionalExpression &node) = 0;
 
     /**
      * \brief Called by an AssignmentExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(AssignmentExpression &node) = 0;
+    virtual R visit(AssignmentExpression &node) = 0;
 
     /**
      * \brief Called by an ListOperationExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(ListOperationExpression &node) = 0;
+    virtual R visit(ListOperationExpression &node) = 0;
 
     /**
      * \brief Called by a RegexExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(RegexExpression &node) = 0;
+    virtual R visit(RegexExpression &node) = 0;
 
     /**
      * \brief Called by a ClosureExpression AST node.
      * \param node the node being visited
      */
-    virtual void visit(ClosureExpression &node) = 0;
+    virtual R visit(ClosureExpression &node) = 0;
 
 protected:
     ExpressionVisitor() = default;
@@ -204,6 +205,7 @@ private:
 /**
  * \brief Interface for statement visitors.
  */
+template<typename R>
 class StatementVisitor {
 
 public:
@@ -213,85 +215,85 @@ public:
      * \brief Called by an EmptyStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(EmptyStatement &node) = 0;
+    virtual R visit(EmptyStatement &node) = 0;
 
     /**
      * \brief Called by an ExpressionStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(ExpressionStatement &node) = 0;
+    virtual R visit(ExpressionStatement &node) = 0;
 
     /**
      * \brief Called by a CompoundStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(CompoundStatement &node) = 0;
+    virtual R visit(CompoundStatement &node) = 0;
 
     /**
      * \brief Called by a ReturnStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(ReturnStatement &node) = 0;
+    virtual R visit(ReturnStatement &node) = 0;
 
     /**
      * \brief Called by an IfStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(IfStatement &node) = 0;
+    virtual R visit(IfStatement &node) = 0;
 
     /**
      * \brief Called by a TryStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(TryStatement &node) = 0;
+    virtual R visit(TryStatement &node) = 0;
 
     /**
      * \brief Called by a ForeachStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(ForeachStatement &node) = 0;
+    virtual R visit(ForeachStatement &node) = 0;
 
     /**
      * \brief Called by a ThrowStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(ThrowStatement &node) = 0;
+    virtual R visit(ThrowStatement &node) = 0;
 
     /**
      * \brief Called by a SimpleStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(SimpleStatement &node) = 0;
+    virtual R visit(SimpleStatement &node) = 0;
 
     /**
      * \brief Called by a ScopeGuardStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(ScopeGuardStatement &node) = 0;
+    virtual R visit(ScopeGuardStatement &node) = 0;
 
     /**
      * \brief Called by a WhileStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(WhileStatement &node) = 0;
+    virtual R visit(WhileStatement &node) = 0;
 
     /**
      * \brief Called by a DoWhileStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(DoWhileStatement &node) = 0;
+    virtual R visit(DoWhileStatement &node) = 0;
 
     /**
      * \brief Called by a ForStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(ForStatement &node) = 0;
+    virtual R visit(ForStatement &node) = 0;
 
     /**
      * \brief Called by a SwitchStatement AST node.
      * \param node the node being visited
      */
-    virtual void visit(SwitchStatement &node) = 0;
+    virtual R visit(SwitchStatement &node) = 0;
 
 protected:
     StatementVisitor() = default;

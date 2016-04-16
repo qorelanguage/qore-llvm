@@ -36,6 +36,7 @@
 #include "qore/common/Logging.h"
 #include "qore/common/Loggable.h"
 #include "qore/rt/Meta.h"
+#include "qore/rt/Context.h"
 
 namespace qore {
 namespace rt {
@@ -110,17 +111,12 @@ protected:
 private:
     std::string str;
 
-    friend qvalue createString(const char *, qsize);
+    friend void Context::createString(Id id, const char *value, qsize length);
+
     friend qvalue convertIntToString(qvalue i);
     friend qvalue convertStringToInt(qvalue p);
     friend qvalue opAddStringString(qvalue left, qvalue right);
 };
-
-qvalue createString(const char *data, qsize length) {
-    qvalue v;
-    v.p = new QString(std::string(data, length));
-    return v;
-}
 
 qvalue convertIntToString(qvalue i) {
     LOG("convertIntToString(" << i.i << ")");
@@ -198,58 +194,6 @@ qvalue int_unbox(qvalue p) noexcept {
 }
 
 
-
-///////////////////////////////////////////////////////////////
-/// GlobalVariable
-///////////////////////////////////////////////////////////////
-class RwLock {
-};
-
-struct GlobalVariable {
-    RwLock lock;
-    qvalue value;
-};
-
-GlobalVariable *gv_create(qvalue init) {
-    GlobalVariable *gv = new GlobalVariable();
-    LOG("GlobalVariable " << gv << " created");
-    gv->value = init;
-    return gv;
-}
-
-qvalue gv_free(GlobalVariable *gv) noexcept {
-    LOG("GlobalVariable " << gv << " destroyed");
-    qvalue v =  gv->value;
-    delete gv;
-    return v;
-}
-
-void gv_read_lock(GlobalVariable *gv) noexcept {
-    LOG("GlobalVariable " << gv << " read lock");
-}
-
-void gv_read_unlock(GlobalVariable *gv) noexcept {
-    LOG("GlobalVariable " << gv << " read unlock");
-}
-
-void gv_write_lock(GlobalVariable *gv) noexcept {
-    LOG("GlobalVariable " << gv << " write lock");
-}
-
-void gv_write_unlock(GlobalVariable *gv) noexcept {
-    LOG("GlobalVariable " << gv << " write unlock");
-}
-
-qvalue gv_get(GlobalVariable *gv) noexcept {
-    LOG("GlobalVariable " << gv << " get");
-    return gv->value;
-}
-
-void gv_set(GlobalVariable *gv, qvalue v) noexcept {
-    LOG("GlobalVariable " << gv << " set");
-    gv->value = v;
-}
-
 extern "C" qvalue qint_to_qvalue(qint i) noexcept {
     qvalue v;
     v.i = i;
@@ -260,19 +204,36 @@ extern "C" qvalue qint_to_qvalue(qint i) noexcept {
 ////FIXME
 //}
 
-static qvalue convert_any(qvalue src, Type type) {
+static qvalue convert_any(qvalue src, Type type, bool &b) {
     const meta::ConversionDesc &desc = meta::findConversion(src.p->getType(), type);
     if (src.p->getType() == Type::Int) {
         src = int_unbox(src);
     }
-    return desc.f(src);
+    b = false;
+    if (desc.conversion != Conversion::Identity) {
+        src = desc.f(src);
+        if (desc.retType != Type::Int) {
+            b = true;
+        }
+    }
+    return src;
 }
 
 qvalue op_generic(Op o, qvalue left, qvalue right) {
     const meta::BinaryOperatorDesc &desc = meta::findOperator(o, left.p->getType(), right.p->getType());
 
     //FIXME exceptions are not handled correctly
-    qvalue ret = desc.f(convert_any(left, desc.leftType), convert_any(right, desc.rightType));
+    bool leftRef;
+    bool rightRef;
+    left = convert_any(left, desc.leftType, leftRef);
+    right = convert_any(right, desc.rightType, rightRef);
+    qvalue ret = desc.f(left, right);
+    if (rightRef) {
+        decRef(right);
+    }
+    if (leftRef) {
+        decRef(left);
+    }
     if (desc.retType == Type::Int) {
         ret = int_box(ret);
     }
@@ -292,7 +253,49 @@ qvalue op_addeq_any_any(qvalue left, qvalue right) {
 }
 
 qvalue any_to_string(qvalue a) {
-    return convert_any(a, Type::String);
+    bool b;
+    return convert_any(a, Type::String, b);
+}
+
+void Context::createString(Id id, const char *value, qsize length) {
+    strings.resize(id + 1);
+    strings[id].set(new QString(std::string(value, length)));
+}
+
+void createString(Context &ctx, Id id, const char *str, qsize len) {
+    ctx.createString(id, str, len);
+}
+
+qvalue loadString(Context &ctx, Id id) noexcept {
+    return ctx.loadString(id);
+}
+
+void createGlobal(Context &ctx, Id id, bool refCounted, qvalue initValue) {
+    ctx.createGlobal(id, refCounted, initValue);
+}
+
+void gv_read_lock(Context &ctx, Id id) noexcept {
+    ctx.gv_read_lock(id);
+}
+
+void gv_read_unlock(Context &ctx, Id id) noexcept {
+    ctx.gv_read_unlock(id);
+}
+
+void gv_write_lock(Context &ctx, Id id) noexcept {
+    ctx.gv_write_lock(id);
+}
+
+void gv_write_unlock(Context &ctx, Id id) noexcept {
+    ctx.gv_write_unlock(id);
+}
+
+qvalue gv_get(Context &ctx, Id id) noexcept {
+    return ctx.gv_get(id);
+}
+
+void gv_set(Context &ctx, Id id, qvalue v) noexcept {
+    ctx.gv_set(id, v);
 }
 
 } // namespace rt

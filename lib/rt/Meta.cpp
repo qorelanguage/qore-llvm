@@ -37,8 +37,7 @@ namespace rt {
 namespace meta {
 
 static qvalue conv_id(qvalue v) {
-    incRef(v);
-    return v;
+    QORE_UNREACHABLE("");
 }
 
 #define C(C, F, RET, ARG)           { Conversion::C, F, Type::RET, Type::ARG }

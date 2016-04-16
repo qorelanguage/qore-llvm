@@ -30,7 +30,10 @@
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/ast/Dump.h"
+#include "qore/comp/sem/Analyzer.h"
+#include "qore/in/Interpreter.h"
 #include "qore/cg/CodeGen.h"
+#include "DiagPrinter.h"
 #include "Interactive.h"
 
 /// \cond NoDoxygen
@@ -63,21 +66,11 @@ void test(bool file, std::string str) {
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    qore::ir::Script scr;
-    qore::comp::sem::analyze(ctx, scr, *script);
-
-    qore::as::S sss;
-    qore::comp::sem::analyze2(sss, scr);
-
+    qore::comp::as::Script::Ptr sss = qore::comp::sem::analyze(ctx, *script);
     LOG("-------------------------------------------------------------------------------");
-    {
-        qore::in::Interpreter i(sss);
-        i.run(*sss.qinit);
-        i.run(*sss.qmain);
-        i.run(*sss.qdone);
-    }
+    qore::in::Interpreter::interpret(*sss);
     LOG("-------------------------------------------------------------------------------");
-    qore::cg::CodeGen::process(sss);
+    qore::cg::CodeGen::process(*sss);
 }
 
 /// \endcond NoDoxygen
@@ -92,7 +85,7 @@ int main(int argc, char *argv[]) {
     std::string src = R"(
 int i;
 our string s;
-s = "A";
+s = string s1 = "A";
 i = i + 1;
 s = s + i;
 i += "2";
@@ -104,13 +97,13 @@ a += "8";
 
 )";
 
-//    std::istringstream stream(src);
-//    std::streambuf* cin_backup = std::cin.rdbuf(stream.rdbuf());
-//    qore::interactive();
-//    std::cin.rdbuf(cin_backup);
+    std::istringstream stream(src);
+    std::streambuf* cin_backup = std::cin.rdbuf(stream.rdbuf());
+    qore::interactive();
+    std::cin.rdbuf(cin_backup);
 
 //    test(true, argv[1]);
-    test(false, src);
+//    test(false, src);
 
     return 0;
 }

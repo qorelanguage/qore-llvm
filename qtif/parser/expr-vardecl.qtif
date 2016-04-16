@@ -3,8 +3,9 @@ x::y a;
 *x a;
 *x::y a;
 x a = b;
+x a = b = c;
 #$$$
--Script@1:1-6:1
+-Script@1:1-7:1
   .members:
   .statements:
     -ExpressionStatement@1:1-1:4
@@ -37,7 +38,7 @@ x a = b;
           .name: a
     -ExpressionStatement@5:1-5:8
       .expression:
-        -VarDeclExpression@5:1-5:3
+        -VarDeclExpression@5:1-5:7
           .type:
             -NameType@5:1-5:1
               .name: x
@@ -45,3 +46,19 @@ x a = b;
           .initializer:
             -NameExpression@5:7-5:7
               .name: b
+    -ExpressionStatement@6:1-6:12
+      .expression:
+        -VarDeclExpression@6:1-6:11
+          .type:
+            -NameType@6:1-6:1
+              .name: x
+          .name: a
+          .initializer:
+            -AssignmentExpression@6:7-6:11
+              .left:
+                -NameExpression@6:7-6:7
+                  .name: b
+              .op: Equals =
+              .right:
+                -NameExpression@6:11-6:11
+                  .name: c

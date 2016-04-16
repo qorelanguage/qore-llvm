@@ -33,11 +33,9 @@
 
 #include <string>
 #include <vector>
-#include "qore/ir/decl/Function.h"
-#include "qore/ir/decl/GlobalVariable.h"
-#include "qore/ir/decl/StringLiteral.h"
-#include "qore/as/as.h"
+#include "qore/comp/as/is.h"
 #include "Helper.h"
+#include "qore/cg/CodeGen.h"
 
 namespace qore {
 namespace cg {
@@ -45,22 +43,19 @@ namespace cg {
 class ScriptCompiler {
 
 public:
-    ScriptCompiler(Helper &helper, as::S &script);
-    void compile(as::F &f);
+    ScriptCompiler(Helper &helper, comp::as::Script &script);
+    void compile(comp::as::Function &f);
 
 private:
-    void addStringLiteral(as::Id id, const std::string &value);
+    void addStringLiteral(Id id, const std::string &value);
 
     void doBlock();
 
 private:
     Helper &helper;
-    llvm::IRBuilder<> bInit;
-    llvm::IRBuilder<> bDone;
 
-    std::vector<llvm::GlobalVariable *> strings;
-    std::vector<llvm::GlobalVariable *> globals;
-    std::unordered_map<as::F *, llvm::Function *> functions;
+    llvm::GlobalVariable *rtctx;
+    std::unordered_map<comp::as::Function *, llvm::Function *> functions;
 };
 
 } // namespace cg

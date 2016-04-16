@@ -63,7 +63,7 @@ namespace ast {
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
-class DumpVisitor : public StatementVisitor, public ExpressionVisitor {
+class DumpVisitor : public StatementVisitor<void>, public ExpressionVisitor<void> {
 
 public:
     DumpVisitor(Context &ctx, OS &os) : ctx(ctx), os(os) {

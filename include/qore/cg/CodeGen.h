@@ -31,7 +31,10 @@
 #ifndef INCLUDE_QORE_CG_CODEGEN_H_
 #define INCLUDE_QORE_CG_CODEGEN_H_
 
-#include "qore/as/as.h"
+#include <memory>
+#include <string>
+#include <vector>
+#include "qore/comp/as/Script.h"
 
 namespace qore {
 namespace cg {
@@ -39,7 +42,7 @@ namespace cg {
 class CodeGen {
 
 public:
-    static void process(as::S &script);
+    static void process(comp::as::Script &script);
 
 };
 

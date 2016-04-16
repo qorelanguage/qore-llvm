@@ -35,187 +35,163 @@
 #include <cassert>
 #include <vector>
 #include "qore/common/Exceptions.h"
-#include "qore/as/as.h"
+#include "qore/comp/as/is.h"
 #include "qore/rt/Func.h"
+#include "qore/rt/Context.h"
 
 namespace qore {
 namespace in {
 
+template<typename F>
 class FunctionInterpreter {
 
 public:
-    FunctionInterpreter(as::F &f, std::vector<rt::qvalue> &strings, std::vector<rt::GlobalVariable *> &globals) : f(f),
-            strings(strings), globals(globals), locals(f.localCount), temps(f.tempCount), b(f.blocks[0].get()), i(0) {
+    explicit FunctionInterpreter(rt::Context &ctx, F &f) : ctx(ctx), f(f) {
     }
 
-    FunctionInterpreter(as::F &f, std::vector<rt::qvalue> &strings, std::vector<rt::GlobalVariable *> &globals,
-            std::vector<rt::qvalue> &locals) : FunctionInterpreter(f, strings, globals) {
-        std::copy(locals.begin(), locals.end(), this->locals.begin());
-    }
-
-    std::vector<rt::qvalue> getLocals() {
-        return locals;
-    }
-
-    void run() {
+    void run(comp::as::Block &bb) {
+        comp::as::Block *b = &bb;
+        Id i = 0;
         while (true) {
             assert(i < b->instructions.size());
-            as::Instruction *ins = b->instructions[i++].get();
-
-            switch (ins->getKind()) {
-                case as::Instruction::Kind::IntConstant:
-                    exec(static_cast<as::IntConstant *>(ins));
-                    break;
-                case as::Instruction::Kind::GetLocal:
-                    exec(static_cast<as::GetLocal *>(ins));
-                    break;
-                case as::Instruction::Kind::SetLocal:
-                    exec(static_cast<as::SetLocal *>(ins));
-                    break;
-                case as::Instruction::Kind::LoadString:
-                    exec(static_cast<as::LoadString *>(ins));
-                    break;
-                case as::Instruction::Kind::RefInc:
-                    exec(static_cast<as::RefInc *>(ins));
-                    break;
-                case as::Instruction::Kind::RefDec:
-                    exec(static_cast<as::RefDec *>(ins));
-                    break;
-//                RefDecNoexcept,           6
-                case as::Instruction::Kind::ReadLockGlobal:
-                    exec(static_cast<as::ReadLockGlobal *>(ins));
-                    break;
-                case as::Instruction::Kind::ReadUnlockGlobal:
-                    exec(static_cast<as::ReadUnlockGlobal *>(ins));
-                    break;
-                case as::Instruction::Kind::WriteLockGlobal:
-                    exec(static_cast<as::WriteLockGlobal *>(ins));
-                    break;
-                case as::Instruction::Kind::WriteUnlockGlobal:
-                    exec(static_cast<as::WriteUnlockGlobal *>(ins));
-                    break;
-                case as::Instruction::Kind::GetGlobal:
-                    exec(static_cast<as::GetGlobal *>(ins));
-                    break;
-                case as::Instruction::Kind::SetGlobal:
-                    exec(static_cast<as::SetGlobal *>(ins));
-                    break;
-                case as::Instruction::Kind::MakeGlobal:
-                    exec(static_cast<as::MakeGlobal *>(ins));
-                    break;
-                case as::Instruction::Kind::FreeGlobal:
-                    exec(static_cast<as::FreeGlobal *>(ins));
-                    break;
-//                LandingPad,               15
-//                Rethrow,                  16
-                case as::Instruction::Kind::BinaryOperator:
-                    exec(static_cast<as::BinaryOperator *>(ins));
-                    break;
-                case as::Instruction::Kind::Conversion:
-                    exec(static_cast<as::Conversion *>(ins));
-                    break;
-                case as::Instruction::Kind::RetVoid:
-                    return;
-                default:
-                    QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins->getKind()));
+            comp::as::Instruction *ins = b->instructions[i++].get();
+            try {
+                switch (ins->getKind()) {
+                    case comp::as::Instruction::Kind::IntConstant:
+                        exec(static_cast<comp::as::IntConstant *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::GetLocal:
+                        exec(static_cast<comp::as::GetLocal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::SetLocal:
+                        exec(static_cast<comp::as::SetLocal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::LoadString:
+                        exec(static_cast<comp::as::LoadString *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::RefInc:
+                        exec(static_cast<comp::as::RefInc *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::RefDec:
+                        exec(static_cast<comp::as::RefDec *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::ReadLockGlobal:
+                        exec(static_cast<comp::as::ReadLockGlobal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::ReadUnlockGlobal:
+                        exec(static_cast<comp::as::ReadUnlockGlobal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::WriteLockGlobal:
+                        exec(static_cast<comp::as::WriteLockGlobal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::WriteUnlockGlobal:
+                        exec(static_cast<comp::as::WriteUnlockGlobal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::GetGlobal:
+                        exec(static_cast<comp::as::GetGlobal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::SetGlobal:
+                        exec(static_cast<comp::as::SetGlobal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::MakeGlobal:
+                        exec(static_cast<comp::as::MakeGlobal *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::BinaryOperator:
+                        exec(static_cast<comp::as::BinaryOperator *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::Conversion:
+                        exec(static_cast<comp::as::Conversion *>(ins));
+                        break;
+                    case comp::as::Instruction::Kind::RetVoid:
+                        return;
+                    case comp::as::Instruction::Kind::MakeStringLiteral:
+                        exec(static_cast<comp::as::MakeStringLiteral *>(ins));
+                        break;
+                    default:
+                        QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins->getKind()));
+                }
+            } catch (rt::Exception &e) {
+                if (ins->getLpad()) {
+                    QORE_UNREACHABLE("Exception thrown by an instruction with no landing pad");
+                }
+                b = ins->getLpad();
+                i = 1;
+                //temps[static_cast<comp::as::LandingPad *>(b->instructions[0].get())->getDest()] = e;
+                QORE_NOT_IMPLEMENTED("");
             }
         }
     }
 
 private:
-    void exec(as::IntConstant *ins) {
-        temps[ins->getDest()] = rt::qint_to_qvalue(ins->getValue());
+    void exec(comp::as::IntConstant *ins) {
+        f.setTemp(ins->getDest(), rt::qint_to_qvalue(ins->getValue()));
     }
 
-    void exec(as::GetLocal *ins) {
-        temps[ins->getDest()] = locals[ins->getSlot()];
+    void exec(comp::as::GetLocal *ins) {
+        f.setTemp(ins->getDest(), f.getLocal(ins->getSlot()));
     }
 
-    void exec(as::SetLocal *ins) {
-        locals[ins->getSlot()] = temps[ins->getSrc()];
+    void exec(comp::as::SetLocal *ins) {
+        f.setLocal(ins->getSlot(), f.getTemp(ins->getSrc()));
     }
 
-    void exec(as::LoadString *ins) {
-        temps[ins->getDest()] = strings[ins->getId()];
+    void exec(comp::as::LoadString *ins) {
+        f.setTemp(ins->getDest(), ctx.loadString(ins->getStringLiteral().getId()));
     }
 
-    void exec(as::RefInc *ins) {
-        rt::incRef(temps[ins->getTemp()]);
+    void exec(comp::as::RefInc *ins) {
+        rt::incRef(f.getTemp(ins->getTemp()));
     }
 
-    void exec(as::RefDec *ins) {
-        try {
-            rt::decRef(temps[ins->getTemp()]);
-        } catch (rt::Exception &e) {
-            caught(e, ins->getLpad());
-        }
+    void exec(comp::as::RefDec *ins) {
+        rt::decRef(f.getTemp(ins->getTemp()));
     }
 
-    void exec(as::ReadLockGlobal *ins) {
-        rt::gv_read_lock(globals[ins->getId()]);
+    void exec(comp::as::ReadLockGlobal *ins) {
+        ctx.gv_read_lock(ins->getGlobalVariable().getId());
     }
 
-    void exec(as::ReadUnlockGlobal *ins) {
-        rt::gv_read_unlock(globals[ins->getId()]);
+    void exec(comp::as::ReadUnlockGlobal *ins) {
+        ctx.gv_read_unlock(ins->getGlobalVariable().getId());
     }
 
-    void exec(as::WriteLockGlobal *ins) {
-        rt::gv_write_lock(globals[ins->getId()]);
+    void exec(comp::as::WriteLockGlobal *ins) {
+        ctx.gv_write_lock(ins->getGlobalVariable().getId());
     }
 
-    void exec(as::WriteUnlockGlobal *ins) {
-        rt::gv_write_unlock(globals[ins->getId()]);
+    void exec(comp::as::WriteUnlockGlobal *ins) {
+        ctx.gv_write_unlock(ins->getGlobalVariable().getId());
     }
 
-    void exec(as::GetGlobal *ins) {
-        temps[ins->getDest()] = rt::gv_get(globals[ins->getId()]);
+    void exec(comp::as::GetGlobal *ins) {
+        f.setTemp(ins->getDest(), ctx.gv_get(ins->getGlobalVariable().getId()));
     }
 
-    void exec(as::SetGlobal *ins) {
-        rt::gv_set(globals[ins->getId()], temps[ins->getSrc()]);
+    void exec(comp::as::SetGlobal *ins) {
+        ctx.gv_set(ins->getGlobalVariable().getId(), f.getTemp(ins->getSrc()));
     }
 
-    void exec(as::MakeGlobal *ins) {
-        globals[ins->getId()] = rt::gv_create(temps[ins->getSrc()]);    //TODO exception
+    void exec(comp::as::MakeGlobal *ins) {
+        ctx.createGlobal(ins->getGlobalVariable().getId(), !ins->getGlobalVariable().getType().isPrimitive(),
+                f.getTemp(ins->getInitValue()));
+        //TODO exception
     }
 
-    void exec(as::FreeGlobal *ins) {
-        temps[ins->getDest()] = rt::gv_free(globals[ins->getId()]);
+    void exec(comp::as::BinaryOperator *ins) {
+        f.setTemp(ins->getDest(), ins->getDesc().f(f.getTemp(ins->getLeft()), f.getTemp(ins->getRight())));
     }
 
-    void exec(as::BinaryOperator *ins) {
-        try {
-            temps[ins->getDest()] = ins->getDesc().f(temps[ins->getLeft()], temps[ins->getRight()]);
-        } catch (rt::Exception &e) {
-            caught(e, ins->getLpad());
-        }
+    void exec(comp::as::Conversion *ins) {
+        f.setTemp(ins->getDest(), ins->getDesc().f(f.getTemp(ins->getArg())));
     }
 
-    void exec(as::Conversion *ins) {
-        try {
-            temps[ins->getDest()] = ins->getDesc().f(temps[ins->getArg()]);
-        } catch (rt::Exception &e) {
-            caught(e, ins->getLpad());
-        }
+    void exec(comp::as::MakeStringLiteral *ins) {
+        ctx.createString(ins->getStringLiteral().getId(), ins->getValue().c_str(), ins->getValue().length());
     }
 
 private:
-    void caught(rt::Exception &e, as::Id lpad) {
-        assert(lpad != as::InvalidId);
-        b = f.blocks[lpad].get();
-        i = 1;
-        //temps[static_cast<as::LandingPad *>(b->instructions[0].get())->getDest()] = e;
-        QORE_NOT_IMPLEMENTED("");
-    }
-
-private:
-    as::F &f;
-    std::vector<rt::qvalue> &strings;
-    std::vector<rt::GlobalVariable *> &globals;
-    std::vector<rt::qvalue> locals;
-    std::vector<rt::qvalue> temps;
-    as::Block *b;
-    as::Id i;
+    rt::Context &ctx;
+    F &f;
 };
 
 } // namespace in
