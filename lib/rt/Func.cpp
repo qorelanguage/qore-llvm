@@ -298,5 +298,13 @@ void gv_set(Context &ctx, Id id, qvalue v) noexcept {
     ctx.gv_set(id, v);
 }
 
+extern "C" void decRefNoexcept(qvalue v, qvalue ex) noexcept {
+    try {
+        decRef(v);
+    } catch (Exception &e) {
+        //link e with ex
+    }
+}
+
 } // namespace rt
 } // namespace qore
