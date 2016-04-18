@@ -68,7 +68,7 @@ public:
             //                  code f = sub() {    f();    }
             rhs = evalAndConvert(*node.initializer, type);
         } else {
-            rhs = defaultFor(core, type);
+            rhs = core.scriptBuilder.defaultFor(type);
         }
         return LifetimeStartExpression::create(lv, std::move(rhs));
     }
@@ -100,7 +100,7 @@ public:
             std::string s = core.ctx.getSrcMgr().get(node.token.location.sourceId).getRange(
                     node.token.location.offset, node.token.length);
             s = s.substr(1, s.length() - 2);
-            return StringLiteralRefExpression::create(core.createStringLiteral(s));
+            return StringLiteralRefExpression::create(core.scriptBuilder.createStringLiteral(s));
         } else if (node.token.type == qore::comp::TokenType::Integer) {
             //FIXME proper integer literal parsing
             std::string s = core.ctx.getSrcMgr().get(node.token.location.sourceId).getRange(
@@ -147,19 +147,6 @@ public:
     Expression::Ptr visit(ast::ListOperationExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(ast::RegexExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(ast::ClosureExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-
-    static Expression::Ptr defaultFor(Core &core, const as::Type &type) {
-        if (type == as::Type::String) {
-            return StringLiteralRefExpression::create(core.createStringLiteral(""));
-        }
-        if (type == as::Type::Int) {
-            return IntLiteralExpression::create(0);
-        }
-        if (type == as::Type::Any || type == as::Type::Error || type.isOptional()) {
-            return NothingLiteralExpression::create();
-        }
-        QORE_NOT_IMPLEMENTED("Default value");
-    }
 
 private:
     Expression::Ptr eval(ast::Expression &node) {

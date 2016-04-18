@@ -84,9 +84,9 @@ private:
 };
 
 template<typename OS>
-void dump(OS os, Analyzer &a) {
-    Dump<OS> dump(a.ctx, os);
-    dump.dump(a.rootNamespace);
+void dump(OS os, Context &ctx, NamespaceScope &ns) {
+    Dump<OS> dump(ctx, os);
+    dump.dump(ns);
 }
 
 } // namespace sem

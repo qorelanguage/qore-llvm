@@ -138,52 +138,51 @@ private:
     std::vector<rt::qvalue> locals;
 };
 
-class Interactive : private AnalyzerCallbacks {
+class Interactive {
 
 public:
-    explicit Interactive(Context &compCtx) : compCtx(compCtx), dp(compCtx), parser(compCtx, dp),
-            analyzer(compCtx, *this, script) {
+    explicit Interactive(Context &compCtx) : compCtx(compCtx) {
     }
 
     void doIt() {
+        StdinWrapper dp(compCtx);
+        Parser parser(compCtx, dp);
         InteractiveFunctionBuilder mainBuilder;
-        InteractiveScope topScope(analyzer.getRootNamespace());
+        Core analyzer(compCtx);
+        NamespaceScope root(analyzer);
+        InteractiveScope topScope(root);
         BlockScopeImpl blockScope(topScope);
         while (true) {
             comp::Parser::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
             if (declOrStmt.decl) {
-                analyzer.processDeclaration(*declOrStmt.decl);
+                root.processDeclaration(*declOrStmt.decl);
                 analyzer.processPendingDeclarations();
             } else if (declOrStmt.stmt) {
-                execute(mainBuilder, analyzer.doPass1(blockScope, *declOrStmt.stmt));
-                mainBuilder.clear();
+                Statement::Ptr stmt = analyzer.doPass1(blockScope, *declOrStmt.stmt);
+                auto initializers = analyzer.scriptBuilder.takeInitializers();
+                for (auto &stmt : initializers) {
+                    analyzer.doPass2(mainBuilder, *stmt);
+                }
+                analyzer.doPass2(mainBuilder, *stmt);
+                execute(mainBuilder);
             } else {
                 break;
             }
         }
-        execute(mainBuilder, blockScope.finalize());
+        analyzer.doPass2(mainBuilder, *blockScope.finalize());
+        execute(mainBuilder);
     }
 
 private:
-    void addInitializer(Statement::Ptr stmt) override {
-        InteractiveFunctionBuilder builder;
-        execute(builder, std::move(stmt));
-    }
-
-    void execute(InteractiveFunctionBuilder &builder, Statement::Ptr stmt) {
-        analyzer.doPass2(builder, *stmt);
+    void execute(InteractiveFunctionBuilder &builder) {
         builder.createRetVoid();
-
         in::FunctionInterpreter<InteractiveFunctionBuilder> fi(rtCtx, builder);
         fi.run(builder.getBlock(0));
+        builder.clear();
     }
 
 private:
     Context &compCtx;
-    StdinWrapper dp;
-    Parser parser;
-    as::Script script;
-    Analyzer analyzer;
     rt::Context rtCtx;
 };
 

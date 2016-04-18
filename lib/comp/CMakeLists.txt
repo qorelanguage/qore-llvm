@@ -16,6 +16,7 @@ add_library(comp STATIC
     sem/Builder.cpp
     sem/ClassScope.cpp
     sem/FunctionOverloadPack.cpp
+    sem/GlobalVariableInfo.cpp
     sem/NamespaceScope.cpp
     as/Type.cpp
 )

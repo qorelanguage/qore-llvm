@@ -50,34 +50,9 @@ public:
     using Ptr = std::unique_ptr<Script>;
 
 public:
-    Script() : stringCount(0) {
-    }
-
-    StringLiteral createStringLiteral() {
-        return StringLiteral(stringCount++);
-    }
-
-    GlobalVariable &createGlobalVariable(String::Ref name, SourceLocation location, const Type &type) {
-        std::unique_ptr<GlobalVariable> ptr
-            = util::make_unique<GlobalVariable>(globalVariables.size(), name, location, type);
-        GlobalVariable &gv = *ptr;
-        globalVariables.push_back(std::move(ptr));
-        return gv;
-    }
-
-    const Type &createType(rt::Type runtimeType, std::string name, bool optional) {
-        std::unique_ptr<Type> ptr = util::make_unique<Type>(runtimeType, std::move(name), optional, false);
-        Type &t = *ptr;
-        types.push_back(std::move(ptr));
-        return t;
-    }
-
-    Function &createFunction(std::string name, Id tempCount, Id localCount, std::vector<Block::Ptr> blocks) {
-        std::unique_ptr<Function> ptr
-            = util::make_unique<Function>(tempCount, localCount, std::move(blocks));
-        Function &f = *ptr;
-        functions[name] = std::move(ptr);
-        return f;
+    Script(std::vector<std::unique_ptr<Type>> types, std::vector<std::unique_ptr<GlobalVariable>> globalVariables,
+            std::map<std::string, std::unique_ptr<Function>> functions) : types(std::move(types)),
+            globalVariables(std::move(globalVariables)), functions(std::move(functions)) {
     }
 
     Function &getFunction(const std::string &name) {
@@ -93,10 +68,9 @@ private:
     Script &operator=(Script &&) = delete;
 
 private:
-    Id stringCount;
-    std::map<std::string, std::unique_ptr<Function>> functions;
-    std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
     std::vector<std::unique_ptr<Type>> types;
+    std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
+    std::map<std::string, std::unique_ptr<Function>> functions;
 };
 
 } // namespace as

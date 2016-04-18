@@ -52,8 +52,7 @@ public:
     using Ptr = std::unique_ptr<GlobalVariableInfo>;
 
 public:
-    GlobalVariableInfo(Core &core, NamespaceScope &parent, ast::GlobalVariable &node) : core(core),
-            parent(parent), node(node), gv(nullptr) {
+    GlobalVariableInfo(NamespaceScope &parent, ast::GlobalVariable &node) : parent(parent), node(node), gv(nullptr) {
     }
 
     String::Ref getName() const {
@@ -74,13 +73,9 @@ public:
         return *gv;
     }
 
-    void pass2() {
-        assert(gv == nullptr);
-        gv = &core.createGlobalVariable(getName(), getLocation(), core.resolveType(parent, node.type));
-    }
+    void pass2();
 
 private:
-    Core &core;
     NamespaceScope &parent;
     ast::GlobalVariable &node;
     as::GlobalVariable *gv;

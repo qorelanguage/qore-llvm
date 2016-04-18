@@ -48,8 +48,7 @@ public:
     using Ptr = std::unique_ptr<ClassScope>;
 
 public:
-    ClassScope(Core &core, NamespaceScope &parent, ast::Class &node) : core(core),
-            parent(parent), node(node), types(core.createClassTypes(*this)) {
+    ClassScope(Core &core, NamespaceScope &parent, ast::Class &node) : core(core), parent(parent), node(node) {
 //        for (auto &decl : node.members) {
 //            try {processDeclaration(*decl); } catch (ReportedError &) { ignore }
 //        }
@@ -65,16 +64,10 @@ public:
         return node.name.last().location;
     }
 
-    std::pair<const as::Type *, const as::Type *> getTypes() const {
-        return types;
-    }
-
 private:
     Core &core;
     NamespaceScope &parent;
     ast::Class &node;
-
-    const std::pair<const as::Type *, const as::Type *> types;
 
     template<typename OS> friend class Dump;
 };

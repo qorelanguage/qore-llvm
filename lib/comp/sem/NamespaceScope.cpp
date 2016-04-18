@@ -40,36 +40,40 @@ namespace comp {
 namespace sem {
 
 void NamespaceScope::processDeclaration(ast::Declaration &decl) {
-    switch (decl.getKind()) {
-        case ast::Declaration::Kind::Namespace: {
-            ast::Namespace &namespaceDecl = static_cast<ast::Namespace &>(decl);
-            NamespaceScope &parent = findParentFor(namespaceDecl.name);
-            parent.processNamespaceDeclaration(namespaceDecl);
-            break;
+    try {
+        switch (decl.getKind()) {
+            case ast::Declaration::Kind::Namespace: {
+                ast::Namespace &namespaceDecl = static_cast<ast::Namespace &>(decl);
+                NamespaceScope &parent = findParentFor(namespaceDecl.name);
+                parent.processNamespaceDeclaration(namespaceDecl);
+                break;
+            }
+            case ast::Declaration::Kind::Class: {
+                ast::Class &classDecl = static_cast<ast::Class &>(decl);
+                NamespaceScope &parent = findParentFor(classDecl.name);
+                parent.processClassDeclaration(classDecl);
+                break;
+            }
+            case ast::Declaration::Kind::Constant:
+                //add to const-queue
+                QORE_NOT_IMPLEMENTED("");
+            case ast::Declaration::Kind::Function: {
+                ast::Function &functionDecl = static_cast<ast::Function &>(decl);
+                NamespaceScope &parent = findParentFor(functionDecl.name);
+                parent.processFunctionDeclaration(functionDecl);
+                break;
+            }
+            case ast::Declaration::Kind::GlobalVariable: {
+                ast::GlobalVariable &globalVariableDecl = static_cast<ast::GlobalVariable &>(decl);
+                NamespaceScope &parent = findParentFor(globalVariableDecl.name);
+                parent.processGlobalVariableDeclaration(globalVariableDecl);
+                break;
+            }
+            default:
+                QORE_UNREACHABLE("Invalid ast::Declaration::Kind");
         }
-        case ast::Declaration::Kind::Class: {
-            ast::Class &classDecl = static_cast<ast::Class &>(decl);
-            NamespaceScope &parent = findParentFor(classDecl.name);
-            parent.processClassDeclaration(classDecl);
-            break;
-        }
-        case ast::Declaration::Kind::Constant:
-            //add to const-queue
-            QORE_NOT_IMPLEMENTED("");
-        case ast::Declaration::Kind::Function: {
-            ast::Function &functionDecl = static_cast<ast::Function &>(decl);
-            NamespaceScope &parent = findParentFor(functionDecl.name);
-            parent.processFunctionDeclaration(functionDecl);
-            break;
-        }
-        case ast::Declaration::Kind::GlobalVariable: {
-            ast::GlobalVariable &globalVariableDecl = static_cast<ast::GlobalVariable &>(decl);
-            NamespaceScope &parent = findParentFor(globalVariableDecl.name);
-            parent.processGlobalVariableDeclaration(globalVariableDecl);
-            break;
-        }
-        default:
-            QORE_UNREACHABLE("Invalid ast::Declaration::Kind");
+    } catch (ReportedError &) {
+        // ignored, diagnostic has been reported already
     }
 }
 
@@ -115,7 +119,7 @@ void NamespaceScope::processClassDeclaration(ast::Class &node) {
 }
 
 void NamespaceScope::processGlobalVariableDeclaration(ast::GlobalVariable &node) {
-    GlobalVariableInfo::Ptr ptr = util::make_unique<GlobalVariableInfo>(core, *this, node);
+    GlobalVariableInfo::Ptr ptr = util::make_unique<GlobalVariableInfo>(*this, node);
 
     //TODO check modifiers, reserved words
     GlobalVariableInfo *old = findGlobalVariable(ptr->getName());
@@ -237,6 +241,33 @@ Symbol NamespaceScope::resolveSymbol(ast::Name &name) const {
         }
     }
     QORE_NOT_IMPLEMENTED("");
+}
+
+const as::Type &NamespaceScope::resolveType(ast::Type &node) const {
+    if (node.getKind() == ast::Type::Kind::Implicit) {
+        //return nothing/void
+        QORE_NOT_IMPLEMENTED("");
+    }
+    if (node.getKind() == ast::Type::Kind::Invalid || !node.getName().isValid()) {
+        return as::Type::Error;
+    }
+
+    assert(node.getKind() == ast::Type::Kind::Basic || node.getKind() == ast::Type::Kind::Asterisk);
+    bool asterisk = node.getKind() == ast::Type::Kind::Asterisk;
+
+    if (node.getName().isSimple()) {
+        const as::Type *t = core.scriptBuilder.getBuiltinType(node.getName().last(), asterisk);
+        if (t) {
+            return *t;
+        }
+    }
+
+    try {
+        ClassScope &c = resolveClass(node.getName());
+        return core.scriptBuilder.getClassType(c, asterisk);
+    } catch (ReportedError &) {
+        return as::Type::Error;
+    }
 }
 
 } // namespace sem

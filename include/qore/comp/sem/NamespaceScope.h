@@ -78,6 +78,10 @@ public:
         return parentNamespace == nullptr;
     }
 
+    ScriptBuilder &getScriptBuilder() {
+        return core.scriptBuilder;
+    }
+
     /**
      * \brief Finds a namespace with given name.
      * \param name the name to find
@@ -92,9 +96,7 @@ public:
 
     ClassScope &resolveClass(const ast::Name &name) const;
 
-    const as::Type &resolveType(ast::Type &node) const override {
-        return core.resolveType(*this, node);
-    }
+    const as::Type &resolveType(ast::Type &node) const override;
 
     Symbol resolveSymbol(ast::Name &name) const override;
 

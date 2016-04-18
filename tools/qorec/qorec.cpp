@@ -103,7 +103,7 @@ a += "8";
     std::cin.rdbuf(cin_backup);
 
 //    test(true, argv[1]);
-//    test(false, src);
+    test(false, src);
 
     return 0;
 }

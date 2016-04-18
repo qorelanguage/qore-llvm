@@ -23,34 +23,25 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-#include "../Qtif.h"
-#include "gmock/gmock.h"
-#include "qore/comp/DirectiveProcessor.h"
-#include "qore/comp/Parser.h"
-#include "qore/comp/sem/Analyzer.h"
-#include "qore/comp/sem/Dump.h"
+///
+/// \file
+/// \brief TODO file description
+///
+//------------------------------------------------------------------------------
+#include "qore/comp/sem/GlobalVariableInfo.h"
+#include "qore/comp/sem/NamespaceScope.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-class AnalyzerTest : public qtif::LineTest {
-};
 
-TEST_P(AnalyzerTest, Run) {
-    DirectiveProcessor dp(ctx, getSrc());
-    Parser parser(ctx, dp);
-    ast::Script::Ptr scriptNode = parser.parseScript();
-    Core analyzer(ctx);
-    NamespaceScope root(analyzer);
-    for (auto &decl : scriptNode->members) {
-        root.processDeclaration(*decl);
-    }
-    analyzer.processPendingDeclarations();
-    dump(output, ctx, root);
+void GlobalVariableInfo::pass2() {
+    assert(gv == nullptr);
+    const as::Type &type = parent.resolveType(node.type);
+    gv = &parent.getScriptBuilder().createGlobalVariable(getName(), getLocation(), type);
 }
 
-QTIF_TEST_CASE(AnalyzerTest, "semantic/");
 
 } // namespace sem
 } // namespace comp

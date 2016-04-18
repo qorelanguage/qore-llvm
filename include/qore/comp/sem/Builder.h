@@ -255,8 +255,8 @@ public:
     explicit FunctionBuilder(std::string name) : name(std::move(name)), tempCount(0), localCount(0) {
     }
 
-    as::Function &build(as::Script &script) {
-        return script.createFunction(std::move(name), tempCount, localCount, clear());
+    as::Function &build(ScriptBuilder &scriptBuilder) {
+        return scriptBuilder.createFunction(std::move(name), tempCount, localCount, clear());
     }
 
     as::LocalSlot createLocalSlot() override {
