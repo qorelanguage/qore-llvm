@@ -39,9 +39,11 @@ as::Block *Builder::getLandingPad() {
     if (cleanupTemps.empty() && (!cleanupLValue || !cleanupLValue->hasLock()) && cleanupLocals.empty()) {
         return nullptr;
     }
+    bool savedTeminated = terminated;
     as::Block *savedCurrent = currentBlock;
     as::Block *block = createBlock();
     currentBlock = block;
+    terminated = false;
 
     as::Temp e = getFreeTemp();
     createLandingPad(e);
@@ -64,7 +66,20 @@ as::Block *Builder::getLandingPad() {
     createRethrow(e);
     setTempFree(e);
     currentBlock = savedCurrent;
+    terminated = savedTeminated;
     return block;
+}
+
+void Builder::buildCleanupForRet() {
+    assert(!cleanupLValue);
+    assert(cleanupTemps.empty());
+
+    for (auto it = cleanupLocals.rbegin(); it != cleanupLocals.rend(); ++it) {
+        as::Temp temp = getFreeTemp();
+        createGetLocal(temp, findLocalSlot(**it));
+        createRefDec(temp);
+        setTempFree(temp);
+    }
 }
 
 } // namespace sem

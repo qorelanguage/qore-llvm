@@ -29,6 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/FunctionOverloadPack.h"
+#include <string>
 #include "qore/common/Exceptions.h"
 #include "ReportedError.h"
 
@@ -39,14 +40,16 @@ namespace sem {
 void FunctionOverloadPack::pass2() {
     for (auto node : queue) {
         try {
-            FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(core, *this, *node);
+            std::string mangledName = core.ctx.getString(name);      //FIXME mangled names
+            FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(core, parent, mangledName, *node);
             checkOverload(*ptr);
-            //create block scope and core.addToQueue(scope, *node->body);
+            core.addToQueue(*ptr);
             functions.push_back(std::move(ptr));
         } catch (ReportedError &) {
             // ignored, diagnostic has been reported already
         }
     }
+    queue.clear();
 }
 
 void FunctionOverloadPack::checkOverload(FunctionScope &f1) {

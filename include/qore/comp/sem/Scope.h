@@ -33,6 +33,7 @@
 
 #include "qore/comp/as/Type.h"
 #include "qore/comp/ast/Type.h"
+#include "qore/comp/sem/LocalVariable.h"
 
 namespace qore {
 namespace comp {
@@ -83,6 +84,8 @@ public:
     virtual const as::Type &resolveType(ast::Type &node) const = 0;
     virtual LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) = 0;
     virtual Symbol resolveSymbol(ast::Name &name) const = 0;
+    virtual LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) = 0;
+    virtual const as::Type &getReturnType() const = 0;
 
 protected:
     Scope() = default;

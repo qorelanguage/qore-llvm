@@ -56,11 +56,11 @@ public:
     }
 
     ~TempHelper() {
-        if (doRefDec) {
-            builder.createRefDec(temp);
-        }
         if (inCleanup) {
             builder.doneCleanup(temp);
+        }
+        if (doRefDec) {
+            builder.createRefDec(temp);
         }
         builder.setTempFree(temp);
     }
@@ -236,6 +236,11 @@ private:
     void refIncDestIfNeeded() {
         if (!freeDest) {
             builder.createRefInc(dest);
+        } else {
+            if (destInCleanup) {
+                builder.doneCleanup(dest);
+            }
+            destInCleanup = false;
         }
     }
 

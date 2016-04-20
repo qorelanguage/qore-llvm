@@ -45,7 +45,7 @@ public:
     using Ptr = std::unique_ptr<FunctionOverloadPack>;
 
 public:
-    FunctionOverloadPack(Core &core, NamespaceScope &parent, String::Ref name, SourceLocation location)
+    FunctionOverloadPack(Core &core, Scope &parent, String::Ref name, SourceLocation location)
             : core(core), parent(parent), name(name), location(location) {
     }
 
@@ -66,12 +66,16 @@ public:
 
     void pass2();
 
+    Scope &getParent() {
+        return parent;
+    }
+
 private:
     void checkOverload(FunctionScope &f1);
 
 private:
     Core &core;
-    NamespaceScope &parent;
+    Scope &parent;
     String::Ref name;
     SourceLocation location;
     std::vector<ast::Routine *> queue;

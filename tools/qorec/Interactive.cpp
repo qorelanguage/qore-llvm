@@ -94,6 +94,14 @@ public:
         return rootScope.resolveSymbol(name);
     }
 
+    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+        QORE_UNREACHABLE("");
+    }
+
+    const as::Type &getReturnType() const override {
+        return as::Type::Nothing;
+    }
+
 private:
     const Scope &rootScope;
     std::vector<std::unique_ptr<LocalVariable>> locals;

@@ -51,14 +51,21 @@ public:
 
 public:
     Script(std::vector<std::unique_ptr<Type>> types, std::vector<std::unique_ptr<GlobalVariable>> globalVariables,
-            std::map<std::string, std::unique_ptr<Function>> functions) : types(std::move(types)),
-            globalVariables(std::move(globalVariables)), functions(std::move(functions)) {
+            std::vector<std::unique_ptr<Function>> functions, Function *qInit, Function *qMain)
+            : types(std::move(types)), globalVariables(std::move(globalVariables)), functions(std::move(functions)),
+              qInit(qInit), qMain(qMain) {
     }
 
-    Function &getFunction(const std::string &name) {
-        auto it = functions.find(name);
-        assert(it != functions.end());
-        return *it->second;
+    const std::vector<std::unique_ptr<Function>> &getFunctions() const {
+        return functions;
+    }
+
+    Function &getInit() const {
+        return *qInit;
+    }
+
+    Function &getMain() const {
+        return *qMain;
     }
 
 private:
@@ -70,7 +77,9 @@ private:
 private:
     std::vector<std::unique_ptr<Type>> types;
     std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
-    std::map<std::string, std::unique_ptr<Function>> functions;
+    std::vector<std::unique_ptr<Function>> functions;
+    Function *qInit;
+    Function *qMain;
 };
 
 } // namespace as

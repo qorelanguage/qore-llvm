@@ -54,8 +54,14 @@ namespace sem {
 class ExpressionAnalyzerPass1 : public ast::ExpressionVisitor<Expression::Ptr> {
 
 public:
-    ExpressionAnalyzerPass1(Core &core, BlockScope &scope, const as::Type *typeHint = nullptr)
-            : core(core), scope(scope), typeHint(typeHint) {
+    static Expression::Ptr eval(Core &core, Scope &scope, ast::Expression &node) {
+        ExpressionAnalyzerPass1 a(core, scope);
+        return node.accept(a);
+    }
+
+    static Expression::Ptr evalAndConvert(Core &core, Scope &scope, const as::Type &type, ast::Expression &node) {
+        ExpressionAnalyzerPass1 a(core, scope, &type);
+        return a.convert(node.accept(a), type);
     }
 
     Expression::Ptr visit(ast::VarDeclExpression &node) override {
@@ -149,6 +155,10 @@ public:
     Expression::Ptr visit(ast::ClosureExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
 
 private:
+    ExpressionAnalyzerPass1(Core &core, Scope &scope, const as::Type *typeHint = nullptr)
+            : core(core), scope(scope), typeHint(typeHint) {
+    }
+
     Expression::Ptr eval(ast::Expression &node) {
         ExpressionAnalyzerPass1 a(core, scope);
         return node.accept(a);
@@ -179,7 +189,7 @@ private:
 
 private:
     Core &core;
-    BlockScope &scope;
+    Scope &scope;
     const as::Type *typeHint;
 };
 

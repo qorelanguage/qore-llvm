@@ -61,6 +61,7 @@ class ClassScope;
 class GlobalVariableInfo;
 class FunctionOverloadPack;
 class FunctionScope;
+class FunctionBuilder;
 
 class ScriptBuilder {
 
@@ -122,16 +123,11 @@ public:
         QORE_NOT_IMPLEMENTED("Default value");
     }
 
-    as::Function &createFunction(std::string name, Id tempCount, Id localCount, std::vector<as::Block::Ptr> blocks) {
-        std::unique_ptr<as::Function> ptr
-            = util::make_unique<as::Function>(tempCount, localCount, std::move(blocks));
-        as::Function &f = *ptr;
-        functions[name] = std::move(ptr);
-        return f;
-    }
+    as::Function &createFunction(std::string name, Id argCount, const as::Type &retType, FunctionBuilder &b);
 
-    as::Script::Ptr build() {
-        return util::make_unique<as::Script>(std::move(types), std::move(globalVariables), std::move(functions));
+    as::Script::Ptr build(as::Function *qInit, as::Function *qMain) {
+        return util::make_unique<as::Script>(std::move(types), std::move(globalVariables), std::move(functions),
+                qInit, qMain);
     }
 
     std::vector<Statement::Ptr> takeInitializers() {
@@ -153,7 +149,7 @@ private:
     std::vector<Statement::Ptr> initializers;
     std::vector<std::unique_ptr<as::GlobalVariable>> globalVariables;
     std::vector<std::unique_ptr<as::Type>> types;
-    std::map<std::string, std::unique_ptr<as::Function>> functions;
+    std::vector<std::unique_ptr<as::Function>> functions;
 };
 
 
@@ -179,15 +175,15 @@ public:
         functionOverloadPackQueue.push_back(&fp);
     }
 
-    void addToQueue(BlockScope &f, ast::Statement &stmt) {
-        functionQueue.emplace_back(&f, &stmt);
+    void addToQueue(FunctionScope &f) {
+        functionQueue.emplace_back(&f);
     }
 
     /*
      * transforms ast to ir (it does type checking, resolves all symbols and operators, decides
      * which local variables need to be shared), adds closures to the queue (?)
      */
-    Statement::Ptr doPass1(BlockScope &scope, ast::Statement &stmt);
+    Statement::Ptr doPass1(Scope &scope, ast::Statement &stmt);
 
     /*
      * transforms ir to as (exception safety, temporaries, ...)
@@ -208,7 +204,7 @@ private:
     std::vector<ClassScope *> classQueue;
     std::vector<GlobalVariableInfo *> globalVariableQueue;
     std::vector<FunctionOverloadPack *> functionOverloadPackQueue;
-    std::vector<std::pair<BlockScope *, ast::Statement *>> functionQueue;
+    std::vector<FunctionScope *> functionQueue;
 };
 
 } // namespace sem

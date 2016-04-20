@@ -106,6 +106,14 @@ public:
         QORE_NOT_IMPLEMENTED("");
     }
 
+    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+        QORE_UNREACHABLE("");
+    }
+
+    const as::Type &getReturnType() const override {
+        QORE_UNREACHABLE("");
+    }
+
 private:
     DiagBuilder report(DiagId id, SourceLocation location) const {
         return core.ctx.report(id, location);

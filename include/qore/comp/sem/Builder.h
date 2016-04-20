@@ -54,13 +54,17 @@ class LValue;
 class Builder {
 
 public:
-    Builder() : currentBlock(createBlock()), cleanupLValue(nullptr) {
+    Builder() : currentBlock(createBlock()), terminated(false), cleanupLValue(nullptr) {
     }
 
     virtual ~Builder() = default;
 
     virtual as::LocalSlot createLocalSlot() = 0;
     virtual as::Temp createTemp() = 0;
+
+    bool isTerminated() const {
+        return terminated;
+    }
 
     as::Block &getBlock(Id id) {
         return *blocks[id];
@@ -102,11 +106,13 @@ public:
     }
 
     void addCleanup(as::Temp temp) {
+        LOG("ADD CLEANUP " << temp.getIndex());
         assert(std::find(cleanupTemps.begin(), cleanupTemps.end(), temp.getIndex()) == cleanupTemps.end());
         cleanupTemps.push_back(temp.getIndex());
     }
 
     void doneCleanup(as::Temp temp) {
+        LOG("DONE CLEANUP " << temp.getIndex());
         auto it = std::find(cleanupTemps.begin(), cleanupTemps.end(), temp.getIndex());
         assert(it != cleanupTemps.end());
         cleanupTemps.erase(it);
@@ -151,8 +157,16 @@ public:
         add(util::make_unique<as::MakeStringLiteral>(stringLiteral, std::move(value)));
     }
 
+    void createRet(as::Temp temp) {
+        buildCleanupForRet();
+        add(util::make_unique<as::Ret>(temp));
+        terminated = true;
+    }
+
     void createRetVoid() {
+        buildCleanupForRet();
         add(util::make_unique<as::RetVoid>());
+        terminated = true;
     }
 
     void createSetLocal(as::LocalSlot slot, as::Temp src) {
@@ -214,11 +228,17 @@ public:
 
     void createRethrow(as::Temp e) {
         add(util::make_unique<as::Rethrow>(e));
+        terminated = true;
+    }
+
+    void createGetArg(as::Temp dest, Id index) {
+        add(util::make_unique<as::GetArg>(dest, index));
     }
 
     std::vector<as::Block::Ptr> clear() {
         std::vector<as::Block::Ptr> tmp = std::move(blocks);
         currentBlock = createBlock();
+        terminated = false;
         return tmp;
     }
 
@@ -231,10 +251,14 @@ private:
     }
 
     void add(as::Instruction::Ptr ins) {
+        if (terminated) {
+            QORE_NOT_IMPLEMENTED("");   //unreachable
+        }
         currentBlock->instructions.push_back(std::move(ins));
     }
 
     as::Block *getLandingPad();
+    void buildCleanupForRet();
 
 private:
     std::vector<as::Temp> freeTemps;
@@ -242,21 +266,17 @@ private:
     std::vector<as::LocalSlot> freeLocalSlots;
     std::vector<as::Block::Ptr> blocks;
     as::Block *currentBlock;
+    bool terminated;
 
     std::vector<Id> cleanupTemps;
     std::vector<const LocalVariable *> cleanupLocals;
     LValue *cleanupLValue;
 };
 
-//functions need to be revisited - it may turn out that these object will be created way before their bodies
 class FunctionBuilder : public Builder {
 
 public:
-    explicit FunctionBuilder(std::string name) : name(std::move(name)), tempCount(0), localCount(0) {
-    }
-
-    as::Function &build(ScriptBuilder &scriptBuilder) {
-        return scriptBuilder.createFunction(std::move(name), tempCount, localCount, clear());
+    FunctionBuilder() : tempCount(0), localCount(0) {
     }
 
     as::LocalSlot createLocalSlot() override {
@@ -268,9 +288,10 @@ public:
     }
 
 private:
-    std::string name;
     Id tempCount;
     Id localCount;
+
+    friend class ScriptBuilder;
 };
 
 } // namespace sem

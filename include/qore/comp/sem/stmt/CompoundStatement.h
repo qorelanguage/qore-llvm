@@ -44,8 +44,8 @@ public:
     using Ptr = std::unique_ptr<CompoundStatement>;
 
 public:
-    static Ptr create() {
-        return Ptr(new CompoundStatement());
+    static Ptr create(std::vector<Statement::Ptr> statements) {
+        return Ptr(new CompoundStatement(std::move(statements)));
     }
 
     Kind getKind() const override {
@@ -56,12 +56,8 @@ public:
         return statements;
     }
 
-    void add(Statement::Ptr stmt) {
-        statements.push_back(std::move(stmt));
-    }
-
 private:
-    CompoundStatement() {
+    explicit CompoundStatement(std::vector<Statement::Ptr> statements) : statements(std::move(statements)) {
     }
 
 private:

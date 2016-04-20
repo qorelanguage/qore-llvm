@@ -83,6 +83,20 @@ public:
         }
     }
 
+    void visit(const ReturnStatement &stmt) {
+        if (stmt.getExpression()) {
+            as::Temp temp = builder.getFreeTemp();
+            {
+                ExpressionAnalyzerPass2 a(core, builder, temp);
+                stmt.getExpression()->accept(a);
+            }
+            builder.createRet(temp);
+            builder.setTempFree(temp);
+        } else {
+            builder.createRetVoid();
+        }
+    }
+
     void visit(const StringLiteralInitializationStatement &stmt) {
         builder.createMakeStringLiteral(stmt.getStringLiteral(), stmt.getValue());
     }

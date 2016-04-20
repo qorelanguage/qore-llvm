@@ -50,7 +50,7 @@ public:
     /**
      * \brief The type of one element of the parameter list: a triplet (type, name, default value (may be nullptr)).
      */
-    using Param = std::tuple<Type, Token, Expression::Ptr>;
+    using Param = std::tuple<Type, Name::Id, Expression::Ptr>;
 
     /**
      * \brief The type of one element of the base constructor invocation list.

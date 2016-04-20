@@ -32,8 +32,10 @@
 #define INCLUDE_QORE_COMP_AS_FUNCTION_H_
 
 #include <cassert>
+#include <string>
 #include <vector>
 #include "qore/comp/as/Block.h"
+#include "qore/comp/as/Type.h"
 
 namespace qore {
 namespace comp {
@@ -42,8 +44,21 @@ namespace as {
 class Function {
 
 public:
-    Function(Id tempCount, Id localCount, std::vector<Block::Ptr> blocks) : tempCount(tempCount),
-            localCount(localCount), blocks(std::move(blocks)) {
+    Function(std::string name, Id argCount, const as::Type &retType, Id tempCount, Id localCount,
+            std::vector<Block::Ptr> blocks) : name(std::move(name)), argCount(argCount), retType(retType),
+            tempCount(tempCount), localCount(localCount), blocks(std::move(blocks)) {
+    }
+
+    const std::string &getName() const {
+        return name;
+    }
+
+    Id getArgCount() const {
+        return argCount;
+    }
+
+    bool isVoid() const {
+        return retType == Type::Nothing;    //TODO is nothing == void ?
     }
 
     Id getTempCount() const {
@@ -60,6 +75,9 @@ public:
     }
 
 private:
+    std::string name;
+    Id argCount;
+    const as::Type &retType;
     Id tempCount;
     Id localCount;
     std::vector<Block::Ptr> blocks;

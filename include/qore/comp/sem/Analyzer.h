@@ -48,33 +48,6 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-class QMS : public Scope {      //temporary - simulates the scope of qmain
-
-public:
-    explicit QMS(const Scope &rootScope) : rootScope(rootScope) {
-    }
-
-    const as::Type &resolveType(ast::Type &node) const override {
-        return rootScope.resolveType(node);
-    }
-
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
-        std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(type);
-        LocalVariable &lv = *ptr;
-        locals.push_back(std::move(ptr));
-        return lv;
-    }
-
-    Symbol resolveSymbol(ast::Name &name) const override {
-        return rootScope.resolveSymbol(name);
-    }
-
-private:
-    const Scope &rootScope;
-    std::vector<std::unique_ptr<LocalVariable>> locals;
-};
-
-
 inline as::Script::Ptr analyze(Context &ctx, ast::Script &node) {
     Core analyzer(ctx);
     NamespaceScope root(analyzer);
@@ -84,33 +57,24 @@ inline as::Script::Ptr analyze(Context &ctx, ast::Script &node) {
     }
     analyzer.processPendingDeclarations();
 
-    //once we support functions, synthesize qmain and put it into funcQueue before calling processPendingDeclarations();
-    QMS qms(root);
-    BlockScopeImpl topLevelScope(qms);
+    ast::Routine::Ptr r = ast::Routine::create();
+    r->body = ast::CompoundStatement::create();
+    r->body->statements = std::move(node.statements);
+    r->type = ast::Type::createImplicit(SourceLocation());
 
-    std::vector<Statement::Ptr> temp;
-    for (auto &stmt : node.statements) {
-        temp.push_back(analyzer.doPass1(topLevelScope, *stmt));
-    }
-    temp.push_back(topLevelScope.finalize());
-
-    FunctionBuilder mainBuilder("qmain");
-    for (auto &stmt : temp) {
-        analyzer.doPass2(mainBuilder, *stmt);
-    }
-    mainBuilder.createRetVoid();
-    mainBuilder.build(analyzer.scriptBuilder);
+    FunctionScope mainFs(analyzer, root, "qmain", *r);
+    as::Function &qMain = mainFs.analyze();
 
     //qinit - pass2
-    FunctionBuilder initBuilder("qinit");
+    FunctionBuilder initBuilder;
     auto initializers = analyzer.scriptBuilder.takeInitializers();
     for (auto &stmt : initializers) {
         analyzer.doPass2(initBuilder, *stmt);
     }
     initBuilder.createRetVoid();
-    initBuilder.build(analyzer.scriptBuilder);
+    as::Function &qInit = analyzer.scriptBuilder.createFunction("qinit", 0, as::Type::Nothing, initBuilder);
 
-    return analyzer.scriptBuilder.build();
+    return analyzer.scriptBuilder.build(&qInit, &qMain);
 }
 
 } // namespace sem

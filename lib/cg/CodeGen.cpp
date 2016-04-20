@@ -30,12 +30,14 @@
 //------------------------------------------------------------------------------
 #include "qore/cg/CodeGen.h"
 #include <iostream>
+#include <vector>
 #include "llvm/IR/AssemblyAnnotationWriter.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/raw_os_ostream.h"
-#include "ScriptCompiler.h"
+
+#include "FunctionCompiler.h"
 
 namespace qore {
 namespace cg {
@@ -43,11 +45,27 @@ namespace cg {
 void CodeGen::process(comp::as::Script &script) {
     Helper helper;
 
-    ScriptCompiler scriptCompiler(helper, script);
+    llvm::GlobalVariable *rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
+            llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
+    std::unordered_map<comp::as::Function *, llvm::Function *> functions;
 
-    //XXX for all functions
-    scriptCompiler.compile(script.getFunction("qinit"));
-    scriptCompiler.compile(script.getFunction("qmain"));
+    for (auto &f : script.getFunctions()) {
+        std::vector<llvm::Type *> args(f->getArgCount(), helper.lt_qvalue);
+        llvm::Type *ret = f->isVoid() ? helper.lt_void : helper.lt_qvalue;
+        llvm::Function *func = llvm::Function::Create(
+                llvm::FunctionType::get(ret, args, false),
+                llvm::Function::ExternalLinkage, f->getName(), helper.module.get());
+        functions[f.get()] = func;
+        Id i = 0;
+        for (auto it = func->arg_begin(); it != func->arg_end(); ++it) {
+            (*it).setName(llvm::Twine("arg").concat(llvm::Twine(i)));
+        }
+    }
+
+    for (auto &f : script.getFunctions()) {
+        FunctionCompiler fc(*f, functions[f.get()], helper, rtctx);
+        fc.x();
+    }
 
     std::unique_ptr<llvm::Module> module = std::move(helper.module);
 

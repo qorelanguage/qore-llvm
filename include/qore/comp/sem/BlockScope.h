@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_BLOCKSCOPE_H_
 
 #include <map>
+#include <vector>
 #include "qore/comp/sem/LocalVariable.h"
 #include "qore/comp/sem/Scope.h"
 #include "qore/comp/sem/stmt/Statement.h"
@@ -45,7 +46,6 @@ namespace sem {
 class BlockScope : public Scope {
 
 public:
-    virtual LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) = 0;
 
 protected:
     BlockScope() = default;
@@ -86,12 +86,16 @@ public:
         return parent.resolveSymbol(name);
     }
 
+    const as::Type &getReturnType() const override {
+        return parent.getReturnType();
+    }
+
     Statement::Ptr finalize() {
-        CompoundStatement::Ptr stmt = CompoundStatement::create();
-        for (auto it = locals.rbegin(); it != locals.rend(); ++it) {
-            stmt->add(LifetimeEndStatement::create(*it->second));
+        std::vector<Statement::Ptr> statements;
+        for (auto it = locals.rbegin(); it != locals.rend(); ++it) {            //incorrect order
+            statements.push_back(LifetimeEndStatement::create(*it->second));
         }
-        return std::move(stmt);
+        return CompoundStatement::create(std::move(statements));
     }
 
 private:

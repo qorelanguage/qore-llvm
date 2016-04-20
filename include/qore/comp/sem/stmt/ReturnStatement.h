@@ -25,40 +25,47 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief ReturnStatement definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef LIB_CG_SCRIPTCOMPILER_H_
-#define LIB_CG_SCRIPTCOMPILER_H_
+#ifndef INCLUDE_QORE_COMP_SEM_STMT_RETURNSTATEMENT_H_
+#define INCLUDE_QORE_COMP_SEM_STMT_RETURNSTATEMENT_H_
 
-#include <string>
-#include <vector>
-#include "qore/comp/as/is.h"
-#include "Helper.h"
-#include "qore/cg/CodeGen.h"
+#include "qore/comp/sem/expr/Expression.h"
+#include "qore/comp/sem/stmt/Statement.h"
 
 namespace qore {
-namespace cg {
+namespace comp {
+namespace sem {
 
-class ScriptCompiler {
+class ReturnStatement : public Statement {
 
 public:
-    ScriptCompiler(Helper &helper, comp::as::Script &script);
-    void compile(comp::as::Function &f);
+    using Ptr = std::unique_ptr<ReturnStatement>;
+
+public:
+    static Ptr create(Expression::Ptr expression = nullptr) {
+        return Ptr(new ReturnStatement(std::move(expression)));
+    }
+
+    Kind getKind() const override {
+        return Kind::Return;
+    }
+
+    const Expression *getExpression() const {
+        return expression.get();
+    }
 
 private:
-    void addStringLiteral(Id id, const std::string &value);
-
-    void doBlock();
+    explicit ReturnStatement(Expression::Ptr expression) : expression(std::move(expression)) {
+    }
 
 private:
-    Helper &helper;
-
-    llvm::GlobalVariable *rtctx;
-    std::unordered_map<comp::as::Function *, llvm::Function *> functions;
+    Expression::Ptr expression;
 };
 
-} // namespace cg
+} // namespace sem
+} // namespace comp
 } // namespace qore
 
-#endif // LIB_CG_SCRIPTCOMPILER_H_
+#endif // INCLUDE_QORE_COMP_SEM_STMT_RETURNSTATEMENT_H_

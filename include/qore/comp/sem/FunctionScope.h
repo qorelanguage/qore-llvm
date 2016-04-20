@@ -31,8 +31,12 @@
 #ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_
 #define INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_
 
+#include <map>
+#include <string>
+#include <vector>
 #include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Routine.h"
+#include "qore/comp/sem/Scope.h"
 
 namespace qore {
 namespace comp {
@@ -44,18 +48,35 @@ namespace sem {
 //helps with return/throw statement
 
 class FunctionOverloadPack;
-class FunctionScope {
+class FunctionScope : public Scope {
 
 public:
     using Ptr = std::unique_ptr<FunctionScope>;
 
 public:
-    FunctionScope(Core &core, FunctionOverloadPack &parent, ast::Routine &node) : core(core), parent(parent) {
+    FunctionScope(Core &core, Scope &parent, std::string name, ast::Routine &node);
+
+
+    const as::Type &resolveType(ast::Type &node) const override;
+    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override;
+    Symbol resolveSymbol(ast::Name &name) const override;
+    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+        QORE_UNREACHABLE("");
     }
+
+    const as::Type &getReturnType() const override {
+        return resolveType(node.type);
+    }
+
+    as::Function &analyze();
 
 private:
     Core &core;
-    FunctionOverloadPack &parent;
+    Scope &parent;
+    std::string name;
+    ast::Routine &node;
+    std::vector<std::unique_ptr<LocalVariable>> locals;
+    std::map<String::Ref, LocalVariable *> args;
 };
 
 } // namespace sem

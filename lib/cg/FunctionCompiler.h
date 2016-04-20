@@ -28,20 +28,16 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#include "ScriptCompiler.h"
+#ifndef LIB_CG_FUNCTIONCOMPILER_H_
+#define LIB_CG_FUNCTIONCOMPILER_H_
+
 #include <string>
 #include <vector>
+#include "qore/comp/as/is.h"
+#include "Helper.h"
 
 namespace qore {
 namespace cg {
-
-ScriptCompiler::ScriptCompiler(Helper &helper, comp::as::Script &script) : helper(helper) {
-    rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
-            llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
-    //XXX for all functions
-    functions[&script.getFunction("qinit")] = helper.createFunction("qinit", helper.lt_void);
-    functions[&script.getFunction("qmain")] = helper.createFunction("qmain", helper.lt_void);
-}
 
 class FunctionCompiler {
 
@@ -190,6 +186,11 @@ public:
                             helper.convFunctions[&ins.getDesc()], temps[ins.getArg().getIndex()]);
                     break;
                 }
+                case comp::as::Instruction::Kind::Ret: {
+                    comp::as::Ret &ins = static_cast<comp::as::Ret &>(*ii);
+                    builder.CreateRet(temps[ins.getValue().getIndex()]);
+                    break;
+                }
                 case comp::as::Instruction::Kind::RetVoid:
                     builder.CreateRetVoid();
                     break;
@@ -210,6 +211,17 @@ public:
                     builder.CreateCall(helper.lf_createString, args);
                     break;
                 }
+                case comp::as::Instruction::Kind::GetArg: {
+                    comp::as::GetArg &ins = static_cast<comp::as::GetArg &>(*ii);
+
+                    auto it = func->arg_begin();
+                    Id i = ins.getIndex();
+                    while (i--) {
+                        ++it;
+                    }
+                    temps[ins.getDest().getIndex()] = it;
+                    break;
+                }
                 default:
                     QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ii->getKind()));
             }
@@ -228,10 +240,7 @@ private:
     llvm::Value *excSlot;
 };
 
-void ScriptCompiler::compile(comp::as::Function &f) {
-    FunctionCompiler fc(f, functions[&f], helper, rtctx);
-    fc.x();
-}
-
 } // namespace cg
 } // namespace qore
+
+#endif // LIB_CG_FUNCTIONCOMPILER_H_

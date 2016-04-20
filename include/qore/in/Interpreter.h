@@ -78,8 +78,8 @@ class Interpreter {
 public:
     static void interpret(comp::as::Script &script) {
         rt::Context rtCtx;
-        run(rtCtx, script.getFunction("qinit"));
-        run(rtCtx, script.getFunction("qmain"));
+        run(rtCtx, script.getInit());
+        run(rtCtx, script.getMain());
     }
 
 private:

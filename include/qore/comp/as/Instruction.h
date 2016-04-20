@@ -63,8 +63,10 @@ public:
         Rethrow,
         BinaryOperator,
         Conversion,
+        Ret,
         RetVoid,
-        MakeStringLiteral
+        MakeStringLiteral,
+        GetArg,
     };
 
 public:

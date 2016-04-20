@@ -92,6 +92,30 @@ private:
     LocalSlot slot;
 };
 
+class GetArg : public Instruction {
+
+public:
+    GetArg(Temp dest, Id index) : dest(dest), index(index) {
+    }
+
+    Kind getKind() const override {
+        return Kind::GetArg;
+    }
+
+    Temp getDest() const {
+        return dest;
+    }
+
+    Id getIndex() const {
+        return index;
+    }
+
+private:
+    Temp dest;
+    Id index;
+};
+
+
 class SetLocal : public Instruction {
 
 public:
@@ -447,6 +471,24 @@ public:
     Kind getKind() const override {
         return Kind::RetVoid;
     }
+};
+
+class Ret : public Instruction {
+
+public:
+    explicit Ret(Temp value) : value(value) {
+    }
+
+    Kind getKind() const override {
+        return Kind::Ret;
+    }
+
+    Temp getValue() const {
+        return value;
+    }
+
+private:
+    Temp value;
 };
 
 class MakeStringLiteral : public Instruction {

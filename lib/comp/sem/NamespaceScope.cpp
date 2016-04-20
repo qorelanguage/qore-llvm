@@ -245,8 +245,7 @@ Symbol NamespaceScope::resolveSymbol(ast::Name &name) const {
 
 const as::Type &NamespaceScope::resolveType(ast::Type &node) const {
     if (node.getKind() == ast::Type::Kind::Implicit) {
-        //return nothing/void
-        QORE_NOT_IMPLEMENTED("");
+        return as::Type::Nothing;
     }
     if (node.getKind() == ast::Type::Kind::Invalid || !node.getName().isValid()) {
         return as::Type::Error;

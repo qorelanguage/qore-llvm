@@ -83,24 +83,28 @@ int main(int argc, char *argv[]) {
     LOG_FUNCTION();
 
     std::string src = R"(
-int i;
-our string s;
-s = string s1 = "A";
-i = i + 1;
-s = s + i;
-i += "2";
-s += i;
+any sub f(string a) {
+    return a + a;
+}
 
-any a = 1;
-a = a + 2;
-a += "8";
+#int i;
+our string s;
+#s = string s1 = "A";
+#i = i + 1;
+#s = s + i;
+#i += "2";
+#s += i;
+
+#any a = 1;
+#a = a + 2;
+#a += "8";
 
 )";
 
-    std::istringstream stream(src);
-    std::streambuf* cin_backup = std::cin.rdbuf(stream.rdbuf());
-    qore::interactive();
-    std::cin.rdbuf(cin_backup);
+//    std::istringstream stream(src);
+//    std::streambuf* cin_backup = std::cin.rdbuf(stream.rdbuf());
+//    qore::interactive();
+//    std::cin.rdbuf(cin_backup);
 
 //    test(true, argv[1]);
     test(false, src);

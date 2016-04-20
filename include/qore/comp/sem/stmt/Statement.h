@@ -41,6 +41,7 @@ class CompoundStatement;
 class ExpressionStatement;
 class GlobalVariableInitializationStatement;
 class LifetimeEndStatement;
+class ReturnStatement;
 class StringLiteralInitializationStatement;
 
 class Statement {
@@ -51,6 +52,7 @@ public:
         Expression,
         GlobalVariableInitialization,
         LifetimeEnd,
+        Return,
         StringLiteralInitialization,
     };
 
@@ -69,6 +71,7 @@ public:
             CASE(Expression);
             CASE(GlobalVariableInitialization);
             CASE(LifetimeEnd);
+            CASE(Return);
             CASE(StringLiteralInitialization);
             default:
                 QORE_UNREACHABLE("");

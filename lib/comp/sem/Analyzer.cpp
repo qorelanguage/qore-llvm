@@ -63,15 +63,13 @@ void Core::processPendingDeclarations() {
      *      but there may be cycles which need to be detected)
      */
 
-    for (auto it : functionQueue) {
-        doPass1(*it.first, *it.second);
-        //doPass2
-        //finalize function scope
+    for (auto f : functionQueue) {
+        f->analyze();
     }
     functionQueue.clear();
 }
 
-Statement::Ptr Core::doPass1(BlockScope &scope, ast::Statement &stmt) {
+Statement::Ptr Core::doPass1(Scope &scope, ast::Statement &stmt) {
     StatementAnalyzerPass1 a(*this, scope);
     return stmt.accept(a);
 }
@@ -93,6 +91,15 @@ const as::Type &ScriptBuilder::getClassType(const ClassScope &c, bool asterisk) 
     const as::Type &t2 = createType(rt::Type::Object, c.getFullName(), true);
     classTypes[&c] = std::make_pair(&t1, &t2);
     return asterisk ? t2 : t1;
+}
+
+as::Function &ScriptBuilder::createFunction(std::string name, Id argCount, const as::Type &retType,
+        FunctionBuilder &b) {
+    std::unique_ptr<as::Function> ptr
+        = util::make_unique<as::Function>(name, argCount, retType, b.tempCount, b.localCount, b.clear());
+    as::Function &f = *ptr;
+    functions.push_back(std::move(ptr));
+    return f;
 }
 
 } // namespace sem
