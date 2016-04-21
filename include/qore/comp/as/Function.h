@@ -69,9 +69,9 @@ public:
         return localCount;
     }
 
-    Block &getBlock(Id index) const {
-        assert(index < blocks.size());
-        return *blocks[index];
+    Block &getEntryBlock() const {
+        assert(!blocks.empty());
+        return *blocks[0];
     }
 
 private:

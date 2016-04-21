@@ -74,6 +74,10 @@ public:
         switch (t) {
             case rt::Type::Error:
                 return Error;
+            case rt::Type::Bool:
+                return Bool;
+            case rt::Type::SoftBool:
+                return SoftBool;
             case rt::Type::Int:
                 return Int;
             case rt::Type::String:
@@ -89,6 +93,8 @@ public:
 
 public:
     static const Type Error;
+    static const Type Bool;
+    static const Type SoftBool;
     static const Type Int;
     static const Type IntOpt;
     static const Type String;

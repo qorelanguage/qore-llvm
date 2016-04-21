@@ -25,47 +25,31 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief LifetimeEndStatement definition.
+/// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_STMT_LIFETIMEENDSTATEMENT_H_
-#define INCLUDE_QORE_COMP_SEM_STMT_LIFETIMEENDSTATEMENT_H_
-
-#include "qore/comp/sem/LocalVariable.h"
-#include "qore/comp/sem/stmt/Statement.h"
+#ifndef INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_
+#define INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-class LifetimeEndStatement : public Statement {
+class CleanupScope {
 
 public:
-    using Ptr = std::unique_ptr<LifetimeEndStatement>;
-
-public:
-    static Ptr create(const LocalVariable &localVariable) {
-        return Ptr(new LifetimeEndStatement(localVariable));
+    explicit CleanupScope(const LocalVariable &lv) : lv(&lv), stmt(nullptr) {
     }
 
-    Kind getKind() const override {
-        return Kind::LifetimeEnd;
+    explicit CleanupScope(const Statement &stmt) : lv(nullptr), stmt(&stmt) {
     }
 
-    const LocalVariable &getLocalVariable() const {
-        return localVariable;
-    }
-
-private:
-    explicit LifetimeEndStatement(const LocalVariable &localVariable) : localVariable(localVariable) {
-    }
-
-private:
-    const LocalVariable &localVariable;
+    const LocalVariable *lv;
+    const Statement *stmt;
 };
 
 } // namespace sem
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_STMT_LIFETIMEENDSTATEMENT_H_
+#endif // INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_

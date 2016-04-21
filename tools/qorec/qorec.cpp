@@ -83,8 +83,9 @@ int main(int argc, char *argv[]) {
     LOG_FUNCTION();
 
     std::string src = R"(
-any sub f(string a) {
-    return a + a;
+any sub f(int i) {
+    if (i += string x) {string s1 = "aaa"; return 21;}
+    return 42;
 }
 
 #int i;

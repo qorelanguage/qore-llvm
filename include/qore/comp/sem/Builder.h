@@ -44,6 +44,7 @@
 #include "qore/comp/as/is.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/LocalVariable.h"
+#include "qore/comp/sem/CleanupScope.h"
 
 namespace qore {
 namespace comp {
@@ -77,6 +78,9 @@ public:
             freeLocalSlots.pop_back();
         }
         locals.insert(std::make_pair(&lv, slot));
+
+        cleanupScopes.emplace_back(lv);
+
         return slot;
     }
 
@@ -86,6 +90,7 @@ public:
         return it->second;
     }
 
+private:
     as::LocalSlot unassignLocalSlot(const LocalVariable &lv) {
         auto it = locals.find(&lv);
         assert(it != locals.end());
@@ -95,14 +100,47 @@ public:
         return slot;
     }
 
-    void addCleanup(const LocalVariable &lv) {
-        cleanupLocals.push_back(&lv);
+public:
+    void pushCleanupScope(const Statement &stmt) {
+        cleanupScopes.emplace_back(stmt);
     }
 
-    void doneCleanup(const LocalVariable &lv) {
-        auto it = std::find(cleanupLocals.begin(), cleanupLocals.end(), &lv);
-        assert(it != cleanupLocals.end());
-        cleanupLocals.erase(it);
+    void popCleanupScope(const Statement &stmt) {
+        while (true) {
+            CleanupScope cs = cleanupScopes.back();
+            cleanupScopes.pop_back();
+
+            if (cs.lv) {
+                as::LocalSlot slot = unassignLocalSlot(*cs.lv);
+                if (!terminated && !cs.lv->getType().isPrimitive()) {
+                    as::Temp temp = getFreeTemp();
+                    createGetLocal(temp, slot);
+                    createRefDec(temp);
+                    setTempFree(temp);
+                }
+            }
+
+            if (cs.stmt == &stmt) {
+                break;
+            }
+        }
+    }
+
+    void popCleanupScopes() {
+        while (true) {
+            CleanupScope cs = cleanupScopes.back();
+            cleanupScopes.pop_back();
+
+            if (cs.lv) {
+                as::LocalSlot slot = unassignLocalSlot(*cs.lv);
+                if (!terminated && !cs.lv->getType().isPrimitive()) {
+                    as::Temp temp = getFreeTemp();
+                    createGetLocal(temp, slot);
+                    createRefDec(temp);
+                    setTempFree(temp);
+                }
+            }
+        }
     }
 
     void addCleanup(as::Temp temp) {
@@ -235,6 +273,14 @@ public:
         add(util::make_unique<as::GetArg>(dest, index));
     }
 
+    void createJump(const as::Block &dest) {
+        add(util::make_unique<as::Jump>(dest));
+    }
+
+    void createBranch(as::Temp condition, const as::Block &trueDest, const as::Block &falseDest) {
+        add(util::make_unique<as::Branch>(condition, trueDest, falseDest));
+    }
+
     std::vector<as::Block::Ptr> clear() {
         std::vector<as::Block::Ptr> tmp = std::move(blocks);
         currentBlock = createBlock();
@@ -242,7 +288,6 @@ public:
         return tmp;
     }
 
-private:
     as::Block *createBlock() {
         as::Block::Ptr ptr = as::Block::create(blocks.size());
         as::Block *b = ptr.get();
@@ -250,6 +295,12 @@ private:
         return b;
     }
 
+    void setCurrentBlock(as::Block *b) {
+        currentBlock = b;
+        terminated = false;
+    }
+
+private:
     void add(as::Instruction::Ptr ins) {
         if (terminated) {
             QORE_NOT_IMPLEMENTED("");   //unreachable
@@ -258,6 +309,8 @@ private:
     }
 
     as::Block *getLandingPad();
+    as::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
+    bool needsLandingPad(std::vector<CleanupScope>::reverse_iterator it);
     void buildCleanupForRet();
 
 private:
@@ -269,7 +322,7 @@ private:
     bool terminated;
 
     std::vector<Id> cleanupTemps;
-    std::vector<const LocalVariable *> cleanupLocals;
+    std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
 };
 

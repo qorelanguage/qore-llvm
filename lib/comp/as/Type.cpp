@@ -35,6 +35,8 @@ namespace comp {
 namespace as {
 
 const Type Type::Error(rt::Type::Error, "<error>", false, false);
+const Type Type::Bool(rt::Type::Bool, "bool", false, true);
+const Type Type::SoftBool(rt::Type::SoftBool, "softbool", false, true);
 const Type Type::Int(rt::Type::Int, "int", false, true);
 const Type Type::IntOpt(rt::Type::Int, "int", true, false);
 const Type Type::String(rt::Type::String, "string", false, false);

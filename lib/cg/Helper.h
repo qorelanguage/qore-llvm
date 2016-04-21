@@ -80,6 +80,7 @@ public:
         lf_gv_set = createFunction("gv_set", lt_void, lt_Context_ptr, lt_Id, lt_qvalue);
 
         lf_qint_to_qvalue = createFunction("qint_to_qvalue", lt_qvalue, lt_qint);
+        lf_qvalue_to_qbool = createFunction("qvalue_to_qbool", lt_bool, lt_qvalue);
 
         lf_createString = createFunction("createString", lt_void, lt_Context_ptr, lt_Id, lt_char_ptr, lt_qsize);
         lf_loadString = createFunction("loadString", lt_qvalue, lt_Context_ptr, lt_Id);
@@ -94,6 +95,8 @@ public:
                       = createFunction("convertStringToInt", lt_qvalue, lt_qvalue);
         convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::BoxInt)]
                       = createFunction("int_box", lt_qvalue, lt_qvalue);
+        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::IntToBool)]
+                      = createFunction("int_to_bool", lt_qvalue, lt_qvalue);
 
         binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::StringPlusString)]
                        = createFunction("opAddStringString", lt_qvalue, lt_qvalue, lt_qvalue);
@@ -178,6 +181,7 @@ public:
     llvm::Function *lf_gv_set;
 
     llvm::Function *lf_qint_to_qvalue;
+    llvm::Function *lf_qvalue_to_qbool;
 
     llvm::Function *lf_createString;
     llvm::Function *lf_loadString;

@@ -31,6 +31,7 @@
 #ifndef LIB_CG_FUNCTIONCOMPILER_H_
 #define LIB_CG_FUNCTIONCOMPILER_H_
 
+#include <map>
 #include <string>
 #include <vector>
 #include "qore/comp/as/is.h"
@@ -49,13 +50,20 @@ public:
     }
 
     void x() {
-        llvm::IRBuilder<> builder(llvm::BasicBlock::Create(helper.ctx, "entry", func));
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(helper.ctx, "entry", func);
+        llvm::IRBuilder<> builder(entry);
         for (auto &l : locals) {
             l = builder.CreateAlloca(helper.lt_qvalue, nullptr);    //FIXME name
         }
         excSlot = builder.CreateAlloca(helper.lt_exc, nullptr, "exc.slot");
-        //XXX do all blocks that have not yet been done
-        builder.CreateBr(doBlock(f.getBlock(0)));
+
+        blockMap[&f.getEntryBlock()] = entry;
+        queue.push_back(&f.getEntryBlock());
+        while (!queue.empty()) {
+            const comp::as::Block *b = queue.back();
+            queue.pop_back();
+            doBlock(blockMap[b], *b);
+        }
     }
 
     llvm::Value *makeCallOrInvoke(llvm::IRBuilder<> &builder, const comp::as::Instruction &ins,
@@ -64,13 +72,15 @@ public:
             return builder.CreateCall(f, args);
         }
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(helper.ctx, "bb", func);
-        llvm::Value *ret = builder.CreateInvoke(f, bb, doBlock(*ins.getLpad()), args);
+        llvm::BasicBlock *lpad = llvm::BasicBlock::Create(helper.ctx, "lpad", func);
+
+        llvm::Value *ret = builder.CreateInvoke(f, bb, lpad, args);
+        doBlock(lpad, *ins.getLpad());
         builder.SetInsertPoint(bb);
         return ret;
     }
 
-    llvm::BasicBlock *doBlock(comp::as::Block &block) {
-        llvm::BasicBlock *bb = llvm::BasicBlock::Create(helper.ctx, "bb", func);
+    void doBlock(llvm::BasicBlock *bb, const comp::as::Block &block) {
         llvm::IRBuilder<> builder(bb);
         for (auto &ii : block.instructions) {
             switch (ii->getKind()) {
@@ -222,13 +232,33 @@ public:
                     temps[ins.getDest().getIndex()] = it;
                     break;
                 }
+                case comp::as::Instruction::Kind::Branch: {
+                    comp::as::Branch &ins = static_cast<comp::as::Branch &>(*ii);
+                    builder.CreateCondBr(
+                            builder.CreateCall(helper.lf_qvalue_to_qbool, temps[ins.getCondition().getIndex()]),
+                            mapBlock(ins.getTrueDest(), "if.true"),
+                            mapBlock(ins.getFalseDest(), "if.false"));
+                    break;
+                }
+                case comp::as::Instruction::Kind::Jump: {
+                    comp::as::Jump &ins = static_cast<comp::as::Jump &>(*ii);
+                    builder.CreateBr(mapBlock(ins.getDest(), "jump.dest"));
+                    break;
+                }
                 default:
                     QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ii->getKind()));
             }
         }
-        return bb;
     }
 
+    llvm::BasicBlock *mapBlock(const comp::as::Block &b, const char *name) {
+        llvm::BasicBlock *&bb = blockMap[&b];
+        if (!bb) {
+            bb = llvm::BasicBlock::Create(helper.ctx, name, func);
+            queue.push_back(&b);
+        }
+        return bb;
+    }
 
 private:
     comp::as::Function &f;
@@ -238,6 +268,8 @@ private:
     std::vector<llvm::AllocaInst *> locals;
     std::vector<llvm::Value *> temps;
     llvm::Value *excSlot;
+    std::map<const comp::as::Block *, llvm::BasicBlock *> blockMap;
+    std::vector<const comp::as::Block *> queue;
 };
 
 } // namespace cg

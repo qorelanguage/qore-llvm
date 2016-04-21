@@ -515,6 +515,54 @@ private:
     std::string value;
 };
 
+class Jump : public Instruction {
+
+public:
+    explicit Jump(const Block &dest) : dest(dest) {
+    }
+
+    Kind getKind() const override {
+        return Kind::Jump;
+    }
+
+    const Block &getDest() const {
+        return dest;
+    }
+
+private:
+    const Block &dest;
+};
+
+class Branch: public Instruction {
+
+public:
+    Branch(Temp condition, const Block &trueDest, const Block &falseDest) : condition(condition), trueDest(trueDest),
+            falseDest(falseDest) {
+    }
+
+    Kind getKind() const override {
+        return Kind::Branch;
+    }
+
+    Temp getCondition() const {
+        return condition;
+    }
+
+    const Block &getTrueDest() const {
+        return trueDest;
+    }
+
+    const Block &getFalseDest() const {
+        return falseDest;
+    }
+
+private:
+    Temp condition;
+    const Block &trueDest;
+    const Block &falseDest;
+};
+
+
 //class Dump {
 //
 //public:

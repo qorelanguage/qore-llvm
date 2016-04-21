@@ -63,10 +63,6 @@ public:
         return temps[temp.getIndex()];
     }
 
-    comp::as::Block &getBlock(Id id) {
-        return f.getBlock(id);
-    }
-
 private:
     comp::as::Function &f;
     std::vector<rt::qvalue> temps;
@@ -89,7 +85,7 @@ private:
     static void run(rt::Context &ctx, comp::as::Function &f) {
         X x(f);
         FunctionInterpreter<X> fi(ctx, x);
-        fi.run(x.getBlock(0));
+        fi.run(f.getEntryBlock());
     }
 };
 

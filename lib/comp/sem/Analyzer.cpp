@@ -70,8 +70,7 @@ void Core::processPendingDeclarations() {
 }
 
 Statement::Ptr Core::doPass1(Scope &scope, ast::Statement &stmt) {
-    StatementAnalyzerPass1 a(*this, scope);
-    return stmt.accept(a);
+    return StatementAnalyzerPass1::analyze(*this, scope, stmt);
 }
 
 /*

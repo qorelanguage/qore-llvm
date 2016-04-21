@@ -50,6 +50,7 @@ ConversionDesc ConversionTable[] = {
         C(StringToInt, convertStringToInt, Int, String),
         C(BoxInt, int_box, Any, Int),
         C(AnyToString, any_to_string, String, Any),
+        C(IntToBool, int_to_bool, Bool, Int),
 };
 
 //Warning - entries must be in the same order as rt::Operator
@@ -115,6 +116,11 @@ Conversion findConversionImpl(Type src, Type dest) {
         }
         if (src == Type::Any) {
             return Conversion::AnyToString;
+        }
+    }
+    if (dest == Type::SoftBool) {
+        if (src == Type::Int) {
+            return Conversion::IntToBool;
         }
     }
     if (dest == Type::SoftInt) {

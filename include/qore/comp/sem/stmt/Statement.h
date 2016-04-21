@@ -40,7 +40,7 @@ namespace sem {
 class CompoundStatement;
 class ExpressionStatement;
 class GlobalVariableInitializationStatement;
-class LifetimeEndStatement;
+class IfStatement;
 class ReturnStatement;
 class StringLiteralInitializationStatement;
 
@@ -51,7 +51,7 @@ public:
         Compound,
         Expression,
         GlobalVariableInitialization,
-        LifetimeEnd,
+        If,
         Return,
         StringLiteralInitialization,
     };
@@ -70,7 +70,7 @@ public:
             CASE(Compound);
             CASE(Expression);
             CASE(GlobalVariableInitialization);
-            CASE(LifetimeEnd);
+            CASE(If);
             CASE(Return);
             CASE(StringLiteralInitialization);
             default:

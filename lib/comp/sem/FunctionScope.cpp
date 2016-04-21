@@ -71,10 +71,7 @@ as::Function &FunctionScope::analyze() {
         args[std::get<1>(a).str] = &createLocalVariable(std::get<1>(a).str, std::get<1>(a).location, type);
     }
 
-
-    StatementAnalyzerPass1 a(core, *this);
-    Statement::Ptr body = node.body->accept(a);
-
+    Statement::Ptr body = core.doPass1(*this, *node.body);
 
     FunctionBuilder b;
     Id index = 0;
@@ -85,7 +82,6 @@ as::Function &FunctionScope::analyze() {
         as::Temp temp = b.getFreeTemp();
         b.createGetArg(temp, index++);
         if (!lv.getType().isPrimitive()) {
-            b.addCleanup(lv);
             b.createRefInc(temp);
         }
         b.createSetLocal(slot, temp);

@@ -29,16 +29,36 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/Builder.h"
+#include <vector>
 #include "LValue.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
+bool Builder::needsLandingPad(std::vector<CleanupScope>::reverse_iterator it) {
+    if (!cleanupTemps.empty() || (cleanupLValue && cleanupLValue->hasLock())) {
+        return true;
+    }
+    while (it != cleanupScopes.rend()) {
+        if (it->lv && !it->lv->getType().isPrimitive()) {
+            return true;
+        }
+        //break if catch block?
+        ++it;
+    }
+    return false;
+}
+
 as::Block *Builder::getLandingPad() {
-    if (cleanupTemps.empty() && (!cleanupLValue || !cleanupLValue->hasLock()) && cleanupLocals.empty()) {
+    return getLandingPad2(cleanupScopes.rbegin());
+}
+
+as::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator iit) {
+    if (!needsLandingPad(iit)) {
         return nullptr;
     }
+
     bool savedTeminated = terminated;
     as::Block *savedCurrent = currentBlock;
     as::Block *block = createBlock();
@@ -56,14 +76,21 @@ as::Block *Builder::getLandingPad() {
         createRefDecNoexcept(as::Temp(*it), e);
     }
 
-    for (auto it = cleanupLocals.rbegin(); it != cleanupLocals.rend(); ++it) {
-        as::Temp temp = getFreeTemp();
-        createGetLocal(temp, findLocalSlot(**it));
-        createRefDecNoexcept(temp, e);
-        setTempFree(temp);
+    while (iit != cleanupScopes.rend()) {
+        if (iit->lv && !iit->lv->getType().isPrimitive()) {
+            as::Temp temp = getFreeTemp();
+            createGetLocal(temp, findLocalSlot(*iit->lv));
+            createRefDecNoexcept(temp, e);
+            setTempFree(temp);
+        }
+        //if catch, create jump and break
+        ++iit;
     }
 
-    createRethrow(e);
+    if (!terminated) {
+        createRethrow(e);
+    }
+
     setTempFree(e);
     currentBlock = savedCurrent;
     terminated = savedTeminated;
@@ -74,11 +101,13 @@ void Builder::buildCleanupForRet() {
     assert(!cleanupLValue);
     assert(cleanupTemps.empty());
 
-    for (auto it = cleanupLocals.rbegin(); it != cleanupLocals.rend(); ++it) {
-        as::Temp temp = getFreeTemp();
-        createGetLocal(temp, findLocalSlot(**it));
-        createRefDec(temp);
-        setTempFree(temp);
+    for (auto it = cleanupScopes.rbegin(); it != cleanupScopes.rend(); ++it) {
+        if (it->lv && !it->lv->getType().isPrimitive()) {
+            as::Temp temp = getFreeTemp();
+            createGetLocal(temp, findLocalSlot(*it->lv));
+            add(util::make_unique<as::RefDec>(temp, getLandingPad2(it + 1)));
+            setTempFree(temp);
+        }
     }
 }
 

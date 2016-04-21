@@ -37,7 +37,6 @@
 #include "qore/comp/sem/Scope.h"
 #include "qore/comp/sem/stmt/Statement.h"
 #include "qore/comp/sem/stmt/CompoundStatement.h"
-#include "qore/comp/sem/stmt/LifetimeEndStatement.h"
 
 namespace qore {
 namespace comp {
@@ -88,14 +87,6 @@ public:
 
     const as::Type &getReturnType() const override {
         return parent.getReturnType();
-    }
-
-    Statement::Ptr finalize() {
-        std::vector<Statement::Ptr> statements;
-        for (auto it = locals.rbegin(); it != locals.rend(); ++it) {            //incorrect order
-            statements.push_back(LifetimeEndStatement::create(*it->second));
-        }
-        return CompoundStatement::create(std::move(statements));
     }
 
 private:

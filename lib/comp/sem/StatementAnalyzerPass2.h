@@ -35,7 +35,6 @@
 #include "qore/comp/sem/stmt/CompoundStatement.h"
 #include "qore/comp/sem/stmt/ExpressionStatement.h"
 #include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
-#include "qore/comp/sem/stmt/LifetimeEndStatement.h"
 #include "qore/comp/sem/stmt/StringLiteralInitializationStatement.h"
 #include "qore/comp/as/is.h"
 #include "ExpressionAnalyzerPass2.h"
@@ -54,9 +53,11 @@ public:
     }
 
     void visit(const CompoundStatement &stmt) {
+        builder.pushCleanupScope(stmt);
         for (const Statement::Ptr &ptr : stmt.getStatements()) {
             ptr->accept(*this);
         }
+        builder.popCleanupScope(stmt);
     }
 
     void visit(const ExpressionStatement &stmt) {
@@ -72,15 +73,50 @@ public:
         builder.setTempFree(temp);
     }
 
-    void visit(const LifetimeEndStatement &stmt) {
-        as::LocalSlot slot = builder.unassignLocalSlot(stmt.getLocalVariable());
-        if (!stmt.getLocalVariable().getType().isPrimitive()) {
-            builder.doneCleanup(stmt.getLocalVariable());
-            as::Temp temp = builder.getFreeTemp();
-            builder.createGetLocal(temp, slot);
-            builder.createRefDec(temp);
+    void visit(const IfStatement &stmt) {
+        builder.pushCleanupScope(stmt);
+
+        as::Temp temp = builder.getFreeTemp();
+        ExpressionAnalyzerPass2 a(core, builder, temp);
+        stmt.getCondition().accept(a);
+
+        as::Block *cont = nullptr;
+        as::Block *trueBlock = builder.createBlock();
+
+        if (!stmt.getFalseBranch()) {
+            cont = builder.createBlock();
+            builder.createBranch(temp, *trueBlock, *cont);
             builder.setTempFree(temp);
+        } else {
+            as::Block *falseBlock = builder.createBlock();
+            builder.createBranch(temp, *trueBlock, *falseBlock);
+            builder.setTempFree(temp);
+            builder.setCurrentBlock(falseBlock);
+            builder.pushCleanupScope(*stmt.getFalseBranch());
+            stmt.getFalseBranch()->accept(*this);
+            builder.popCleanupScope(*stmt.getFalseBranch());
+            if (!builder.isTerminated()) {
+                cont = builder.createBlock();
+                builder.createJump(*cont);
+            }
         }
+
+        builder.setCurrentBlock(trueBlock);
+        builder.pushCleanupScope(stmt.getTrueBranch());
+        stmt.getTrueBranch().accept(*this);
+        builder.popCleanupScope(stmt.getTrueBranch());
+        if (!builder.isTerminated()) {
+            if (!cont) {
+                cont = builder.createBlock();
+            }
+            builder.createJump(*cont);
+        }
+
+        if (cont) {
+            builder.setCurrentBlock(cont);
+        }
+
+        builder.popCleanupScope(stmt);
     }
 
     void visit(const ReturnStatement &stmt) {

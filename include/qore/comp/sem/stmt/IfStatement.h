@@ -25,77 +25,61 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief IfStatement definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
-#define INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
+#ifndef INCLUDE_QORE_COMP_SEM_STMT_IFSTATEMENT_H_
+#define INCLUDE_QORE_COMP_SEM_STMT_IFSTATEMENT_H_
 
-#include <memory>
+#include <cassert>
+#include "qore/comp/sem/expr/Expression.h"
+#include "qore/comp/sem/stmt/Statement.h"
 
 namespace qore {
 namespace comp {
-namespace as {
+namespace sem {
 
-class Block;
-class Instruction {
-
-public:
-    using Ptr = std::unique_ptr<Instruction>;
+class IfStatement : public Statement {
 
 public:
-    enum Kind {
-        IntConstant,
-        GetLocal,
-        SetLocal,
-        LoadString,
-        RefInc,
-        RefDec,
-        RefDecNoexcept,
-        ReadLockGlobal,
-        ReadUnlockGlobal,
-        WriteLockGlobal,
-        WriteUnlockGlobal,
-        GetGlobal,
-        SetGlobal,
-        MakeGlobal,
-        LandingPad,
-        Rethrow,
-        BinaryOperator,
-        Conversion,
-        Ret,
-        RetVoid,
-        MakeStringLiteral,
-        GetArg,
-        Jump,
-        Branch,
-    };
+    using Ptr = std::unique_ptr<IfStatement>;
 
 public:
-    virtual ~Instruction() = default;
-
-    virtual Kind getKind() const = 0;
-
-    Block *getLpad() const {
-        return lpad;
+    static Ptr create(Expression::Ptr condition, Statement::Ptr trueBranch, Statement::Ptr falseBranch) {
+        assert(condition);
+        assert(trueBranch);
+        return Ptr(new IfStatement(std::move(condition), std::move(trueBranch), std::move(falseBranch)));
     }
 
-protected:
-    explicit Instruction(Block *lpad = nullptr) : lpad(lpad) {
+    Kind getKind() const override {
+        return Kind::If;
+    }
+
+    const Expression &getCondition() const {
+        return *condition;
+    }
+
+    const Statement &getTrueBranch() const {
+        return *trueBranch;
+    }
+
+    const Statement *getFalseBranch() const {
+        return falseBranch.get();
     }
 
 private:
-    Instruction(const Instruction &) = delete;
-    Instruction(Instruction &&) = delete;
-    Instruction &operator=(const Instruction &) = delete;
-    Instruction &operator=(Instruction &&) = delete;
+    IfStatement(Expression::Ptr condition, Statement::Ptr trueBranch, Statement::Ptr falseBranch)
+            : condition(std::move(condition)), trueBranch(std::move(trueBranch)), falseBranch(std::move(falseBranch)) {
+    }
 
 private:
-    Block *lpad;
+    Expression::Ptr condition;
+    Statement::Ptr trueBranch;
+    Statement::Ptr falseBranch;
 };
 
-} // namespace as
+} // namespace sem
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
+#endif // INCLUDE_QORE_COMP_SEM_STMT_IFSTATEMENT_H_

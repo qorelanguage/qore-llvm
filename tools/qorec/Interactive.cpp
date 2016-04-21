@@ -177,7 +177,7 @@ public:
                 break;
             }
         }
-        analyzer.doPass2(mainBuilder, *blockScope.finalize());
+        mainBuilder.popCleanupScopes();
         execute(mainBuilder);
     }
 

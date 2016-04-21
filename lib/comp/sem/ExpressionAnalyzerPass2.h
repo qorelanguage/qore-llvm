@@ -191,7 +191,6 @@ public:
         evaluate(dest, expr.getInitExpression());
         if (!expr.getLocalVariable().getType().isPrimitive()) {
             refIncDestIfNeeded();
-            builder.addCleanup(expr.getLocalVariable());
         }
         as::LocalSlot slot = builder.assignLocalSlot(expr.getLocalVariable());
         builder.createSetLocal(slot, dest);

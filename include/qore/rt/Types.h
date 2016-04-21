@@ -60,6 +60,7 @@ enum class Type {
     Any,
     Nothing,
     Bool,
+    SoftBool,
     Int,
     SoftInt,
     Float,
@@ -91,6 +92,7 @@ enum class Conversion {
     StringToInt,
     BoxInt,
     AnyToString,
+    IntToBool,
 };
 
 } // namespace rt

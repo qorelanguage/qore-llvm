@@ -55,6 +55,7 @@ extern "C" qvalue op_add_any_any(qvalue left, qvalue right);       //THROWS
 extern "C" qvalue op_addeq_any_any(qvalue left, qvalue right);       //THROWS
 
 extern "C" qvalue qint_to_qvalue(qint i) noexcept;
+extern "C" qbool qvalue_to_qbool(qvalue v) noexcept;
 
 extern "C" qvalue any_to_string(qvalue a);
 
@@ -74,6 +75,8 @@ extern "C" void gv_write_lock(Context &ctx, Id id) noexcept;
 extern "C" void gv_write_unlock(Context &ctx, Id id) noexcept;
 extern "C" qvalue gv_get(Context &ctx, Id id) noexcept;
 extern "C" void gv_set(Context &ctx, Id id, qvalue v) noexcept;
+
+extern "C" qvalue int_to_bool(qvalue i) noexcept;
 
 } // namespace rt
 } // namespace qore

@@ -125,6 +125,13 @@ qvalue convertIntToString(qvalue i) {
     return v;
 }
 
+qvalue int_to_bool(qvalue i) noexcept {
+    LOG("int_to_bool(" << i.i << ")");
+    qvalue v;
+    v.b = i.i != 0;
+    return v;
+}
+
 qvalue convertStringToInt(qvalue p) {
     assert(p.p->getType() == Type::String);
     LOG("convertStringToInt(" << p.p << ")");
@@ -304,6 +311,10 @@ extern "C" void decRefNoexcept(qvalue v, qvalue ex) noexcept {
     } catch (Exception &e) {
         //link e with ex
     }
+}
+
+extern "C" qbool qvalue_to_qbool(qvalue v) noexcept {
+    return v.b;
 }
 
 } // namespace rt
