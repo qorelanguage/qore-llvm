@@ -375,7 +375,7 @@ public:
         TYPE(type);
         ARRAY(params, {
                 visit(std::get<0>(i));
-                os << indent << "-"; str(std::get<1>(i).str);
+                os << indent << "-Identifier " << str(std::get<1>(i).str) << "\n";      //FIXME
                 if (std::get<2>(i)) { std::get<2>(i)->accept(*this); } else { os << indent << "-no default-\n"; }
         });
         if (!node.baseCtors.empty()) {
