@@ -36,6 +36,7 @@
 #include "qore/comp/sem/stmt/ExpressionStatement.h"
 #include "qore/comp/sem/stmt/IfStatement.h"
 #include "qore/comp/sem/stmt/ReturnStatement.h"
+#include "qore/comp/sem/stmt/TryStatement.h"
 #include "ExpressionAnalyzerPass1.h"
 
 namespace qore {
@@ -93,9 +94,14 @@ public:
         return IfStatement::create(std::move(cond), std::move(b1), std::move(b2));
     }
 
+    Statement::Ptr visit(ast::TryStatement &node) override {
+        Statement::Ptr tryStmt = analyzeWithNewBlock(core, scope, *node.stmtTry);
+        Statement::Ptr catchStmt = analyzeWithNewBlock(core, scope, *node.stmtCatch);
+        return TryStatement::create(std::move(tryStmt), std::move(catchStmt));
+    }
+
 
     Statement::Ptr visit(ast::EmptyStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::TryStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
     Statement::Ptr visit(ast::ForeachStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
     Statement::Ptr visit(ast::ThrowStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
     Statement::Ptr visit(ast::SimpleStatement &node) override { QORE_NOT_IMPLEMENTED(""); }

@@ -201,7 +201,7 @@ private:
 class RefDecNoexcept : public Instruction {
 
 public:
-    RefDecNoexcept(Temp temp) : temp(temp) {
+    explicit RefDecNoexcept(Temp temp) : temp(temp) {
     }
 
     Kind getKind() const override {
@@ -358,6 +358,8 @@ private:
     Temp initValue;
 };
 
+//this name is misleading - it has nothing to do with qore's 'rethrow' statement
+//instead it resembles llvm's resume, i.e. continue with stack unwinding with 'current exception'
 class Rethrow : public Instruction {
 
 public:

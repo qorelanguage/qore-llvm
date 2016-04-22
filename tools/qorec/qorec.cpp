@@ -83,22 +83,14 @@ int main(int argc, char *argv[]) {
     LOG_FUNCTION();
 
     std::string src = R"(
-any sub f(int i) {
-    if (i += string x) {string s1 = "aaa"; return 21;}
-    return 42;
+
+string s = "A";
+try {
+    string s2 = "B";
+    s = "1";
+} catch (hash e) {
+    string s3 = "C";
 }
-
-#int i;
-our string s;
-#s = string s1 = "A";
-#i = i + 1;
-#s = s + i;
-#i += "2";
-#s += i;
-
-#any a = 1;
-#a = a + 2;
-#a += "8";
 
 )";
 

@@ -125,8 +125,8 @@ private:
     }
 
 public:
-    void pushCleanupScope(const Statement &stmt) {
-        cleanupScopes.emplace_back(stmt);
+    void pushCleanupScope(const Statement &stmt, as::Block *catchBlock = nullptr) {
+        cleanupScopes.emplace_back(stmt, catchBlock);
     }
 
     void popCleanupScope(const Statement &stmt) {

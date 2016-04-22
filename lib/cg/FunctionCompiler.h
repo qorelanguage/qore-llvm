@@ -84,7 +84,7 @@ public:
             llvm::LandingPadInst *l = bld.CreateLandingPad(helper.lt_exc, 1);
             l->setCleanup(true);
             bld.CreateStore(l, excSlot);
-            //FIXME extract exception and push on a stack (thread local? qore::rt support?)
+            //FIXME extract exception and use it in decRefNoExcept
             doBlock(lpad, *ins.getLpad());
         }
         llvm::Value *ret = builder.CreateInvoke(f, bb, lpad, args);

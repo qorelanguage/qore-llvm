@@ -25,33 +25,52 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief TryStatement definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_
-#define INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_
+#ifndef INCLUDE_QORE_COMP_SEM_STMT_TRYSTATEMENT_H_
+#define INCLUDE_QORE_COMP_SEM_STMT_TRYSTATEMENT_H_
+
+#include "qore/comp/sem/stmt/Statement.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-class CleanupScope {
+class TryStatement : public Statement {
 
 public:
-    explicit CleanupScope(const LocalVariable &lv, as::Block *b) : lv(&lv), stmt(nullptr), b(b), lpad(nullptr) {
+    using Ptr = std::unique_ptr<TryStatement>;
+
+public:
+    static Ptr create(Statement::Ptr tryBody, Statement::Ptr catchBody) {
+        return Ptr(new TryStatement(std::move(tryBody), std::move(catchBody)));
     }
 
-    explicit CleanupScope(const Statement &stmt, as::Block *b) : lv(nullptr), stmt(&stmt), b(b), lpad(nullptr) {
+    Kind getKind() const override {
+        return Kind::Try;
     }
 
-    const LocalVariable *lv;
-    const Statement *stmt;
-    as::Block *b;
-    as::Block *lpad;
+    const Statement &getTryBody() const {
+        return *tryBody;
+    }
+
+    const Statement &getCatchBody() const {
+        return *catchBody;
+    }
+
+private:
+    TryStatement(Statement::Ptr tryBody, Statement::Ptr catchBody)
+            : tryBody(std::move(tryBody)), catchBody(std::move(catchBody)) {
+    }
+
+private:
+    Statement::Ptr tryBody;
+    Statement::Ptr catchBody;
 };
 
 } // namespace sem
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_
+#endif // INCLUDE_QORE_COMP_SEM_STMT_TRYSTATEMENT_H_

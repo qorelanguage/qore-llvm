@@ -36,6 +36,7 @@
 #include "qore/comp/sem/stmt/ExpressionStatement.h"
 #include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
 #include "qore/comp/sem/stmt/StringLiteralInitializationStatement.h"
+#include "qore/comp/sem/stmt/TryStatement.h"
 #include "qore/comp/as/is.h"
 #include "ExpressionAnalyzerPass2.h"
 
@@ -135,6 +136,38 @@ public:
 
     void visit(const StringLiteralInitializationStatement &stmt) {
         builder.createMakeStringLiteral(stmt.getStringLiteral(), stmt.getValue());
+    }
+
+    void visit(const TryStatement &stmt) {
+        as::Block *cont = nullptr;
+        as::Block *catchBlock = builder.createBlock();
+        builder.pushCleanupScope(stmt.getTryBody(), catchBlock);
+        stmt.getTryBody().accept(*this);
+        if (!builder.isTerminated()) {
+            cont = builder.createBlock();
+            builder.createJump(*cont);
+        }
+        builder.popCleanupScope(stmt.getTryBody());
+
+        builder.setCurrentBlock(catchBlock);
+        builder.pushCleanupScope(stmt.getCatchBody());
+        //store 'current exception' to the user variable
+        stmt.getCatchBody().accept(*this);
+        if (!builder.isTerminated()) {
+            if (!cont) {
+                cont = builder.createBlock();
+            }
+            builder.createJump(*cont);
+        }
+        builder.popCleanupScope(stmt.getCatchBody());
+
+        if (cont) {
+            builder.setCurrentBlock(cont);
+        }
+        //rethrow statement will:
+        // - check that it is inside a catch block
+        // - restore 'current exception' from the use variable
+        // - jump to the next block in builder's cleanupStack (or resume if there is no such block)
     }
 
 private:

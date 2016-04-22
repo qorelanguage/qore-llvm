@@ -50,8 +50,7 @@ public:
     }
 
     void run(comp::as::Block &bb) {
-        std::vector<rt::qvalue> exceptions;
-        comp::as::Block *b = &bb;
+        const comp::as::Block *b = &bb;
         Id i = 0;
         while (true) {
             assert(i < b->instructions.size());
@@ -108,6 +107,12 @@ public:
                     case comp::as::Instruction::Kind::MakeStringLiteral:
                         exec(static_cast<comp::as::MakeStringLiteral *>(ins));
                         break;
+                    case comp::as::Instruction::Kind::Jump: {
+                        comp::as::Jump &ii = static_cast<comp::as::Jump &>(*ins);
+                        b = &ii.getDest();
+                        i = 0;
+                        break;
+                    }
                     default:
                         QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins->getKind()));
                 }
@@ -115,10 +120,10 @@ public:
                 if (ins->getLpad()) {
                     QORE_UNREACHABLE("Exception thrown by an instruction with no landing pad");
                 }
-                exceptions.push_back(e.value);
-                //        who will pop it?
-                //                rethrow instruction
-                //                start of actual user's catch block?
+                //  set 'e' as the 'current exception'
+                //      - it is only used during cleanup (by the refDecNoThrow instruction), i.e. the code between
+                //        the start of the lpad block and either rethrow/resume or jump to user's catch block, which
+                //        will store it to a user-defined local variable
                 b = ins->getLpad();
                 i = 0;
             }
