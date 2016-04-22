@@ -64,6 +64,7 @@ public:
             queue.pop_back();
             doBlock(blockMap[b], *b);
         }
+        //func->viewCFG();
     }
 
     llvm::Value *makeCallOrInvoke(llvm::IRBuilder<> &builder, const comp::as::Instruction &ins,
@@ -72,10 +73,21 @@ public:
             return builder.CreateCall(f, args);
         }
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(helper.ctx, "bb", func);
-        llvm::BasicBlock *lpad = llvm::BasicBlock::Create(helper.ctx, "lpad", func);
 
+
+        llvm::BasicBlock *lpad = blockMap[ins.getLpad()];
+        if (!lpad) {
+            lpad = llvm::BasicBlock::Create(helper.ctx, "lpad", func);
+            blockMap[ins.getLpad()] = lpad;
+
+            llvm::IRBuilder<> bld(lpad);
+            llvm::LandingPadInst *l = bld.CreateLandingPad(helper.lt_exc, 1);
+            l->setCleanup(true);
+            bld.CreateStore(l, excSlot);
+            //FIXME extract exception and push on a stack (thread local? qore::rt support?)
+            doBlock(lpad, *ins.getLpad());
+        }
         llvm::Value *ret = builder.CreateInvoke(f, bb, lpad, args);
-        doBlock(lpad, *ins.getLpad());
         builder.SetInsertPoint(bb);
         return ret;
     }
@@ -118,7 +130,8 @@ public:
                 }
                 case comp::as::Instruction::Kind::RefDecNoexcept: {
                     comp::as::RefDecNoexcept &ins = static_cast<comp::as::RefDecNoexcept &>(*ii);
-                    llvm::Value *args[2] = { temps[ins.getTemp().getIndex()], temps[ins.getE().getIndex()] };
+                    auto e = llvm::Constant::getNullValue(helper.lt_qvalue); //FIXME top of exception stack
+                    llvm::Value *args[2] = { temps[ins.getTemp().getIndex()], e };
                     builder.CreateCall(helper.lf_decRefNoexcept, args);
                     break;
                 }
@@ -170,16 +183,8 @@ public:
                     builder.CreateCall(helper.lf_createGlobal, args);
                     break;
                 }
-                case comp::as::Instruction::Kind::LandingPad: {
-                    comp::as::LandingPad &ins = static_cast<comp::as::LandingPad &>(*ii);
-                    llvm::LandingPadInst *l = builder.CreateLandingPad(helper.lt_exc, 1);
-                    l->setCleanup(true);
-                    builder.CreateStore(l, excSlot);
-                    temps[ins.getDest().getIndex()] = llvm::Constant::getNullValue(helper.lt_qvalue);
-                    //FIXME extract exception
-                    break;
-                }
                 case comp::as::Instruction::Kind::Rethrow: {
+                    //FIXME pop from exception stack
                     builder.CreateResume(builder.CreateLoad(excSlot));
                     break;
                 }

@@ -54,6 +54,7 @@ union qvalue {
 //struct GlobalVariable;
 
 struct Exception {
+    qvalue value;
 };
 
 enum class Type {

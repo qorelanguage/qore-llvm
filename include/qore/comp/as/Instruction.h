@@ -59,7 +59,6 @@ public:
         GetGlobal,
         SetGlobal,
         MakeGlobal,
-        LandingPad,
         Rethrow,
         BinaryOperator,
         Conversion,

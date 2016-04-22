@@ -50,6 +50,7 @@ public:
     }
 
     void run(comp::as::Block &bb) {
+        std::vector<rt::qvalue> exceptions;
         comp::as::Block *b = &bb;
         Id i = 0;
         while (true) {
@@ -114,10 +115,12 @@ public:
                 if (ins->getLpad()) {
                     QORE_UNREACHABLE("Exception thrown by an instruction with no landing pad");
                 }
+                exceptions.push_back(e.value);
+                //        who will pop it?
+                //                rethrow instruction
+                //                start of actual user's catch block?
                 b = ins->getLpad();
-                i = 1;
-                //temps[static_cast<comp::as::LandingPad *>(b->instructions[0].get())->getDest()] = e;
-                QORE_NOT_IMPLEMENTED("");
+                i = 0;
             }
         }
     }

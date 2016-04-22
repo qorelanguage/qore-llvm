@@ -38,14 +38,16 @@ namespace sem {
 class CleanupScope {
 
 public:
-    explicit CleanupScope(const LocalVariable &lv) : lv(&lv), stmt(nullptr) {
+    explicit CleanupScope(const LocalVariable &lv, as::Block *b) : lv(&lv), stmt(nullptr), b(b), lpad(nullptr) {
     }
 
-    explicit CleanupScope(const Statement &stmt) : lv(nullptr), stmt(&stmt) {
+    explicit CleanupScope(const Statement &stmt) : lv(nullptr), stmt(&stmt), b(nullptr), lpad(nullptr) {
     }
 
     const LocalVariable *lv;
     const Statement *stmt;
+    as::Block *b;
+    as::Block *lpad;
 };
 
 } // namespace sem

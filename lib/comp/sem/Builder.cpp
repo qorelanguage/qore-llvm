@@ -36,27 +36,29 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-bool Builder::needsLandingPad(std::vector<CleanupScope>::reverse_iterator it) {
-    if (!cleanupTemps.empty() || (cleanupLValue && cleanupLValue->hasLock())) {
-        return true;
-    }
-    while (it != cleanupScopes.rend()) {
-        if (it->lv && !it->lv->getType().isPrimitive()) {
-            return true;
-        }
-        //break if catch block?
-        ++it;
-    }
-    return false;
-}
-
 as::Block *Builder::getLandingPad() {
     return getLandingPad2(cleanupScopes.rbegin());
 }
 
 as::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator iit) {
-    if (!needsLandingPad(iit)) {
-        return nullptr;
+    while (iit != cleanupScopes.rend()) {
+        if (iit->b) {
+            break;
+        }
+        ++iit;
+    }
+
+    if (cleanupTemps.empty() && (!cleanupLValue || !cleanupLValue->hasLock())) {
+
+        if (iit == cleanupScopes.rend()) {
+            return nullptr;
+        }
+
+        if (iit->lpad == nullptr) {
+            iit->lpad = createBlock();
+            iit->lpad->instructions.push_back(util::make_unique<as::Jump>(*iit->b));
+        }
+        return iit->lpad;
     }
 
     bool savedTeminated = terminated;
@@ -65,33 +67,20 @@ as::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator i
     currentBlock = block;
     terminated = false;
 
-    as::Temp e = getFreeTemp();
-    createLandingPad(e);
-
     if (cleanupLValue) {
         cleanupLValue->cleanup(*this);
     }
 
     for (auto it = cleanupTemps.rbegin(); it != cleanupTemps.rend(); ++it) {
-        createRefDecNoexcept(as::Temp(*it), e);
+        createRefDecNoexcept(as::Temp(*it));
     }
 
-    while (iit != cleanupScopes.rend()) {
-        if (iit->lv && !iit->lv->getType().isPrimitive()) {
-            as::Temp temp = getFreeTemp();
-            createGetLocal(temp, findLocalSlot(*iit->lv));
-            createRefDecNoexcept(temp, e);
-            setTempFree(temp);
-        }
-        //if catch, create jump and break
-        ++iit;
+    if (iit != cleanupScopes.rend()) {
+        currentBlock->instructions.push_back(util::make_unique<as::Jump>(*iit->b));
+    } else {
+        currentBlock->instructions.push_back(util::make_unique<as::Rethrow>());
     }
 
-    if (!terminated) {
-        createRethrow(e);
-    }
-
-    setTempFree(e);
     currentBlock = savedCurrent;
     terminated = savedTeminated;
     return block;

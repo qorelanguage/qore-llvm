@@ -79,7 +79,21 @@ public:
         }
         locals.insert(std::make_pair(&lv, slot));
 
-        cleanupScopes.emplace_back(lv);
+        as::Block *b = nullptr;
+        if (!lv.getType().isPrimitive()) {
+            b = createBlock();
+            as::Temp temp = getFreeTemp();      //all temps are free at this point
+            b->instructions.push_back(util::make_unique<as::GetLocal>(temp, slot));
+            b->instructions.push_back(util::make_unique<as::RefDecNoexcept>(temp));
+            setTempFree(temp);
+            as::Block *b2 = fff(cleanupScopes.rbegin());
+            if (b2) {
+                b->instructions.push_back(util::make_unique<as::Jump>(*b2));
+            } else {
+                b->instructions.push_back(util::make_unique<as::Rethrow>());
+            }
+        }
+        cleanupScopes.emplace_back(lv, b);
 
         return slot;
     }
@@ -91,6 +105,16 @@ public:
     }
 
 private:
+    as::Block *fff(std::vector<CleanupScope>::reverse_iterator iit) {
+        while (iit != cleanupScopes.rend()) {
+            if (iit->b) {
+                return iit->b;
+            }
+            ++iit;
+        }
+        return nullptr;
+    }
+
     as::LocalSlot unassignLocalSlot(const LocalVariable &lv) {
         auto it = locals.find(&lv);
         assert(it != locals.end());
@@ -256,18 +280,14 @@ public:
         add(util::make_unique<as::Conversion>(dest, desc, arg, getLandingPad()));
     }
 
-    void createRefDecNoexcept(as::Temp temp, as::Temp e) {
-        add(util::make_unique<as::RefDecNoexcept>(temp, e));
+    void createRefDecNoexcept(as::Temp temp) {
+        add(util::make_unique<as::RefDecNoexcept>(temp));
     }
 
-    void createLandingPad(as::Temp dest) {
-        add(util::make_unique<as::LandingPad>(dest));
-    }
-
-    void createRethrow(as::Temp e) {
-        add(util::make_unique<as::Rethrow>(e));
-        terminated = true;
-    }
+//    void createRethrow() {
+//        add(util::make_unique<as::Rethrow>());
+//        terminated = true;
+//    }
 
     void createGetArg(as::Temp dest, Id index) {
         add(util::make_unique<as::GetArg>(dest, index));
@@ -310,7 +330,6 @@ private:
 
     as::Block *getLandingPad();
     as::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
-    bool needsLandingPad(std::vector<CleanupScope>::reverse_iterator it);
     void buildCleanupForRet();
 
 private:

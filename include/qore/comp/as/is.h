@@ -201,7 +201,7 @@ private:
 class RefDecNoexcept : public Instruction {
 
 public:
-    RefDecNoexcept(Temp temp, Temp e) : temp(temp), e(e) {
+    RefDecNoexcept(Temp temp) : temp(temp) {
     }
 
     Kind getKind() const override {
@@ -212,13 +212,8 @@ public:
         return temp;
     }
 
-    Temp getE() const {
-        return e;
-    }
-
 private:
     Temp temp;
-    Temp e;
 };
 
 class ReadLockGlobal : public Instruction {
@@ -363,40 +358,15 @@ private:
     Temp initValue;
 };
 
-class LandingPad : public Instruction {
-
-public:
-    explicit LandingPad(Temp dest) : dest(dest) {
-    }
-
-    Kind getKind() const override {
-        return Kind::LandingPad;
-    }
-
-    Temp getDest() const {
-        return dest;
-    }
-
-private:
-    Temp dest;
-};
-
 class Rethrow : public Instruction {
 
 public:
-    explicit Rethrow(Temp e) : e(e) {
+    Rethrow() {
     }
 
     Kind getKind() const override {
         return Kind::Rethrow;
     }
-
-    Temp getE() const {
-        return e;
-    }
-
-private:
-    Temp e;
 };
 
 class BinaryOperator : public Instruction {
