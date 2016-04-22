@@ -39,6 +39,7 @@ namespace sem {
 void GlobalVariableInfo::pass2() {
     assert(gv == nullptr);
     const as::Type &type = parent.resolveType(node.type);
+    //FIXME use fullname
     gv = &parent.getScriptBuilder().createGlobalVariable(getName(), getLocation(), type);
 }
 

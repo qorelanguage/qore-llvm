@@ -123,7 +123,7 @@ public:
         QORE_NOT_IMPLEMENTED("Default value");
     }
 
-    as::Function &createFunction(std::string name, Id argCount, const as::Type &retType, FunctionBuilder &b);
+    as::Function &createFunction(std::string name, Id argCount, const as::Type &retType, Builder &b);
 
     as::Script::Ptr build(as::Function *qInit, as::Function *qMain) {
         return util::make_unique<as::Script>(std::move(types), std::move(globalVariables), std::move(functions),

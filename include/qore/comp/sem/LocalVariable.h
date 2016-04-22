@@ -31,6 +31,8 @@
 #ifndef INCLUDE_QORE_COMP_SEM_LOCALVARIABLE_H_
 #define INCLUDE_QORE_COMP_SEM_LOCALVARIABLE_H_
 
+#include "qore/comp/as/Type.h"
+
 namespace qore {
 namespace comp {
 namespace sem {
@@ -38,8 +40,16 @@ namespace sem {
 class LocalVariable {
 
 public:
-    LocalVariable(const as::Type &type) : type(type) {
+    LocalVariable(String::Ref name, SourceLocation location, const as::Type &type) : name(name),
+            location(location), type(type) {
+    }
 
+    String::Ref getName() const {
+        return name;
+    }
+
+    SourceLocation getLocation() const {
+        return location;
     }
 
     const as::Type &getType() const {
@@ -47,6 +57,8 @@ public:
     }
 
 private:
+    String::Ref name;
+    SourceLocation location;
     const as::Type &type;
 };
 

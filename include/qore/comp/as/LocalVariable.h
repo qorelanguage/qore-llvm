@@ -28,36 +28,54 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_LOCALSLOT_H_
-#define INCLUDE_QORE_COMP_AS_LOCALSLOT_H_
+#ifndef INCLUDE_QORE_COMP_AS_LOCALVARIABLE_H_
+#define INCLUDE_QORE_COMP_AS_LOCALVARIABLE_H_
 
+#include <memory>
+#include "qore/comp/SourceLocation.h"
+#include "qore/comp/String.h"
+#include "qore/comp/as/Type.h"
 #include "qore/Id.h"
 
 namespace qore {
 namespace comp {
 namespace as {
 
-class LocalSlot {
+class LocalVariable {
 
 public:
-    explicit LocalSlot(Id index) : index(index) {
+    using Ptr = std::unique_ptr<LocalVariable>;
+
+public:
+    LocalVariable(Id id, String::Ref name, SourceLocation location, const Type &type)
+            : id(id), name(name), location(location), type(type) {
     }
 
-    Id getIndex() const {
-        return index;
+    Id getId() const {
+        return id;
     }
 
-    LocalSlot(const LocalSlot &) = default;
-    LocalSlot(LocalSlot &&) = default;
-    LocalSlot &operator=(const LocalSlot &) = default;
-    LocalSlot &operator=(LocalSlot &&) = default;
+    SourceLocation getLocation() const {
+        return location;
+    }
+
+    String::Ref getName() const {
+        return name;
+    }
+
+    const Type &getType() const {
+        return type;
+    }
 
 private:
-    Id index;
+    Id id;
+    String::Ref name;
+    SourceLocation location;
+    const Type &type;
 };
 
 } // namespace as
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AS_LOCALSLOT_H_
+#endif // INCLUDE_QORE_COMP_AS_LOCALVARIABLE_H_

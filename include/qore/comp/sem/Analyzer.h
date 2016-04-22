@@ -66,7 +66,7 @@ inline as::Script::Ptr analyze(Context &ctx, ast::Script &node) {
     as::Function &qMain = mainFs.analyze();
 
     //qinit - pass2
-    FunctionBuilder initBuilder;
+    Builder initBuilder;
     auto initializers = analyzer.scriptBuilder.takeInitializers();
     for (auto &stmt : initializers) {
         analyzer.doPass2(initBuilder, *stmt);

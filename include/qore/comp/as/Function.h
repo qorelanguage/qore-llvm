@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 #include "qore/comp/as/Block.h"
+#include "qore/comp/as/LocalVariable.h"
 #include "qore/comp/as/Type.h"
 
 namespace qore {
@@ -44,9 +45,10 @@ namespace as {
 class Function {
 
 public:
-    Function(std::string name, Id argCount, const as::Type &retType, Id tempCount, Id localCount,
-            std::vector<Block::Ptr> blocks) : name(std::move(name)), argCount(argCount), retType(retType),
-            tempCount(tempCount), localCount(localCount), blocks(std::move(blocks)) {
+    Function(std::string name, Id argCount, const as::Type &retType, Id tempCount,
+            std::vector<LocalVariable::Ptr> locals, std::vector<Block::Ptr> blocks)
+            : name(std::move(name)), argCount(argCount), retType(retType),
+            tempCount(tempCount), locals(std::move(locals)), blocks(std::move(blocks)) {
     }
 
     const std::string &getName() const {
@@ -66,7 +68,7 @@ public:
     }
 
     Id getLocalCount() const {
-        return localCount;
+        return locals.size();
     }
 
     Block &getEntryBlock() const {
@@ -79,7 +81,7 @@ private:
     Id argCount;
     const as::Type &retType;
     Id tempCount;
-    Id localCount;
+    std::vector<LocalVariable::Ptr> locals;
     std::vector<Block::Ptr> blocks;
 };
 

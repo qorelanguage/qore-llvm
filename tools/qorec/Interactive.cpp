@@ -29,6 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "Interactive.h"
+#include <map>
 #include <string>
 #include <vector>
 #include "qore/common/Logging.h"
@@ -83,7 +84,7 @@ public:
     }
 
     LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
-        std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(type);
+        std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(name, location, type);
         LocalVariable &lv = *ptr;
         locals.push_back(std::move(ptr));
         //lv.setShared();
@@ -107,30 +108,17 @@ private:
     std::vector<std::unique_ptr<LocalVariable>> locals;
 };
 
-class InteractiveFunctionBuilder : public Builder {
+class TopLevelCtx {
 
 public:
-    InteractiveFunctionBuilder() {
+    void setLocal(const as::LocalVariable &lv, rt::qvalue value) {
+        locals[lv.getId()] = value;
     }
 
-    as::LocalSlot createLocalSlot() override {
-        Id id = locals.size();
-        locals.resize(id + 1);
-        return as::LocalSlot(id);
-    }
-
-    as::Temp createTemp() override {
-        Id id = temps.size();
-        temps.resize(id + 1);
-        return as::Temp(id);
-    }
-
-    void setLocal(as::LocalSlot slot, rt::qvalue value) {
-        locals[slot.getIndex()] = value;
-    }
-
-    rt::qvalue getLocal(as::LocalSlot slot) {
-        return locals[slot.getIndex()];
+    rt::qvalue getLocal(const as::LocalVariable &lv) {
+        auto it = locals.find(lv.getId());
+        assert(it != locals.end());
+        return it->second;
     }
 
     void setTemp(as::Temp temp, rt::qvalue value) {
@@ -138,12 +126,14 @@ public:
     }
 
     rt::qvalue getTemp(as::Temp temp) {
-        return temps[temp.getIndex()];
+        auto it = temps.find(temp.getIndex());
+        assert(it != temps.end());
+        return it->second;
     }
 
 private:
-    std::vector<rt::qvalue> temps;
-    std::vector<rt::qvalue> locals;
+    std::map<Id, rt::qvalue> temps;
+    std::map<Id, rt::qvalue> locals;
 };
 
 class Interactive {
@@ -153,13 +143,15 @@ public:
     }
 
     void doIt() {
+        rt::Context rtCtx;
         StdinWrapper dp(compCtx);
         Parser parser(compCtx, dp);
-        InteractiveFunctionBuilder mainBuilder;
+        Builder mainBuilder;
         Core analyzer(compCtx);
         NamespaceScope root(analyzer);
         InteractiveScope topScope(root);
         BlockScopeImpl blockScope(topScope);
+        TopLevelCtx topLevelCtx;
         while (true) {
             comp::Parser::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
             if (declOrStmt.decl) {
@@ -172,26 +164,19 @@ public:
                     analyzer.doPass2(mainBuilder, *stmt);
                 }
                 analyzer.doPass2(mainBuilder, *stmt);
-                execute(mainBuilder);
+                in::FunctionInterpreter<TopLevelCtx> fi(rtCtx, topLevelCtx);
+                fi.run(mainBuilder.getEntryForInteractiveMode());
             } else {
                 break;
             }
         }
         mainBuilder.popCleanupScopes();
-        execute(mainBuilder);
-    }
-
-private:
-    void execute(InteractiveFunctionBuilder &builder) {
-        builder.createRetVoid();
-        in::FunctionInterpreter<InteractiveFunctionBuilder> fi(rtCtx, builder);
-        fi.run(builder.getBlock(0));
-        builder.clear();
+        in::FunctionInterpreter<TopLevelCtx> fi(rtCtx, topLevelCtx);
+        fi.run(mainBuilder.getEntryForInteractiveMode());
     }
 
 private:
     Context &compCtx;
-    rt::Context rtCtx;
 };
 
 } // namespace sem

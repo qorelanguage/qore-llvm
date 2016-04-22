@@ -192,13 +192,12 @@ public:
         if (!expr.getLocalVariable().getType().isPrimitive()) {
             refIncDestIfNeeded();
         }
-        as::LocalSlot slot = builder.assignLocalSlot(expr.getLocalVariable());
-        builder.createSetLocal(slot, dest);
+        builder.startOfLocalVariableLifetime(expr.getLocalVariable(), dest);
     }
 
     void visit(const LocalVariableRefExpression &expr) {
         noSideEffect();
-        builder.createGetLocal(dest, builder.findLocalSlot(expr.getLocalVariable()));
+        builder.createGetLocal(dest, expr.getLocalVariable());
         if (!expr.getLocalVariable().getType().isPrimitive()) {
             refIncDestIfNeeded();
         }

@@ -92,10 +92,9 @@ const as::Type &ScriptBuilder::getClassType(const ClassScope &c, bool asterisk) 
     return asterisk ? t2 : t1;
 }
 
-as::Function &ScriptBuilder::createFunction(std::string name, Id argCount, const as::Type &retType,
-        FunctionBuilder &b) {
-    std::unique_ptr<as::Function> ptr
-        = util::make_unique<as::Function>(name, argCount, retType, b.tempCount, b.localCount, b.clear());
+as::Function &ScriptBuilder::createFunction(std::string name, Id argCount, const as::Type &retType, Builder &b) {
+    std::unique_ptr<as::Function> ptr = util::make_unique<as::Function>(name, argCount,
+            retType, b.tempCount, std::move(b.locals), std::move(b.blocks));
     as::Function &f = *ptr;
     functions.push_back(std::move(ptr));
     return f;

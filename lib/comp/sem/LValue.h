@@ -81,7 +81,7 @@ public:
                 builder.createGetGlobal(dest, asGlobal().getGlobalVariable());
                 break;
             case Expression::Kind::LocalVariableRef:
-                builder.createGetLocal(dest, builder.findLocalSlot(asLocal().getLocalVariable()));
+                builder.createGetLocal(dest, asLocal().getLocalVariable());
                 break;
             default:
                 //error reported in ctor
@@ -95,7 +95,7 @@ public:
                 builder.createSetGlobal(asGlobal().getGlobalVariable(), src);
                 break;
             case Expression::Kind::LocalVariableRef:
-                builder.createSetLocal(builder.findLocalSlot(asLocal().getLocalVariable()), src);
+                builder.createSetLocal(asLocal().getLocalVariable(), src);
                 break;
             default:
                 //error reported in ctor

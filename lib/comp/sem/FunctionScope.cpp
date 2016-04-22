@@ -48,7 +48,7 @@ const as::Type &FunctionScope::resolveType(ast::Type &node) const {
 }
 
 LocalVariable &FunctionScope::createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) {
-    std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(type);
+    std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(name, location, type);
     LocalVariable &lv = *ptr;
     locals.push_back(std::move(ptr));
     return lv;
@@ -73,19 +73,11 @@ as::Function &FunctionScope::analyze() {
 
     Statement::Ptr body = core.doPass1(*this, *node.body);
 
-    FunctionBuilder b;
+    Builder b;
     Id index = 0;
     for (auto it = node.params.begin(); it != node.params.end(); ++it) {
         LocalVariable &lv = *args[std::get<1>(*it).str];
-        as::LocalSlot slot = b.assignLocalSlot(lv);      //or allocate on heap and copy if the local variable is shared
-
-        as::Temp temp = b.getFreeTemp();
-        b.createGetArg(temp, index++);
-        if (!lv.getType().isPrimitive()) {
-            b.createRefInc(temp);
-        }
-        b.createSetLocal(slot, temp);
-        b.setTempFree(temp);
+        b.startOfArgumentLifetime(lv, index++);
     }
 
     StatementAnalyzerPass2 a2(core, b);

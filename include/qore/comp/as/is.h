@@ -39,7 +39,7 @@
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/StringLiteral.h"
 #include "qore/comp/as/Temp.h"
-#include "qore/comp/as/LocalSlot.h"
+#include "qore/comp/as/LocalVariable.h"
 #include "qore/comp/as/GlobalVariable.h"
 
 namespace qore {
@@ -72,7 +72,7 @@ private:
 class GetLocal : public Instruction {
 
 public:
-    GetLocal(Temp dest, LocalSlot slot) : dest(dest), slot(slot) {
+    GetLocal(Temp dest, const LocalVariable &localVariable) : dest(dest), localVariable(localVariable) {
     }
 
     Kind getKind() const override {
@@ -83,13 +83,13 @@ public:
         return dest;
     }
 
-    LocalSlot getSlot() const {
-        return slot;
+    const LocalVariable &getLocalVariable() const {
+        return localVariable;
     }
 
 private:
     Temp dest;
-    LocalSlot slot;
+    const LocalVariable &localVariable;
 };
 
 class GetArg : public Instruction {
@@ -119,15 +119,15 @@ private:
 class SetLocal : public Instruction {
 
 public:
-    SetLocal(LocalSlot slot, Temp src) : slot(slot), src(src) {
+    SetLocal(const LocalVariable &localVariable, Temp src) : localVariable(localVariable), src(src) {
     }
 
     Kind getKind() const override {
         return Kind::SetLocal;
     }
 
-    LocalSlot getSlot() const {
-        return slot;
+    const LocalVariable &getLocalVariable() const {
+        return localVariable;
     }
 
     Temp getSrc() const {
@@ -135,7 +135,7 @@ public:
     }
 
 private:
-    LocalSlot slot;
+    const LocalVariable &localVariable;
     Temp src;
 };
 

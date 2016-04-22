@@ -136,11 +136,11 @@ private:
     }
 
     void exec(comp::as::GetLocal *ins) {
-        f.setTemp(ins->getDest(), f.getLocal(ins->getSlot()));
+        f.setTemp(ins->getDest(), f.getLocal(ins->getLocalVariable()));
     }
 
     void exec(comp::as::SetLocal *ins) {
-        f.setLocal(ins->getSlot(), f.getTemp(ins->getSrc()));
+        f.setLocal(ins->getLocalVariable(), f.getTemp(ins->getSrc()));
     }
 
     void exec(comp::as::LoadString *ins) {

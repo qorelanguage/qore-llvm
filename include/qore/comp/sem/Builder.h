@@ -38,7 +38,7 @@
 #include "qore/comp/as/Temp.h"
 #include "qore/comp/as/StringLiteral.h"
 #include "qore/comp/as/GlobalVariable.h"
-#include "qore/comp/as/LocalSlot.h"
+#include "qore/comp/as/LocalVariable.h"
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/Script.h"
 #include "qore/comp/as/is.h"
@@ -55,53 +55,65 @@ class LValue;
 class Builder {
 
 public:
-    Builder() : currentBlock(createBlock()), terminated(false), cleanupLValue(nullptr) {
+    Builder() : currentBlock(createBlock()), terminated(false), cleanupLValue(nullptr), tempCount(0) {
+        entry = currentBlock;
     }
-
-    virtual ~Builder() = default;
-
-    virtual as::LocalSlot createLocalSlot() = 0;
-    virtual as::Temp createTemp() = 0;
 
     bool isTerminated() const {
         return terminated;
     }
 
-    as::Block &getBlock(Id id) {
-        return *blocks[id];
+    void startOfArgumentLifetime(const LocalVariable &lv, Id argIndex) {
+        const as::LocalVariable &aslv = alloc(lv);
+        assert(aslv.getId() == argIndex);
+
+        //if not shared:
+        if (!lv.getType().isPrimitive()) {
+            as::Temp temp = getFreeTemp();
+            add(util::make_unique<as::GetLocal>(temp, aslv));
+            add(util::make_unique<as::RefInc>(temp));
+            setTempFree(temp);
+            x(aslv);
+        }
+
+        //if shared:
+        // - get value from aslv to temp
+        // - if not primitive, emit refInc
+        // - emit instruction for allocating the wrapper with 'temp' as the initial value
+        // - emit instruction for storing the wrapper ptr to local slot aslv
+        // - push cleanup scope that dereferences the wrapper
     }
 
-    as::LocalSlot assignLocalSlot(const LocalVariable &lv) {
-        assert(locals.find(&lv) == locals.end());
-        as::LocalSlot slot = freeLocalSlots.empty() ? createLocalSlot() : freeLocalSlots.back();
-        if (!freeLocalSlots.empty()) {
-            freeLocalSlots.pop_back();
-        }
-        locals.insert(std::make_pair(&lv, slot));
+    void startOfLocalVariableLifetime(const LocalVariable &lv, as::Temp value) {
+        const as::LocalVariable &aslv = alloc(lv);
 
-        as::Block *b = nullptr;
+        //if not shared:
+        add(util::make_unique<as::SetLocal>(aslv, value));
         if (!lv.getType().isPrimitive()) {
-            b = createBlock();
-            as::Temp temp = getFreeTemp();      //all temps are free at this point
-            b->instructions.push_back(util::make_unique<as::GetLocal>(temp, slot));
-            b->instructions.push_back(util::make_unique<as::RefDecNoexcept>(temp));
-            setTempFree(temp);
-            as::Block *b2 = fff(cleanupScopes.rbegin());
-            if (b2) {
-                b->instructions.push_back(util::make_unique<as::Jump>(*b2));
-            } else {
-                b->instructions.push_back(util::make_unique<as::Rethrow>());
-            }
+            x(aslv);
+        }
+
+        //if shared:
+        // - emit instruction for allocating the wrapper with 'value' as the initial value (its refcount is
+        //          already increased)
+        // - emit instruction for storing the wrapper ptr to local slot aslv
+        // - push cleanup scope that dereferences the wrapper
+    }
+
+private:
+    void x(const as::LocalVariable &lv) {
+        as::Block *b = createBlock();
+        as::Temp temp = getFreeTemp();      //all temps are free at this point
+        b->instructions.push_back(util::make_unique<as::GetLocal>(temp, lv));
+        b->instructions.push_back(util::make_unique<as::RefDecNoexcept>(temp));
+        setTempFree(temp);
+        as::Block *b2 = fff(cleanupScopes.rbegin());
+        if (b2) {
+            b->instructions.push_back(util::make_unique<as::Jump>(*b2));
+        } else {
+            b->instructions.push_back(util::make_unique<as::Rethrow>());
         }
         cleanupScopes.emplace_back(lv, b);
-
-        return slot;
-    }
-
-    as::LocalSlot findLocalSlot(const LocalVariable &lv) {
-        auto it = locals.find(&lv);
-        assert(it != locals.end());
-        return it->second;
     }
 
 private:
@@ -115,15 +127,6 @@ private:
         return nullptr;
     }
 
-    as::LocalSlot unassignLocalSlot(const LocalVariable &lv) {
-        auto it = locals.find(&lv);
-        assert(it != locals.end());
-        as::LocalSlot slot = it->second;
-        locals.erase(it);
-        freeLocalSlots.push_back(slot);
-        return slot;
-    }
-
 public:
     void pushCleanupScope(const Statement &stmt, as::Block *catchBlock = nullptr) {
         cleanupScopes.emplace_back(stmt, catchBlock);
@@ -135,10 +138,9 @@ public:
             cleanupScopes.pop_back();
 
             if (cs.lv) {
-                as::LocalSlot slot = unassignLocalSlot(*cs.lv);
                 if (!terminated && !cs.lv->getType().isPrimitive()) {
                     as::Temp temp = getFreeTemp();
-                    createGetLocal(temp, slot);
+                    add(util::make_unique<as::GetLocal>(temp, *cs.lv));
                     createRefDec(temp);
                     setTempFree(temp);
                 }
@@ -151,15 +153,14 @@ public:
     }
 
     void popCleanupScopes() {
-        while (true) {
+        while (!cleanupScopes.empty()) {
             CleanupScope cs = cleanupScopes.back();
             cleanupScopes.pop_back();
 
             if (cs.lv) {
-                as::LocalSlot slot = unassignLocalSlot(*cs.lv);
                 if (!terminated && !cs.lv->getType().isPrimitive()) {
                     as::Temp temp = getFreeTemp();
-                    createGetLocal(temp, slot);
+                    add(util::make_unique<as::GetLocal>(temp, *cs.lv));
                     createRefDec(temp);
                     setTempFree(temp);
                 }
@@ -196,7 +197,7 @@ public:
             freeTemps.pop_back();
             return t;
         }
-        return createTemp();
+        return as::Temp(tempCount++);
     }
 
     void setTempFree(as::Temp temp) {
@@ -231,16 +232,16 @@ public:
         terminated = true;
     }
 
-    void createSetLocal(as::LocalSlot slot, as::Temp src) {
-        add(util::make_unique<as::SetLocal>(slot, src));
+    void createSetLocal(const LocalVariable &lv, as::Temp src) {
+        add(util::make_unique<as::SetLocal>(mapLocal(lv), src));
     }
 
     void createIntConstant(as::Temp dest, rt::qint value) {
         add(util::make_unique<as::IntConstant>(dest, value));
     }
 
-    void createGetLocal(as::Temp dest, as::LocalSlot slot) {
-        add(util::make_unique<as::GetLocal>(dest, slot));
+    void createGetLocal(as::Temp dest, const LocalVariable &lv) {
+        add(util::make_unique<as::GetLocal>(dest, mapLocal(lv)));
     }
 
     void createRefDec(as::Temp temp) {
@@ -301,11 +302,14 @@ public:
         add(util::make_unique<as::Branch>(condition, trueDest, falseDest));
     }
 
-    std::vector<as::Block::Ptr> clear() {
-        std::vector<as::Block::Ptr> tmp = std::move(blocks);
-        currentBlock = createBlock();
+
+    as::Block &getEntryForInteractiveMode() {
+        add(util::make_unique<as::RetVoid>());
+        as::Block *b = entry;
+        entry = createBlock();
+        currentBlock = entry;
         terminated = false;
-        return tmp;
+        return *b;
     }
 
     as::Block *createBlock() {
@@ -332,10 +336,23 @@ private:
     as::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
     void buildCleanupForRet();
 
+    const as::LocalVariable &alloc(const LocalVariable &lv) {
+        as::LocalVariable::Ptr ptr = util::make_unique<as::LocalVariable>(locals.size(), lv.getName(),
+                lv.getLocation(), lv.getType());
+        as::LocalVariable *v = ptr.get();
+        locals.push_back(std::move(ptr));
+        localMap[&lv] = v;
+        return *v;
+    }
+
+    const as::LocalVariable &mapLocal(const LocalVariable &lv) const {
+        auto it = localMap.find(&lv);
+        assert(it != localMap.end());
+        return *it->second;
+    }
+
 private:
     std::vector<as::Temp> freeTemps;
-    std::map<const LocalVariable *, as::LocalSlot> locals;
-    std::vector<as::LocalSlot> freeLocalSlots;
     std::vector<as::Block::Ptr> blocks;
     as::Block *currentBlock;
     bool terminated;
@@ -343,25 +360,11 @@ private:
     std::vector<Id> cleanupTemps;
     std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
-};
+    std::vector<as::LocalVariable::Ptr> locals;
+    std::map<const LocalVariable *, const as::LocalVariable *> localMap;
 
-class FunctionBuilder : public Builder {
-
-public:
-    FunctionBuilder() : tempCount(0), localCount(0) {
-    }
-
-    as::LocalSlot createLocalSlot() override {
-        return as::LocalSlot(localCount++);
-    }
-
-    as::Temp createTemp() override {
-        return as::Temp(tempCount++);
-    }
-
-private:
     Id tempCount;
-    Id localCount;
+    as::Block *entry;
 
     friend class ScriptBuilder;
 };

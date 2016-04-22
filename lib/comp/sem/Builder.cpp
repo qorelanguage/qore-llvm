@@ -93,7 +93,7 @@ void Builder::buildCleanupForRet() {
     for (auto it = cleanupScopes.rbegin(); it != cleanupScopes.rend(); ++it) {
         if (it->lv && !it->lv->getType().isPrimitive()) {
             as::Temp temp = getFreeTemp();
-            createGetLocal(temp, findLocalSlot(*it->lv));
+            add(util::make_unique<as::GetLocal>(temp, *it->lv));
             add(util::make_unique<as::RefDec>(temp, getLandingPad2(it + 1)));
             setTempFree(temp);
         }
