@@ -34,8 +34,8 @@
 #include <memory>
 #include "qore/comp/SourceLocation.h"
 #include "qore/comp/String.h"
-#include "qore/comp/as/Type.h"
 #include "qore/Id.h"
+#include "qore/Type.h"
 
 namespace qore {
 namespace comp {

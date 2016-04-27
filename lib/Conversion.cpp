@@ -28,72 +28,57 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
-#define INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
-
-#include <memory>
+#include "qore/Conversion.h"
 
 namespace qore {
-namespace comp {
-namespace as {
 
-class Block;
-class Instruction {
-
-public:
-    using Ptr = std::unique_ptr<Instruction>;
-
-public:
-    enum Kind {
-        IntConstant,
-        GetLocal,
-        SetLocal,
-        LoadString,
-        RefInc,
-        RefDec,
-        RefDecNoexcept,
-        ReadLockGlobal,
-        ReadUnlockGlobal,
-        WriteLockGlobal,
-        WriteUnlockGlobal,
-        GetGlobal,
-        SetGlobal,
-        MakeGlobal,
-        Rethrow,
-        BinaryOperator,
-        Conversion,
-        Ret,
-        RetVoid,
-        GetArg,
-        Jump,
-        Branch,
-    };
-
-public:
-    virtual ~Instruction() = default;
-
-    virtual Kind getKind() const = 0;
-
-    Block *getLpad() const {
-        return lpad;
+const Conversion *Conversion::find(const Type &src, const Type &dest) {
+    //XXX can be replaced with a table
+    if (src == dest) {
+        return nullptr;
     }
-
-protected:
-    explicit Instruction(Block *lpad = nullptr) : lpad(lpad) {
+    if (dest == Type::String) {
+        if (src == Type::String) {
+            return nullptr;
+        }
+        if (src == Type::Any) {
+            return &AnyToString;
+        }
     }
+    if (dest == Type::SoftString) {
+        if (src == Type::String) {
+            return nullptr;
+        }
+        if (src == Type::Int) {
+            return &IntToString;
+        }
+        if (src == Type::Any) {
+            return &AnyToString;
+        }
+    }
+    if (dest == Type::SoftBool) {
+        if (src == Type::Int) {
+            return &IntToBool;
+        }
+    }
+    if (dest == Type::SoftInt) {
+        if (src == Type::Int) {
+            return nullptr;
+        }
+        if (src == Type::String) {
+            return &StringToInt;
+        }
+    }
+    if (dest == Type::Any) {
+        if (src == Type::Int) {
+            return &IntToAny;
+        }
+        if (src == Type::String) {
+            return nullptr;
+        }
+    }
+    QORE_NOT_IMPLEMENTED("Conversion " << src.getName() << " to " << dest.getName());
 
-private:
-    Instruction(const Instruction &) = delete;
-    Instruction(Instruction &&) = delete;
-    Instruction &operator=(const Instruction &) = delete;
-    Instruction &operator=(Instruction &&) = delete;
+}
 
-private:
-    Block *lpad;
-};
-
-} // namespace as
-} // namespace comp
 } // namespace qore
-
-#endif // INCLUDE_QORE_COMP_AS_INSTRUCTION_H_

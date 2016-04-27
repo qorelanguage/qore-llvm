@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_EXPR_INTLITERALEXPRESSION_H_
 
 #include "qore/comp/sem/expr/Expression.h"
+#include "qore/Value.h"
 
 namespace qore {
 namespace comp {
@@ -43,7 +44,7 @@ public:
     using Ptr = std::unique_ptr<IntLiteralExpression>;
 
 public:
-    static Ptr create(rt::qint value) {
+    static Ptr create(qint value) {
         return Ptr(new IntLiteralExpression(value));
     }
 
@@ -51,20 +52,20 @@ public:
         return Kind::IntLiteral;
     }
 
-    const as::Type &getType() const override {
-        return as::Type::Int;
+    const Type &getType() const override {
+        return Type::Int;
     }
 
-    rt::qint getValue() const {
+    qint getValue() const {
         return value;
     }
 
 private:
-    explicit IntLiteralExpression(rt::qint value) : value(value) {
+    explicit IntLiteralExpression(qint value) : value(value) {
     }
 
 private:
-    rt::qint value;
+    qint value;
 };
 
 } // namespace sem

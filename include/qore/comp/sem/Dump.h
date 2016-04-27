@@ -69,12 +69,8 @@ public:
     }
 
     void dump(const GlobalVariableInfo &gv) {
-        os << indent << "-our " << type(gv.getType()) << " " << ctx.getString(gv.getName())
+        os << indent << "-our " << gv.getType() << " " << ctx.getString(gv.getName())
                 << " @" << ctx.decode(gv.getLocation()) << "\n";
-    }
-
-    std::string type(const as::Type &t) {
-        return (t.isOptional() ? "*" : "") + t.getName();
     }
 
 private:

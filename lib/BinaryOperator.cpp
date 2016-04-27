@@ -28,72 +28,44 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
-#define INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
-
-#include <memory>
+#include "qore/BinaryOperator.h"
 
 namespace qore {
-namespace comp {
-namespace as {
 
-class Block;
-class Instruction {
-
-public:
-    using Ptr = std::unique_ptr<Instruction>;
-
-public:
-    enum Kind {
-        IntConstant,
-        GetLocal,
-        SetLocal,
-        LoadString,
-        RefInc,
-        RefDec,
-        RefDecNoexcept,
-        ReadLockGlobal,
-        ReadUnlockGlobal,
-        WriteLockGlobal,
-        WriteUnlockGlobal,
-        GetGlobal,
-        SetGlobal,
-        MakeGlobal,
-        Rethrow,
-        BinaryOperator,
-        Conversion,
-        Ret,
-        RetVoid,
-        GetArg,
-        Jump,
-        Branch,
-    };
-
-public:
-    virtual ~Instruction() = default;
-
-    virtual Kind getKind() const = 0;
-
-    Block *getLpad() const {
-        return lpad;
+std::ostream &operator<<(std::ostream &os, BinaryOperator::Kind kind) {
+    switch (kind) {
+        case BinaryOperator::Kind::Plus:
+            return os << "+";
+        case BinaryOperator::Kind::PlusEquals:
+            return os << "+=";
+        default:
+            QORE_UNREACHABLE("Invalid BinaryOperator::Kind: " << static_cast<int>(kind));
     }
-
-protected:
-    explicit Instruction(Block *lpad = nullptr) : lpad(lpad) {
+}
+const BinaryOperator &BinaryOperator::find(Kind kind, const Type &left, const Type &right) {
+    if (kind == Kind::Plus) {
+        if (left == Type::Any || right == Type::Any) {
+            return AnyPlusAny;
+        }
+        if (left == Type::String || right == Type::String) {
+            return SoftStringPlusSoftString;
+        }
+        if (left == Type::Int || right == Type::Int) {
+            return SoftIntPlusSoftInt;
+        }
     }
+    if (kind == Kind::PlusEquals) {
+        if (left == Type::Any) {
+            return AnyPlusEqualsAny;
+        }
+        if (left == Type::String) {
+            return SoftStringPlusSoftString;
+        }
+        if (left == Type::Int) {
+            return SoftIntPlusSoftInt;
+        }
+    }
+    QORE_NOT_IMPLEMENTED("Operator " << left.getName() << " " << kind << " " << right.getName());
+}
 
-private:
-    Instruction(const Instruction &) = delete;
-    Instruction(Instruction &&) = delete;
-    Instruction &operator=(const Instruction &) = delete;
-    Instruction &operator=(Instruction &&) = delete;
-
-private:
-    Block *lpad;
-};
-
-} // namespace as
-} // namespace comp
-} // namespace qore
-
-#endif // INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
+} //namespace qore

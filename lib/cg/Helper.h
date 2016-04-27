@@ -86,26 +86,6 @@ public:
         lf_loadString = createFunction("loadString", lt_qvalue, lt_Context_ptr, lt_Id);
 
         lf_createGlobal = createFunction("createGlobal", lt_void, lt_Context_ptr, lt_Id, lt_bool, lt_qvalue);
-
-
-        //FIXME this can be done generically using rt::meta::*Desc
-        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::IntToString)]
-                      = createFunction("convertIntToString", lt_qvalue, lt_qvalue);
-        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::StringToInt)]
-                      = createFunction("convertStringToInt", lt_qvalue, lt_qvalue);
-        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::BoxInt)]
-                      = createFunction("int_box", lt_qvalue, lt_qvalue);
-        convFunctions[rt::meta::ConversionTable + static_cast<int>(rt::Conversion::IntToBool)]
-                      = createFunction("int_to_bool", lt_qvalue, lt_qvalue);
-
-        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::StringPlusString)]
-                       = createFunction("opAddStringString", lt_qvalue, lt_qvalue, lt_qvalue);
-        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::IntPlusInt)]
-                       = createFunction("opAddIntInt", lt_qvalue, lt_qvalue, lt_qvalue);
-        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::AnyPlusAny)]
-                       = createFunction("op_add_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
-        binOpFunctions[rt::meta::BinaryOperatorTable + static_cast<int>(rt::Operator::AnyPlusEqAny)]
-                       = createFunction("op_addeq_any_any", lt_qvalue, lt_qvalue, lt_qvalue);
     }
 
     llvm::Function *createFunction(const std::string &name, llvm::Type *ret) {
@@ -151,6 +131,49 @@ public:
         return llvm::ConstantInt::get(lt_bool, b, false);
     }
 
+    llvm::Function *getConversion(const Conversion &conversion) {
+        llvm::Function *&ref = convFunctions[&conversion];
+        if (!ref) {
+            ref = createFunction(conversion.getFunctionName(), lt_qvalue, lt_qvalue);
+        }
+        return ref;
+    }
+
+    llvm::Function *getBinaryOperator(const BinaryOperator &op) {
+        llvm::Function *&ref = binOpFunctions[&op];
+        if (!ref) {
+            ref = createFunction(op.getFunctionName(), lt_qvalue, lt_qvalue, lt_qvalue);
+        }
+        return ref;
+    }
+
+    llvm::Value *loadString(String *string) {
+        QORE_NOT_IMPLEMENTED("");
+        //find entry in a map of String * -> llvm::GlobalVariable *
+        //if not found:
+        //      create a llvm::GlobalVariable of type String *
+        //      create the mapping
+        //return builder.CreateLoad(gv);
+        //before the module is built, go through the mapping and create init & cleanup code for each string
+        //            case comp::as::Instruction::Kind::MakeStringLiteral: {
+        //                comp::as::MakeStringLiteral &ins = static_cast<comp::as::MakeStringLiteral &>(*ii);
+        //                Id id = ins.getStringLiteral().getId();
+        //                llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, ins.getValue(), true);
+        //                llvm::GlobalVariable *str = new llvm::GlobalVariable(*helper.module, val->getType(), true,
+        //                        llvm::GlobalValue::PrivateLinkage, val, llvm::Twine("str").concat(llvm::Twine(id)));
+        //                str->setUnnamedAddr(true);
+        //
+        //                llvm::Value *args[4] = {
+        //                        rtctx,
+        //                        helper.wrapId(id),
+        //                        builder.CreateConstGEP2_32(nullptr, str, 0, 0),
+        //                        llvm::ConstantInt::get(helper.lt_qsize, ins.getValue().length(), false),
+        //                };
+        //                builder.CreateCall(helper.lf_createString, args);
+        //                break;
+        //            }
+    }
+
 public:
     llvm::LLVMContext &ctx;
     std::unique_ptr<llvm::Module> module;
@@ -189,8 +212,9 @@ public:
 
     llvm::Function *lf_personality;
 
-    std::unordered_map<const rt::meta::ConversionDesc *, llvm::Function *> convFunctions;
-    std::unordered_map<const rt::meta::BinaryOperatorDesc *, llvm::Function *> binOpFunctions;
+private:
+    std::unordered_map<const Conversion *, llvm::Function *> convFunctions;
+    std::unordered_map<const BinaryOperator *, llvm::Function *> binOpFunctions;
 };
 
 } // namespace cg

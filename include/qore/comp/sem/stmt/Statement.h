@@ -42,7 +42,6 @@ class ExpressionStatement;
 class GlobalVariableInitializationStatement;
 class IfStatement;
 class ReturnStatement;
-class StringLiteralInitializationStatement;
 class TryStatement;
 
 class Statement {
@@ -54,7 +53,6 @@ public:
         GlobalVariableInitialization,
         If,
         Return,
-        StringLiteralInitialization,
         Try,
     };
 
@@ -74,7 +72,6 @@ public:
             CASE(GlobalVariableInitialization);
             CASE(If);
             CASE(Return);
-            CASE(StringLiteralInitialization);
             CASE(Try);
             default:
                 QORE_UNREACHABLE("");

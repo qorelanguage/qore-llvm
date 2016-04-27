@@ -32,7 +32,6 @@
 #define INCLUDE_QORE_COMP_SEM_EXPR_COMPOUNDASSIGNMENTEXPRESSION_H_
 
 #include "qore/comp/sem/expr/Expression.h"
-#include "qore/rt/Meta.h"
 
 namespace qore {
 namespace comp {
@@ -44,15 +43,15 @@ public:
     using Ptr = std::unique_ptr<CompoundAssignmentExpression>;
 
 public:
-    static Ptr create(Expression::Ptr left, const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr right) {
-        return Ptr(new CompoundAssignmentExpression(std::move(left), desc, std::move(right)));
+    static Ptr create(Expression::Ptr left, const qore::BinaryOperator &op, Expression::Ptr right) {
+        return Ptr(new CompoundAssignmentExpression(std::move(left), op, std::move(right)));
     }
 
     Kind getKind() const override {
         return Kind::CompoundAssignment;
     }
 
-    const as::Type &getType() const override {
+    const Type &getType() const override {
         return left->getType();
     }
 
@@ -60,8 +59,8 @@ public:
         return *left;
     }
 
-    const rt::meta::BinaryOperatorDesc &getDesc() const {
-        return desc;
+    const qore::BinaryOperator &getOperator() const {
+        return op;
     }
 
     const Expression &getRight() const {
@@ -69,13 +68,13 @@ public:
     }
 
 private:
-    CompoundAssignmentExpression(Expression::Ptr left, const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr right)
-            : left(std::move(left)), desc(desc), right(std::move(right)) {
+    CompoundAssignmentExpression(Expression::Ptr left, const qore::BinaryOperator &op, Expression::Ptr right)
+            : left(std::move(left)), op(op), right(std::move(right)) {
     }
 
 private:
     Expression::Ptr left;
-    const rt::meta::BinaryOperatorDesc &desc;
+    const qore::BinaryOperator &op;
     Expression::Ptr right;
 };
 

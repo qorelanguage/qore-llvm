@@ -25,50 +25,55 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO description
+/// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_RT_META_H_
-#define INCLUDE_QORE_RT_META_H_
+#ifndef INCLUDE_QORE_STRING_H_
+#define INCLUDE_QORE_STRING_H_
 
-#include "qore/rt/Types.h"
+#include <iostream>
+#include <string>
+#include "qore/Any.h"
 
 namespace qore {
-namespace rt {
-namespace meta {
 
-struct ConversionDesc {
-    using F = qvalue(qvalue);
+class String : public Any {
 
-    const Conversion conversion;
-    const F &f;
-    const Type retType;
-    const Type argType;
+public:
+    using Ptr = auto_ptr<String>;
+
+public:
+    explicit String(std::string str) : str(std::move(str)) {
+        LOG(this << " created");
+    }
+
+    const Type &getType() const override {
+        return Type::String;
+    }
+
+    qint toInt() const {
+        std::stringstream s(str);
+        qint i;
+        s >> i;
+        return i;
+    }
+
+    String *append(String *right) {
+        return new String(str + right->str);
+    }
+
+protected:
+    ~String() {
+        LOG(this << " destroyed");
+    }
+
+protected:
+    WRITE_TO_LOG("String \"" << str << "\"")
 
 private:
-    ConversionDesc() = delete;
+    std::string str;
 };
 
-struct BinaryOperatorDesc {
-    using F = qvalue(qvalue, qvalue);
-
-    const F &f;
-    const Type retType;
-    const Type leftType;
-    const Type rightType;
-
-private:
-    BinaryOperatorDesc() = delete;
-};
-
-extern ConversionDesc ConversionTable[];
-extern BinaryOperatorDesc BinaryOperatorTable[];
-
-const BinaryOperatorDesc &findOperator(Op o, Type l, Type r);
-const ConversionDesc &findConversion(Type src, Type dest);
-
-} // namespace meta
-} // namespace rt
 } // namespace qore
 
-#endif // INCLUDE_QORE_RT_META_H_
+#endif // INCLUDE_QORE_STRING_H_

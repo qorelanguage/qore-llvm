@@ -52,7 +52,7 @@ public:
         return Kind::GlobalVariableRef;
     }
 
-    const as::Type &getType() const override {
+    const Type &getType() const override {
         return globalVariable.getType();
     }
 

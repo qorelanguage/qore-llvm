@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEM_GLOBALVARIABLEINFO_H_
 #define INCLUDE_QORE_COMP_SEM_GLOBALVARIABLEINFO_H_
 
+#include <string>
 #include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Namespace.h"
 
@@ -52,7 +53,8 @@ public:
     using Ptr = std::unique_ptr<GlobalVariableInfo>;
 
 public:
-    GlobalVariableInfo(NamespaceScope &parent, ast::GlobalVariable &node) : parent(parent), node(node), gv(nullptr) {
+    GlobalVariableInfo(Core &core, NamespaceScope &parent, ast::GlobalVariable &node)
+            : core(core), parent(parent), node(node), gv(nullptr) {
     }
 
     String::Ref getName() const {
@@ -63,7 +65,7 @@ public:
         return node.name.last().location;
     }
 
-    const as::Type &getType() const {
+    const Type &getType() const {
         assert(gv != nullptr);
         return gv->getType();
     }
@@ -75,7 +77,10 @@ public:
 
     void pass2();
 
+    std::string getFullName();
+
 private:
+    Core &core;
     NamespaceScope &parent;
     ast::GlobalVariable &node;
     as::GlobalVariable *gv;

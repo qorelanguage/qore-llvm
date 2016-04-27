@@ -114,8 +114,7 @@ public:
                 }
                 case comp::as::Instruction::Kind::LoadString: {
                     comp::as::LoadString &ins = static_cast<comp::as::LoadString &>(*ii);
-                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getStringLiteral().getId()) };
-                    temps[ins.getDest().getIndex()] = builder.CreateCall(helper.lf_loadString, args);
+                    temps[ins.getDest().getIndex()] = helper.loadString(ins.getString());
                     break;
                 }
                 case comp::as::Instruction::Kind::RefInc: {
@@ -177,7 +176,7 @@ public:
                     llvm::Value *args[4] = {
                             rtctx,
                             helper.wrapId(ins.getGlobalVariable().getId()),
-                            helper.wrapBool(!ins.getGlobalVariable().getType().isPrimitive()),
+                            helper.wrapBool(ins.getGlobalVariable().getType().isRefCounted()),
                             temps[ins.getInitValue().getIndex()]
                     };
                     builder.CreateCall(helper.lf_createGlobal, args);
@@ -191,14 +190,14 @@ public:
                 case comp::as::Instruction::Kind::BinaryOperator: {
                     comp::as::BinaryOperator &ins = static_cast<comp::as::BinaryOperator &>(*ii);
                     llvm::Value *args[2] = { temps[ins.getLeft().getIndex()], temps[ins.getRight().getIndex()] };
-                    temps[ins.getDest().getIndex()]
-                          = makeCallOrInvoke(builder, ins, helper.binOpFunctions[&ins.getDesc()], args);
+                    temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
+                            helper.getBinaryOperator(ins.getOperator()), args);
                     break;
                 }
                 case comp::as::Instruction::Kind::Conversion: {
                     comp::as::Conversion &ins = static_cast<comp::as::Conversion &>(*ii);
                     temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
-                            helper.convFunctions[&ins.getDesc()], temps[ins.getArg().getIndex()]);
+                            helper.getConversion(ins.getConversion()), temps[ins.getArg().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::Ret: {
@@ -209,23 +208,6 @@ public:
                 case comp::as::Instruction::Kind::RetVoid:
                     builder.CreateRetVoid();
                     break;
-                case comp::as::Instruction::Kind::MakeStringLiteral: {
-                    comp::as::MakeStringLiteral &ins = static_cast<comp::as::MakeStringLiteral &>(*ii);
-                    Id id = ins.getStringLiteral().getId();
-                    llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, ins.getValue(), true);
-                    llvm::GlobalVariable *str = new llvm::GlobalVariable(*helper.module, val->getType(), true,
-                            llvm::GlobalValue::PrivateLinkage, val, llvm::Twine("str").concat(llvm::Twine(id)));
-                    str->setUnnamedAddr(true);
-
-                    llvm::Value *args[4] = {
-                            rtctx,
-                            helper.wrapId(id),
-                            builder.CreateConstGEP2_32(nullptr, str, 0, 0),
-                            llvm::ConstantInt::get(helper.lt_qsize, ins.getValue().length(), false),
-                    };
-                    builder.CreateCall(helper.lf_createString, args);
-                    break;
-                }
                 case comp::as::Instruction::Kind::GetArg: {
                     comp::as::GetArg &ins = static_cast<comp::as::GetArg &>(*ii);
 

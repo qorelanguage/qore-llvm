@@ -43,11 +43,11 @@ FunctionScope::FunctionScope(Core &core, Scope &parent, std::string name, ast::R
         : core(core), parent(parent), name(std::move(name)), node(node) {
 }
 
-const as::Type &FunctionScope::resolveType(ast::Type &node) const {
+const Type &FunctionScope::resolveType(ast::Type &node) const {
     return parent.resolveType(node);
 }
 
-LocalVariable &FunctionScope::createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) {
+LocalVariable &FunctionScope::createLocalVariable(String::Ref name, SourceLocation location, const Type &type) {
     std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(name, location, type);
     LocalVariable &lv = *ptr;
     locals.push_back(std::move(ptr));
@@ -67,7 +67,7 @@ Symbol FunctionScope::resolveSymbol(ast::Name &name) const {
 as::Function &FunctionScope::analyze() {
 
     for (auto &a : node.params) {
-        const as::Type &type = resolveType(std::get<0>(a));
+        const Type &type = resolveType(std::get<0>(a));
         args[std::get<1>(a).str] = &createLocalVariable(std::get<1>(a).str, std::get<1>(a).location, type);
     }
 
@@ -84,7 +84,7 @@ as::Function &FunctionScope::analyze() {
     body->accept(a2);
 
     if (!b.isTerminated()) {
-        if (getReturnType() == as::Type::Nothing) {
+        if (getReturnType() == Type::Nothing) {
             b.createRetVoid();
         } else {
             QORE_UNREACHABLE("");   //missing return statement

@@ -29,20 +29,22 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/GlobalVariableInfo.h"
+#include <string>
 #include "qore/comp/sem/NamespaceScope.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-
 void GlobalVariableInfo::pass2() {
     assert(gv == nullptr);
-    const as::Type &type = parent.resolveType(node.type);
-    //FIXME use fullname
-    gv = &parent.getScriptBuilder().createGlobalVariable(getName(), getLocation(), type);
+    const Type &type = parent.resolveType(node.type);
+    gv = &parent.getScriptBuilder().createGlobalVariable(getFullName(), getLocation(), type);
 }
 
+std::string GlobalVariableInfo::getFullName() {
+    return parent.getFullName() + "::" + core.ctx.getString(getName());
+}
 
 } // namespace sem
 } // namespace comp

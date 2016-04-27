@@ -68,7 +68,7 @@ public:
         assert(aslv.getId() == argIndex);
 
         //if not shared:
-        if (!lv.getType().isPrimitive()) {
+        if (lv.getType().isRefCounted()) {
             as::Temp temp = getFreeTemp();
             add(util::make_unique<as::GetLocal>(temp, aslv));
             add(util::make_unique<as::RefInc>(temp));
@@ -89,7 +89,7 @@ public:
 
         //if not shared:
         add(util::make_unique<as::SetLocal>(aslv, value));
-        if (!lv.getType().isPrimitive()) {
+        if (lv.getType().isRefCounted()) {
             x(aslv);
         }
 
@@ -138,7 +138,7 @@ public:
             cleanupScopes.pop_back();
 
             if (cs.lv) {
-                if (!terminated && !cs.lv->getType().isPrimitive()) {
+                if (!terminated && cs.lv->getType().isRefCounted()) {
                     as::Temp temp = getFreeTemp();
                     add(util::make_unique<as::GetLocal>(temp, *cs.lv));
                     createRefDec(temp);
@@ -158,7 +158,7 @@ public:
             cleanupScopes.pop_back();
 
             if (cs.lv) {
-                if (!terminated && !cs.lv->getType().isPrimitive()) {
+                if (!terminated && cs.lv->getType().isRefCounted()) {
                     as::Temp temp = getFreeTemp();
                     add(util::make_unique<as::GetLocal>(temp, *cs.lv));
                     createRefDec(temp);
@@ -208,16 +208,12 @@ public:
         add(util::make_unique<as::RefInc>(temp));
     }
 
-    void createLoadString(as::Temp dest, as::StringLiteral stringLiteral) {
-        add(util::make_unique<as::LoadString>(dest, stringLiteral));
+    void createLoadString(as::Temp dest, qore::String::Ptr string) {
+        add(util::make_unique<as::LoadString>(dest, std::move(string)));
     }
 
     void createMakeGlobal(const as::GlobalVariable &gv, as::Temp initValue) {
         add(util::make_unique<as::MakeGlobal>(gv, initValue));
-    }
-
-    void createMakeStringLiteral(as::StringLiteral stringLiteral, std::string value) {
-        add(util::make_unique<as::MakeStringLiteral>(stringLiteral, std::move(value)));
     }
 
     void createRet(as::Temp temp) {
@@ -236,7 +232,7 @@ public:
         add(util::make_unique<as::SetLocal>(mapLocal(lv), src));
     }
 
-    void createIntConstant(as::Temp dest, rt::qint value) {
+    void createIntConstant(as::Temp dest, qint value) {
         add(util::make_unique<as::IntConstant>(dest, value));
     }
 
@@ -273,12 +269,13 @@ public:
         add(util::make_unique<as::SetGlobal>(gv.get(), src));
     }
 
-    void createBinaryOperator(as::Temp dest, const rt::meta::BinaryOperatorDesc &desc, as::Temp left, as::Temp right) {
-        add(util::make_unique<as::BinaryOperator>(dest, desc, left, right, getLandingPad()));
+    void createBinaryOperator(as::Temp dest, const BinaryOperator &op, as::Temp left, as::Temp right) {
+        add(util::make_unique<as::BinaryOperator>(dest, op, left, right, op.canThrow() ? getLandingPad() : nullptr));
     }
 
-    void createConversion(as::Temp dest, const rt::meta::ConversionDesc &desc, as::Temp arg) {
-        add(util::make_unique<as::Conversion>(dest, desc, arg, getLandingPad()));
+    void createConversion(as::Temp dest, const qore::Conversion &conversion, as::Temp arg) {
+        add(util::make_unique<as::Conversion>(dest, conversion, arg,
+                conversion.canThrow() ? getLandingPad() : nullptr));
     }
 
     void createRefDecNoexcept(as::Temp temp) {

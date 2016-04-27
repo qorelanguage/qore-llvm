@@ -28,22 +28,40 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_TYPE_H_
-#define INCLUDE_QORE_COMP_AS_TYPE_H_
+#ifndef INCLUDE_QORE_TYPE_H_
+#define INCLUDE_QORE_TYPE_H_
 
+#include <memory>
 #include <string>
 #include "qore/common/Exceptions.h"
-#include "qore/rt/Types.h"
 
 namespace qore {
-namespace comp {
-namespace as {
 
 class Type {
 
 public:
-    Type(rt::Type runtimeType, std::string name, bool optional, bool primitive) : name(std::move(name)),
-            optional(optional), primitive(primitive), runtimeType(runtimeType) {
+    enum class Kind {
+        Error,
+        Any,
+        Nothing,
+        Bool,
+        SoftBool,
+        Int,
+        IntOpt,
+        SoftInt,
+        String,
+        StringOpt,
+        SoftString,
+        Object,
+        ObjectOpt,
+    };
+
+public:
+    using Ptr = std::unique_ptr<Type>;
+
+public:
+    static Ptr create(Kind kind, std::string name) {
+        return Ptr(new Type(kind, name));
     }
 
     bool operator==(const Type &other) const {
@@ -54,53 +72,56 @@ public:
         return !(*this == other);
     }
 
+    Kind getKind() const {
+        return kind;
+    }
+
     const std::string &getName() const {
         return name;
     }
 
-    rt::Type getRuntimeType() const {
-        return runtimeType;
-    }
-
-    bool isOptional() const {
-        return optional;
-    }
-
-    bool isPrimitive() const {
-        return primitive;
-    }
-
-    static const Type &from(rt::Type t) {
-        switch (t) {
-            case rt::Type::Error:
+    static const Type &from(Kind kind) {
+        switch (kind) {
+            case Kind::Error:
                 return Error;
-            case rt::Type::Bool:
-                return Bool;
-            case rt::Type::SoftBool:
-                return SoftBool;
-            case rt::Type::Int:
-                return Int;
-            case rt::Type::String:
-                return String;
-            case rt::Type::Any:
+            case Kind::Any:
                 return Any;
-            case rt::Type::Nothing:
+            case Kind::Nothing:
                 return Nothing;
+            case Kind::Bool:
+                return Bool;
+            case Kind::SoftBool:
+                return SoftBool;
+            case Kind::Int:
+                return Int;
+            case Kind::IntOpt:
+                return IntOpt;
+            case Kind::String:
+                return String;
+            case Kind::StringOpt:
+                return StringOpt;
             default:
-                QORE_NOT_IMPLEMENTED("");
+                QORE_UNREACHABLE("Invalid Type::Kind: " << static_cast<int>(kind));
         }
     }
 
-public:
-    static const Type Error;
-    static const Type Bool;
-    static const Type SoftBool;
-    static const Type Int;
-    static const Type IntOpt;
-    static const Type String;
-    static const Type StringOpt;
-    static const Type Any;
-    static const Type Nothing;
+    bool isRefCounted() const {
+        switch (kind) {
+            case Kind::Nothing:
+            case Kind::Bool:
+            case Kind::SoftBool:
+            case Kind::Int:
+            case Kind::IntOpt:
+            case Kind::SoftInt:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+private:
+    Type(Kind kind, std::string name) : kind(kind), name(std::move(name)) {
+    }
 
 private:
     Type(const Type &) = delete;
@@ -108,15 +129,28 @@ private:
     Type &operator=(const Type &) = delete;
     Type &operator=(Type &&) = delete;
 
+public:
+    static const Type Error;
+    static const Type Any;
+    static const Type Nothing;
+    static const Type Bool;
+    static const Type SoftBool;
+    static const Type Int;
+    static const Type IntOpt;
+    static const Type SoftInt;
+    static const Type String;
+    static const Type StringOpt;
+    static const Type SoftString;
+
 private:
+    Kind kind;
     std::string name;
-    bool optional;
-    bool primitive;
-    rt::Type runtimeType;
 };
 
-} // namespace as
-} // namespace comp
+inline std::ostream &operator<<(std::ostream &os, const Type &type) {
+    return os << type.getName();
+}
+
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AS_TYPE_H_
+#endif // INCLUDE_QORE_TYPE_H_

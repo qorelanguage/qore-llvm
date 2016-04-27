@@ -28,22 +28,29 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#include "qore/comp/as/Type.h"
+#ifndef INCLUDE_QORE_ANY_H_
+#define INCLUDE_QORE_ANY_H_
+
+#include "qore/RefCounted.h"
+#include "qore/Type.h"
 
 namespace qore {
-namespace comp {
-namespace as {
 
-const Type Type::Error(rt::Type::Error, "<error>", false, false);
-const Type Type::Bool(rt::Type::Bool, "bool", false, true);
-const Type Type::SoftBool(rt::Type::SoftBool, "softbool", false, true);
-const Type Type::Int(rt::Type::Int, "int", false, true);
-const Type Type::IntOpt(rt::Type::Int, "int", true, false);
-const Type Type::String(rt::Type::String, "string", false, false);
-const Type Type::StringOpt(rt::Type::String, "string", true, false);
-const Type Type::Any(rt::Type::Any, "any", false, false);
-const Type Type::Nothing(rt::Type::Nothing, "nothing", false, true);  //primitive?
+class Any : public RefCounted {
 
-} // namespace as
-} // namespace comp
+public:
+    Any() {
+    }
+
+    virtual const Type &getType() const = 0;
+
+private:
+    Any(const Any &) = delete;
+    Any(Any &&) = delete;
+    Any &operator=(const Any &) = delete;
+    Any &operator=(Any &&) = delete;
+};
+
 } // namespace qore
+
+#endif // INCLUDE_QORE_ANY_H_

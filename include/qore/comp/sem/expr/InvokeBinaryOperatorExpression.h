@@ -43,20 +43,20 @@ public:
     using Ptr = std::unique_ptr<InvokeBinaryOperatorExpression>;
 
 public:
-    static Ptr create(const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr left, Expression::Ptr right) {
-        return Ptr(new InvokeBinaryOperatorExpression(desc, std::move(left), std::move(right)));
+    static Ptr create(const BinaryOperator &op, Expression::Ptr left, Expression::Ptr right) {
+        return Ptr(new InvokeBinaryOperatorExpression(op, std::move(left), std::move(right)));
     }
 
     Kind getKind() const override {
         return Kind::InvokeBinaryOperator;
     }
 
-    const as::Type &getType() const override {
-        return as::Type::from(desc.retType);
+    const Type &getType() const override {
+        return op.getResultType();
     }
 
-    const rt::meta::BinaryOperatorDesc &getDesc() const {
-        return desc;
+    const BinaryOperator &getOperator() const {
+        return op;
     }
 
     const Expression &getLeft() const {
@@ -68,12 +68,12 @@ public:
     }
 
 private:
-    InvokeBinaryOperatorExpression(const rt::meta::BinaryOperatorDesc &desc, Expression::Ptr left,
-            Expression::Ptr right) : desc(desc), left(std::move(left)), right(std::move(right)) {
+    InvokeBinaryOperatorExpression(const BinaryOperator &op, Expression::Ptr left,
+            Expression::Ptr right) : op(op), left(std::move(left)), right(std::move(right)) {
     }
 
 private:
-    const rt::meta::BinaryOperatorDesc &desc;
+    const BinaryOperator &op;
     Expression::Ptr left;
     Expression::Ptr right;
 };

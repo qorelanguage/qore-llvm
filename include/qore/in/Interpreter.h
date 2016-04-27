@@ -33,7 +33,7 @@
 
 #include <unordered_map>
 #include <vector>
-#include "qore/rt/Types.h"
+#include "qore/Value.h"
 #include "qore/rt/Context.h"
 #include "qore/in/FunctionInterpreter.h"
 #include "qore/comp/as/Script.h"
@@ -47,26 +47,26 @@ public:
     explicit X(comp::as::Function &f) : f(f), temps(f.getTempCount()), locals(f.getLocalCount()) {
     }
 
-    void setLocal(const comp::as::LocalVariable &lv, rt::qvalue value) {
+    void setLocal(const comp::as::LocalVariable &lv, qvalue value) {
         locals[lv.getId()] = value;
     }
 
-    rt::qvalue getLocal(const comp::as::LocalVariable &lv) {
+    qvalue getLocal(const comp::as::LocalVariable &lv) {
         return locals[lv.getId()];
     }
 
-    void setTemp(comp::as::Temp temp, rt::qvalue value) {
+    void setTemp(comp::as::Temp temp, qvalue value) {
         temps[temp.getIndex()] = value;
     }
 
-    rt::qvalue getTemp(comp::as::Temp temp) {
+    qvalue getTemp(comp::as::Temp temp) {
         return temps[temp.getIndex()];
     }
 
 private:
     comp::as::Function &f;
-    std::vector<rt::qvalue> temps;
-    std::vector<rt::qvalue> locals;
+    std::vector<qvalue> temps;
+    std::vector<qvalue> locals;
 };
 
 class Interpreter {

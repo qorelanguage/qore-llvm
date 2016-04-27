@@ -96,21 +96,21 @@ public:
 
     ClassScope &resolveClass(const ast::Name &name) const;
 
-    const as::Type &resolveType(ast::Type &node) const override;
+    const Type &resolveType(ast::Type &node) const override;
 
     Symbol resolveSymbol(ast::Name &name) const override;
 
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         //this will happen if a local variable is declared in a constant initializer - report error and return
         //a fake local variable of type error which will need to be statically allocated somewhere
         QORE_NOT_IMPLEMENTED("");
     }
 
-    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }
 
-    const as::Type &getReturnType() const override {
+    const Type &getReturnType() const override {
         QORE_UNREACHABLE("");
     }
 

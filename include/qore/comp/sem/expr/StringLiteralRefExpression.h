@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_EXPR_STRINGLITERALREFEXPRESSION_H_
 
 #include "qore/comp/sem/expr/Expression.h"
-#include "qore/comp/as/StringLiteral.h"
+#include "qore/String.h"
 
 namespace qore {
 namespace comp {
@@ -44,28 +44,28 @@ public:
     using Ptr = std::unique_ptr<StringLiteralRefExpression>;
 
 public:
-    static Ptr create(as::StringLiteral stringLiteral) {
-        return Ptr(new StringLiteralRefExpression(stringLiteral));
+    static Ptr create(qore::String::Ptr string) {
+        return Ptr(new StringLiteralRefExpression(std::move(string)));
     }
 
     Kind getKind() const override {
         return Kind::StringLiteralRef;
     }
 
-    const as::Type &getType() const override {
-        return as::Type::String;
+    const Type &getType() const override {
+        return Type::String;
     }
 
-    as::StringLiteral getStringLiteral() const {
-        return stringLiteral;
-    }
-
-private:
-    explicit StringLiteralRefExpression(as::StringLiteral stringLiteral) : stringLiteral(stringLiteral) {
+    qore::String::Ptr getString() const {
+        return string.dup();
     }
 
 private:
-    as::StringLiteral stringLiteral;
+    explicit StringLiteralRefExpression(qore::String::Ptr string) : string(std::move(string)) {
+    }
+
+private:
+    qore::String::Ptr string;
 };
 
 } // namespace sem

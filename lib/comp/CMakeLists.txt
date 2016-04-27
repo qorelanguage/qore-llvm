@@ -19,10 +19,9 @@ add_library(comp STATIC
     sem/FunctionScope.cpp
     sem/GlobalVariableInfo.cpp
     sem/NamespaceScope.cpp
-    as/Type.cpp
 )
 
 target_link_libraries(comp
-    common
+    core
     rt
 )

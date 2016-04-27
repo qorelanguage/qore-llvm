@@ -79,11 +79,11 @@ public:
     explicit InteractiveScope(const Scope &rootScope) : rootScope(rootScope) {
     }
 
-    const as::Type &resolveType(ast::Type &node) const override {
+    const Type &resolveType(ast::Type &node) const override {
         return rootScope.resolveType(node);
     }
 
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(name, location, type);
         LocalVariable &lv = *ptr;
         locals.push_back(std::move(ptr));
@@ -95,12 +95,12 @@ public:
         return rootScope.resolveSymbol(name);
     }
 
-    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }
 
-    const as::Type &getReturnType() const override {
-        return as::Type::Nothing;
+    const Type &getReturnType() const override {
+        return Type::Nothing;
     }
 
 private:
@@ -111,29 +111,29 @@ private:
 class TopLevelCtx {
 
 public:
-    void setLocal(const as::LocalVariable &lv, rt::qvalue value) {
+    void setLocal(const as::LocalVariable &lv, qvalue value) {
         locals[lv.getId()] = value;
     }
 
-    rt::qvalue getLocal(const as::LocalVariable &lv) {
+    qvalue getLocal(const as::LocalVariable &lv) {
         auto it = locals.find(lv.getId());
         assert(it != locals.end());
         return it->second;
     }
 
-    void setTemp(as::Temp temp, rt::qvalue value) {
+    void setTemp(as::Temp temp, qvalue value) {
         temps[temp.getIndex()] = value;
     }
 
-    rt::qvalue getTemp(as::Temp temp) {
+    qvalue getTemp(as::Temp temp) {
         auto it = temps.find(temp.getIndex());
         assert(it != temps.end());
         return it->second;
     }
 
 private:
-    std::map<Id, rt::qvalue> temps;
-    std::map<Id, rt::qvalue> locals;
+    std::map<Id, qvalue> temps;
+    std::map<Id, qvalue> locals;
 };
 
 class Interactive {

@@ -25,78 +25,43 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Core types of the Qore runtime.
+/// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_RT_TYPES_H_
-#define INCLUDE_QORE_RT_TYPES_H_
+#ifndef INCLUDE_QORE_INT_H_
+#define INCLUDE_QORE_INT_H_
 
-#include <cstdint>
+#include "qore/Any.h"
 
 namespace qore {
-namespace rt {
 
-//base class for all heap-allocated values (string, list, hash, user objects, primitive wrappers, etc.)
-class QAny;
+class Int : public Any {
 
-using qsize = uint64_t;
-using qbool = bool;
-using qint = int64_t;
-using qfloat = double;
-using qptr = QAny *;
-union qvalue {
-    qbool b;
+public:
+    explicit Int(qint i) : i(i) {
+        LOG(this << " created");
+    }
+
+    const Type &getType() const override {
+        return Type::Int;
+    }
+
+    qint get() const {
+        return i;
+    }
+
+protected:
+    ~Int() {
+        LOG(this << " destroyed");
+    }
+
+protected:
+    WRITE_TO_LOG("Int \"" << i << "\"")
+
+private:
     qint i;
-    qfloat f;
-    qptr p;
 };
 
-//struct GlobalVariable;
-
-struct Exception {
-    qvalue value;
-};
-
-enum class Type {
-    Any,
-    Nothing,
-    Bool,
-    SoftBool,
-    Int,
-    SoftInt,
-    Float,
-    Number,
-    String,
-    SoftString,
-    List,
-    Hash,
-    Object,
-
-    Error,  //should this be here?
-};
-
-enum class Op {
-    Plus,
-    PlusEq,
-};
-
-enum class Operator {
-    IntPlusInt,
-    StringPlusString,
-    AnyPlusAny,
-    AnyPlusEqAny,
-};
-
-enum class Conversion {
-    Identity,
-    IntToString,
-    StringToInt,
-    BoxInt,
-    AnyToString,
-    IntToBool,
-};
-
-} // namespace rt
 } // namespace qore
 
-#endif // INCLUDE_QORE_RT_TYPES_H_
+#endif // INCLUDE_QORE_INT_H_

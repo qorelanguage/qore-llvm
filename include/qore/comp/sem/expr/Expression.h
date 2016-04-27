@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_EXPR_EXPRESSION_H_
 
 #include <memory>
-#include "qore/comp/as/Type.h"
+#include "qore/Type.h"
 
 namespace qore {
 namespace comp {
@@ -71,7 +71,7 @@ public:
 public:
     virtual ~Expression() = default;
     virtual Kind getKind() const = 0;
-    virtual const as::Type &getType() const = 0;
+    virtual const Type &getType() const = 0;
 
     template<typename V>
     typename V::ReturnType accept(V &v) const {

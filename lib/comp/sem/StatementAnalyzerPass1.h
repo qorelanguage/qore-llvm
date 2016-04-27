@@ -73,12 +73,12 @@ public:
 
     Statement::Ptr visit(ast::ReturnStatement &node) override {
         if (!node.expression) {
-            if (scope.getReturnType() != as::Type::Nothing) {
+            if (scope.getReturnType() != Type::Nothing) {
                 QORE_UNREACHABLE("report error");
             }
             return ReturnStatement::create();
         }
-        if (scope.getReturnType() == as::Type::Nothing) {
+        if (scope.getReturnType() == Type::Nothing) {
             QORE_UNREACHABLE("report error");
         }
         return ReturnStatement::create(
@@ -87,7 +87,7 @@ public:
 
     Statement::Ptr visit(ast::IfStatement &node) override {
         BlockScopeImpl inner(scope);
-        Expression::Ptr cond = ExpressionAnalyzerPass1::evalAndConvert(core, inner, as::Type::SoftBool,
+        Expression::Ptr cond = ExpressionAnalyzerPass1::evalAndConvert(core, inner, Type::SoftBool,
                 *node.condition);
         Statement::Ptr b1 = analyzeWithNewBlock(core, inner, *node.stmtTrue);
         Statement::Ptr b2 = node.stmtFalse ? analyzeWithNewBlock(core, inner, *node.stmtFalse) : nullptr;

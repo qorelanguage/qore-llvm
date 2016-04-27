@@ -43,20 +43,20 @@ public:
     using Ptr = std::unique_ptr<InvokeConversionExpression>;
 
 public:
-    static Ptr create(const rt::meta::ConversionDesc &desc, Expression::Ptr arg) {
-        return Ptr(new InvokeConversionExpression(desc, std::move(arg)));
+    static Ptr create(const qore::Conversion &conversion, Expression::Ptr arg) {
+        return Ptr(new InvokeConversionExpression(conversion, std::move(arg)));
     }
 
     Kind getKind() const override {
         return Kind::InvokeConversion;
     }
 
-    const as::Type &getType() const override {
-        return as::Type::from(desc.retType);
+    const Type &getType() const override {
+        return conversion.getToType();
     }
 
-    const rt::meta::ConversionDesc &getDesc() const {
-        return desc;
+    const qore::Conversion &getConversion() const {
+        return conversion;
     }
 
     const Expression &getArg() const {
@@ -64,12 +64,12 @@ public:
     }
 
 private:
-    InvokeConversionExpression(const rt::meta::ConversionDesc &desc, Expression::Ptr arg)
-            : desc(desc), arg(std::move(arg)) {
+    InvokeConversionExpression(const qore::Conversion &conversion, Expression::Ptr arg)
+            : conversion(conversion), arg(std::move(arg)) {
     }
 
 private:
-    const rt::meta::ConversionDesc &desc;
+    const qore::Conversion &conversion;
     Expression::Ptr arg;
 };
 

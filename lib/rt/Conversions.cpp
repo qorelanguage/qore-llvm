@@ -28,61 +28,65 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_FUNCTION_H_
-#define INCLUDE_QORE_COMP_AS_FUNCTION_H_
-
+#include "qore/rt/Conversions.h"
 #include <cassert>
-#include <string>
-#include <vector>
-#include "qore/comp/as/Block.h"
-#include "qore/comp/as/LocalVariable.h"
+#include "qore/Conversion.h"
+#include "qore/Int.h"
+#include "qore/String.h"
 #include "qore/Type.h"
 
 namespace qore {
-namespace comp {
-namespace as {
+namespace rt {
 
-class Function {
+qvalue convertAny(qvalue src, const Type &type) {
+    const Conversion *conversion = Conversion::find(src.p->getType(), type);
 
-public:
-    Function(std::string name, Id argCount, const Type &retType, Id tempCount,
-            std::vector<LocalVariable::Ptr> locals, std::vector<Block::Ptr> blocks)
-            : name(std::move(name)), argCount(argCount), retType(retType),
-            tempCount(tempCount), locals(std::move(locals)), blocks(std::move(blocks)) {
+    if (src.p->getType() == Type::Int) {
+        src.i = static_cast<Int *>(src.p)->get();
     }
-
-    const std::string &getName() const {
-        return name;
+    if (conversion != nullptr) {
+        src = conversion->getFunction()(src);
+    } else if (type.isRefCounted()) {
+        //TODO identity conversion causes increased refCount
+        src.p->incRefCount();
     }
+    return src;
+}
 
-    Id getArgCount() const {
-        return argCount;
-    }
+qvalue convertAnyToString(qvalue value) {
+    LOG("convertAnyToString(" << value.p << ")");
+    return convertAny(value, Type::String);
+}
 
-    Id getTempCount() const {
-        return tempCount;
-    }
+qvalue convertIntToAny(qvalue value) {
+    LOG("convertIntToAny(" << value.i << ")");
+    //XXX instances can be cached if Int is immutable
+    qvalue result;
+    result.p = new Int(value.i);
+    return result;
+}
 
-    Id getLocalCount() const {
-        return locals.size();
-    }
+qvalue convertIntToBool(qvalue value) noexcept {
+    LOG("convertIntToBool(" << value.i << ")");
+    qvalue result;
+    result.b = value.i != 0;
+    return result;
+}
 
-    Block &getEntryBlock() const {
-        assert(!blocks.empty());
-        return *blocks[0];
-    }
+qvalue convertIntToString(qvalue value) {
+    LOG("convertIntToString(" << value.i << ")");
+    qvalue result;
+    result.p = new String(std::to_string(value.i));
+    return result;
+}
 
-private:
-    std::string name;
-    Id argCount;
-    const Type &retType;
-    Id tempCount;
-    std::vector<LocalVariable::Ptr> locals;
-    std::vector<Block::Ptr> blocks;
-};
+qvalue convertStringToInt(qvalue value) {
+    assert(value.p->getType() == Type::String);
+    LOG("convertStringToInt(" << value.p << ")");
+    qvalue result;
+    result.i = static_cast<String *>(value.p)->toInt();
+    return result;
+}
 
-} // namespace as
-} // namespace comp
+} // namespace rt
 } // namespace qore
-
-#endif // INCLUDE_QORE_COMP_AS_FUNCTION_H_

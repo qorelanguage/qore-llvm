@@ -57,11 +57,11 @@ public:
     explicit BlockScopeImpl(Scope &parent) : parent(parent) {
     }
 
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         return parent.createLocalVariable(name, location, type);
     }
 
-    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const as::Type &type) override {
+    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         if (locals.find(name) != locals.end()) {
             //FIXME report duplicate local variable in the same block
             QORE_NOT_IMPLEMENTED("");
@@ -71,7 +71,7 @@ public:
         return lv;
     }
 
-    const as::Type &resolveType(ast::Type &node) const override {
+    const Type &resolveType(ast::Type &node) const override {
         return parent.resolveType(node);
     }
 
@@ -85,7 +85,7 @@ public:
         return parent.resolveSymbol(name);
     }
 
-    const as::Type &getReturnType() const override {
+    const Type &getReturnType() const override {
         return parent.getReturnType();
     }
 

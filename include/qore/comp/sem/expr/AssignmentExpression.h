@@ -51,7 +51,7 @@ public:
         return Kind::Assignment;
     }
 
-    const as::Type &getType() const override {
+    const Type &getType() const override {
         return left->getType();
     }
 

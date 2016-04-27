@@ -46,7 +46,6 @@
 #include "qore/comp/as/StringLiteral.h"
 #include "qore/comp/sem/BlockScope.h"
 #include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
-#include "qore/comp/sem/stmt/StringLiteralInitializationStatement.h"
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
 #include "qore/comp/sem/expr/NothingLiteralExpression.h"
 #include "qore/comp/sem/expr/StringLiteralRefExpression.h"
@@ -67,12 +66,12 @@ class ScriptBuilder {
 
 public:
     explicit ScriptBuilder(StringTable &strings) {
-        builtinTypes[strings.put("int")] = std::make_pair(&as::Type::Int, &as::Type::IntOpt);
-        builtinTypes[strings.put("string")] = std::make_pair(&as::Type::String, &as::Type::StringOpt);
-        builtinTypes[strings.put("any")] = std::make_pair(&as::Type::Any, nullptr);
+        builtinTypes[strings.put("int")] = std::make_pair(&Type::Int, &Type::IntOpt);
+        builtinTypes[strings.put("string")] = std::make_pair(&Type::String, &Type::StringOpt);
+        builtinTypes[strings.put("any")] = std::make_pair(&Type::Any, nullptr);
     }
 
-    const as::Type *getBuiltinType(const ast::Name::Id &name, bool asterisk) const {
+    const Type *getBuiltinType(const ast::Name::Id &name, bool asterisk) const {
         auto it = builtinTypes.find(name.str);
         if (it == builtinTypes.end()) {
             return nullptr;
@@ -81,49 +80,48 @@ public:
         if (asterisk) {
             if (!it->second.second) {
                 //FIXME report error (any with asterisk)
-                return &as::Type::Error;
+                return &Type::Error;
             }
             return it->second.second;
         }
         return it->second.first;
     }
 
-    const as::Type &getClassType(const ClassScope &c, bool asterisk);
+    const Type &getClassType(const ClassScope &c, bool asterisk);
 
-    as::StringLiteral createStringLiteral(const std::string &value) {
+    qore::String::Ptr createStringLiteral(const std::string &value) {
         auto it = strings.find(value);
         if (it != strings.end()) {
-            return it->second;
+            return it->second.dup();
         }
-        as::StringLiteral sl(strings.size());
-        strings.insert(std::make_pair(value, sl));
-        initializers.push_back(StringLiteralInitializationStatement::create(sl, std::move(value)));
-        return sl;
+        qore::String::Ptr string = qore::String::Ptr(new qore::String(value));
+        strings.insert(std::make_pair(value, string.dup()));
+        return std::move(string);
     }
 
-    as::GlobalVariable &createGlobalVariable(String::Ref name, SourceLocation location, const as::Type &type) {
+    as::GlobalVariable &createGlobalVariable(std::string name, SourceLocation location, const Type &type) {
         std::unique_ptr<as::GlobalVariable> ptr
-            = util::make_unique<as::GlobalVariable>(globalVariables.size(), name, location, type);
+            = util::make_unique<as::GlobalVariable>(globalVariables.size(), std::move(name), location, type);
         as::GlobalVariable &gv = *ptr;
         globalVariables.push_back(std::move(ptr));
         initializers.push_back(GlobalVariableInitializationStatement::create(gv, defaultFor(type)));
         return gv;
     }
 
-    Expression::Ptr defaultFor(const as::Type &type) {
-        if (type == as::Type::String) {
+    Expression::Ptr defaultFor(const Type &type) {
+        if (type == Type::String) {
             return StringLiteralRefExpression::create(createStringLiteral(""));
         }
-        if (type == as::Type::Int) {
+        if (type == Type::Int) {
             return IntLiteralExpression::create(0);
         }
-        if (type == as::Type::Any || type == as::Type::Error || type.isOptional()) {
+        if (type == Type::Any || type == Type::Error) {     // || type.isOptional()
             return NothingLiteralExpression::create();
         }
         QORE_NOT_IMPLEMENTED("Default value");
     }
 
-    as::Function &createFunction(std::string name, Id argCount, const as::Type &retType, Builder &b);
+    as::Function &createFunction(std::string name, Id argCount, const Type &retType, Builder &b);
 
     as::Script::Ptr build(as::Function *qInit, as::Function *qMain) {
         return util::make_unique<as::Script>(std::move(types), std::move(globalVariables), std::move(functions),
@@ -135,20 +133,20 @@ public:
     }
 
 private:
-    const as::Type &createType(rt::Type runtimeType, std::string name, bool optional) {
-        std::unique_ptr<as::Type> ptr = util::make_unique<as::Type>(runtimeType, std::move(name), optional, false);
-        as::Type &t = *ptr;
+    const Type &createType(Type::Kind kind, std::string name) {
+        Type::Ptr ptr = Type::create(kind, std::move(name));
+        Type &t = *ptr;
         types.push_back(std::move(ptr));
         return t;
     }
 
 private:
-    std::map<String::Ref, std::pair<const as::Type *, const as::Type *>> builtinTypes;
-    std::map<const ClassScope *, std::pair<const as::Type *, const as::Type *>> classTypes;
-    std::unordered_map<std::string, as::StringLiteral> strings;
+    std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;
+    std::map<const ClassScope *, std::pair<const Type *, const Type *>> classTypes;
+    std::unordered_map<std::string, qore::String::Ptr> strings;
     std::vector<Statement::Ptr> initializers;
     std::vector<std::unique_ptr<as::GlobalVariable>> globalVariables;
-    std::vector<std::unique_ptr<as::Type>> types;
+    std::vector<Type::Ptr> types;
     std::vector<std::unique_ptr<as::Function>> functions;
 };
 

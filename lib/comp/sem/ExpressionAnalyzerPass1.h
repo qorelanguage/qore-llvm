@@ -59,13 +59,13 @@ public:
         return node.accept(a);
     }
 
-    static Expression::Ptr evalAndConvert(Core &core, Scope &scope, const as::Type &type, ast::Expression &node) {
+    static Expression::Ptr evalAndConvert(Core &core, Scope &scope, const Type &type, ast::Expression &node) {
         ExpressionAnalyzerPass1 a(core, scope, &type);
         return a.convert(node.accept(a), type);
     }
 
     Expression::Ptr visit(ast::VarDeclExpression &node) override {
-        const as::Type &type = scope.resolveType(node.type);
+        const Type &type = scope.resolveType(node.type);
         LocalVariable &lv = scope.declareLocalVariable(node.name, node.location, type);
 
         Expression::Ptr rhs;
@@ -82,11 +82,11 @@ public:
     Expression::Ptr visit(ast::BinaryExpression &node) override {
         Expression::Ptr left = eval(*node.left);
         Expression::Ptr right = eval(*node.right);
-        const rt::meta::BinaryOperatorDesc &desc = resolveOperator(rt::Op::Plus, left->getType(), right->getType());
+        const BinaryOperator &op = resolveOperator(BinaryOperator::Kind::Plus, left->getType(), right->getType());
         return InvokeBinaryOperatorExpression::create(
-                desc,
-                convert(std::move(left), desc.leftType),
-                convert(std::move(right), desc.rightType));
+                op,
+                convert(std::move(left), op.getLeftType()),
+                convert(std::move(right), op.getRightType()));
     }
 
     Expression::Ptr visit(ast::NameExpression &node) override {
@@ -112,7 +112,7 @@ public:
             std::string s = core.ctx.getSrcMgr().get(node.token.location.sourceId).getRange(
                     node.token.location.offset, node.token.length);
             std::stringstream str(s);
-            rt::qint v;
+            qint v;
             str >> v;
             return IntLiteralExpression::create(v);
         } else {
@@ -128,12 +128,12 @@ public:
         } else if (node.op.type == qore::comp::TokenType::PlusEquals) {
             Expression::Ptr left = eval(*node.left);
             Expression::Ptr right = eval(*node.right);
-            const rt::meta::BinaryOperatorDesc &desc
-                    = resolveOperator(rt::Op::PlusEq, left->getType(), right->getType());
+            const BinaryOperator &op = resolveOperator(BinaryOperator::Kind::PlusEquals,
+                    left->getType(), right->getType());
             return CompoundAssignmentExpression::create(
                     std::move(left),
-                    desc,
-                    convert(std::move(right), desc.rightType));
+                    op,
+                    convert(std::move(right), op.getRightType()));
         } else {
             QORE_NOT_IMPLEMENTED("");
         }
@@ -155,7 +155,7 @@ public:
     Expression::Ptr visit(ast::ClosureExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
 
 private:
-    ExpressionAnalyzerPass1(Core &core, Scope &scope, const as::Type *typeHint = nullptr)
+    ExpressionAnalyzerPass1(Core &core, Scope &scope, const Type *typeHint = nullptr)
             : core(core), scope(scope), typeHint(typeHint) {
     }
 
@@ -164,33 +164,29 @@ private:
         return node.accept(a);
     }
 
-    Expression::Ptr evalAndConvert(ast::Expression &node, const as::Type &type) {
+    Expression::Ptr evalAndConvert(ast::Expression &node, const Type &type) {
         ExpressionAnalyzerPass1 a(core, scope, &type);
         return convert(node.accept(a), type);
     }
 
-    Expression::Ptr convert(Expression::Ptr expr, rt::Type type) {
+    Expression::Ptr convert(Expression::Ptr expr, const Type &type) {
         //FIXME catch exception and report diagnostic
-        const rt::meta::ConversionDesc &desc = rt::meta::findConversion(expr->getType().getRuntimeType(), type);
-        if (desc.conversion == rt::Conversion::Identity) {
+        const Conversion *conversion = Conversion::find(expr->getType(), type);
+        if (!conversion) {
             return std::move(expr);
         }
-        return InvokeConversionExpression::create(desc, std::move(expr));
+        return InvokeConversionExpression::create(*conversion, std::move(expr));
     }
 
-    Expression::Ptr convert(Expression::Ptr expr, const as::Type &type) {
-        return convert(std::move(expr), type.getRuntimeType());
-    }
-
-    const rt::meta::BinaryOperatorDesc &resolveOperator(rt::Op o, const as::Type &l, const as::Type &r) {
+    const BinaryOperator &resolveOperator(BinaryOperator::Kind kind, const Type &l, const Type &r) {
         //FIXME catch exception and report diagnostic
-        return rt::meta::findOperator(o, l.getRuntimeType(), r.getRuntimeType());
+        return BinaryOperator::find(kind, l, r);
     }
 
 private:
     Core &core;
     Scope &scope;
-    const as::Type *typeHint;
+    const Type *typeHint;
 };
 
 } // namespace sem

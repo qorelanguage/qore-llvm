@@ -52,7 +52,7 @@ public:
         return Kind::LifetimeStart;
     }
 
-    const as::Type &getType() const override {
+    const Type &getType() const override {
         return localVariable.getType();
     }
 

@@ -36,7 +36,6 @@
 #include <vector>
 #include "qore/common/Exceptions.h"
 #include "qore/comp/as/is.h"
-#include "qore/rt/Func.h"
 #include "qore/rt/Context.h"
 
 namespace qore {
@@ -104,9 +103,6 @@ public:
                         break;
                     case comp::as::Instruction::Kind::RetVoid:
                         return;
-                    case comp::as::Instruction::Kind::MakeStringLiteral:
-                        exec(static_cast<comp::as::MakeStringLiteral *>(ins));
-                        break;
                     case comp::as::Instruction::Kind::Jump: {
                         comp::as::Jump &ii = static_cast<comp::as::Jump &>(*ins);
                         b = &ii.getDest();
@@ -116,7 +112,7 @@ public:
                     default:
                         QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins->getKind()));
                 }
-            } catch (rt::Exception &e) {
+            } catch (Exception &e) {
                 if (ins->getLpad()) {
                     QORE_UNREACHABLE("Exception thrown by an instruction with no landing pad");
                 }
@@ -132,7 +128,9 @@ public:
 
 private:
     void exec(comp::as::IntConstant *ins) {
-        f.setTemp(ins->getDest(), rt::qint_to_qvalue(ins->getValue()));
+        qvalue v;
+        v.i = ins->getValue();
+        f.setTemp(ins->getDest(), v);
     }
 
     void exec(comp::as::GetLocal *ins) {
@@ -144,15 +142,23 @@ private:
     }
 
     void exec(comp::as::LoadString *ins) {
-        f.setTemp(ins->getDest(), ctx.loadString(ins->getStringLiteral().getId()));
+        qvalue v;
+        v.p = ins->getString();
+        f.setTemp(ins->getDest(), v);
     }
 
     void exec(comp::as::RefInc *ins) {
-        rt::incRef(f.getTemp(ins->getTemp()));
+        qvalue v = f.getTemp(ins->getTemp());
+        if (v.p) {
+            v.p->incRefCount();
+        }
     }
 
     void exec(comp::as::RefDec *ins) {
-        rt::decRef(f.getTemp(ins->getTemp()));
+        qvalue v = f.getTemp(ins->getTemp());
+        if (v.p) {
+            v.p->decRefCount();
+        }
     }
 
     void exec(comp::as::ReadLockGlobal *ins) {
@@ -180,21 +186,18 @@ private:
     }
 
     void exec(comp::as::MakeGlobal *ins) {
-        ctx.createGlobal(ins->getGlobalVariable().getId(), !ins->getGlobalVariable().getType().isPrimitive(),
+        ctx.createGlobal(ins->getGlobalVariable().getId(), ins->getGlobalVariable().getType().isRefCounted(),
                 f.getTemp(ins->getInitValue()));
         //TODO exception
     }
 
     void exec(comp::as::BinaryOperator *ins) {
-        f.setTemp(ins->getDest(), ins->getDesc().f(f.getTemp(ins->getLeft()), f.getTemp(ins->getRight())));
+        f.setTemp(ins->getDest(),
+                ins->getOperator().getFunction()(f.getTemp(ins->getLeft()), f.getTemp(ins->getRight())));
     }
 
     void exec(comp::as::Conversion *ins) {
-        f.setTemp(ins->getDest(), ins->getDesc().f(f.getTemp(ins->getArg())));
-    }
-
-    void exec(comp::as::MakeStringLiteral *ins) {
-        ctx.createString(ins->getStringLiteral().getId(), ins->getValue().c_str(), ins->getValue().length());
+        f.setTemp(ins->getDest(), ins->getConversion().getFunction()(f.getTemp(ins->getArg())));
     }
 
 private:

@@ -31,10 +31,11 @@
 #ifndef INCLUDE_QORE_COMP_AS_GLOBALVARIABLE_H_
 #define INCLUDE_QORE_COMP_AS_GLOBALVARIABLE_H_
 
+#include <string>
 #include "qore/comp/SourceLocation.h"
 #include "qore/comp/String.h"
-#include "qore/comp/as/Type.h"
 #include "qore/Id.h"
+#include "qore/Type.h"
 
 namespace qore {
 namespace comp {
@@ -43,8 +44,8 @@ namespace as {
 class GlobalVariable {
 
 public:
-    GlobalVariable(Id id, String::Ref name, SourceLocation location, const Type &type)
-            : id(id), name(name), location(location), type(type) {
+    GlobalVariable(Id id, std::string name, SourceLocation location, const Type &type)
+            : id(id), name(std::move(name)), location(location), type(type) {
     }
 
     Id getId() const {
@@ -55,7 +56,7 @@ public:
         return location;
     }
 
-    String::Ref getName() const {
+    const std::string &getName() const {
         return name;
     }
 
@@ -65,7 +66,7 @@ public:
 
 private:
     Id id;
-    String::Ref name;
+    std::string name;
     SourceLocation location;
     const Type &type;
 };

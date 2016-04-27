@@ -33,8 +33,9 @@
 
 #include <string>
 #include "qore/Id.h"
-#include "qore/rt/Types.h"
-#include "qore/rt/Meta.h"
+#include "qore/BinaryOperator.h"
+#include "qore/Conversion.h"
+#include "qore/String.h"
 #include "qore/comp/as/Instruction.h"
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/StringLiteral.h"
@@ -49,7 +50,7 @@ namespace as {
 class IntConstant : public Instruction {
 
 public:
-    IntConstant(Temp dest, rt::qint value) : dest(dest), value(value) {
+    IntConstant(Temp dest, qint value) : dest(dest), value(value) {
     }
 
     Kind getKind() const override {
@@ -60,13 +61,13 @@ public:
         return dest;
     }
 
-    rt::qint getValue() const {
+    qint getValue() const {
         return value;
     }
 
 private:
     Temp dest;
-    rt::qint value;
+    qint value;
 };
 
 class GetLocal : public Instruction {
@@ -142,7 +143,7 @@ private:
 class LoadString : public Instruction {
 
 public:
-    LoadString(Temp dest, StringLiteral stringLiteral) : dest(dest), stringLiteral(stringLiteral) {
+    LoadString(Temp dest, qore::String::Ptr string) : dest(dest), string(std::move(string)) {
     }
 
     Kind getKind() const override {
@@ -153,13 +154,13 @@ public:
         return dest;
     }
 
-    StringLiteral getStringLiteral() const {
-        return stringLiteral;
+    qore::String *getString() const {
+        return string.get();
     }
 
 private:
     Temp dest;
-    StringLiteral stringLiteral;
+    qore::String::Ptr string;
 };
 
 class RefInc : public Instruction {
@@ -374,8 +375,8 @@ public:
 class BinaryOperator : public Instruction {
 
 public:
-    BinaryOperator(Temp dest, const rt::meta::BinaryOperatorDesc &desc, Temp left, Temp right, Block *lpad)
-            : Instruction(lpad), dest(dest), desc(desc), left(left), right(right) {
+    BinaryOperator(Temp dest, const qore::BinaryOperator &op, Temp left, Temp right, Block *lpad)
+            : Instruction(lpad), dest(dest), op(op), left(left), right(right) {
     }
 
     Kind getKind() const override {
@@ -386,8 +387,8 @@ public:
         return dest;
     }
 
-    const rt::meta::BinaryOperatorDesc &getDesc() const {
-        return desc;
+    const qore::BinaryOperator &getOperator() const {
+        return op;
     }
 
     Temp getLeft() const {
@@ -400,7 +401,7 @@ public:
 
 private:
     Temp dest;
-    const rt::meta::BinaryOperatorDesc &desc;
+    const qore::BinaryOperator &op;
     Temp left;
     Temp right;
 };
@@ -408,8 +409,8 @@ private:
 class Conversion : public Instruction {
 
 public:
-    Conversion(Temp dest, const rt::meta::ConversionDesc &desc, Temp arg, Block *lpad)
-            : Instruction(lpad), dest(dest), desc(desc), arg(arg) {
+    Conversion(Temp dest, const qore::Conversion &conversion, Temp arg, Block *lpad)
+            : Instruction(lpad), dest(dest), conversion(conversion), arg(arg) {
     }
 
     Kind getKind() const override {
@@ -420,8 +421,8 @@ public:
         return dest;
     }
 
-    const rt::meta::ConversionDesc &getDesc() const {
-        return desc;
+    const qore::Conversion &getConversion() const {
+        return conversion;
     }
 
     Temp getArg() const {
@@ -430,7 +431,7 @@ public:
 
 private:
     Temp dest;
-    const rt::meta::ConversionDesc &desc;
+    const qore::Conversion &conversion;
     Temp arg;
 };
 
@@ -461,30 +462,6 @@ public:
 
 private:
     Temp value;
-};
-
-class MakeStringLiteral : public Instruction {
-
-public:
-    MakeStringLiteral(StringLiteral stringLiteral, std::string value) : stringLiteral(stringLiteral),
-            value(std::move(value)) {
-    }
-
-    Kind getKind() const override {
-        return Kind::MakeStringLiteral;
-    }
-
-    StringLiteral getStringLiteral() const {
-        return stringLiteral;
-    }
-
-    const std::string getValue() const {
-        return value;
-    }
-
-private:
-    StringLiteral stringLiteral;
-    std::string value;
 };
 
 class Jump : public Instruction {

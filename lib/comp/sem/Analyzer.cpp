@@ -32,7 +32,6 @@
 #include <string>
 #include "qore/comp/sem/ClassScope.h"
 #include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
-#include "qore/comp/sem/stmt/StringLiteralInitializationStatement.h"
 #include "ReportedError.h"
 #include "StatementAnalyzerPass1.h"
 #include "StatementAnalyzerPass2.h"
@@ -81,18 +80,18 @@ void Core::doPass2(Builder &builder, Statement &stmt) {
     stmt.accept(a);
 }
 
-const as::Type &ScriptBuilder::getClassType(const ClassScope &c, bool asterisk) {
+const Type &ScriptBuilder::getClassType(const ClassScope &c, bool asterisk) {
     auto it = classTypes.find(&c);
     if (it != classTypes.end()) {
         return asterisk ? *it->second.second : *it->second.first;
     }
-    const as::Type &t1 = createType(rt::Type::Object, c.getFullName(), false);
-    const as::Type &t2 = createType(rt::Type::Object, c.getFullName(), true);
+    const Type &t1 = createType(Type::Kind::Object, c.getFullName());
+    const Type &t2 = createType(Type::Kind::ObjectOpt, "*" + c.getFullName());
     classTypes[&c] = std::make_pair(&t1, &t2);
     return asterisk ? t2 : t1;
 }
 
-as::Function &ScriptBuilder::createFunction(std::string name, Id argCount, const as::Type &retType, Builder &b) {
+as::Function &ScriptBuilder::createFunction(std::string name, Id argCount, const Type &retType, Builder &b) {
     std::unique_ptr<as::Function> ptr = util::make_unique<as::Function>(name, argCount,
             retType, b.tempCount, std::move(b.locals), std::move(b.blocks));
     as::Function &f = *ptr;

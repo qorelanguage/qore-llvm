@@ -28,77 +28,65 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_SCOPE_H_
-#define INCLUDE_QORE_COMP_SEM_SCOPE_H_
+#ifndef INCLUDE_QORE_CONVERSION_H_
+#define INCLUDE_QORE_CONVERSION_H_
 
+#include <string>
 #include "qore/Type.h"
-#include "qore/comp/ast/Type.h"
-#include "qore/comp/sem/LocalVariable.h"
+#include "qore/Value.h"
 
 namespace qore {
-namespace comp {
-namespace sem {
 
-class LocalVariable;
-class GlobalVariableInfo;
-
-class Symbol {
+class Conversion {
 
 public:
-    enum class Kind {
-        Global,
-        Local,
-    };
+    using Function = qvalue(qvalue);
 
 public:
-    explicit Symbol(const LocalVariable &v) : kind(Kind::Local), ptr(&v) {
+    static const Conversion *find(const Type &from, const Type &to);
+
+    const std::string &getFunctionName() const {
+        return functionName;
     }
 
-    explicit Symbol(const GlobalVariableInfo &v) : kind(Kind::Global), ptr(&v) {
+    const Function &getFunction() const {
+        return function;
     }
 
-    Kind getKind() const {
-        return kind;
+    const Type &getToType() const {
+        return to;
     }
 
-    const LocalVariable &asLocal() const {
-        assert(kind == Kind::Local);
-        return *static_cast<const LocalVariable *>(ptr);
-    }
-
-    const GlobalVariableInfo &asGlobal() const {
-        assert(kind == Kind::Global);
-        return *static_cast<const GlobalVariableInfo *>(ptr);
+    bool canThrow() const {
+        return throws;
     }
 
 private:
-    Kind kind;
-    const void *ptr;
-};
-
-class Scope {
-
-public:
-    virtual ~Scope() = default;
-
-    virtual const Type &resolveType(ast::Type &node) const = 0;
-    virtual LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
-    virtual Symbol resolveSymbol(ast::Name &name) const = 0;
-    virtual LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
-    virtual const Type &getReturnType() const = 0;
-
-protected:
-    Scope() = default;
+    Conversion(std::string functionName, const Function &function, const Type &from, const Type &to, bool throws)
+            : functionName(std::move(functionName)), function(function), from(from), to(to), throws(throws) {
+    }
 
 private:
-    Scope(const Scope &) = delete;
-    Scope(Scope &&) = delete;
-    Scope &operator=(const Scope &) = delete;
-    Scope &operator=(Scope &&) = delete;
+    Conversion(const Conversion &) = delete;
+    Conversion(Conversion &&) = delete;
+    Conversion &operator=(const Conversion &) = delete;
+    Conversion &operator=(Conversion &&) = delete;
+
+private:
+    static const Conversion AnyToString;
+    static const Conversion IntToAny;
+    static const Conversion IntToBool;
+    static const Conversion IntToString;
+    static const Conversion StringToInt;
+
+private:
+    std::string functionName;
+    const Function &function;
+    const Type &from;
+    const Type &to;
+    bool throws;
 };
 
-} // namespace sem
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_SCOPE_H_
+#endif // INCLUDE_QORE_CONVERSION_H_

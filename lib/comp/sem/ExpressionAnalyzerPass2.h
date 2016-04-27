@@ -110,7 +110,7 @@ public:
     void visit(const AssignmentExpression &expr) {
         withSideEffect();
         evaluate(dest, expr.getRight());
-        if (!expr.getLeft().getType().isPrimitive()) {
+        if (refCounted(expr.getLeft())) {
             cleanupDest(true);
             TempHelper old(builder);
             LValue left(builder, expr.getLeft());
@@ -129,14 +129,14 @@ public:
 
         TempHelper right(builder);
         evaluate(right, expr.getRight());
-        right.needsCleanup(!expr.getRight().getType().isPrimitive(), true);
+        right.needsCleanup(refCounted(expr.getRight()), true);
 
         TempHelper old(builder);
         LValue left(builder, expr.getLeft());
         left.get(old);
 
-        builder.createBinaryOperator(dest, expr.getDesc(), old, right);
-        if (!expr.getLeft().getType().isPrimitive()) {
+        builder.createBinaryOperator(dest, expr.getOperator(), old, right);
+        if (refCounted(expr.getLeft())) {
             cleanupDest(true);
             refIncDestIfNeeded();
             old.needsCleanup(true, true);
@@ -149,7 +149,7 @@ public:
         const GlobalVariableInfo &gv = expr.getGlobalVariable();
         builder.createReadLockGlobal(gv);
         builder.createGetGlobal(dest, gv);
-        if (!expr.getGlobalVariable().getType().isPrimitive()) {
+        if (refCounted(expr.getGlobalVariable())) {
             refIncDestIfNeeded();
         }
         builder.createReadUnlockGlobal(gv);
@@ -165,14 +165,14 @@ public:
 
         TempHelper left(builder);
         evaluate(left, expr.getLeft());
-        left.needsCleanup(!expr.getLeft().getType().isPrimitive(), true);
+        left.needsCleanup(refCounted(expr.getLeft()), true);
 
         TempHelper right(builder);
         evaluate(right, expr.getRight());
-        right.needsCleanup(!expr.getRight().getType().isPrimitive(), true);
+        right.needsCleanup(refCounted(expr.getRight()), true);
 
-        builder.createBinaryOperator(dest, expr.getDesc(), left, right);
-        cleanupDest(!expr.getType().isPrimitive());
+        builder.createBinaryOperator(dest, expr.getOperator(), left, right);
+        cleanupDest(refCounted(expr));
     }
 
     void visit(const InvokeConversionExpression &expr) {
@@ -180,16 +180,16 @@ public:
 
         TempHelper arg(builder);
         evaluate(arg, expr.getArg());
-        arg.needsCleanup(!expr.getArg().getType().isPrimitive(), true);
+        arg.needsCleanup(refCounted(expr.getArg()), true);
 
-        builder.createConversion(dest, expr.getDesc(), arg);
-        cleanupDest(!expr.getType().isPrimitive());
+        builder.createConversion(dest, expr.getConversion(), arg);
+        cleanupDest(refCounted(expr));
     }
 
     void visit(const LifetimeStartExpression &expr) {
         withSideEffect();
         evaluate(dest, expr.getInitExpression());
-        if (!expr.getLocalVariable().getType().isPrimitive()) {
+        if (refCounted(expr.getLocalVariable())) {
             refIncDestIfNeeded();
         }
         builder.startOfLocalVariableLifetime(expr.getLocalVariable(), dest);
@@ -198,7 +198,7 @@ public:
     void visit(const LocalVariableRefExpression &expr) {
         noSideEffect();
         builder.createGetLocal(dest, expr.getLocalVariable());
-        if (!expr.getLocalVariable().getType().isPrimitive()) {
+        if (refCounted(expr.getLocalVariable())) {
             refIncDestIfNeeded();
         }
     }
@@ -210,7 +210,7 @@ public:
 
     void visit(const StringLiteralRefExpression &expr) {
         noSideEffect();
-        builder.createLoadString(dest, expr.getStringLiteral());
+        builder.createLoadString(dest, expr.getString());
         builder.createRefInc(dest);
     }
 
@@ -252,6 +252,11 @@ private:
     void evaluate(as::Temp temp, const Expression &e) {
         ExpressionAnalyzerPass2 a(core, builder, temp);
         e.accept(a);
+    }
+
+    template<typename T>
+    static bool refCounted(T &t) {
+        return t.getType().isRefCounted();
     }
 
 private:

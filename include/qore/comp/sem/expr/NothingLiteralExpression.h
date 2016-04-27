@@ -51,8 +51,8 @@ public:
         return Kind::NothingLiteral;
     }
 
-    const as::Type &getType() const override {
-        return as::Type::Nothing;
+    const Type &getType() const override {
+        return Type::Nothing;
     }
 
 private:

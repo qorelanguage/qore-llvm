@@ -25,54 +25,24 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief StringLiteralInitializationStatement definition.
+/// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_STMT_STRINGLITERALINITIALIZATIONSTATEMENT_H_
-#define INCLUDE_QORE_COMP_SEM_STMT_STRINGLITERALINITIALIZATIONSTATEMENT_H_
+#ifndef INCLUDE_QORE_RT_CONVERSIONS_H_
+#define INCLUDE_QORE_RT_CONVERSIONS_H_
 
-#include <string>
-#include "qore/comp/sem/stmt/Statement.h"
-#include "qore/comp/as/StringLiteral.h"
+#include "qore/Value.h"
 
 namespace qore {
-namespace comp {
-namespace sem {
+namespace rt {
 
-class StringLiteralInitializationStatement : public Statement {
+extern "C" qvalue convertAnyToString(qvalue);
+extern "C" qvalue convertIntToAny(qvalue);
+extern "C" qvalue convertIntToBool(qvalue) noexcept;
+extern "C" qvalue convertIntToString(qvalue);
+extern "C" qvalue convertStringToInt(qvalue);
 
-public:
-    using Ptr = std::unique_ptr<StringLiteralInitializationStatement>;
-
-public:
-    static Ptr create(as::StringLiteral stringLiteral, std::string value) {
-        return Ptr(new StringLiteralInitializationStatement(stringLiteral, std::move(value)));
-    }
-
-    Kind getKind() const override {
-        return Kind::StringLiteralInitialization;
-    }
-
-    as::StringLiteral getStringLiteral() const {
-        return stringLiteral;
-    }
-
-    const std::string &getValue() const {
-        return value;
-    }
-
-private:
-    StringLiteralInitializationStatement(as::StringLiteral stringLiteral, std::string value)
-            : stringLiteral(stringLiteral), value(std::move(value)) {
-    }
-
-private:
-    as::StringLiteral stringLiteral;
-    std::string value;
-};
-
-} // namespace sem
-} // namespace comp
+} // namespace rt
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_STMT_STRINGLITERALINITIALIZATIONSTATEMENT_H_
+#endif // INCLUDE_QORE_RT_CONVERSIONS_H_

@@ -119,7 +119,7 @@ void NamespaceScope::processClassDeclaration(ast::Class &node) {
 }
 
 void NamespaceScope::processGlobalVariableDeclaration(ast::GlobalVariable &node) {
-    GlobalVariableInfo::Ptr ptr = util::make_unique<GlobalVariableInfo>(*this, node);
+    GlobalVariableInfo::Ptr ptr = util::make_unique<GlobalVariableInfo>(core, *this, node);
 
     //TODO check modifiers, reserved words
     GlobalVariableInfo *old = findGlobalVariable(ptr->getName());
@@ -243,19 +243,19 @@ Symbol NamespaceScope::resolveSymbol(ast::Name &name) const {
     QORE_NOT_IMPLEMENTED("");
 }
 
-const as::Type &NamespaceScope::resolveType(ast::Type &node) const {
+const Type &NamespaceScope::resolveType(ast::Type &node) const {
     if (node.getKind() == ast::Type::Kind::Implicit) {
-        return as::Type::Nothing;
+        return Type::Nothing;
     }
     if (node.getKind() == ast::Type::Kind::Invalid || !node.getName().isValid()) {
-        return as::Type::Error;
+        return Type::Error;
     }
 
     assert(node.getKind() == ast::Type::Kind::Basic || node.getKind() == ast::Type::Kind::Asterisk);
     bool asterisk = node.getKind() == ast::Type::Kind::Asterisk;
 
     if (node.getName().isSimple()) {
-        const as::Type *t = core.scriptBuilder.getBuiltinType(node.getName().last(), asterisk);
+        const Type *t = core.scriptBuilder.getBuiltinType(node.getName().last(), asterisk);
         if (t) {
             return *t;
         }
@@ -265,7 +265,7 @@ const as::Type &NamespaceScope::resolveType(ast::Type &node) const {
         ClassScope &c = resolveClass(node.getName());
         return core.scriptBuilder.getClassType(c, asterisk);
     } catch (ReportedError &) {
-        return as::Type::Error;
+        return Type::Error;
     }
 }
 

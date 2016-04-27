@@ -35,7 +35,6 @@
 #include "qore/comp/sem/stmt/CompoundStatement.h"
 #include "qore/comp/sem/stmt/ExpressionStatement.h"
 #include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
-#include "qore/comp/sem/stmt/StringLiteralInitializationStatement.h"
 #include "qore/comp/sem/stmt/TryStatement.h"
 #include "qore/comp/as/is.h"
 #include "ExpressionAnalyzerPass2.h"
@@ -132,10 +131,6 @@ public:
         } else {
             builder.createRetVoid();
         }
-    }
-
-    void visit(const StringLiteralInitializationStatement &stmt) {
-        builder.createMakeStringLiteral(stmt.getStringLiteral(), stmt.getValue());
     }
 
     void visit(const TryStatement &stmt) {

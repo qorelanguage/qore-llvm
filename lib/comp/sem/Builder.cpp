@@ -91,7 +91,7 @@ void Builder::buildCleanupForRet() {
     assert(cleanupTemps.empty());
 
     for (auto it = cleanupScopes.rbegin(); it != cleanupScopes.rend(); ++it) {
-        if (it->lv && !it->lv->getType().isPrimitive()) {
+        if (it->lv && it->lv->getType().isRefCounted()) {
             as::Temp temp = getFreeTemp();
             add(util::make_unique<as::GetLocal>(temp, *it->lv));
             add(util::make_unique<as::RefDec>(temp, getLandingPad2(it + 1)));

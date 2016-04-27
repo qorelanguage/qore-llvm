@@ -34,52 +34,12 @@
 #include <cassert>
 #include <vector>
 #include "qore/Id.h"
-#include "qore/rt/Types.h"
-#include "qore/rt/Func.h"
+#include "qore/Value.h"
 #include "qore/common/Exceptions.h"
+#include "qore/Any.h"
 
 namespace qore {
 namespace rt {
-
-class StringHolder {
-
-public:
-    StringHolder() {
-        str.p = nullptr;
-    }
-
-    ~StringHolder() {
-        decRef(str);
-    }
-
-    StringHolder(StringHolder &&src) : str(src.str) {
-        src.str.p = nullptr;
-    }
-
-    StringHolder &operator=(StringHolder &&src) {
-        str = src.str;
-        src.str.p = nullptr;
-        return *this;
-    }
-
-
-    void set(qptr p) {
-        assert(!str.p);
-        str.p = p;
-    }
-
-    qvalue get() {
-        assert(str.p != nullptr);
-        return str;
-    }
-
-private:
-    StringHolder(const StringHolder &) = delete;
-    StringHolder &operator=(const StringHolder &) = delete;
-
-private:
-    qvalue str;
-};
 
 ///////////////////////////////////////////////////////////////
 /// GlobalVariable
@@ -95,8 +55,8 @@ public:
     }
 
     ~GlobalVariable() {
-        if (refCounted) {
-            decRef(value);
+        if (refCounted && value.p) {
+            value.p->decRefCount();
         }
         LOG("GlobalVariable " << this << " destroyed");
     }
@@ -115,13 +75,6 @@ public:
 class Context {
 
 public:
-    void createString(Id id, const char *value, qsize length);
-
-    qvalue loadString(Id id) {
-        assert(id < strings.size());
-        return strings[id].get();
-    }
-
     void createGlobal(Id id, bool refCounted, qvalue initValue) {
         globals.resize(id + 1);
         globals[id].init(refCounted, initValue);
@@ -156,7 +109,6 @@ public:
     }
 
 private:
-    std::vector<StringHolder> strings;
     std::vector<GlobalVariable> globals;
 };
 

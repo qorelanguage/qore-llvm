@@ -1,6 +1,6 @@
 add_library(rt STATIC
-    Func.cpp
-    Meta.cpp
+    BinaryOperators.cpp
+    Conversions.cpp
 )
 
 target_link_libraries(rt

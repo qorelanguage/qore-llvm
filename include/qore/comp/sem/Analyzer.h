@@ -72,7 +72,7 @@ inline as::Script::Ptr analyze(Context &ctx, ast::Script &node) {
         analyzer.doPass2(initBuilder, *stmt);
     }
     initBuilder.createRetVoid();
-    as::Function &qInit = analyzer.scriptBuilder.createFunction("qinit", 0, as::Type::Nothing, initBuilder);
+    as::Function &qInit = analyzer.scriptBuilder.createFunction("qinit", 0, Type::Nothing, initBuilder);
 
     return analyzer.scriptBuilder.build(&qInit, &qMain);
 }

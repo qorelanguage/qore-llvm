@@ -51,7 +51,8 @@ void CodeGen::process(comp::as::Script &script) {
 
     for (auto &f : script.getFunctions()) {
         std::vector<llvm::Type *> args(f->getArgCount(), helper.lt_qvalue);
-        llvm::Type *ret = f->isVoid() ? helper.lt_void : helper.lt_qvalue;
+        //llvm::Type *ret = f->isVoid() ? helper.lt_void : helper.lt_qvalue;
+        llvm::Type *ret = helper.lt_void;
         llvm::Function *func = llvm::Function::Create(
                 llvm::FunctionType::get(ret, args, false),
                 llvm::Function::ExternalLinkage, f->getName(), helper.module.get());
