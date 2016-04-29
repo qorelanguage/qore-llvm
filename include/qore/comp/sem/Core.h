@@ -115,7 +115,8 @@ public:
         if (type == Type::Int) {
             return IntLiteralExpression::create(0);
         }
-        if (type == Type::Any || type == Type::Error) {     // || type.isOptional()
+        if (type == Type::Any || type == Type::Error || type == Type::IntOpt || type == Type::StringOpt
+                || type.getKind() == Type::Kind::ObjectOpt) {
             return NothingLiteralExpression::create();
         }
         QORE_NOT_IMPLEMENTED("Default value");

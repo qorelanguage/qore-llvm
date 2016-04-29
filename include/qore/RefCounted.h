@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_REFCOUNTED_H_
 #define INCLUDE_QORE_REFCOUNTED_H_
 
+#include <atomic>
 #include "qore/core/util/Debug.h"
 #include "qore/core/util/Loggable.h"
 #include "qore/Exception.h"
@@ -40,7 +41,7 @@ namespace qore {
 class RefCounted : public util::Loggable {
 
 private:
-    using RefCount = size_t;
+    using RefCount = std::size_t;
 
 public:
     RefCounted() : refCount(1) {
@@ -48,13 +49,11 @@ public:
 
     void incRefCount() noexcept {
         LOG(this << " incRefCount: " << refCount << "->" << (refCount + 1));
-        //XXX atomic
         ++refCount;
     }
 
     void decRefCount() noexcept(false) {
         LOG(this << " decRefCount: " << refCount << "->" << (refCount - 1));
-        //XXX atomic
         if (!--refCount) {
             delete this;
         }
@@ -71,7 +70,7 @@ private:
     RefCounted &operator=(RefCounted &&) = delete;
 
 private:
-    RefCount refCount;
+    std::atomic<RefCount> refCount;
 };
 
 template<typename T>

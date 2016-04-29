@@ -70,7 +70,7 @@ void test(bool file, std::string str) {
     LOG("-------------------------------------------------------------------------------");
     qore::in::Interpreter::interpret(*sss);
     LOG("-------------------------------------------------------------------------------");
-    qore::cg::CodeGen::process(*sss);
+//    qore::cg::CodeGen::process(*sss);
 }
 
 /// \endcond NoDoxygen
@@ -83,7 +83,25 @@ int main(int argc, char *argv[]) {
     LOG_FUNCTION();
 
     std::string src = R"(
+#any sub f(int i) {
+#    if (i += string x) {string s1 = "aaa"; return 21;}
+#    return 42;
+#}
 
+int i;
+our string s;
+s = string s1 = "A";
+i = i + 1;
+s = s + i;
+i += "2";
+s += i;
+
+any a = 1;
+a = a + 2;
+a += "8";
+)";
+
+    std::string src2 = R"(
 string s = "A";
 try {
     string s2 = "B";
@@ -91,7 +109,6 @@ try {
 } catch (hash e) {
     string s3 = "C";
 }
-
 )";
 
 //    std::istringstream stream(src);
