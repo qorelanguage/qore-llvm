@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_ANY_H_
 
 #include "qore/RefCounted.h"
-#include "qore/Type.h"
+#include "qore/core/Type.h"
 
 namespace qore {
 

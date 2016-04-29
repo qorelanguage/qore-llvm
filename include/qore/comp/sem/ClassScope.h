@@ -49,6 +49,8 @@ public:
 
 public:
     ClassScope(Core &core, NamespaceScope &parent, ast::Class &node) : core(core), parent(parent), node(node) {
+        type = Type::createForClass(getFullName(), false);
+        typeOpt = Type::createForClass(getFullName(), true);
 //        for (auto &decl : node.members) {
 //            try {processDeclaration(*decl); } catch (ReportedError &) { ignore }
 //        }
@@ -64,10 +66,16 @@ public:
         return node.name.last().location;
     }
 
+    const Type &getType(bool optional) const {
+        return optional ? *typeOpt : *type;
+    }
+
 private:
     Core &core;
     NamespaceScope &parent;
     ast::Class &node;
+    Type::Ptr type;
+    Type::Ptr typeOpt;
 
     template<typename OS> friend class Dump;
 };

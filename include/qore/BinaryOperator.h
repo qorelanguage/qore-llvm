@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_BINARYOPERATOR_H_
 
 #include <string>
-#include "qore/Type.h"
+#include "qore/core/Type.h"
 #include "qore/Value.h"
 
 namespace qore {

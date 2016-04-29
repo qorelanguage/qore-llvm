@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_EXPR_EXPRESSION_H_
 
 #include <memory>
-#include "qore/Type.h"
+#include "qore/core/Type.h"
 
 namespace qore {
 namespace comp {

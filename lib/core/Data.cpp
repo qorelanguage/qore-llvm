@@ -30,7 +30,6 @@
 //------------------------------------------------------------------------------
 #include "qore/BinaryOperator.h"
 #include "qore/Conversion.h"
-#include "qore/Type.h"
 #include "qore/rt/BinaryOperators.h"
 #include "qore/rt/Conversions.h"
 

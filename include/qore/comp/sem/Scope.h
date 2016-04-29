@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEM_SCOPE_H_
 #define INCLUDE_QORE_COMP_SEM_SCOPE_H_
 
-#include "qore/Type.h"
+#include "qore/core/Type.h"
 #include "qore/comp/ast/Type.h"
 #include "qore/comp/sem/LocalVariable.h"
 

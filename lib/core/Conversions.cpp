@@ -33,7 +33,7 @@
 #include "qore/Conversion.h"
 #include "qore/Int.h"
 #include "qore/String.h"
-#include "qore/Type.h"
+#include "qore/core/Type.h"
 
 namespace qore {
 namespace rt {

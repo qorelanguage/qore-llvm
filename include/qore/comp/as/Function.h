@@ -36,7 +36,7 @@
 #include <vector>
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/LocalVariable.h"
-#include "qore/Type.h"
+#include "qore/core/Type.h"
 
 namespace qore {
 namespace comp {

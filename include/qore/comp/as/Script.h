@@ -49,9 +49,9 @@ public:
     using Ptr = std::unique_ptr<Script>;
 
 public:
-    Script(std::vector<std::unique_ptr<Type>> types, std::vector<std::unique_ptr<GlobalVariable>> globalVariables,
+    Script(std::vector<std::unique_ptr<GlobalVariable>> globalVariables,
             std::vector<std::unique_ptr<Function>> functions, Function *qInit, Function *qMain)
-            : types(std::move(types)), globalVariables(std::move(globalVariables)), functions(std::move(functions)),
+            : globalVariables(std::move(globalVariables)), functions(std::move(functions)),
               qInit(qInit), qMain(qMain) {
     }
 
@@ -74,7 +74,6 @@ private:
     Script &operator=(Script &&) = delete;
 
 private:
-    std::vector<std::unique_ptr<Type>> types;
     std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
     std::vector<std::unique_ptr<Function>> functions;
     Function *qInit;

@@ -87,8 +87,6 @@ public:
         return it->second.first;
     }
 
-    const Type &getClassType(const ClassScope &c, bool asterisk);
-
     qore::String::Ptr createStringLiteral(const std::string &value) {
         auto it = strings.find(value);
         if (it != strings.end()) {
@@ -115,8 +113,7 @@ public:
         if (type == Type::Int) {
             return IntLiteralExpression::create(0);
         }
-        if (type == Type::Any || type == Type::Error || type == Type::IntOpt || type == Type::StringOpt
-                || type.getKind() == Type::Kind::ObjectOpt) {
+        if (type.acceptsNothing()) {
             return NothingLiteralExpression::create();
         }
         QORE_NOT_IMPLEMENTED("Default value");
@@ -125,7 +122,7 @@ public:
     as::Function &createFunction(std::string name, Id argCount, const Type &retType, Builder &b);
 
     as::Script::Ptr build(as::Function *qInit, as::Function *qMain) {
-        return util::make_unique<as::Script>(std::move(types), std::move(globalVariables), std::move(functions),
+        return util::make_unique<as::Script>(std::move(globalVariables), std::move(functions),
                 qInit, qMain);
     }
 
@@ -134,20 +131,10 @@ public:
     }
 
 private:
-    const Type &createType(Type::Kind kind, std::string name) {
-        Type::Ptr ptr = Type::create(kind, std::move(name));
-        Type &t = *ptr;
-        types.push_back(std::move(ptr));
-        return t;
-    }
-
-private:
-    std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;
-    std::map<const ClassScope *, std::pair<const Type *, const Type *>> classTypes;
+    std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;  //XXX could be static
     std::unordered_map<std::string, qore::String::Ptr> strings;
     std::vector<Statement::Ptr> initializers;
     std::vector<std::unique_ptr<as::GlobalVariable>> globalVariables;
-    std::vector<Type::Ptr> types;
     std::vector<std::unique_ptr<as::Function>> functions;
 };
 

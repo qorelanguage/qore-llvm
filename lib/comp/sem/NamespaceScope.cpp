@@ -263,7 +263,7 @@ const Type &NamespaceScope::resolveType(ast::Type &node) const {
 
     try {
         ClassScope &c = resolveClass(node.getName());
-        return core.scriptBuilder.getClassType(c, asterisk);
+        return c.getType(asterisk);
     } catch (ReportedError &) {
         return Type::Error;
     }

@@ -80,17 +80,6 @@ void Core::doPass2(Builder &builder, Statement &stmt) {
     stmt.accept(a);
 }
 
-const Type &ScriptBuilder::getClassType(const ClassScope &c, bool asterisk) {
-    auto it = classTypes.find(&c);
-    if (it != classTypes.end()) {
-        return asterisk ? *it->second.second : *it->second.first;
-    }
-    const Type &t1 = createType(Type::Kind::Object, c.getFullName());
-    const Type &t2 = createType(Type::Kind::ObjectOpt, "*" + c.getFullName());
-    classTypes[&c] = std::make_pair(&t1, &t2);
-    return asterisk ? t2 : t1;
-}
-
 as::Function &ScriptBuilder::createFunction(std::string name, Id argCount, const Type &retType, Builder &b) {
     std::unique_ptr<as::Function> ptr = util::make_unique<as::Function>(name, argCount,
             retType, b.tempCount, std::move(b.locals), std::move(b.blocks));
