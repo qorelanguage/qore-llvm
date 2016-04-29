@@ -26,7 +26,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
-#include "qore/common/Logging.h"
+#include "qore/core/util/Debug.h"
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/ast/Dump.h"
@@ -42,7 +42,7 @@
 /**
  * \brief Logging filter
  */
-class LogFilter : public qore::log::Logger {
+class LogFilter : public qore::util::Logger {
 
 public:
     bool filter(const std::string &component) override {
@@ -78,7 +78,7 @@ void test(bool file, std::string str) {
 int main(int argc, char *argv[]) {
 #ifdef QORE_LOGGING
     LogFilter logFilter;
-    qore::log::LoggerManager::set(&logFilter);
+    qore::util::LoggerManager::set(&logFilter);
 #endif
     LOG_FUNCTION();
 

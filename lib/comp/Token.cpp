@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/Token.h"
 #include <sstream>
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 
 namespace qore {
 namespace comp {

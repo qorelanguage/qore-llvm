@@ -28,9 +28,8 @@
 /// \brief Utility interface for logging.
 ///
 //------------------------------------------------------------------------------
-
-#ifndef INCLUDE_QORE_COMMON_LOGGABLE_H_
-#define INCLUDE_QORE_COMMON_LOGGABLE_H_
+#ifndef INCLUDE_QORE_CORE_UTIL_LOGGABLE_H_
+#define INCLUDE_QORE_CORE_UTIL_LOGGABLE_H_
 
 #ifdef QORE_LOGGING
 
@@ -49,7 +48,7 @@
 #endif
 
 namespace qore {
-namespace log {
+namespace util {
 
 /**
  * \brief Provides logging support for polymorphic class hierarchies.
@@ -110,7 +109,7 @@ inline std::ostream &operator<<(std::ostream &os, const Loggable *ptr) {
 }
 #endif
 
-} // namespace log
+} // namespace util
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMMON_LOGGABLE_H_
+#endif // INCLUDE_QORE_CORE_UTIL_LOGGABLE_H_

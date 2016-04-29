@@ -24,13 +24,24 @@
 //
 //------------------------------------------------------------------------------
 #include "gtest/gtest.h"
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Indent.h"
 
 namespace qore {
+namespace util {
 
-TEST(FatalErrorTest, what) {
-    FatalError err = FATAL_ERROR("msg" << "arg");
-    EXPECT_STREQ("msgarg", err.what());
+TEST(IndentTest, test) {
+    Indent i(2);
+
+    EXPECT_EQ("    ", i.get());
+    EXPECT_EQ("    ", i--.get());
+    EXPECT_EQ("  ", i.get());
+    EXPECT_EQ("", (--i).get());
+    EXPECT_EQ("", i.get());
+    EXPECT_EQ("", i++.get());
+    EXPECT_EQ("  ", i.get());
+    EXPECT_EQ("    ", (++i).get());
+    EXPECT_EQ("    ", i.get());
 }
 
+} // namespace util
 } // namespace qore

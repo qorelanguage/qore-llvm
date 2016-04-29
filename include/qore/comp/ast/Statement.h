@@ -33,7 +33,6 @@
 
 #include <vector>
 #include "qore/comp/ast/Expression.h"
-#include "qore/common/Exceptions.h"
 
 namespace qore {
 namespace comp {

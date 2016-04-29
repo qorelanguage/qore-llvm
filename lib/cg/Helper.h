@@ -37,8 +37,8 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "qore/common/Exceptions.h"
-#include "qore/common/Util.h"
+#include "qore/core/util/Debug.h"
+#include "qore/core/util/Util.h"
 
 namespace qore {
 namespace cg {

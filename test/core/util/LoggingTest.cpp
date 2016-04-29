@@ -23,52 +23,23 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief Provides support for logging messages.
-///
-//------------------------------------------------------------------------------
-#include "qore/common/Logging.h"
-
-#ifdef QORE_LOGGING
-
-#include <iomanip>
-#include <iostream>
-#include <string>
+#include "gtest/gtest.h"
+#include "qore/core/util/Logging.h"
 
 namespace qore {
-namespace log {
+namespace util {
 
-Logger LoggerManager::defaultLogger;
-Logger *LoggerManager::currentLogger = &LoggerManager::defaultLogger;
+#ifdef QORE_LOGGING
+class TestLogger : public Logger {
+};
 
-
-void Logger::log(const std::string &component, const std::string &message,
-        const char *function, const char *file, int line) {
-    if (filter(component)) {
-        std::cout
-            << std::left
-            << std::setw(getHeaderWidth())
-            << formatHeader(function, file, line)
-            << indent
-            << message
-            << std::endl;
-    }
+TEST(LoggingTest, setLogger) {
+    TestLogger logger;
+    Logger *orig = LoggerManager::set(&logger);
+    EXPECT_EQ(&logger, LoggerManager::get());
+    LoggerManager::set(orig);
 }
+#endif
 
-std::string Logger::formatHeader(const char *function, const char *file, int line) {
-    std::string header(file);
-    std::string::size_type slash = header.find_last_of('/');
-
-    if (slash != std::string::npos) {
-        header = header.substr(slash + 1);
-    }
-    header.append(":");
-    header.append(std::to_string(line));
-    return header;
-}
-
-} //namespace log
-} //namespace qore
-
-#endif //QORE_LOGGING
+} // namespace util
+} // namespace qore

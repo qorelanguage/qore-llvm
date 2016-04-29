@@ -28,14 +28,14 @@
 /// \brief Helper for indenting output.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_INDENT_H_
-#define INCLUDE_QORE_COMMON_INDENT_H_
+#ifndef INCLUDE_QORE_CORE_UTIL_INDENT_H_
+#define INCLUDE_QORE_CORE_UTIL_INDENT_H_
 
 #include <ostream>
 #include <string>
 
 namespace qore {
-namespace log {
+namespace util {
 
 /**
  * \brief Helper for producing indentation.
@@ -133,7 +133,7 @@ inline std::ostream &operator<<(std::ostream &os, const Indent &indent) {
     return os << indent.get();
 }
 
-} // namespace log
+} // namespace util
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMMON_INDENT_H_
+#endif // INCLUDE_QORE_CORE_UTIL_INDENT_H_

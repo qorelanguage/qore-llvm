@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_AST_MODIFIERS_H_
 
 #include <type_traits>
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 
 namespace qore {
 namespace comp {

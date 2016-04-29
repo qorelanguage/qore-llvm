@@ -35,7 +35,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "qore/common/Util.h"
 #include "qore/comp/as/Function.h"
 #include "qore/comp/as/GlobalVariable.h"
 #include "qore/comp/as/StringLiteral.h"

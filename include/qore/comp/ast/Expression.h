@@ -34,7 +34,7 @@
 #include <cassert>
 #include <utility>
 #include <vector>
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 #include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Type.h"
 #include "qore/comp/ast/Visitor.h"

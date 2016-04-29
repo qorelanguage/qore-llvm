@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/Scanner.h"
 #include <string>
-#include "qore/common/Logging.h"
+#include "qore/core/util/Debug.h"
 
 /// \cond IGNORED_BY_DOXYGEN
 #define REPORT(diagId)  ctx.report(DiagId::diagId, src.getMarkLocation())

@@ -23,5 +23,4 @@ add_library(comp STATIC
 
 target_link_libraries(comp
     core
-    rt
 )

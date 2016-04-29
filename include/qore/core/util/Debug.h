@@ -25,47 +25,60 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Management of script sources.
+/// \brief Debugging functions and macros.
 ///
 //------------------------------------------------------------------------------
-#include "qore/comp/SourceManager.h"
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
-#include "qore/core/util/Util.h"
+#ifndef INCLUDE_QORE_CORE_UTIL_DEBUG_H_
+#define INCLUDE_QORE_CORE_UTIL_DEBUG_H_
+
+#include "qore/core/util/Logging.h"
+
+/**
+ * \brief Marks an unimplemented point in the code.
+ *
+ * Prints a logging message and throws an exception that is not supposed to be caught anywhere, aborting the execution.
+ * \param M the message to print
+ */
+#define QORE_NOT_IMPLEMENTED(M) \
+            LOG(__PRETTY_FUNCTION__ << " - NOT IMPLEMENTED: " << M); \
+            throw ::qore::util::NotImplemented();
+
+/**
+ * \brief Marks an unreachable point in the code.
+ *
+ * In debug version, prints a message and aborts. In release version it has undefined behavior.
+ * \param M the message to print
+ */
+#define QORE_UNREACHABLE(M) \
+            LOG("FATAL: Unreachable in " << __PRETTY_FUNCTION__ << " - " << M); \
+            QORE_UNREACHABLE_IMPL;
 
 namespace qore {
-namespace comp {
+namespace util {
 
-Source &SourceManager::create(std::string name, std::vector<char> data) {
-    std::vector<int> nulls;
+/**
+ * \brief An exception class thrown by \ref QORE_NOT_IMPLEMENTED.
+ */
+class NotImplemented {};
 
-    for (auto it = std::find(data.begin(), data.end(), 0); it != data.end(); it = std::find(it, data.end(), 0)) {
-        nulls.push_back(static_cast<int>(it - data.begin()));
-        *it = ' ';
-    }
+#ifdef QORE_COVERAGE
+/**
+ * \brief An exception class thrown by \ref QORE_UNREACHABLE.
+ */
+class Unreachable {};
+#endif // QORE_COVERAGE
 
-    int id = static_cast<int>(sources.size());
-    sources.push_back(util::make_unique<Source>(std::move(name), id, std::move(data)));
-
-    for (int offset : nulls) {
-        diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(id, offset));
-    }
-
-    return *sources.back();
-}
-
-Source &SourceManager::createFromFile(std::string fileName, SourceLocation location) {
-    std::string fullName = includePath + fileName;
-    std::ifstream fileStream(fullName, std::ios::binary);
-    std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
-    if (!fileStream.good()) {
-        diagMgr.report(DiagId::CompScriptFileIoError, location) << fullName;
-        data.clear();
-    }
-    return create(std::move(fullName), std::move(data));
-}
-
-} // namespace comp
+} // namespace util
 } // namespace qore
+
+/// \cond NoDoxygen
+#ifdef QORE_COVERAGE
+#define QORE_UNREACHABLE_IMPL   throw ::qore::util::Unreachable();
+#elif !defined(NDEBUG)
+#define QORE_UNREACHABLE_IMPL   abort();
+#else
+#define QORE_UNREACHABLE_IMPL   __builtin_unreachable()
+#endif
+/// \endcond NoDoxygen
+
+#endif // INCLUDE_QORE_CORE_UTIL_DEBUG_H_

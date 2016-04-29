@@ -27,7 +27,7 @@
 #include <regex>
 #include <string>
 #include <utility>
-#include "qore/common/Util.h"
+#include "qore/core/util/Util.h"
 
 namespace qtif {
 

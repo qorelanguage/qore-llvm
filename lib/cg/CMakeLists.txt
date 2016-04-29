@@ -3,7 +3,7 @@ add_library(cg STATIC
 )
 
 target_link_libraries(cg
-    common
+    core
 )
 
 setup_llvm(cg)

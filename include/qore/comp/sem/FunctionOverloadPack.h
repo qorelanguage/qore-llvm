@@ -32,7 +32,6 @@
 #define INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
 
 #include <vector>
-#include "qore/common/Util.h"
 #include "qore/comp/sem/FunctionScope.h"
 
 namespace qore {

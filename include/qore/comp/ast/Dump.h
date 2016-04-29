@@ -445,7 +445,7 @@ private:
 private:
     Context &ctx;
     OS &os;
-    qore::log::Indent indent;
+    qore::util::Indent indent;
 };
 
 #undef NODE_HEADER

@@ -25,8 +25,8 @@
 //------------------------------------------------------------------------------
 #include <sstream>
 #include "gtest/gtest.h"
-#include "qore/common/Exceptions.h"
-#include "qore/common/Util.h"
+#include "qore/core/util/Debug.h"
+#include "qore/core/util/Util.h"
 #include "qore/comp/DiagRecord.h"
 
 namespace qore {
@@ -48,12 +48,12 @@ TEST(DiagRecordTest, LevelToStream) {
 #ifdef QORE_COVERAGE
 TEST(DiagRecordTest, IdToStreamErr) {
     std::ostringstream ss;
-    EXPECT_THROW(ss << static_cast<DiagId>(999), class Unreachable);
+    EXPECT_THROW(ss << static_cast<DiagId>(999), class util::Unreachable);
 }
 
 TEST(DiagRecordTest, LevelToStreamErr) {
     std::ostringstream ss;
-    EXPECT_THROW(ss << static_cast<DiagLevel>(999), class Unreachable);
+    EXPECT_THROW(ss << static_cast<DiagLevel>(999), class util::Unreachable);
 }
 #endif
 

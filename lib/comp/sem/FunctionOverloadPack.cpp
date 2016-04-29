@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/FunctionOverloadPack.h"
 #include <string>
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 #include "ReportedError.h"
 
 namespace qore {

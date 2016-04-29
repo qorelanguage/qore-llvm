@@ -35,7 +35,7 @@
 #include <functional>
 #include <string>
 #include <vector>
-#include "qore/common/Logging.h"
+#include "qore/core/util/Logging.h"
 #include "qore/comp/DiagRecord.h"
 #include "qore/comp/String.h"
 

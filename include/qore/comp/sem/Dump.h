@@ -76,7 +76,7 @@ public:
 private:
     Context &ctx;
     OS os;
-    log::Indent indent;
+    util::Indent indent;
 };
 
 template<typename OS>

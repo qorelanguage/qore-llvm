@@ -34,7 +34,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "qore/common/Util.h"
+#include "qore/core/util/Util.h"
 #include "qore/comp/as/Temp.h"
 #include "qore/comp/as/StringLiteral.h"
 #include "qore/comp/as/GlobalVariable.h"

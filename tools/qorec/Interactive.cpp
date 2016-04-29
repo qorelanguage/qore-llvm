@@ -32,7 +32,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "qore/common/Logging.h"
+#include "qore/core/util/Debug.h"
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/sem/Analyzer.h"

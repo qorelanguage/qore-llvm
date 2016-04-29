@@ -32,7 +32,7 @@
 #define LIB_COMP_SEM_EXPRESSIONANALYZERPASS1_H_
 
 #include <string>
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 #include "qore/comp/ast/Expression.h"
 #include "qore/comp/ast/Closure.h"
 #include "qore/comp/sem/expr/Expression.h"

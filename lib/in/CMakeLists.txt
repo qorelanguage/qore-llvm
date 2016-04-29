@@ -3,5 +3,5 @@ add_library(in STATIC
 )
 
 target_link_libraries(in
-    rt
+    core
 )

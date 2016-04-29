@@ -33,7 +33,7 @@
 
 #include <memory>
 #include <string>
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 
 namespace qore {
 

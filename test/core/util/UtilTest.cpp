@@ -23,23 +23,20 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
+#include <cctype>
 #include "gtest/gtest.h"
-#include "qore/common/Logging.h"
+#include "qore/core/util/Util.h"
 
 namespace qore {
-namespace log {
+namespace util {
 
-#ifdef QORE_LOGGING
-class TestLogger : public Logger {
-};
-
-TEST(LoggingTest, setLogger) {
-    TestLogger logger;
-    Logger *orig = LoggerManager::set(&logger);
-    EXPECT_EQ(&logger, LoggerManager::get());
-    LoggerManager::set(orig);
+TEST(UtilTest, trim) {
+    EXPECT_EQ("a\tb c", trim(" \t\na\tb c\n\r\f", isspace));
 }
-#endif
 
-} // namespace log
+TEST(UtilTest, to_string) {
+    EXPECT_EQ("456", to_string(456));
+}
+
+} // namespace util
 } // namespace qore

@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 #include <sstream>
 #include "gtest/gtest.h"
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 #include "qore/comp/Token.h"
 
 namespace qore {
@@ -46,7 +46,7 @@ TEST(TokenTest, DefaultCtor) {
 #ifdef QORE_COVERAGE
 TEST(TokenTest, TokenTypeIdToStreamErr) {
     std::ostringstream ss;
-    EXPECT_THROW(ss << static_cast<TokenType>(999), class Unreachable);
+    EXPECT_THROW(ss << static_cast<TokenType>(999), class util::Unreachable);
 }
 #endif
 

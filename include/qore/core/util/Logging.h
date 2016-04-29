@@ -28,11 +28,11 @@
 /// \brief Provides support for logging messages.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMMON_LOGGING_H_
-#define INCLUDE_QORE_COMMON_LOGGING_H_
+#ifndef INCLUDE_QORE_CORE_UTIL_LOGGING_H_
+#define INCLUDE_QORE_CORE_UTIL_LOGGING_H_
 
 #include <string>
-#include "qore/common/Indent.h"
+#include "qore/core/util/Indent.h"
 
 /**
  * \brief Logs a message with custom location using QORE_LOG_COMPONENT as the component name.
@@ -81,7 +81,7 @@
  * \param L the line number of the log message
  */
 #define CLOG_EX(C, M, FU, FI, L)                    \
-    ::qore::log::LoggerManager::get()->log(         \
+    ::qore::util::LoggerManager::get()->log(        \
             C,                                      \
             static_cast<std::ostringstream&>(std::ostringstream().flush() << M).str(),  \
             FU,                                     \
@@ -99,14 +99,10 @@
  * \brief Logs the entry and exit of a function.
  * \param C the name of the component for filtering
  */
-#define CLOG_FUNCTION(C)    ::qore::log::LogScope _(C, __PRETTY_FUNCTION__, __FILE__, __LINE__);
+#define CLOG_FUNCTION(C)    ::qore::util::LogScope _(C, __PRETTY_FUNCTION__, __FILE__, __LINE__);
 
 namespace qore {
-
-/**
- * \brief Contains logging utilities.
- */
-namespace log {
+namespace util {
 
 /**
  * \brief Filters and formats log messages.
@@ -217,14 +213,14 @@ public:
     LogScope(const char *component, const char *function, const char *file, int line)
         : component(component), function(function), file(file), line(line) {
         CLOG_EX(component, "Entering " << function, function, file, line);
-        ++::qore::log::LoggerManager::get()->indent;
+        ++LoggerManager::get()->indent;
     }
 
     /**
      * \brief Logs the exit of the scope.
      */
     ~LogScope() {
-        --::qore::log::LoggerManager::get()->indent;
+        --LoggerManager::get()->indent;
         CLOG_EX(component, "Leaving " << function, function, file, line);
     }
 
@@ -235,7 +231,7 @@ private:
     int line;
 };
 
-} //namespace log
+} //namespace util
 } //namespace qore
 
 #else   // QORE_LOGGING
@@ -246,4 +242,4 @@ private:
 
 #endif  // QORE_LOGGING
 
-#endif // INCLUDE_QORE_COMMON_LOGGING_H_
+#endif // INCLUDE_QORE_CORE_UTIL_LOGGING_H_

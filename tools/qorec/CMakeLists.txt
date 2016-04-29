@@ -4,9 +4,7 @@ add_executable(qorec
 )
 
 target_link_libraries(qorec
-    common
     comp
-    rt
     in
     cg
 )

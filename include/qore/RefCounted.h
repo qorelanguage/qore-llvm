@@ -31,14 +31,13 @@
 #ifndef INCLUDE_QORE_REFCOUNTED_H_
 #define INCLUDE_QORE_REFCOUNTED_H_
 
-#include "qore/common/Exceptions.h"
-#include "qore/common/Logging.h"
-#include "qore/common/Loggable.h"
+#include "qore/core/util/Debug.h"
+#include "qore/core/util/Loggable.h"
 #include "qore/Exception.h"
 
 namespace qore {
 
-class RefCounted : public log::Loggable {
+class RefCounted : public util::Loggable {
 
 private:
     using RefCount = size_t;

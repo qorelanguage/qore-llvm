@@ -30,8 +30,8 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/DirectiveProcessor.h"
 #include <string>
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
+#include "qore/core/util/Debug.h"
+#include "qore/core/util/Util.h"
 
 namespace qore {
 namespace comp {

@@ -35,7 +35,7 @@
 #include <vector>
 #include "qore/Id.h"
 #include "qore/Value.h"
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 #include "qore/Any.h"
 
 namespace qore {

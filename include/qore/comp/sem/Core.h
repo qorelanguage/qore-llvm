@@ -35,7 +35,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "qore/common/Util.h"
+#include "qore/core/util/Util.h"
 #include "qore/comp/Context.h"
 #include "qore/comp/ast/Declaration.h"
 #include "qore/comp/ast/Statement.h"

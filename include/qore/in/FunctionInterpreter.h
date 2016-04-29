@@ -34,7 +34,7 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
-#include "qore/common/Exceptions.h"
+#include "qore/core/util/Debug.h"
 #include "qore/comp/as/is.h"
 #include "qore/rt/Context.h"
 
