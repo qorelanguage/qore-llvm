@@ -36,7 +36,6 @@
 #include <vector>
 #include "qore/core/util/Util.h"
 #include "qore/comp/as/Temp.h"
-#include "qore/comp/as/StringLiteral.h"
 #include "qore/comp/as/GlobalVariable.h"
 #include "qore/comp/as/LocalVariable.h"
 #include "qore/comp/as/Block.h"

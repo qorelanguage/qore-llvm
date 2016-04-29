@@ -43,7 +43,6 @@
 #include "qore/comp/as/GlobalVariable.h"
 #include "qore/comp/as/Function.h"
 #include "qore/comp/as/Script.h"
-#include "qore/comp/as/StringLiteral.h"
 #include "qore/comp/sem/BlockScope.h"
 #include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
