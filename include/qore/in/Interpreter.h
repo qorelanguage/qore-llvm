@@ -33,7 +33,7 @@
 
 #include <unordered_map>
 #include <vector>
-#include "qore/Value.h"
+#include "qore/core/Value.h"
 #include "qore/rt/Context.h"
 #include "qore/in/FunctionInterpreter.h"
 #include "qore/comp/as/Script.h"

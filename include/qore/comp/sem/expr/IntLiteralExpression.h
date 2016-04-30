@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_EXPR_INTLITERALEXPRESSION_H_
 
 #include "qore/comp/sem/expr/Expression.h"
-#include "qore/Value.h"
+#include "qore/core/Value.h"
 
 namespace qore {
 namespace comp {

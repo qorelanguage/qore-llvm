@@ -25,27 +25,46 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Definitions of types related to runtime values.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_VALUE_H_
-#define INCLUDE_QORE_VALUE_H_
+#ifndef INCLUDE_QORE_CORE_VALUE_H_
+#define INCLUDE_QORE_CORE_VALUE_H_
 
 #include <cstdint>
 
 namespace qore {
 
+/**
+ * \brief The type used to represent Qore 'bool' values.
+ */
 using qbool = bool;
+
+/**
+ * \brief The type used to represent Qore 'int' values.
+ */
 using qint = int64_t;
+
+/**
+ * \brief The type used to represent Qore 'float' values.
+ */
 using qfloat = double;
+
+/**
+ * \brief The type used to represent heap-allocated values that use reference counting.
+ */
 using qptr = class Any *;
+
+/**
+ * \brief A 64-bit type that can hold any value.
+ */
 union qvalue {
-    qbool b;
-    qint i;
-    qfloat f;
-    qptr p;
+    qbool b;        //!< Holds a 'bool' value.
+    qint i;         //!< Holds an 'int' value.
+    qfloat f;       //!< Holds a 'float' value.
+    qptr p;         //!< Holds a pointer to a heap-allocated value.
 };
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_VALUE_H_
+#endif // INCLUDE_QORE_CORE_VALUE_H_

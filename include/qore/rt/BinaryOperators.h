@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_RT_BINARYOPERATORS_H_
 #define INCLUDE_QORE_RT_BINARYOPERATORS_H_
 
-#include "qore/Value.h"
+#include "qore/core/Value.h"
 
 namespace qore {
 namespace rt {
