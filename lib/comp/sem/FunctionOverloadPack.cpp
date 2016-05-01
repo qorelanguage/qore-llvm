@@ -40,9 +40,14 @@ namespace sem {
 void FunctionOverloadPack::pass2() {
     for (auto node : queue) {
         try {
-            std::string mangledName = core.ctx.getString(name);      //FIXME mangled names
-            FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(core, parent, mangledName, *node);
-            checkOverload(*ptr);
+            FunctionType type(parent.resolveType(node->type));
+            for (auto &p : node->params) {
+                type.addParameter(parent.resolveType(std::get<0>(p)));
+            }
+            checkOverload(type);
+
+            Function &f = rt.addFunction(std::move(type));
+            FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(f, core, parent, *node);
             core.addToQueue(*ptr);
             functions.push_back(std::move(ptr));
         } catch (ReportedError &) {
@@ -52,10 +57,10 @@ void FunctionOverloadPack::pass2() {
     queue.clear();
 }
 
-void FunctionOverloadPack::checkOverload(FunctionScope &f1) {
-    for (auto &f2 : functions) {
-        //if the type (in terms of overloading) of f1 is the same as f2, then report error and throw ReportedError
-        QORE_NOT_IMPLEMENTED("overloads not supported "<< f2.get());
+void FunctionOverloadPack::checkOverload(FunctionType &type) {
+    for (auto &f : functions) {
+        //if the type (in terms of overloading) of f is the same as type, then report error and throw ReportedError
+        QORE_NOT_IMPLEMENTED("overloads not supported "<< f.get());
     }
 }
 

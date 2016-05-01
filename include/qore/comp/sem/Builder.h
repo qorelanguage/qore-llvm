@@ -43,6 +43,7 @@
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/LocalVariable.h"
 #include "qore/comp/sem/CleanupScope.h"
+#include "qore/core/Function.h"
 
 namespace qore {
 namespace comp {
@@ -55,6 +56,10 @@ class Builder {
 public:
     Builder() : currentBlock(createBlock()), terminated(false), cleanupLValue(nullptr), tempCount(0) {
         entry = currentBlock;
+    }
+
+    void build(Function &f) {
+        f.setBody(tempCount, std::move(locals), std::move(blocks));
     }
 
     bool isTerminated() const {
@@ -360,8 +365,6 @@ private:
 
     Id tempCount;
     as::Block *entry;
-
-    friend class ScriptBuilder;
 };
 
 } // namespace sem

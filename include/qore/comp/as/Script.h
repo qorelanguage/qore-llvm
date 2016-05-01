@@ -35,7 +35,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "qore/comp/as/Function.h"
+#include "qore/core/Function.h"
 
 namespace qore {
 namespace comp {
@@ -47,8 +47,7 @@ public:
     using Ptr = std::unique_ptr<Script>;
 
 public:
-    Script(std::vector<std::unique_ptr<Function>> functions, Function *qInit, Function *qMain)
-            : functions(std::move(functions)), qInit(qInit), qMain(qMain) {
+    Script(Function *qInit, Function *qMain) : qInit(qInit), qMain(qMain) {
     }
 
     const std::vector<std::unique_ptr<Function>> &getFunctions() const {

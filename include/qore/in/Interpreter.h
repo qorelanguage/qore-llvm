@@ -43,7 +43,7 @@ namespace in {
 class X {
 
 public:
-    explicit X(comp::as::Function &f) : f(f), temps(f.getTempCount()), locals(f.getLocalCount()) {
+    explicit X(Function &f) : temps(f.getTempCount()), locals(f.getLocalCount()) {
     }
 
     void setLocal(const comp::as::LocalVariable &lv, qvalue value) {
@@ -63,7 +63,6 @@ public:
     }
 
 private:
-    comp::as::Function &f;
     std::vector<qvalue> temps;
     std::vector<qvalue> locals;
 };
@@ -80,7 +79,7 @@ private:
     Interpreter() {
     }
 
-    static void run(comp::as::Function &f) {
+    static void run(Function &f) {
         X x(f);
         FunctionInterpreter<X> fi(x);
         fi.run(f.getEntryBlock());

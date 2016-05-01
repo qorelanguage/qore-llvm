@@ -47,15 +47,16 @@ void CodeGen::process(comp::as::Script &script) {
 
     llvm::GlobalVariable *rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
             llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
-    std::unordered_map<comp::as::Function *, llvm::Function *> functions;
+    std::unordered_map<Function *, llvm::Function *> functions;
 
     for (auto &f : script.getFunctions()) {
-        std::vector<llvm::Type *> args(f->getArgCount(), helper.lt_qvalue);
+        const char *name = "xxx";   //TODO mangled name
+        std::vector<llvm::Type *> args(f->getType().getParameterCount(), helper.lt_qvalue);
         //llvm::Type *ret = f->isVoid() ? helper.lt_void : helper.lt_qvalue;
         llvm::Type *ret = helper.lt_void;
         llvm::Function *func = llvm::Function::Create(
                 llvm::FunctionType::get(ret, args, false),
-                llvm::Function::ExternalLinkage, f->getName(), helper.module.get());
+                llvm::Function::ExternalLinkage, name, helper.module.get());
         functions[f.get()] = func;
         Id i = 0;
         for (auto it = func->arg_begin(); it != func->arg_end(); ++it) {

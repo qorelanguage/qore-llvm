@@ -37,6 +37,7 @@
 #include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Routine.h"
 #include "qore/comp/sem/Scope.h"
+#include "qore/core/Function.h"
 
 namespace qore {
 namespace comp {
@@ -54,7 +55,7 @@ public:
     using Ptr = std::unique_ptr<FunctionScope>;
 
 public:
-    FunctionScope(Core &core, Scope &parent, std::string name, ast::Routine &node);
+    FunctionScope(Function &rt, Core &core, Scope &parent, ast::Routine &node);
 
 
     const Type &resolveType(ast::Type &node) const override;
@@ -65,15 +66,19 @@ public:
     }
 
     const Type &getReturnType() const override {
-        return resolveType(node.type);
+        return rt.getType().getReturnType();
     }
 
-    as::Function &analyze();
+    void analyze();
+
+    Function &getRt() const {
+        return rt;
+    }
 
 private:
+    Function &rt;
     Core &core;
     Scope &parent;
-    std::string name;
     ast::Routine &node;
     std::vector<std::unique_ptr<LocalVariable>> locals;
     std::map<String::Ref, LocalVariable *> args;

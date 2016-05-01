@@ -33,6 +33,7 @@
 
 #include <string>
 #include <vector>
+#include "qore/core/FunctionGroup.h"
 #include "qore/core/GlobalVariable.h"
 
 namespace qore {
@@ -91,6 +92,18 @@ public:
         return gv;
     }
 
+    /**
+     * \brief Creates a new function group in this namespace.
+     * \param name the name of the function group
+     * \return newly created function group
+     */
+    FunctionGroup &addFunctionGroup(std::string name) {
+        FunctionGroup::Ptr ptr = FunctionGroup::Ptr(new FunctionGroup(std::move(name)));
+        FunctionGroup &fg = *ptr;
+        functionGroups.push_back(std::move(ptr));
+        return fg;
+    }
+
 private:
     Namespace(const Namespace &) = delete;
     Namespace(Namespace &&) = delete;
@@ -101,6 +114,7 @@ private:
     std::string name;
     std::vector<std::unique_ptr<Namespace>> namespaces;
     std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
+    std::vector<std::unique_ptr<FunctionGroup>> functionGroups;
 };
 
 } // namespace qore

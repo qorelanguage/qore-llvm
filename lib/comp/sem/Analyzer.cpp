@@ -80,14 +80,6 @@ void Core::doPass2(Builder &builder, Statement &stmt) {
     stmt.accept(a);
 }
 
-as::Function &ScriptBuilder::createFunction(std::string name, Id argCount, const Type &retType, Builder &b) {
-    std::unique_ptr<as::Function> ptr = util::make_unique<as::Function>(name, argCount,
-            retType, b.tempCount, std::move(b.locals), std::move(b.blocks));
-    as::Function &f = *ptr;
-    functions.push_back(std::move(ptr));
-    return f;
-}
-
 } // namespace sem
 } // namespace comp
 } // namespace qore

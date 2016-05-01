@@ -25,64 +25,21 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the Size type.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_FUNCTION_H_
-#define INCLUDE_QORE_COMP_AS_FUNCTION_H_
+#ifndef INCLUDE_QORE_CORE_SIZE_H_
+#define INCLUDE_QORE_CORE_SIZE_H_
 
-#include <cassert>
-#include <string>
-#include <vector>
-#include "qore/comp/as/Block.h"
-#include "qore/comp/as/LocalVariable.h"
-#include "qore/core/Type.h"
+#include <cstdint>
 
 namespace qore {
-namespace comp {
-namespace as {
 
-class Function {
+/**
+ * \brief An unsigned integer type used for collections sizes or element counts.
+ */
+using Size = uint64_t;
 
-public:
-    Function(std::string name, Id argCount, const Type &retType, Id tempCount,
-            std::vector<LocalVariable::Ptr> locals, std::vector<Block::Ptr> blocks)
-            : name(std::move(name)), argCount(argCount), retType(retType),
-            tempCount(tempCount), locals(std::move(locals)), blocks(std::move(blocks)) {
-    }
+}
 
-    const std::string &getName() const {
-        return name;
-    }
-
-    Id getArgCount() const {
-        return argCount;
-    }
-
-    Id getTempCount() const {
-        return tempCount;
-    }
-
-    Id getLocalCount() const {
-        return locals.size();
-    }
-
-    Block &getEntryBlock() const {
-        assert(!blocks.empty());
-        return *blocks[0];
-    }
-
-private:
-    std::string name;
-    Id argCount;
-    const Type &retType;
-    Id tempCount;
-    std::vector<LocalVariable::Ptr> locals;
-    std::vector<Block::Ptr> blocks;
-};
-
-} // namespace as
-} // namespace comp
-} // namespace qore
-
-#endif // INCLUDE_QORE_COMP_AS_FUNCTION_H_
+#endif // INCLUDE_QORE_CORE_SIZE_H_

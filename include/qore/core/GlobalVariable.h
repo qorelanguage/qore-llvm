@@ -88,28 +88,28 @@ public:
     /**
      * \brief Acquires the read lock for the global variable.
      */
-    void readLock() noexcept {
+    void readLock() {
         LOG("GlobalVariable " << name << " read lock");
     }
 
     /**
      * \brief Releases the read lock for the global variable.
      */
-    void readUnlock() noexcept {
+    void readUnlock() {
         LOG("GlobalVariable " << name << " read unlock");
     }
 
     /**
      * \brief Acquires the write lock for the global variable.
      */
-    void writeLock() noexcept {
+    void writeLock() {
         LOG("GlobalVariable " << name << " write lock");
     }
 
     /**
      * \brief Releases the write lock for the global variable.
      */
-    void writeUnlock() noexcept {
+    void writeUnlock() {
         LOG("GlobalVariable " << name << " write unlock");
     }
 
@@ -120,7 +120,7 @@ public:
      * initialized first by calling the initValue() method.
      * \return the value of the global variable
      */
-    qvalue getValue() noexcept {
+    qvalue getValue() {
         assert(hasValue);
         //assert read or write lock acquired by current thread
         LOG("GlobalVariable " << name << " get");
@@ -134,7 +134,7 @@ public:
      * initialized first by calling the initValue() method.
      * \param v the new value of the global variable
      */
-    void setValue(qvalue v) noexcept {
+    void setValue(qvalue v) {
         assert(hasValue);
         //assert write lock acquired by current thread
         LOG("GlobalVariable " << name << " set");

@@ -40,7 +40,6 @@
 #include "qore/comp/ast/Declaration.h"
 #include "qore/comp/ast/Statement.h"
 #include "qore/comp/ast/Type.h"
-#include "qore/comp/as/Function.h"
 #include "qore/comp/as/Script.h"
 #include "qore/comp/sem/BlockScope.h"
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
@@ -94,16 +93,9 @@ public:
         return std::move(string);
     }
 
-    as::Function &createFunction(std::string name, Id argCount, const Type &retType, Builder &b);
-
-    as::Script::Ptr build(as::Function *qInit, as::Function *qMain) {
-        return util::make_unique<as::Script>(std::move(functions), qInit, qMain);
-    }
-
 private:
     std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;  //XXX could be static
     std::unordered_map<std::string, qore::String::Ptr> strings;
-    std::vector<std::unique_ptr<as::Function>> functions;
 };
 
 

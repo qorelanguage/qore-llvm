@@ -25,61 +25,65 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Runtime representation of a group of function overloads.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
-#define INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
+#ifndef INCLUDE_QORE_CORE_FUNCTIONGROUP_H_
+#define INCLUDE_QORE_CORE_FUNCTIONGROUP_H_
 
+#include <string>
 #include <vector>
-#include "qore/comp/sem/FunctionScope.h"
-#include "qore/core/FunctionGroup.h"
+#include "qore/core/Function.h"
 
 namespace qore {
-namespace comp {
-namespace sem {
 
-class FunctionOverloadPack {
-
-public:
-    using Ptr = std::unique_ptr<FunctionOverloadPack>;
+/**
+ * \brief Runtime representation of a group of function overloads.
+ */
+class FunctionGroup {
 
 public:
-    FunctionOverloadPack(FunctionGroup &rt, Core &core, Scope &parent, SourceLocation location)
-            : rt(rt), core(core), parent(parent), location(location) {
+    using Ptr = std::unique_ptr<FunctionGroup>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Creates the function group.
+     * \param name the name of the function group
+     */
+    explicit FunctionGroup(std::string name) : name(std::move(name)) {
     }
 
-    SourceLocation getLocation() const {
-        return location;
+    /**
+     * \brief Returns the name of the function group.
+     * \return the name of the function group
+     */
+    const std::string &getName() const {
+        return name;
     }
 
-    void addOverload(ast::Routine &node) {
-        if (queue.empty()) {
-            core.addToQueue(*this);
-        }
-        queue.push_back(&node);
-    }
-
-    void pass2();
-
-    Scope &getParent() {
-        return parent;
+    /**
+     * \brief Creates a new function.
+     * \param type the type of the function
+     * \return newly created function
+     */
+    Function &addFunction(FunctionType type) {
+        Function::Ptr ptr = Function::Ptr(new Function(std::move(type)));
+        Function &f = *ptr;
+        functions.push_back(std::move(ptr));
+        return f;
     }
 
 private:
-    void checkOverload(FunctionType &type);
+    FunctionGroup(const FunctionGroup &) = delete;
+    FunctionGroup(FunctionGroup &&) = delete;
+    FunctionGroup &operator=(const FunctionGroup &) = delete;
+    FunctionGroup &operator=(FunctionGroup &&) = delete;
 
 private:
-    FunctionGroup &rt;
-    Core &core;
-    Scope &parent;
-    SourceLocation location;
-    std::vector<ast::Routine *> queue;
-    std::vector<FunctionScope::Ptr> functions;
+    std::string name;
+    std::vector<Function::Ptr> functions;
 };
 
-} // namespace sem
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
+#endif // INCLUDE_QORE_CORE_FUNCTIONGROUP_H_

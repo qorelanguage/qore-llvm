@@ -36,6 +36,7 @@
 #include <vector>
 #include "qore/comp/as/is.h"
 #include "Helper.h"
+#include "qore/core/Function.h"
 
 namespace qore {
 namespace cg {
@@ -43,7 +44,7 @@ namespace cg {
 class FunctionCompiler {
 
 public:
-    FunctionCompiler(comp::as::Function &f, llvm::Function *func, Helper &helper, llvm::GlobalVariable *rtctx)
+    FunctionCompiler(Function &f, llvm::Function *func, Helper &helper, llvm::GlobalVariable *rtctx)
             : f(f), func(func), helper(helper), rtctx(rtctx), locals(f.getLocalCount()), temps(f.getTempCount()),
               excSlot(nullptr) {
         func->setPersonalityFn(llvm::ConstantExpr::getBitCast(helper.lf_personality, helper.lt_char_ptr));
@@ -250,7 +251,7 @@ public:
     }
 
 private:
-    comp::as::Function &f;
+    Function &f;
     llvm::Function *func;
     Helper &helper;
     llvm::GlobalVariable *rtctx;

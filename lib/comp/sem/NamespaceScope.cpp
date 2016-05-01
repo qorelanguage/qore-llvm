@@ -149,7 +149,8 @@ void NamespaceScope::processFunctionDeclaration(ast::Function &node) {
             throw ReportedError();
         }
 
-        FunctionOverloadPack::Ptr ptr = util::make_unique<FunctionOverloadPack>(core, *this, name, location);
+        FunctionOverloadPack::Ptr ptr = util::make_unique<FunctionOverloadPack>(
+                rt.addFunctionGroup(core.ctx.getString(name)), core, *this, location);
         fp = ptr.get();
         functions[name] = std::move(ptr);
     }

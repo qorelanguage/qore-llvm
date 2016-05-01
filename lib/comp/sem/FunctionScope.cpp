@@ -39,8 +39,8 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-FunctionScope::FunctionScope(Core &core, Scope &parent, std::string name, ast::Routine &node)
-        : core(core), parent(parent), name(std::move(name)), node(node) {
+FunctionScope::FunctionScope(Function &rt, Core &core, Scope &parent, ast::Routine &node)
+        : rt(rt), core(core), parent(parent), node(node) {
 }
 
 const Type &FunctionScope::resolveType(ast::Type &node) const {
@@ -64,10 +64,10 @@ Symbol FunctionScope::resolveSymbol(ast::Name &name) const {
     return parent.resolveSymbol(name);
 }
 
-as::Function &FunctionScope::analyze() {
+void FunctionScope::analyze() {
 
     for (auto &a : node.params) {
-        const Type &type = resolveType(std::get<0>(a));
+        const Type &type = resolveType(std::get<0>(a)); //XXX parameter types have already been resolved
         args[std::get<1>(a).str] = &createLocalVariable(std::get<1>(a).str, std::get<1>(a).location, type);
     }
 
@@ -91,7 +91,7 @@ as::Function &FunctionScope::analyze() {
         }
     }
 
-    return core.scriptBuilder.createFunction(name, node.params.size(), resolveType(node.type), b);
+    b.build(rt);
 }
 
 } // namespace sem

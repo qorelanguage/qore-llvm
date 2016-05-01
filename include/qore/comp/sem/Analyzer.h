@@ -63,8 +63,9 @@ inline as::Script::Ptr analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
     r->body->statements = std::move(node.statements);
     r->type = ast::Type::createImplicit(SourceLocation());
 
-    FunctionScope mainFs(analyzer, root, "qmain", *r);
-    as::Function &qMain = mainFs.analyze();
+    Function &qMain = rtEnv.getRootNamespace().addFunctionGroup("<qmain>").addFunction(FunctionType(Type::Nothing));
+    FunctionScope mainFs(qMain, analyzer, root, *r);
+    mainFs.analyze();
 
     //qinit - pass2
     Builder initBuilder;
@@ -73,9 +74,11 @@ inline as::Script::Ptr analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
         analyzer.doPass2(initBuilder, *stmt);
     }
     initBuilder.createRetVoid();
-    as::Function &qInit = analyzer.scriptBuilder.createFunction("qinit", 0, Type::Nothing, initBuilder);
 
-    return analyzer.scriptBuilder.build(&qInit, &qMain);
+    Function &qInit = rtEnv.getRootNamespace().addFunctionGroup("<qinit>").addFunction(FunctionType(Type::Nothing));
+    initBuilder.build(qInit);
+
+    return util::make_unique<as::Script>(&qInit, &qMain);
 }
 
 } // namespace sem
