@@ -34,7 +34,6 @@
 #include <unordered_map>
 #include <vector>
 #include "qore/core/Value.h"
-#include "qore/rt/Context.h"
 #include "qore/in/FunctionInterpreter.h"
 #include "qore/comp/as/Script.h"
 
@@ -73,18 +72,17 @@ class Interpreter {
 
 public:
     static void interpret(comp::as::Script &script) {
-        rt::Context rtCtx;
-        run(rtCtx, script.getInit());
-        run(rtCtx, script.getMain());
+        run(script.getInit());
+        run(script.getMain());
     }
 
 private:
     Interpreter() {
     }
 
-    static void run(rt::Context &ctx, comp::as::Function &f) {
+    static void run(comp::as::Function &f) {
         X x(f);
-        FunctionInterpreter<X> fi(ctx, x);
+        FunctionInterpreter<X> fi(x);
         fi.run(f.getEntryBlock());
     }
 };

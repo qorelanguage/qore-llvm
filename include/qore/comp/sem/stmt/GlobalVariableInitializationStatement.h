@@ -33,7 +33,7 @@
 
 #include "qore/comp/sem/expr/Expression.h"
 #include "qore/comp/sem/stmt/Statement.h"
-#include "qore/comp/as/GlobalVariable.h"
+#include "qore/core/GlobalVariable.h"
 
 namespace qore {
 namespace comp {
@@ -45,7 +45,7 @@ public:
     using Ptr = std::unique_ptr<GlobalVariableInitializationStatement>;
 
 public:
-    static Ptr create(const as::GlobalVariable &globalVariable, Expression::Ptr expression) {
+    static Ptr create(GlobalVariable &globalVariable, Expression::Ptr expression) {
         return Ptr(new GlobalVariableInitializationStatement(globalVariable, std::move(expression)));
     }
 
@@ -53,7 +53,7 @@ public:
         return Kind::GlobalVariableInitialization;
     }
 
-    const as::GlobalVariable &getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
@@ -62,12 +62,12 @@ public:
     }
 
 private:
-    GlobalVariableInitializationStatement(const as::GlobalVariable &globalVariable, Expression::Ptr expression)
+    GlobalVariableInitializationStatement(GlobalVariable &globalVariable, Expression::Ptr expression)
             : globalVariable(globalVariable), expression(std::move(expression)) {
     }
 
 private:
-    const as::GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
     Expression::Ptr expression;
 };
 

@@ -42,6 +42,7 @@
 #include "qore/comp/sem/ClassScope.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/FunctionOverloadPack.h"
+#include "qore/core/Namespace.h"
 
 namespace qore {
 namespace comp {
@@ -53,20 +54,19 @@ public:
     using Ptr = std::unique_ptr<NamespaceScope>;
 
 public:
-    explicit NamespaceScope(Core &core) : core(core), parentNamespace(nullptr), name() {
+    NamespaceScope(Core &core, Namespace &rt) : core(core), rt(rt), parentNamespace(nullptr) {
     }
 
-    NamespaceScope(NamespaceScope &parentNamespace, String::Ref name, SourceLocation location)
-            : core(parentNamespace.core), parentNamespace(&parentNamespace), name(name), location(location) {
+    NamespaceScope(Namespace &rtNamespace, NamespaceScope &parentNamespace, SourceLocation location)
+            : core(parentNamespace.core), rt(rt), parentNamespace(&parentNamespace), location(location) {
+    }
+
+    Namespace &getRt() {
+        return rt;
     }
 
     std::string getFullName() const {
-        return isRoot() ? "" : parentNamespace->getFullName() + "::" + core.ctx.getString(name);
-    }
-
-    String::Ref getName() const {
-        assert(!isRoot());
-        return name;
+        return isRoot() ? "" : parentNamespace->getFullName() + "::" + rt.getName();
     }
 
     SourceLocation getLocation() const {
@@ -196,8 +196,8 @@ private:
 
 private:
     Core &core;
+    Namespace &rt;
     NamespaceScope *parentNamespace;
-    String::Ref name;
     SourceLocation location;
     std::map<String::Ref, Ptr> namespaces;
     std::map<String::Ref, ClassScope::Ptr> classes;

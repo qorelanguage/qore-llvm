@@ -134,54 +134,56 @@ public:
                     builder.CreateCall(helper.lf_decRefNoexcept, args);
                     break;
                 }
-                case comp::as::Instruction::Kind::ReadLockGlobal: {
-                    comp::as::ReadLockGlobal &ins = static_cast<comp::as::ReadLockGlobal &>(*ii);
-                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
-                    builder.CreateCall(helper.lf_gv_read_lock, args);
-                    break;
-                }
-                case comp::as::Instruction::Kind::ReadUnlockGlobal: {
-                    comp::as::ReadUnlockGlobal &ins = static_cast<comp::as::ReadUnlockGlobal &>(*ii);
-                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
-                    builder.CreateCall(helper.lf_gv_read_unlock, args);
-                    break;
-                }
-                case comp::as::Instruction::Kind::WriteLockGlobal: {
-                    comp::as::WriteLockGlobal &ins = static_cast<comp::as::WriteLockGlobal &>(*ii);
-                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
-                    builder.CreateCall(helper.lf_gv_write_lock, args);
-                    break;
-                }
-                case comp::as::Instruction::Kind::WriteUnlockGlobal: {
-                    comp::as::WriteUnlockGlobal &ins = static_cast<comp::as::WriteUnlockGlobal &>(*ii);
-                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
-                    builder.CreateCall(helper.lf_gv_write_unlock, args);
-                    break;
-                }
-                case comp::as::Instruction::Kind::GetGlobal: {
-                    comp::as::GetGlobal &ins = static_cast<comp::as::GetGlobal &>(*ii);
-                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
-                    temps[ins.getDest().getIndex()] = builder.CreateCall(helper.lf_gv_get, args);
-                    break;
-                }
-                case comp::as::Instruction::Kind::SetGlobal: {
-                    comp::as::SetGlobal &ins = static_cast<comp::as::SetGlobal &>(*ii);
-                    llvm::Value *args[3] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()),
-                            temps[ins.getSrc().getIndex()] };
-                    builder.CreateCall(helper.lf_gv_set, args);
-                    break;
-                }
-                case comp::as::Instruction::Kind::MakeGlobal: {
-                    comp::as::MakeGlobal &ins = static_cast<comp::as::MakeGlobal &>(*ii);
-                    llvm::Value *args[4] = {
-                            rtctx,
-                            helper.wrapId(ins.getGlobalVariable().getId()),
-                            helper.wrapBool(ins.getGlobalVariable().getType().isRefCounted()),
-                            temps[ins.getInitValue().getIndex()]
-                    };
-                    builder.CreateCall(helper.lf_createGlobal, args);
-                    break;
-                }
+                //TODO replace ins.getGlobalVariable().getId() with a map
+                //of qore::GlobalVariable * -> llvm::GlobalVariable *
+//                case comp::as::Instruction::Kind::ReadLockGlobal: {
+//                    comp::as::ReadLockGlobal &ins = static_cast<comp::as::ReadLockGlobal &>(*ii);
+//                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
+//                    builder.CreateCall(helper.lf_gv_read_lock, args);
+//                    break;
+//                }
+//                case comp::as::Instruction::Kind::ReadUnlockGlobal: {
+//                    comp::as::ReadUnlockGlobal &ins = static_cast<comp::as::ReadUnlockGlobal &>(*ii);
+//                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
+//                    builder.CreateCall(helper.lf_gv_read_unlock, args);
+//                    break;
+//                }
+//                case comp::as::Instruction::Kind::WriteLockGlobal: {
+//                    comp::as::WriteLockGlobal &ins = static_cast<comp::as::WriteLockGlobal &>(*ii);
+//                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
+//                    builder.CreateCall(helper.lf_gv_write_lock, args);
+//                    break;
+//                }
+//                case comp::as::Instruction::Kind::WriteUnlockGlobal: {
+//                    comp::as::WriteUnlockGlobal &ins = static_cast<comp::as::WriteUnlockGlobal &>(*ii);
+//                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
+//                    builder.CreateCall(helper.lf_gv_write_unlock, args);
+//                    break;
+//                }
+//                case comp::as::Instruction::Kind::GetGlobal: {
+//                    comp::as::GetGlobal &ins = static_cast<comp::as::GetGlobal &>(*ii);
+//                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
+//                    temps[ins.getDest().getIndex()] = builder.CreateCall(helper.lf_gv_get, args);
+//                    break;
+//                }
+//                case comp::as::Instruction::Kind::SetGlobal: {
+//                    comp::as::SetGlobal &ins = static_cast<comp::as::SetGlobal &>(*ii);
+//                    llvm::Value *args[3] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()),
+//                            temps[ins.getSrc().getIndex()] };
+//                    builder.CreateCall(helper.lf_gv_set, args);
+//                    break;
+//                }
+//                case comp::as::Instruction::Kind::MakeGlobal: {
+//                    comp::as::MakeGlobal &ins = static_cast<comp::as::MakeGlobal &>(*ii);
+//                    llvm::Value *args[4] = {
+//                            rtctx,
+//                            helper.wrapId(ins.getGlobalVariable().getId()),
+//                            helper.wrapBool(ins.getGlobalVariable().getType().isRefCounted()),
+//                            temps[ins.getInitValue().getIndex()]
+//                    };
+//                    builder.CreateCall(helper.lf_createGlobal, args);
+//                    break;
+//                }
                 case comp::as::Instruction::Kind::Rethrow: {
                     //FIXME pop from exception stack
                     builder.CreateResume(builder.CreateLoad(excSlot));

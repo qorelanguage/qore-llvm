@@ -29,6 +29,7 @@
 #include "qore/comp/Parser.h"
 #include "qore/comp/sem/Analyzer.h"
 #include "qore/comp/sem/Dump.h"
+#include "qore/core/Env.h"
 
 namespace qore {
 namespace comp {
@@ -42,7 +43,8 @@ TEST_P(AnalyzerTest, Run) {
     Parser parser(ctx, dp);
     ast::Script::Ptr scriptNode = parser.parseScript();
     Core analyzer(ctx);
-    NamespaceScope root(analyzer);
+    Env rtEnv;
+    NamespaceScope root(analyzer, rtEnv.getRootNamespace());
     for (auto &decl : scriptNode->members) {
         root.processDeclaration(*decl);
     }

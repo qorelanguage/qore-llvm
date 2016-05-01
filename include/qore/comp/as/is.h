@@ -40,7 +40,7 @@
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/Temp.h"
 #include "qore/comp/as/LocalVariable.h"
-#include "qore/comp/as/GlobalVariable.h"
+#include "qore/core/GlobalVariable.h"
 
 namespace qore {
 namespace comp {
@@ -219,79 +219,79 @@ private:
 class ReadLockGlobal : public Instruction {
 
 public:
-    explicit ReadLockGlobal(const GlobalVariable &globalVariable) : globalVariable(globalVariable) {
+    explicit ReadLockGlobal(GlobalVariable &globalVariable) : globalVariable(globalVariable) {
     }
 
     Kind getKind() const override {
         return Kind::ReadLockGlobal;
     }
 
-    GlobalVariable getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
 private:
-    const GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
 };
 
 class ReadUnlockGlobal : public Instruction {
 
 public:
-    explicit ReadUnlockGlobal(const GlobalVariable &globalVariable) : globalVariable(globalVariable) {
+    explicit ReadUnlockGlobal(GlobalVariable &globalVariable) : globalVariable(globalVariable) {
     }
 
     Kind getKind() const override {
         return Kind::ReadUnlockGlobal;
     }
 
-    GlobalVariable getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
 private:
-    const GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
 };
 
 class WriteLockGlobal : public Instruction {
 
 public:
-    explicit WriteLockGlobal(const GlobalVariable &globalVariable) : globalVariable(globalVariable) {
+    explicit WriteLockGlobal(GlobalVariable &globalVariable) : globalVariable(globalVariable) {
     }
 
     Kind getKind() const override {
         return Kind::WriteLockGlobal;
     }
 
-    GlobalVariable getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
 private:
-    const GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
 };
 
 class WriteUnlockGlobal : public Instruction {
 
 public:
-    explicit WriteUnlockGlobal(const GlobalVariable &globalVariable) : globalVariable(globalVariable) {
+    explicit WriteUnlockGlobal(GlobalVariable &globalVariable) : globalVariable(globalVariable) {
     }
 
     Kind getKind() const override {
         return Kind::WriteUnlockGlobal;
     }
 
-    GlobalVariable getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
 private:
-    const GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
 };
 
 class GetGlobal : public Instruction {
 
 public:
-    GetGlobal(Temp dest, const GlobalVariable &globalVariable) : dest(dest), globalVariable(globalVariable) {
+    GetGlobal(Temp dest, GlobalVariable &globalVariable) : dest(dest), globalVariable(globalVariable) {
     }
 
     Kind getKind() const override {
@@ -302,26 +302,26 @@ public:
         return dest;
     }
 
-    GlobalVariable getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
 private:
     Temp dest;
-    const GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
 };
 
 class SetGlobal: public Instruction {
 
 public:
-    SetGlobal(const GlobalVariable &globalVariable, Temp src) : globalVariable(globalVariable), src(src) {
+    SetGlobal(GlobalVariable &globalVariable, Temp src) : globalVariable(globalVariable), src(src) {
     }
 
     Kind getKind() const override {
         return Kind::SetGlobal;
     }
 
-    GlobalVariable getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
@@ -330,14 +330,14 @@ public:
     }
 
 private:
-    const GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
     Temp src;
 };
 
 class MakeGlobal: public Instruction {
 
 public:
-    MakeGlobal(const GlobalVariable &globalVariable, Temp initValue) : globalVariable(globalVariable),
+    MakeGlobal(GlobalVariable &globalVariable, Temp initValue) : globalVariable(globalVariable),
             initValue(initValue) {
     }
 
@@ -345,7 +345,7 @@ public:
         return Kind::MakeGlobal;
     }
 
-    const GlobalVariable &getGlobalVariable() const {
+    GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
@@ -354,7 +354,7 @@ public:
     }
 
 private:
-    const GlobalVariable &globalVariable;
+    GlobalVariable &globalVariable;
     Temp initValue;
 };
 

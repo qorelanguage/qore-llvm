@@ -43,14 +43,15 @@
 #include "qore/comp/sem/stmt/Statement.h"
 #include "qore/comp/sem/Builder.h"
 #include "qore/comp/ast/Script.h"
+#include "qore/core/Env.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-inline as::Script::Ptr analyze(Context &ctx, ast::Script &node) {
+inline as::Script::Ptr analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
     Core analyzer(ctx);
-    NamespaceScope root(analyzer);
+    NamespaceScope root(analyzer, rtEnv.getRootNamespace());
 
     for (auto &decl : node.members) {
         root.processDeclaration(*decl);
@@ -67,7 +68,7 @@ inline as::Script::Ptr analyze(Context &ctx, ast::Script &node) {
 
     //qinit - pass2
     Builder initBuilder;
-    auto initializers = analyzer.scriptBuilder.takeInitializers();
+    auto initializers = analyzer.takeInitializers();
     for (auto &stmt : initializers) {
         analyzer.doPass2(initBuilder, *stmt);
     }

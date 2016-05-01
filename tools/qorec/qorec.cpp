@@ -66,7 +66,8 @@ void test(bool file, std::string str) {
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    qore::comp::as::Script::Ptr sss = qore::comp::sem::analyze(ctx, *script);
+    qore::Env rtEnv;
+    qore::comp::as::Script::Ptr sss = qore::comp::sem::analyze(ctx, rtEnv, *script);
     LOG("-------------------------------------------------------------------------------");
     qore::in::Interpreter::interpret(*sss);
     LOG("-------------------------------------------------------------------------------");

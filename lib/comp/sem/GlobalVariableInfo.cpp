@@ -31,18 +31,20 @@
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include <string>
 #include "qore/comp/sem/NamespaceScope.h"
+#include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
 void GlobalVariableInfo::pass2() {
-    assert(gv == nullptr);
+    assert(rt == nullptr);
     const Type &type = parent.resolveType(node.type);
-    gv = &parent.getScriptBuilder().createGlobalVariable(getFullName(), getLocation(), type);
+    rt = &parent.getRt().addGlobalVariable(core.ctx.getString(getName()), type);
+    core.addInitializer(GlobalVariableInitializationStatement::create(*rt, core.defaultFor(type)));
 }
 
-std::string GlobalVariableInfo::getFullName() {
+std::string GlobalVariableInfo::getFullName() const {
     return parent.getFullName() + "::" + core.ctx.getString(getName());
 }
 

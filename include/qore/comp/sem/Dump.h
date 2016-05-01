@@ -49,7 +49,7 @@ public:
         if (ns.isRoot()) {
             os << "-root namespace";
         } else {
-            os << "-namespace " << ctx.getString(ns.name) << " @" << ctx.decode(ns.location);
+            os << "-namespace " << ns.rt.getName() << " @" << ctx.decode(ns.location);
         }
         os << "\n";
         for (auto &n : ns.namespaces) {

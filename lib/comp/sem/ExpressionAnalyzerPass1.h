@@ -74,7 +74,7 @@ public:
             //                  code f = sub() {    f();    }
             rhs = evalAndConvert(*node.initializer, type);
         } else {
-            rhs = core.scriptBuilder.defaultFor(type);
+            rhs = core.defaultFor(type);
         }
         return LifetimeStartExpression::create(lv, std::move(rhs));
     }

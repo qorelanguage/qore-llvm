@@ -36,7 +36,6 @@
 #include <string>
 #include <vector>
 #include "qore/comp/as/Function.h"
-#include "qore/comp/as/GlobalVariable.h"
 
 namespace qore {
 namespace comp {
@@ -48,10 +47,8 @@ public:
     using Ptr = std::unique_ptr<Script>;
 
 public:
-    Script(std::vector<std::unique_ptr<GlobalVariable>> globalVariables,
-            std::vector<std::unique_ptr<Function>> functions, Function *qInit, Function *qMain)
-            : globalVariables(std::move(globalVariables)), functions(std::move(functions)),
-              qInit(qInit), qMain(qMain) {
+    Script(std::vector<std::unique_ptr<Function>> functions, Function *qInit, Function *qMain)
+            : functions(std::move(functions)), qInit(qInit), qMain(qMain) {
     }
 
     const std::vector<std::unique_ptr<Function>> &getFunctions() const {
@@ -73,7 +70,6 @@ private:
     Script &operator=(Script &&) = delete;
 
 private:
-    std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
     std::vector<std::unique_ptr<Function>> functions;
     Function *qInit;
     Function *qMain;

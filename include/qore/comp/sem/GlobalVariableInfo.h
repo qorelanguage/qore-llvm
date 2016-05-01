@@ -34,6 +34,7 @@
 #include <string>
 #include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Namespace.h"
+#include "qore/core/GlobalVariable.h"
 
 namespace qore {
 namespace comp {
@@ -54,7 +55,7 @@ public:
 
 public:
     GlobalVariableInfo(Core &core, NamespaceScope &parent, ast::GlobalVariable &node)
-            : core(core), parent(parent), node(node), gv(nullptr) {
+            : core(core), parent(parent), node(node), rt(nullptr) {
     }
 
     String::Ref getName() const {
@@ -66,24 +67,24 @@ public:
     }
 
     const Type &getType() const {
-        assert(gv != nullptr);
-        return gv->getType();
+        assert(rt != nullptr);
+        return rt->getType();
     }
 
-    const as::GlobalVariable &get() const {
-        assert(gv != nullptr);
-        return *gv;
+    GlobalVariable &getRt() const {
+        assert(rt != nullptr);
+        return *rt;
     }
 
     void pass2();
 
-    std::string getFullName();
+    std::string getFullName() const;
 
 private:
     Core &core;
     NamespaceScope &parent;
     ast::GlobalVariable &node;
-    as::GlobalVariable *gv;
+    GlobalVariable *rt;
 };
 
 } // namespace sem

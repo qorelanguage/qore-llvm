@@ -36,7 +36,6 @@
 #include <vector>
 #include "qore/core/util/Util.h"
 #include "qore/comp/as/Temp.h"
-#include "qore/comp/as/GlobalVariable.h"
 #include "qore/comp/as/LocalVariable.h"
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/Script.h"
@@ -211,7 +210,7 @@ public:
         add(util::make_unique<as::LoadString>(dest, std::move(string)));
     }
 
-    void createMakeGlobal(const as::GlobalVariable &gv, as::Temp initValue) {
+    void createMakeGlobal(GlobalVariable &gv, as::Temp initValue) {
         add(util::make_unique<as::MakeGlobal>(gv, initValue));
     }
 
@@ -245,27 +244,27 @@ public:
     }
 
     void createReadLockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::ReadLockGlobal>(gv.get()));
+        add(util::make_unique<as::ReadLockGlobal>(gv.getRt()));
     }
 
     void createReadUnlockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::ReadUnlockGlobal>(gv.get()));
+        add(util::make_unique<as::ReadUnlockGlobal>(gv.getRt()));
     }
 
     void createWriteLockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::WriteLockGlobal>(gv.get()));
+        add(util::make_unique<as::WriteLockGlobal>(gv.getRt()));
     }
 
     void createWriteUnlockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::WriteUnlockGlobal>(gv.get()));
+        add(util::make_unique<as::WriteUnlockGlobal>(gv.getRt()));
     }
 
     void createGetGlobal(as::Temp dest, const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::GetGlobal>(dest, gv.get()));
+        add(util::make_unique<as::GetGlobal>(dest, gv.getRt()));
     }
 
     void createSetGlobal(const GlobalVariableInfo &gv, as::Temp src) {
-        add(util::make_unique<as::SetGlobal>(gv.get(), src));
+        add(util::make_unique<as::SetGlobal>(gv.getRt(), src));
     }
 
     void createBinaryOperator(as::Temp dest, const BinaryOperator &op, as::Temp left, as::Temp right) {

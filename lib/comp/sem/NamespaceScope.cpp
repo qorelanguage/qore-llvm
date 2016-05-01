@@ -90,7 +90,7 @@ void NamespaceScope::processNamespaceDeclaration(ast::Namespace &node) {
             throw ReportedError();
         }
 
-        Ptr ptr = util::make_unique<NamespaceScope>(*this, name, location);
+        Ptr ptr = util::make_unique<NamespaceScope>(rt.addNamespace(core.ctx.getString(name)), *this, location);
         ns = ptr.get();
         namespaces[name] = std::move(ptr);
     } else {

@@ -36,7 +36,6 @@
 #include <vector>
 #include "qore/core/util/Debug.h"
 #include "qore/comp/as/is.h"
-#include "qore/rt/Context.h"
 
 namespace qore {
 namespace in {
@@ -45,7 +44,7 @@ template<typename F>
 class FunctionInterpreter {
 
 public:
-    explicit FunctionInterpreter(rt::Context &ctx, F &f) : ctx(ctx), f(f) {
+    explicit FunctionInterpreter(F &f) : f(f) {
     }
 
     void run(comp::as::Block &bb) {
@@ -162,33 +161,31 @@ private:
     }
 
     void exec(comp::as::ReadLockGlobal *ins) {
-        ctx.gv_read_lock(ins->getGlobalVariable().getId());
+        ins->getGlobalVariable().readLock();
     }
 
     void exec(comp::as::ReadUnlockGlobal *ins) {
-        ctx.gv_read_unlock(ins->getGlobalVariable().getId());
+        ins->getGlobalVariable().readUnlock();
     }
 
     void exec(comp::as::WriteLockGlobal *ins) {
-        ctx.gv_write_lock(ins->getGlobalVariable().getId());
+        ins->getGlobalVariable().writeLock();
     }
 
     void exec(comp::as::WriteUnlockGlobal *ins) {
-        ctx.gv_write_unlock(ins->getGlobalVariable().getId());
+        ins->getGlobalVariable().writeUnlock();
     }
 
     void exec(comp::as::GetGlobal *ins) {
-        f.setTemp(ins->getDest(), ctx.gv_get(ins->getGlobalVariable().getId()));
+        f.setTemp(ins->getDest(), ins->getGlobalVariable().getValue());
     }
 
     void exec(comp::as::SetGlobal *ins) {
-        ctx.gv_set(ins->getGlobalVariable().getId(), f.getTemp(ins->getSrc()));
+        ins->getGlobalVariable().setValue(f.getTemp(ins->getSrc()));
     }
 
     void exec(comp::as::MakeGlobal *ins) {
-        ctx.createGlobal(ins->getGlobalVariable().getId(), ins->getGlobalVariable().getType().isRefCounted(),
-                f.getTemp(ins->getInitValue()));
-        //TODO exception
+        ins->getGlobalVariable().initValue(f.getTemp(ins->getInitValue()));
     }
 
     void exec(comp::as::BinaryOperator *ins) {
@@ -201,7 +198,6 @@ private:
     }
 
 private:
-    rt::Context &ctx;
     F &f;
 };
 

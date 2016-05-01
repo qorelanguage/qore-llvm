@@ -40,11 +40,9 @@
 #include "qore/comp/ast/Declaration.h"
 #include "qore/comp/ast/Statement.h"
 #include "qore/comp/ast/Type.h"
-#include "qore/comp/as/GlobalVariable.h"
 #include "qore/comp/as/Function.h"
 #include "qore/comp/as/Script.h"
 #include "qore/comp/sem/BlockScope.h"
-#include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
 #include "qore/comp/sem/expr/NothingLiteralExpression.h"
 #include "qore/comp/sem/expr/StringLiteralRefExpression.h"
@@ -96,44 +94,15 @@ public:
         return std::move(string);
     }
 
-    as::GlobalVariable &createGlobalVariable(std::string name, SourceLocation location, const Type &type) {
-        std::unique_ptr<as::GlobalVariable> ptr
-            = util::make_unique<as::GlobalVariable>(globalVariables.size(), std::move(name), location, type);
-        as::GlobalVariable &gv = *ptr;
-        globalVariables.push_back(std::move(ptr));
-        initializers.push_back(GlobalVariableInitializationStatement::create(gv, defaultFor(type)));
-        return gv;
-    }
-
-    Expression::Ptr defaultFor(const Type &type) {
-        if (type == Type::String) {
-            return StringLiteralRefExpression::create(createStringLiteral(""));
-        }
-        if (type == Type::Int) {
-            return IntLiteralExpression::create(0);
-        }
-        if (type.acceptsNothing()) {
-            return NothingLiteralExpression::create();
-        }
-        QORE_NOT_IMPLEMENTED("Default value");
-    }
-
     as::Function &createFunction(std::string name, Id argCount, const Type &retType, Builder &b);
 
     as::Script::Ptr build(as::Function *qInit, as::Function *qMain) {
-        return util::make_unique<as::Script>(std::move(globalVariables), std::move(functions),
-                qInit, qMain);
-    }
-
-    std::vector<Statement::Ptr> takeInitializers() {
-        return std::move(initializers);
+        return util::make_unique<as::Script>(std::move(functions), qInit, qMain);
     }
 
 private:
     std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;  //XXX could be static
     std::unordered_map<std::string, qore::String::Ptr> strings;
-    std::vector<Statement::Ptr> initializers;
-    std::vector<std::unique_ptr<as::GlobalVariable>> globalVariables;
     std::vector<std::unique_ptr<as::Function>> functions;
 };
 
@@ -143,8 +112,6 @@ class Core {
 public:
     explicit Core(Context &ctx) : ctx(ctx), scriptBuilder(ctx.getStringTable()) {
     }
-
-    virtual ~Core() = default;
 
     void processPendingDeclarations();
 
@@ -175,6 +142,27 @@ public:
      */
     void doPass2(Builder &builder, Statement &stmt);
 
+    std::vector<Statement::Ptr> takeInitializers() {
+        return std::move(initializers);
+    }
+
+    void addInitializer(Statement::Ptr stmt) {
+        initializers.push_back(std::move(stmt));
+    }
+
+    Expression::Ptr defaultFor(const Type &type) {
+        if (type == Type::String) {
+            return StringLiteralRefExpression::create(scriptBuilder.createStringLiteral(""));
+        }
+        if (type == Type::Int) {
+            return IntLiteralExpression::create(0);
+        }
+        if (type.acceptsNothing()) {
+            return NothingLiteralExpression::create();
+        }
+        QORE_NOT_IMPLEMENTED("Default value");
+    }
+
 private:
     Core(const Core &) = delete;
     Core(Core &&) = delete;
@@ -190,6 +178,7 @@ private:
     std::vector<GlobalVariableInfo *> globalVariableQueue;
     std::vector<FunctionOverloadPack *> functionOverloadPackQueue;
     std::vector<FunctionScope *> functionQueue;
+    std::vector<Statement::Ptr> initializers;
 };
 
 } // namespace sem

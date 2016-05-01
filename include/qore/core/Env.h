@@ -25,54 +25,49 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Runtime environment.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_GLOBALVARIABLE_H_
-#define INCLUDE_QORE_COMP_AS_GLOBALVARIABLE_H_
+#ifndef INCLUDE_QORE_CORE_ENV_H_
+#define INCLUDE_QORE_CORE_ENV_H_
 
-#include <string>
-#include "qore/comp/SourceLocation.h"
-#include "qore/comp/String.h"
-#include "qore/Id.h"
-#include "qore/core/Type.h"
+#include "qore/core/Namespace.h"
 
 namespace qore {
-namespace comp {
-namespace as {
 
-class GlobalVariable {
+/**
+ * \brief Runtime environment.
+ *
+ * Each program/module is assigned an environment which provides memory management, access to current privileges and
+ * exception handling.
+ */
+class Env {
 
 public:
-    GlobalVariable(Id id, std::string name, SourceLocation location, const Type &type)
-            : id(id), name(std::move(name)), location(location), type(type) {
+    /**
+     * \brief Default constructor.
+     */
+    Env() : rootNamespace("") {
     }
 
-    Id getId() const {
-        return id;
-    }
-
-    SourceLocation getLocation() const {
-        return location;
-    }
-
-    const std::string &getName() const {
-        return name;
-    }
-
-    const Type &getType() const {
-        return type;
+    /**
+     * \brief Returns the root namespace.
+     * \return the root namespace
+     */
+    Namespace &getRootNamespace() {
+        return rootNamespace;
     }
 
 private:
-    Id id;
-    std::string name;
-    SourceLocation location;
-    const Type &type;
+    Env(const Env &) = delete;
+    Env(Env &&) = delete;
+    Env &operator=(const Env &) = delete;
+    Env &operator=(Env &&) = delete;
+
+private:
+    Namespace rootNamespace;
 };
 
-} // namespace as
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AS_GLOBALVARIABLE_H_
+#endif // INCLUDE_QORE_CORE_ENV_H_

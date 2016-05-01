@@ -37,7 +37,7 @@
 #include "qore/comp/Parser.h"
 #include "qore/comp/sem/Analyzer.h"
 #include "qore/in/FunctionInterpreter.h"
-#include "qore/rt/Context.h"
+#include "qore/core/Env.h"
 #include "DiagPrinter.h"
 
 namespace qore {
@@ -143,12 +143,12 @@ public:
     }
 
     void doIt() {
-        rt::Context rtCtx;
         StdinWrapper dp(compCtx);
         Parser parser(compCtx, dp);
         Builder mainBuilder;
         Core analyzer(compCtx);
-        NamespaceScope root(analyzer);
+        Env rtEnv;
+        NamespaceScope root(analyzer, rtEnv.getRootNamespace());
         InteractiveScope topScope(root);
         BlockScopeImpl blockScope(topScope);
         TopLevelCtx topLevelCtx;
@@ -159,19 +159,19 @@ public:
                 analyzer.processPendingDeclarations();
             } else if (declOrStmt.stmt) {
                 Statement::Ptr stmt = analyzer.doPass1(blockScope, *declOrStmt.stmt);
-                auto initializers = analyzer.scriptBuilder.takeInitializers();
+                auto initializers = analyzer.takeInitializers();
                 for (auto &stmt : initializers) {
                     analyzer.doPass2(mainBuilder, *stmt);
                 }
                 analyzer.doPass2(mainBuilder, *stmt);
-                in::FunctionInterpreter<TopLevelCtx> fi(rtCtx, topLevelCtx);
+                in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx);
                 fi.run(mainBuilder.getEntryForInteractiveMode());
             } else {
                 break;
             }
         }
         mainBuilder.popCleanupScopes();
-        in::FunctionInterpreter<TopLevelCtx> fi(rtCtx, topLevelCtx);
+        in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx);
         fi.run(mainBuilder.getEntryForInteractiveMode());
     }
 
