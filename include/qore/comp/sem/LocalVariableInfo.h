@@ -28,20 +28,20 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_LOCALVARIABLE_H_
-#define INCLUDE_QORE_COMP_SEM_LOCALVARIABLE_H_
+#ifndef INCLUDE_QORE_COMP_SEM_LOCALVARIABLEINFO_H_
+#define INCLUDE_QORE_COMP_SEM_LOCALVARIABLEINFO_H_
 
-#include "qore/core/Type.h"
+#include "qore/core/LocalVariable.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-class LocalVariable {
+class LocalVariableInfo {
 
 public:
-    LocalVariable(String::Ref name, SourceLocation location, const Type &type) : name(name),
-            location(location), type(type) {
+    LocalVariableInfo(String::Ref name, SourceLocation location, const Type &type) : name(name),
+            location(location), type(type), rt(nullptr) {
     }
 
     String::Ref getName() const {
@@ -56,14 +56,24 @@ public:
         return type;
     }
 
+    LocalVariable &getRt() const {
+        assert(rt);
+        return *rt;
+    }
+
+    void setRt(LocalVariable &rt) {
+        this->rt = &rt;
+    }
+
 private:
     String::Ref name;
     SourceLocation location;
     const Type &type;
+    LocalVariable *rt;
 };
 
 } // namespace sem
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_LOCALVARIABLE_H_
+#endif // INCLUDE_QORE_COMP_SEM_LOCALVARIABLEINFO_H_

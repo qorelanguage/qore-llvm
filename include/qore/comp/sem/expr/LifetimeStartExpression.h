@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEM_EXPR_LIFETIMESTARTEXPRESSION_H_
 #define INCLUDE_QORE_COMP_SEM_EXPR_LIFETIMESTARTEXPRESSION_H_
 
-#include "qore/comp/sem/LocalVariable.h"
+#include "qore/comp/sem/LocalVariableInfo.h"
 #include "qore/comp/sem/expr/Expression.h"
 
 namespace qore {
@@ -44,7 +44,7 @@ public:
     using Ptr = std::unique_ptr<LifetimeStartExpression>;
 
 public:
-    static Ptr create(const LocalVariable &localVariable, Expression::Ptr initExpression) {
+    static Ptr create(LocalVariableInfo &localVariable, Expression::Ptr initExpression) {
         return Ptr(new LifetimeStartExpression(localVariable, std::move(initExpression)));
     }
 
@@ -56,7 +56,7 @@ public:
         return localVariable.getType();
     }
 
-    const LocalVariable &getLocalVariable() const {
+    LocalVariableInfo &getLocalVariable() const {
         return localVariable;
     }
 
@@ -65,12 +65,12 @@ public:
     }
 
 private:
-    LifetimeStartExpression(const LocalVariable &localVariable, Expression::Ptr initExpression)
+    LifetimeStartExpression(LocalVariableInfo &localVariable, Expression::Ptr initExpression)
             : localVariable(localVariable), initExpression(std::move(initExpression)) {
     }
 
 private:
-    const LocalVariable &localVariable;
+    LocalVariableInfo &localVariable;
     Expression::Ptr initExpression;
 };
 

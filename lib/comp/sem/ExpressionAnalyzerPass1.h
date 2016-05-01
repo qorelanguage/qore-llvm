@@ -66,7 +66,7 @@ public:
 
     Expression::Ptr visit(ast::VarDeclExpression &node) override {
         const Type &type = scope.resolveType(node.type);
-        LocalVariable &lv = scope.declareLocalVariable(node.name, node.location, type);
+        LocalVariableInfo &lv = scope.declareLocalVariable(node.name, node.location, type);
 
         Expression::Ptr rhs;
         if (node.initializer) {

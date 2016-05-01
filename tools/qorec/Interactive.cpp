@@ -83,9 +83,9 @@ public:
         return rootScope.resolveType(node);
     }
 
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
-        std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(name, location, type);
-        LocalVariable &lv = *ptr;
+    LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+        std::unique_ptr<LocalVariableInfo> ptr = util::make_unique<LocalVariableInfo>(name, location, type);
+        LocalVariableInfo &lv = *ptr;
         locals.push_back(std::move(ptr));
         //lv.setShared();
         return lv;
@@ -95,7 +95,7 @@ public:
         return rootScope.resolveSymbol(name);
     }
 
-    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+    LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }
 
@@ -105,18 +105,18 @@ public:
 
 private:
     const Scope &rootScope;
-    std::vector<std::unique_ptr<LocalVariable>> locals;
+    std::vector<std::unique_ptr<LocalVariableInfo>> locals;
 };
 
 class TopLevelCtx {
 
 public:
-    void setLocal(const as::LocalVariable &lv, qvalue value) {
-        locals[lv.getId()] = value;
+    void setLocal(const LocalVariable &lv, qvalue value) {
+        locals[lv.getIndex()] = value;
     }
 
-    qvalue getLocal(const as::LocalVariable &lv) {
-        auto it = locals.find(lv.getId());
+    qvalue getLocal(const LocalVariable &lv) {
+        auto it = locals.find(lv.getIndex());
         assert(it != locals.end());
         return it->second;
     }

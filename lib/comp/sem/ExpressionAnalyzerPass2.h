@@ -192,7 +192,7 @@ public:
         if (refCounted(expr.getLocalVariable())) {
             refIncDestIfNeeded();
         }
-        builder.startOfLocalVariableLifetime(expr.getLocalVariable(), dest);
+        builder.startOfLocalVariableLifetime(core.ctx, expr.getLocalVariable(), dest);
     }
 
     void visit(const LocalVariableRefExpression &expr) {

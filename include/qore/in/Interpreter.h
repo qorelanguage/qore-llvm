@@ -46,12 +46,12 @@ public:
     explicit X(Function &f) : temps(f.getTempCount()), locals(f.getLocalCount()) {
     }
 
-    void setLocal(const comp::as::LocalVariable &lv, qvalue value) {
-        locals[lv.getId()] = value;
+    void setLocal(const LocalVariable &lv, qvalue value) {
+        locals[lv.getIndex()] = value;
     }
 
-    qvalue getLocal(const comp::as::LocalVariable &lv) {
-        return locals[lv.getId()];
+    qvalue getLocal(const LocalVariable &lv) {
+        return locals[lv.getIndex()];
     }
 
     void setTemp(comp::as::Temp temp, qvalue value) {

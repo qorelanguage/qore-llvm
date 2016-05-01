@@ -39,8 +39,8 @@
 #include "qore/comp/as/Instruction.h"
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/Temp.h"
-#include "qore/comp/as/LocalVariable.h"
 #include "qore/core/GlobalVariable.h"
+#include "qore/core/LocalVariable.h"
 
 namespace qore {
 namespace comp {

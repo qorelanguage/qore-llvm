@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEM_EXPR_LOCALVARIABLEREFEXPRESSION_H_
 #define INCLUDE_QORE_COMP_SEM_EXPR_LOCALVARIABLEREFEXPRESSION_H_
 
-#include "qore/comp/sem/LocalVariable.h"
+#include "qore/comp/sem/LocalVariableInfo.h"
 #include "qore/comp/sem/expr/Expression.h"
 
 namespace qore {
@@ -44,7 +44,7 @@ public:
     using Ptr = std::unique_ptr<LocalVariableRefExpression>;
 
 public:
-    static Ptr create(const LocalVariable &localVariable) {
+    static Ptr create(const LocalVariableInfo &localVariable) {
         return Ptr(new LocalVariableRefExpression(localVariable));
     }
 
@@ -56,16 +56,16 @@ public:
         return localVariable.getType();
     }
 
-    const LocalVariable &getLocalVariable() const {
+    const LocalVariableInfo &getLocalVariable() const {
         return localVariable;
     }
 
 private:
-    explicit LocalVariableRefExpression(const LocalVariable &localVariable) : localVariable(localVariable) {
+    explicit LocalVariableRefExpression(const LocalVariableInfo &localVariable) : localVariable(localVariable) {
     }
 
 private:
-    const LocalVariable &localVariable;
+    const LocalVariableInfo &localVariable;
 };
 
 } // namespace sem

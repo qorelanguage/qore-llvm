@@ -31,7 +31,6 @@
 #ifndef INCLUDE_QORE_COMP_SEM_NAMESPACESCOPE_H_
 #define INCLUDE_QORE_COMP_SEM_NAMESPACESCOPE_H_
 
-#include <qore/comp/sem/Core.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -40,6 +39,7 @@
 #include "qore/comp/ast/Class.h"
 #include "qore/comp/ast/Namespace.h"
 #include "qore/comp/sem/ClassScope.h"
+#include "qore/comp/sem/Core.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/FunctionOverloadPack.h"
 #include "qore/core/Namespace.h"
@@ -57,7 +57,7 @@ public:
     NamespaceScope(Core &core, Namespace &rt) : core(core), rt(rt), parentNamespace(nullptr) {
     }
 
-    NamespaceScope(Namespace &rtNamespace, NamespaceScope &parentNamespace, SourceLocation location)
+    NamespaceScope(Namespace &rt, NamespaceScope &parentNamespace, SourceLocation location)
             : core(parentNamespace.core), rt(rt), parentNamespace(&parentNamespace), location(location) {
     }
 
@@ -100,13 +100,13 @@ public:
 
     Symbol resolveSymbol(ast::Name &name) const override;
 
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+    LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         //this will happen if a local variable is declared in a constant initializer - report error and return
         //a fake local variable of type error which will need to be statically allocated somewhere
         QORE_NOT_IMPLEMENTED("");
     }
 
-    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+    LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }
 

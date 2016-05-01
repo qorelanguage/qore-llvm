@@ -59,9 +59,9 @@ public:
 
 
     const Type &resolveType(ast::Type &node) const override;
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override;
+    LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override;
     Symbol resolveSymbol(ast::Name &name) const override;
-    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+    LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }
 
@@ -80,8 +80,8 @@ private:
     Core &core;
     Scope &parent;
     ast::Routine &node;
-    std::vector<std::unique_ptr<LocalVariable>> locals;
-    std::map<String::Ref, LocalVariable *> args;
+    std::vector<std::unique_ptr<LocalVariableInfo>> locals;
+    std::map<String::Ref, LocalVariableInfo *> args;
 };
 
 } // namespace sem

@@ -33,7 +33,7 @@
 
 #include <map>
 #include <vector>
-#include "qore/comp/sem/LocalVariable.h"
+#include "qore/comp/sem/LocalVariableInfo.h"
 #include "qore/comp/sem/Scope.h"
 #include "qore/comp/sem/stmt/Statement.h"
 #include "qore/comp/sem/stmt/CompoundStatement.h"
@@ -57,16 +57,16 @@ public:
     explicit BlockScopeImpl(Scope &parent) : parent(parent) {
     }
 
-    LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+    LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         return parent.createLocalVariable(name, location, type);
     }
 
-    LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+    LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         if (locals.find(name) != locals.end()) {
             //FIXME report duplicate local variable in the same block
             QORE_NOT_IMPLEMENTED("");
         }
-        LocalVariable &lv = createLocalVariable(name, location, type);
+        LocalVariableInfo &lv = createLocalVariable(name, location, type);
         locals[name] = &lv;
         return lv;
     }
@@ -91,7 +91,7 @@ public:
 
 private:
     Scope &parent;
-    std::map<String::Ref, LocalVariable *> locals;
+    std::map<String::Ref, LocalVariableInfo *> locals;
 };
 
 } // namespace sem

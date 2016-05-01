@@ -36,12 +36,11 @@
 #include <vector>
 #include "qore/core/util/Util.h"
 #include "qore/comp/as/Temp.h"
-#include "qore/comp/as/LocalVariable.h"
 #include "qore/comp/as/Block.h"
 #include "qore/comp/as/Script.h"
 #include "qore/comp/as/is.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
-#include "qore/comp/sem/LocalVariable.h"
+#include "qore/comp/sem/LocalVariableInfo.h"
 #include "qore/comp/sem/CleanupScope.h"
 #include "qore/core/Function.h"
 
@@ -66,9 +65,9 @@ public:
         return terminated;
     }
 
-    void startOfArgumentLifetime(const LocalVariable &lv, Id argIndex) {
-        const as::LocalVariable &aslv = alloc(lv);
-        assert(aslv.getId() == argIndex);
+    void startOfArgumentLifetime(Context &ctx, LocalVariableInfo &lv, Id argIndex) {
+        const LocalVariable &aslv = alloc(ctx, lv);
+        assert(aslv.getIndex() == argIndex);
 
         //if not shared:
         if (lv.getType().isRefCounted()) {
@@ -87,8 +86,8 @@ public:
         // - push cleanup scope that dereferences the wrapper
     }
 
-    void startOfLocalVariableLifetime(const LocalVariable &lv, as::Temp value) {
-        const as::LocalVariable &aslv = alloc(lv);
+    void startOfLocalVariableLifetime(Context &ctx, LocalVariableInfo &lv, as::Temp value) {
+        const LocalVariable &aslv = alloc(ctx, lv);
 
         //if not shared:
         add(util::make_unique<as::SetLocal>(aslv, value));
@@ -104,7 +103,7 @@ public:
     }
 
 private:
-    void x(const as::LocalVariable &lv) {
+    void x(const LocalVariable &lv) {
         as::Block *b = createBlock();
         as::Temp temp = getFreeTemp();      //all temps are free at this point
         b->instructions.push_back(util::make_unique<as::GetLocal>(temp, lv));
@@ -231,16 +230,16 @@ public:
         terminated = true;
     }
 
-    void createSetLocal(const LocalVariable &lv, as::Temp src) {
-        add(util::make_unique<as::SetLocal>(mapLocal(lv), src));
+    void createSetLocal(const LocalVariableInfo &lv, as::Temp src) {
+        add(util::make_unique<as::SetLocal>(lv.getRt(), src));
     }
 
     void createIntConstant(as::Temp dest, qint value) {
         add(util::make_unique<as::IntConstant>(dest, value));
     }
 
-    void createGetLocal(as::Temp dest, const LocalVariable &lv) {
-        add(util::make_unique<as::GetLocal>(dest, mapLocal(lv)));
+    void createGetLocal(as::Temp dest, const LocalVariableInfo &lv) {
+        add(util::make_unique<as::GetLocal>(dest, lv.getRt()));
     }
 
     void createRefDec(as::Temp temp) {
@@ -336,19 +335,13 @@ private:
     as::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
     void buildCleanupForRet();
 
-    const as::LocalVariable &alloc(const LocalVariable &lv) {
-        as::LocalVariable::Ptr ptr = util::make_unique<as::LocalVariable>(locals.size(), lv.getName(),
-                lv.getLocation(), lv.getType());
-        as::LocalVariable *v = ptr.get();
+    const LocalVariable &alloc(Context &ctx, LocalVariableInfo &lv) {
+        LocalVariable::Ptr ptr = util::make_unique<LocalVariable>(locals.size(),
+                ctx.getString(lv.getName()), lv.getType());
+        LocalVariable &v = *ptr;
         locals.push_back(std::move(ptr));
-        localMap[&lv] = v;
-        return *v;
-    }
-
-    const as::LocalVariable &mapLocal(const LocalVariable &lv) const {
-        auto it = localMap.find(&lv);
-        assert(it != localMap.end());
-        return *it->second;
+        lv.setRt(v);
+        return v;
     }
 
 private:
@@ -360,8 +353,7 @@ private:
     std::vector<Id> cleanupTemps;
     std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
-    std::vector<as::LocalVariable::Ptr> locals;
-    std::map<const LocalVariable *, const as::LocalVariable *> localMap;
+    std::vector<LocalVariable::Ptr> locals;
 
     Id tempCount;
     as::Block *entry;

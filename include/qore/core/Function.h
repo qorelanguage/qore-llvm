@@ -32,11 +32,12 @@
 #define INCLUDE_QORE_CORE_FUNCTION_H_
 
 #include <cassert>
+#include <string>
 #include <vector>
 #include "qore/Id.h"
 #include "qore/comp/as/Block.h"
-#include "qore/comp/as/LocalVariable.h"
 #include "qore/core/FunctionType.h"
+#include "qore/core/LocalVariable.h"
 
 namespace qore {
 
@@ -78,12 +79,18 @@ public:
         return *blocks[0];
     }
 
-    void setBody(Size tempCount, std::vector<comp::as::LocalVariable::Ptr> locals,
-            std::vector<comp::as::Block::Ptr> blocks) {
+    void setBody(Size tempCount, std::vector<LocalVariable::Ptr> locals, std::vector<comp::as::Block::Ptr> blocks) {
         this->tempCount = tempCount;
         this->locals = std::move(locals);
         this->blocks = std::move(blocks);
     }
+
+//    LocalVariable &addLocalVariable(std::string name, const Type &type) {
+//        LocalVariable::Ptr ptr = LocalVariable::Ptr(new LocalVariable(locals.size(), std::move(name), type));
+//        LocalVariable &lv = *ptr;
+//        locals.push_back(std::move(ptr));
+//        return lv;
+//    }
 
 private:
     Function(const Function &) = delete;
@@ -95,7 +102,7 @@ private:
     FunctionType type;
 
     Size tempCount;
-    std::vector<comp::as::LocalVariable::Ptr> locals;
+    std::vector<LocalVariable::Ptr> locals;
     std::vector<comp::as::Block::Ptr> blocks;
 };
 

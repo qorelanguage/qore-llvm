@@ -105,12 +105,12 @@ public:
                 }
                 case comp::as::Instruction::Kind::GetLocal: {
                     comp::as::GetLocal &ins = static_cast<comp::as::GetLocal &>(*ii);
-                    temps[ins.getDest().getIndex()] = builder.CreateLoad(locals[ins.getLocalVariable().getId()]);
+                    temps[ins.getDest().getIndex()] = builder.CreateLoad(locals[ins.getLocalVariable().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::SetLocal: {
                     comp::as::SetLocal &ins = static_cast<comp::as::SetLocal &>(*ii);
-                    builder.CreateStore(temps[ins.getSrc().getIndex()], locals[ins.getLocalVariable().getId()]);
+                    builder.CreateStore(temps[ins.getSrc().getIndex()], locals[ins.getLocalVariable().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::LoadString: {

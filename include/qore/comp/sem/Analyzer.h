@@ -31,13 +31,13 @@
 #ifndef INCLUDE_QORE_COMP_SEM_ANALYZER_H_
 #define INCLUDE_QORE_COMP_SEM_ANALYZER_H_
 
-#include <qore/comp/sem/Core.h>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 #include "qore/comp/Context.h"
 #include "qore/comp/as/Script.h"
+#include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Declaration.h"
 #include "qore/comp/sem/NamespaceScope.h"
 #include "qore/comp/sem/stmt/Statement.h"

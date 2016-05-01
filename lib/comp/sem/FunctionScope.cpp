@@ -47,9 +47,9 @@ const Type &FunctionScope::resolveType(ast::Type &node) const {
     return parent.resolveType(node);
 }
 
-LocalVariable &FunctionScope::createLocalVariable(String::Ref name, SourceLocation location, const Type &type) {
-    std::unique_ptr<LocalVariable> ptr = util::make_unique<LocalVariable>(name, location, type);
-    LocalVariable &lv = *ptr;
+LocalVariableInfo &FunctionScope::createLocalVariable(String::Ref name, SourceLocation location, const Type &type) {
+    std::unique_ptr<LocalVariableInfo> ptr = util::make_unique<LocalVariableInfo>(name, location, type);
+    LocalVariableInfo &lv = *ptr;
     locals.push_back(std::move(ptr));
     return lv;
 }
@@ -76,8 +76,8 @@ void FunctionScope::analyze() {
     Builder b;
     Id index = 0;
     for (auto it = node.params.begin(); it != node.params.end(); ++it) {
-        LocalVariable &lv = *args[std::get<1>(*it).str];
-        b.startOfArgumentLifetime(lv, index++);
+        LocalVariableInfo &lv = *args[std::get<1>(*it).str];
+        b.startOfArgumentLifetime(core.ctx, lv, index++);
     }
 
     StatementAnalyzerPass2 a2(core, b);

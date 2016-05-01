@@ -33,13 +33,12 @@
 
 #include "qore/core/Type.h"
 #include "qore/comp/ast/Type.h"
-#include "qore/comp/sem/LocalVariable.h"
+#include "qore/comp/sem/LocalVariableInfo.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-class LocalVariable;
 class GlobalVariableInfo;
 
 class Symbol {
@@ -51,7 +50,7 @@ public:
     };
 
 public:
-    explicit Symbol(const LocalVariable &v) : kind(Kind::Local), ptr(&v) {
+    explicit Symbol(const LocalVariableInfo &v) : kind(Kind::Local), ptr(&v) {
     }
 
     explicit Symbol(const GlobalVariableInfo &v) : kind(Kind::Global), ptr(&v) {
@@ -61,9 +60,9 @@ public:
         return kind;
     }
 
-    const LocalVariable &asLocal() const {
+    const LocalVariableInfo &asLocal() const {
         assert(kind == Kind::Local);
-        return *static_cast<const LocalVariable *>(ptr);
+        return *static_cast<const LocalVariableInfo *>(ptr);
     }
 
     const GlobalVariableInfo &asGlobal() const {
@@ -82,9 +81,9 @@ public:
     virtual ~Scope() = default;
 
     virtual const Type &resolveType(ast::Type &node) const = 0;
-    virtual LocalVariable &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
+    virtual LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
     virtual Symbol resolveSymbol(ast::Name &name) const = 0;
-    virtual LocalVariable &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
+    virtual LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
     virtual const Type &getReturnType() const = 0;
 
 protected:

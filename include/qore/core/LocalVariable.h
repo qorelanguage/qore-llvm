@@ -25,57 +25,67 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Runtime representation of a local variable.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_LOCALVARIABLE_H_
-#define INCLUDE_QORE_COMP_AS_LOCALVARIABLE_H_
+#ifndef INCLUDE_QORE_CORE_LOCALVARIABLE_H_
+#define INCLUDE_QORE_CORE_LOCALVARIABLE_H_
 
 #include <memory>
-#include "qore/comp/SourceLocation.h"
-#include "qore/comp/String.h"
-#include "qore/Id.h"
+#include <string>
+#include "qore/core/Size.h"
 #include "qore/core/Type.h"
 
 namespace qore {
-namespace comp {
-namespace as {
 
+/**
+ * \brief Runtime representation of a local variable.
+ */
 class LocalVariable {
 
 public:
-    using Ptr = std::unique_ptr<LocalVariable>;
+    using Ptr = std::unique_ptr<LocalVariable>;         //!< Pointer type.
 
 public:
-    LocalVariable(Id id, String::Ref name, SourceLocation location, const Type &type)
-            : id(id), name(name), location(location), type(type) {
+    /**
+     * \brief Creates a local variable.
+     * \param index the index of the local variable
+     * \param name the name of the local variable
+     * \param type the type of the local variable
+     */
+    LocalVariable(Size index, std::string name, const Type &type) : index(index), name(std::move(name)), type(type) {
     }
 
-    Id getId() const {
-        return id;
+    /**
+     * \brief Returns the index of the local variable.
+     * @return the index of the local variable
+     */
+    Size getIndex() const {
+        return index;
     }
 
-    SourceLocation getLocation() const {
-        return location;
-    }
-
-    String::Ref getName() const {
+    /**
+     * \brief Returns the name of the local variable.
+     * @return the name of the local variable
+     */
+    const std::string &getName() const {
         return name;
     }
 
+    /**
+     * \brief Returns the type of the local variable.
+     * @return the type of the local variable
+     */
     const Type &getType() const {
         return type;
     }
 
 private:
-    Id id;
-    String::Ref name;
-    SourceLocation location;
+    Size index;
+    std::string name;
     const Type &type;
 };
 
-} // namespace as
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AS_LOCALVARIABLE_H_
+#endif // INCLUDE_QORE_CORE_LOCALVARIABLE_H_
