@@ -34,9 +34,9 @@
 #include <cassert>
 #include <string>
 #include <vector>
-#include "qore/comp/as/Block.h"
 #include "qore/core/FunctionType.h"
 #include "qore/core/LocalVariable.h"
+#include "qore/core/code/Block.h"
 
 namespace qore {
 
@@ -73,12 +73,12 @@ public:
         return locals.size();
     }
 
-    comp::as::Block &getEntryBlock() const {
+    code::Block &getEntryBlock() const {
         assert(!blocks.empty());
         return *blocks[0];
     }
 
-    void setBody(Size tempCount, std::vector<LocalVariable::Ptr> locals, std::vector<comp::as::Block::Ptr> blocks) {
+    void setBody(Size tempCount, std::vector<LocalVariable::Ptr> locals, std::vector<code::Block::Ptr> blocks) {
         this->tempCount = tempCount;
         this->locals = std::move(locals);
         this->blocks = std::move(blocks);
@@ -102,7 +102,7 @@ private:
 
     Size tempCount;
     std::vector<LocalVariable::Ptr> locals;
-    std::vector<comp::as::Block::Ptr> blocks;
+    std::vector<code::Block::Ptr> blocks;
 };
 
 } // namespace qore

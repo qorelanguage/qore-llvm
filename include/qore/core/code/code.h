@@ -25,75 +25,20 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Namespace for code-related definitions.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
-#define INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
-
-#include <memory>
+#ifndef INCLUDE_QORE_CORE_CODE_CODE_H_
+#define INCLUDE_QORE_CORE_CODE_CODE_H_
 
 namespace qore {
-namespace comp {
-namespace as {
 
-class Block;
-class Instruction {
+/**
+ * \brief The namespace used by code-related definitions.
+ */
+namespace code {
+}
 
-public:
-    using Ptr = std::unique_ptr<Instruction>;
-
-public:
-    enum Kind {
-        IntConstant,
-        GetLocal,
-        SetLocal,
-        LoadString,
-        RefInc,
-        RefDec,
-        RefDecNoexcept,
-        ReadLockGlobal,
-        ReadUnlockGlobal,
-        WriteLockGlobal,
-        WriteUnlockGlobal,
-        GetGlobal,
-        SetGlobal,
-        MakeGlobal,
-        Rethrow,
-        BinaryOperator,
-        Conversion,
-        Ret,
-        RetVoid,
-        GetArg,
-        Jump,
-        Branch,
-    };
-
-public:
-    virtual ~Instruction() = default;
-
-    virtual Kind getKind() const = 0;
-
-    Block *getLpad() const {
-        return lpad;
-    }
-
-protected:
-    explicit Instruction(Block *lpad = nullptr) : lpad(lpad) {
-    }
-
-private:
-    Instruction(const Instruction &) = delete;
-    Instruction(Instruction &&) = delete;
-    Instruction &operator=(const Instruction &) = delete;
-    Instruction &operator=(Instruction &&) = delete;
-
-private:
-    Block *lpad;
-};
-
-} // namespace as
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AS_INSTRUCTION_H_
+#endif // INCLUDE_QORE_CORE_CODE_CODE_H_

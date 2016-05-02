@@ -95,41 +95,41 @@ public:
 
     void doBlock(llvm::BasicBlock *bb, const comp::as::Block &block) {
         llvm::IRBuilder<> builder(bb);
-        for (auto &ii : block.instructions) {
-            switch (ii->getKind()) {
+        for (const code::Instruction &ii : block) {
+            switch (ii.getKind()) {
                 case comp::as::Instruction::Kind::IntConstant: {
-                    comp::as::IntConstant &ins = static_cast<comp::as::IntConstant &>(*ii);
+                    const comp::as::IntConstant &ins = static_cast<const comp::as::IntConstant &>(ii);
                     temps[ins.getDest().getIndex()] = builder.CreateCall(
                             helper.lf_qint_to_qvalue, llvm::ConstantInt::get(helper.lt_qint, ins.getValue(), true));
                     break;
                 }
                 case comp::as::Instruction::Kind::GetLocal: {
-                    comp::as::GetLocal &ins = static_cast<comp::as::GetLocal &>(*ii);
+                    const comp::as::GetLocal &ins = static_cast<const comp::as::GetLocal &>(ii);
                     temps[ins.getDest().getIndex()] = builder.CreateLoad(locals[ins.getLocalVariable().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::SetLocal: {
-                    comp::as::SetLocal &ins = static_cast<comp::as::SetLocal &>(*ii);
+                    const comp::as::SetLocal &ins = static_cast<const comp::as::SetLocal &>(ii);
                     builder.CreateStore(temps[ins.getSrc().getIndex()], locals[ins.getLocalVariable().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::LoadString: {
-                    comp::as::LoadString &ins = static_cast<comp::as::LoadString &>(*ii);
+                    const comp::as::LoadString &ins = static_cast<const comp::as::LoadString &>(ii);
                     temps[ins.getDest().getIndex()] = helper.loadString(ins.getString());
                     break;
                 }
                 case comp::as::Instruction::Kind::RefInc: {
-                    comp::as::RefInc &ins = static_cast<comp::as::RefInc &>(*ii);
+                    const comp::as::RefInc &ins = static_cast<const comp::as::RefInc &>(ii);
                     builder.CreateCall(helper.lf_incRef, temps[ins.getTemp().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::RefDec: {
-                    comp::as::RefDec &ins = static_cast<comp::as::RefDec &>(*ii);
+                    const comp::as::RefDec &ins = static_cast<const comp::as::RefDec &>(ii);
                     makeCallOrInvoke(builder, ins, helper.lf_decRef, temps[ins.getTemp().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::RefDecNoexcept: {
-                    comp::as::RefDecNoexcept &ins = static_cast<comp::as::RefDecNoexcept &>(*ii);
+                    const comp::as::RefDecNoexcept &ins = static_cast<const comp::as::RefDecNoexcept &>(ii);
                     auto e = llvm::Constant::getNullValue(helper.lt_qvalue); //FIXME top of exception stack
                     llvm::Value *args[2] = { temps[ins.getTemp().getIndex()], e };
                     builder.CreateCall(helper.lf_decRefNoexcept, args);
@@ -138,44 +138,44 @@ public:
                 //TODO replace ins.getGlobalVariable().getId() with a map
                 //of qore::GlobalVariable * -> llvm::GlobalVariable *
 //                case comp::as::Instruction::Kind::ReadLockGlobal: {
-//                    comp::as::ReadLockGlobal &ins = static_cast<comp::as::ReadLockGlobal &>(*ii);
+//                    comp::as::ReadLockGlobal &ins = static_cast<const comp::as::ReadLockGlobal &>(ii);
 //                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
 //                    builder.CreateCall(helper.lf_gv_read_lock, args);
 //                    break;
 //                }
 //                case comp::as::Instruction::Kind::ReadUnlockGlobal: {
-//                    comp::as::ReadUnlockGlobal &ins = static_cast<comp::as::ReadUnlockGlobal &>(*ii);
+//                    comp::as::ReadUnlockGlobal &ins = static_cast<const comp::as::ReadUnlockGlobal &>(ii);
 //                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
 //                    builder.CreateCall(helper.lf_gv_read_unlock, args);
 //                    break;
 //                }
 //                case comp::as::Instruction::Kind::WriteLockGlobal: {
-//                    comp::as::WriteLockGlobal &ins = static_cast<comp::as::WriteLockGlobal &>(*ii);
+//                    comp::as::WriteLockGlobal &ins = static_cast<const comp::as::WriteLockGlobal &>(ii);
 //                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
 //                    builder.CreateCall(helper.lf_gv_write_lock, args);
 //                    break;
 //                }
 //                case comp::as::Instruction::Kind::WriteUnlockGlobal: {
-//                    comp::as::WriteUnlockGlobal &ins = static_cast<comp::as::WriteUnlockGlobal &>(*ii);
+//                    comp::as::WriteUnlockGlobal &ins = static_cast<const comp::as::WriteUnlockGlobal &>(ii);
 //                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
 //                    builder.CreateCall(helper.lf_gv_write_unlock, args);
 //                    break;
 //                }
 //                case comp::as::Instruction::Kind::GetGlobal: {
-//                    comp::as::GetGlobal &ins = static_cast<comp::as::GetGlobal &>(*ii);
+//                    comp::as::GetGlobal &ins = static_cast<const comp::as::GetGlobal &>(ii);
 //                    llvm::Value *args[2] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()) };
 //                    temps[ins.getDest().getIndex()] = builder.CreateCall(helper.lf_gv_get, args);
 //                    break;
 //                }
 //                case comp::as::Instruction::Kind::SetGlobal: {
-//                    comp::as::SetGlobal &ins = static_cast<comp::as::SetGlobal &>(*ii);
+//                    comp::as::SetGlobal &ins = static_cast<const comp::as::SetGlobal &>(ii);
 //                    llvm::Value *args[3] = { rtctx, helper.wrapId(ins.getGlobalVariable().getId()),
 //                            temps[ins.getSrc().getIndex()] };
 //                    builder.CreateCall(helper.lf_gv_set, args);
 //                    break;
 //                }
 //                case comp::as::Instruction::Kind::MakeGlobal: {
-//                    comp::as::MakeGlobal &ins = static_cast<comp::as::MakeGlobal &>(*ii);
+//                    comp::as::MakeGlobal &ins = static_cast<const comp::as::MakeGlobal &>(ii);
 //                    llvm::Value *args[4] = {
 //                            rtctx,
 //                            helper.wrapId(ins.getGlobalVariable().getId()),
@@ -191,20 +191,20 @@ public:
                     break;
                 }
                 case comp::as::Instruction::Kind::BinaryOperator: {
-                    comp::as::BinaryOperator &ins = static_cast<comp::as::BinaryOperator &>(*ii);
+                    const comp::as::BinaryOperator &ins = static_cast<const comp::as::BinaryOperator &>(ii);
                     llvm::Value *args[2] = { temps[ins.getLeft().getIndex()], temps[ins.getRight().getIndex()] };
                     temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
                             helper.getBinaryOperator(ins.getOperator()), args);
                     break;
                 }
                 case comp::as::Instruction::Kind::Conversion: {
-                    comp::as::Conversion &ins = static_cast<comp::as::Conversion &>(*ii);
+                    const comp::as::Conversion &ins = static_cast<const comp::as::Conversion &>(ii);
                     temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
                             helper.getConversion(ins.getConversion()), temps[ins.getArg().getIndex()]);
                     break;
                 }
                 case comp::as::Instruction::Kind::Ret: {
-                    comp::as::Ret &ins = static_cast<comp::as::Ret &>(*ii);
+                    const comp::as::Ret &ins = static_cast<const comp::as::Ret &>(ii);
                     builder.CreateRet(temps[ins.getValue().getIndex()]);
                     break;
                 }
@@ -212,7 +212,7 @@ public:
                     builder.CreateRetVoid();
                     break;
                 case comp::as::Instruction::Kind::GetArg: {
-                    comp::as::GetArg &ins = static_cast<comp::as::GetArg &>(*ii);
+                    const comp::as::GetArg &ins = static_cast<const comp::as::GetArg &>(ii);
 
                     auto it = func->arg_begin();
                     Index i = ins.getIndex();
@@ -223,7 +223,7 @@ public:
                     break;
                 }
                 case comp::as::Instruction::Kind::Branch: {
-                    comp::as::Branch &ins = static_cast<comp::as::Branch &>(*ii);
+                    const comp::as::Branch &ins = static_cast<const comp::as::Branch &>(ii);
                     builder.CreateCondBr(
                             builder.CreateCall(helper.lf_qvalue_to_qbool, temps[ins.getCondition().getIndex()]),
                             mapBlock(ins.getTrueDest(), "if.true"),
@@ -231,12 +231,12 @@ public:
                     break;
                 }
                 case comp::as::Instruction::Kind::Jump: {
-                    comp::as::Jump &ins = static_cast<comp::as::Jump &>(*ii);
+                    const comp::as::Jump &ins = static_cast<const comp::as::Jump &>(ii);
                     builder.CreateBr(mapBlock(ins.getDest(), "jump.dest"));
                     break;
                 }
                 default:
-                    QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ii->getKind()));
+                    QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ii.getKind()));
             }
         }
     }

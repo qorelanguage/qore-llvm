@@ -35,15 +35,19 @@
 #include "qore/BinaryOperator.h"
 #include "qore/Conversion.h"
 #include "qore/String.h"
-#include "qore/comp/as/Instruction.h"
-#include "qore/comp/as/Block.h"
-#include "qore/comp/as/Temp.h"
+#include "qore/core/code/Instruction.h"
+#include "qore/core/code/Block.h"
 #include "qore/core/GlobalVariable.h"
 #include "qore/core/LocalVariable.h"
+#include "qore/core/code/Temp.h"
 
 namespace qore {
 namespace comp {
 namespace as {
+
+using Temp = code::Temp;
+using Instruction = code::Instruction;
+using Block = code::Block;
 
 class IntConstant : public Instruction {
 
@@ -182,11 +186,15 @@ private:
 class RefDec : public Instruction {
 
 public:
-    RefDec(Temp temp, Block *lpad) : Instruction(lpad), temp(temp) {
+    RefDec(Temp temp, const Block *lpad) : temp(temp), lpad(lpad) {
     }
 
     Kind getKind() const override {
         return Kind::RefDec;
+    }
+
+    const Block *getLpad() const override {
+        return lpad;
     }
 
     Temp getTemp() const {
@@ -195,6 +203,7 @@ public:
 
 private:
     Temp temp;
+    const Block *lpad;
 };
 
 class RefDecNoexcept : public Instruction {
@@ -373,12 +382,16 @@ public:
 class BinaryOperator : public Instruction {
 
 public:
-    BinaryOperator(Temp dest, const qore::BinaryOperator &op, Temp left, Temp right, Block *lpad)
-            : Instruction(lpad), dest(dest), op(op), left(left), right(right) {
+    BinaryOperator(Temp dest, const qore::BinaryOperator &op, Temp left, Temp right, const Block *lpad)
+            : dest(dest), op(op), left(left), right(right), lpad(lpad) {
     }
 
     Kind getKind() const override {
         return Kind::BinaryOperator;
+    }
+
+    const Block *getLpad() const override {
+        return lpad;
     }
 
     Temp getDest() const {
@@ -402,17 +415,22 @@ private:
     const qore::BinaryOperator &op;
     Temp left;
     Temp right;
+    const Block *lpad;
 };
 
 class Conversion : public Instruction {
 
 public:
-    Conversion(Temp dest, const qore::Conversion &conversion, Temp arg, Block *lpad)
-            : Instruction(lpad), dest(dest), conversion(conversion), arg(arg) {
+    Conversion(Temp dest, const qore::Conversion &conversion, Temp arg, const Block *lpad)
+            : dest(dest), conversion(conversion), arg(arg), lpad(lpad) {
     }
 
     Kind getKind() const override {
         return Kind::Conversion;
+    }
+
+    const Block *getLpad() const override {
+        return lpad;
     }
 
     Temp getDest() const {
@@ -431,6 +449,7 @@ private:
     Temp dest;
     const qore::Conversion &conversion;
     Temp arg;
+    const Block *lpad;
 };
 
 class RetVoid : public Instruction {

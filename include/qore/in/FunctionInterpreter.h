@@ -49,152 +49,152 @@ public:
 
     void run(comp::as::Block &bb) {
         const comp::as::Block *b = &bb;
-        Index i = 0;
+        comp::as::Block::Iterator ins = b->begin();
         while (true) {
-            assert(i < b->instructions.size());
-            comp::as::Instruction *ins = b->instructions[i++].get();
+            assert(ins != b->end());
+            ++ins;
             try {
                 switch (ins->getKind()) {
                     case comp::as::Instruction::Kind::IntConstant:
-                        exec(static_cast<comp::as::IntConstant *>(ins));
+                        exec(static_cast<const comp::as::IntConstant &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::GetLocal:
-                        exec(static_cast<comp::as::GetLocal *>(ins));
+                        exec(static_cast<const comp::as::GetLocal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::SetLocal:
-                        exec(static_cast<comp::as::SetLocal *>(ins));
+                        exec(static_cast<const comp::as::SetLocal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::LoadString:
-                        exec(static_cast<comp::as::LoadString *>(ins));
+                        exec(static_cast<const comp::as::LoadString &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::RefInc:
-                        exec(static_cast<comp::as::RefInc *>(ins));
+                        exec(static_cast<const comp::as::RefInc &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::RefDec:
-                        exec(static_cast<comp::as::RefDec *>(ins));
+                        exec(static_cast<const comp::as::RefDec &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::ReadLockGlobal:
-                        exec(static_cast<comp::as::ReadLockGlobal *>(ins));
+                        exec(static_cast<const comp::as::ReadLockGlobal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::ReadUnlockGlobal:
-                        exec(static_cast<comp::as::ReadUnlockGlobal *>(ins));
+                        exec(static_cast<const comp::as::ReadUnlockGlobal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::WriteLockGlobal:
-                        exec(static_cast<comp::as::WriteLockGlobal *>(ins));
+                        exec(static_cast<const comp::as::WriteLockGlobal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::WriteUnlockGlobal:
-                        exec(static_cast<comp::as::WriteUnlockGlobal *>(ins));
+                        exec(static_cast<const comp::as::WriteUnlockGlobal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::GetGlobal:
-                        exec(static_cast<comp::as::GetGlobal *>(ins));
+                        exec(static_cast<const comp::as::GetGlobal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::SetGlobal:
-                        exec(static_cast<comp::as::SetGlobal *>(ins));
+                        exec(static_cast<const comp::as::SetGlobal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::MakeGlobal:
-                        exec(static_cast<comp::as::MakeGlobal *>(ins));
+                        exec(static_cast<const comp::as::MakeGlobal &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::BinaryOperator:
-                        exec(static_cast<comp::as::BinaryOperator *>(ins));
+                        exec(static_cast<const comp::as::BinaryOperator &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::Conversion:
-                        exec(static_cast<comp::as::Conversion *>(ins));
+                        exec(static_cast<const comp::as::Conversion &>(*ins));
                         break;
                     case comp::as::Instruction::Kind::RetVoid:
                         return;
                     case comp::as::Instruction::Kind::Jump: {
-                        comp::as::Jump &ii = static_cast<comp::as::Jump &>(*ins);
+                        const comp::as::Jump &ii = static_cast<const comp::as::Jump &>(*ins);
                         b = &ii.getDest();
-                        i = 0;
+                        ins = b->begin();
                         break;
                     }
                     default:
                         QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins->getKind()));
                 }
             } catch (Exception &e) {
-                if (ins->getLpad()) {
-                    QORE_UNREACHABLE("Exception thrown by an instruction with no landing pad");
+                if (!ins->getLpad()) {
+                    throw;
                 }
                 //  set 'e' as the 'current exception'
                 //      - it is only used during cleanup (by the refDecNoThrow instruction), i.e. the code between
                 //        the start of the lpad block and either rethrow/resume or jump to user's catch block, which
                 //        will store it to a user-defined local variable
                 b = ins->getLpad();
-                i = 0;
+                ins = b->begin();
             }
         }
     }
 
 private:
-    void exec(comp::as::IntConstant *ins) {
+    void exec(const comp::as::IntConstant &ins) {
         qvalue v;
-        v.i = ins->getValue();
-        f.setTemp(ins->getDest(), v);
+        v.i = ins.getValue();
+        f.setTemp(ins.getDest(), v);
     }
 
-    void exec(comp::as::GetLocal *ins) {
-        f.setTemp(ins->getDest(), f.getLocal(ins->getLocalVariable()));
+    void exec(const comp::as::GetLocal &ins) {
+        f.setTemp(ins.getDest(), f.getLocal(ins.getLocalVariable()));
     }
 
-    void exec(comp::as::SetLocal *ins) {
-        f.setLocal(ins->getLocalVariable(), f.getTemp(ins->getSrc()));
+    void exec(const comp::as::SetLocal &ins) {
+        f.setLocal(ins.getLocalVariable(), f.getTemp(ins.getSrc()));
     }
 
-    void exec(comp::as::LoadString *ins) {
+    void exec(const comp::as::LoadString &ins) {
         qvalue v;
-        v.p = ins->getString();
-        f.setTemp(ins->getDest(), v);
+        v.p = ins.getString();
+        f.setTemp(ins.getDest(), v);
     }
 
-    void exec(comp::as::RefInc *ins) {
-        qvalue v = f.getTemp(ins->getTemp());
+    void exec(const comp::as::RefInc &ins) {
+        qvalue v = f.getTemp(ins.getTemp());
         if (v.p) {
             v.p->incRefCount();
         }
     }
 
-    void exec(comp::as::RefDec *ins) {
-        qvalue v = f.getTemp(ins->getTemp());
+    void exec(const comp::as::RefDec &ins) {
+        qvalue v = f.getTemp(ins.getTemp());
         if (v.p) {
             v.p->decRefCount();
         }
     }
 
-    void exec(comp::as::ReadLockGlobal *ins) {
-        ins->getGlobalVariable().readLock();
+    void exec(const comp::as::ReadLockGlobal &ins) {
+        ins.getGlobalVariable().readLock();
     }
 
-    void exec(comp::as::ReadUnlockGlobal *ins) {
-        ins->getGlobalVariable().readUnlock();
+    void exec(const comp::as::ReadUnlockGlobal &ins) {
+        ins.getGlobalVariable().readUnlock();
     }
 
-    void exec(comp::as::WriteLockGlobal *ins) {
-        ins->getGlobalVariable().writeLock();
+    void exec(const comp::as::WriteLockGlobal &ins) {
+        ins.getGlobalVariable().writeLock();
     }
 
-    void exec(comp::as::WriteUnlockGlobal *ins) {
-        ins->getGlobalVariable().writeUnlock();
+    void exec(const comp::as::WriteUnlockGlobal &ins) {
+        ins.getGlobalVariable().writeUnlock();
     }
 
-    void exec(comp::as::GetGlobal *ins) {
-        f.setTemp(ins->getDest(), ins->getGlobalVariable().getValue());
+    void exec(const comp::as::GetGlobal &ins) {
+        f.setTemp(ins.getDest(), ins.getGlobalVariable().getValue());
     }
 
-    void exec(comp::as::SetGlobal *ins) {
-        ins->getGlobalVariable().setValue(f.getTemp(ins->getSrc()));
+    void exec(const comp::as::SetGlobal &ins) {
+        ins.getGlobalVariable().setValue(f.getTemp(ins.getSrc()));
     }
 
-    void exec(comp::as::MakeGlobal *ins) {
-        ins->getGlobalVariable().initValue(f.getTemp(ins->getInitValue()));
+    void exec(const comp::as::MakeGlobal &ins) {
+        ins.getGlobalVariable().initValue(f.getTemp(ins.getInitValue()));
     }
 
-    void exec(comp::as::BinaryOperator *ins) {
-        f.setTemp(ins->getDest(),
-                ins->getOperator().getFunction()(f.getTemp(ins->getLeft()), f.getTemp(ins->getRight())));
+    void exec(const comp::as::BinaryOperator &ins) {
+        f.setTemp(ins.getDest(),
+                ins.getOperator().getFunction()(f.getTemp(ins.getLeft()), f.getTemp(ins.getRight())));
     }
 
-    void exec(comp::as::Conversion *ins) {
-        f.setTemp(ins->getDest(), ins->getConversion().getFunction()(f.getTemp(ins->getArg())));
+    void exec(const comp::as::Conversion &ins) {
+        f.setTemp(ins.getDest(), ins.getConversion().getFunction()(f.getTemp(ins.getArg())));
     }
 
 private:

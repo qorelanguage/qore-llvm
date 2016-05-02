@@ -56,7 +56,7 @@ as::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator i
 
         if (iit->lpad == nullptr) {
             iit->lpad = createBlock();
-            iit->lpad->instructions.push_back(util::make_unique<as::Jump>(*iit->b));
+            iit->lpad->append(util::make_unique<as::Jump>(*iit->b));
         }
         return iit->lpad;
     }
@@ -76,9 +76,9 @@ as::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator i
     }
 
     if (iit != cleanupScopes.rend()) {
-        currentBlock->instructions.push_back(util::make_unique<as::Jump>(*iit->b));
+        currentBlock->append(util::make_unique<as::Jump>(*iit->b));
     } else {
-        currentBlock->instructions.push_back(util::make_unique<as::Rethrow>());
+        currentBlock->append(util::make_unique<as::Rethrow>());
     }
 
     currentBlock = savedCurrent;

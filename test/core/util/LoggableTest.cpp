@@ -23,42 +23,46 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
-///
-/// \file
-/// \brief TODO file description
-///
-//------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_BLOCK_H_
-#define INCLUDE_QORE_COMP_AS_BLOCK_H_
-
-#include <string>
-#include <vector>
-#include "qore/comp/as/Instruction.h"
+#include "gtest/gtest.h"
+#include "qore/core/util/Logging.h"
+#include "qore/core/util/Loggable.h"
 
 namespace qore {
-namespace comp {
-namespace as {
+namespace util {
 
-class Block {
+#ifdef QORE_LOGGING
 
-public:
-    using Ptr = std::unique_ptr<Block>;
-
-public:
-    static Ptr create() {
-        return Ptr(new Block());
-    }
-
-private:
-    Block() {
-    }
-
-public:
-    std::vector<Instruction::Ptr> instructions;
+class LoggableTest : public Loggable, public testing::Test {
+protected:
+    WRITE_TO_LOG("X");
 };
 
-} // namespace as
-} // namespace comp
-} // namespace qore
+TEST_F(LoggableTest, writeToLog) {
+    std::ostringstream str;
 
-#endif // INCLUDE_QORE_COMP_AS_BLOCK_H_
+    EXPECT_EQ(&str, &Loggable::writeToLog(str));
+    EXPECT_EQ("abstract", str.str());
+}
+
+TEST_F(LoggableTest, streamOperatorRef) {
+    std::ostringstream str;
+    str << *this;
+    EXPECT_EQ("X <0x", str.str().substr(0, 5));
+}
+
+TEST_F(LoggableTest, streamOperatorPtr) {
+    std::ostringstream str;
+    str << this;
+    EXPECT_EQ("X <0x", str.str().substr(0, 5));
+}
+
+TEST_F(LoggableTest, streamOperatorPtrNullptr) {
+    std::ostringstream str;
+    LoggableTest *l = nullptr;
+    str << l;
+    EXPECT_EQ("<nullptr>", str.str());
+}
+#endif
+
+} // namespace util
+} // namespace qore

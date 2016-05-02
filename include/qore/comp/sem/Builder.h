@@ -35,8 +35,6 @@
 #include <string>
 #include <vector>
 #include "qore/core/util/Util.h"
-#include "qore/comp/as/Temp.h"
-#include "qore/comp/as/Block.h"
 #include "qore/comp/as/Script.h"
 #include "qore/comp/as/is.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
@@ -106,14 +104,14 @@ private:
     void x(const LocalVariable &lv) {
         as::Block *b = createBlock();
         as::Temp temp = getFreeTemp();      //all temps are free at this point
-        b->instructions.push_back(util::make_unique<as::GetLocal>(temp, lv));
-        b->instructions.push_back(util::make_unique<as::RefDecNoexcept>(temp));
+        b->append(util::make_unique<as::GetLocal>(temp, lv));
+        b->append(util::make_unique<as::RefDecNoexcept>(temp));
         setTempFree(temp);
         as::Block *b2 = fff(cleanupScopes.rbegin());
         if (b2) {
-            b->instructions.push_back(util::make_unique<as::Jump>(*b2));
+            b->append(util::make_unique<as::Jump>(*b2));
         } else {
-            b->instructions.push_back(util::make_unique<as::Rethrow>());
+            b->append(util::make_unique<as::Rethrow>());
         }
         cleanupScopes.emplace_back(lv, b);
     }
@@ -172,13 +170,13 @@ public:
 
     void addCleanup(as::Temp temp) {
         LOG("ADD CLEANUP " << temp.getIndex());
-        assert(std::find(cleanupTemps.begin(), cleanupTemps.end(), temp.getIndex()) == cleanupTemps.end());
-        cleanupTemps.push_back(temp.getIndex());
+        assert(std::find(cleanupTemps.begin(), cleanupTemps.end(), temp) == cleanupTemps.end());
+        cleanupTemps.push_back(temp);
     }
 
     void doneCleanup(as::Temp temp) {
         LOG("DONE CLEANUP " << temp.getIndex());
-        auto it = std::find(cleanupTemps.begin(), cleanupTemps.end(), temp.getIndex());
+        auto it = std::find(cleanupTemps.begin(), cleanupTemps.end(), temp);
         assert(it != cleanupTemps.end());
         cleanupTemps.erase(it);
     }
@@ -312,7 +310,7 @@ public:
     }
 
     as::Block *createBlock() {
-        as::Block::Ptr ptr = as::Block::create();
+        as::Block::Ptr ptr = as::Block::Ptr(new as::Block());
         as::Block *b = ptr.get();
         blocks.push_back(std::move(ptr));
         return b;
@@ -328,7 +326,7 @@ private:
         if (terminated) {
             QORE_NOT_IMPLEMENTED("");   //unreachable
         }
-        currentBlock->instructions.push_back(std::move(ins));
+        currentBlock->append(std::move(ins));
     }
 
     as::Block *getLandingPad();
@@ -350,7 +348,7 @@ private:
     as::Block *currentBlock;
     bool terminated;
 
-    std::vector<Index> cleanupTemps;
+    std::vector<as::Temp> cleanupTemps;
     std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
     std::vector<LocalVariable::Ptr> locals;
