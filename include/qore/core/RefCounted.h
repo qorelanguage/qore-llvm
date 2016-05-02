@@ -25,34 +25,39 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the base class for reference-counted objects and related utility classes.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_REFCOUNTED_H_
-#define INCLUDE_QORE_REFCOUNTED_H_
+#ifndef INCLUDE_QORE_CORE_REFCOUNTED_H_
+#define INCLUDE_QORE_CORE_REFCOUNTED_H_
 
 #include <atomic>
+#include "qore/core/Defs.h"
 #include "qore/core/util/Debug.h"
 #include "qore/core/util/Loggable.h"
-#include "qore/Exception.h"
 
 namespace qore {
 
+/**
+ * \brief Base class for reference-counted objects.
+ *
+ * Instances must be allocated on the heap and the delete operator must not be used on them explicitly.
+ */
 class RefCounted : public util::Loggable {
 
-private:
-    using RefCount = std::size_t;
-
 public:
-    RefCounted() : refCount(1) {
-    }
-
+    /**
+     * \brief Increases the reference count.
+     */
     void incRefCount() noexcept {
         LOG(this << " incRefCount: " << refCount << "->" << (refCount + 1));
         ++refCount;
     }
 
-    void decRefCount() noexcept(false) {
+    /**
+     * \brief Decreases the reference count and if it drops to zero, commits suicide.
+     */
+    void decRefCount() noexcept {
         LOG(this << " decRefCount: " << refCount << "->" << (refCount - 1));
         if (!--refCount) {
             delete this;
@@ -60,7 +65,16 @@ public:
     }
 
 protected:
-    virtual ~RefCounted() noexcept(false) {
+    /**
+     * \brief Constructs the object with reference count set to one.
+     */
+    RefCounted() : refCount(1) {
+    }
+
+    /**
+     * \brief Destructor that will be invoked when the reference count drops to zero.
+     */
+    virtual ~RefCounted() {
     }
 
 private:
@@ -70,56 +84,101 @@ private:
     RefCounted &operator=(RefCounted &&) = delete;
 
 private:
-    std::atomic<RefCount> refCount;
+    std::atomic<Size> refCount;
 };
 
+/**
+ * \brief Simple smart pointer for reference-counted objects.
+ */
 template<typename T>
 class auto_ptr {
 
 public:
+    /**
+     * \brief Creates the pointer.
+     *
+     * Takes over the responsibility of decreasing the reference count of the object.
+     * \param ptr the object with increased reference count.
+     */
     explicit auto_ptr(T *ptr = nullptr) : ptr(ptr) {
     }
 
+    /**
+     * \brief Decreases the reference count of the object.
+     */
     ~auto_ptr() {
         if (ptr) {
-            try {
-                ptr->decRefCount();
-            } catch (Exception &e) {
-                QORE_NOT_IMPLEMENTED("");
-            }
+            ptr->decRefCount();
         }
     }
 
+    /**
+     * \brief Move constructor.
+     *
+     * Takes over the responsibility of decreasing the reference count of the object.
+     * \param src the source pointer, will be left empty after this call
+     */
     auto_ptr(auto_ptr &&src) : ptr(src.ptr) {
         src.ptr = nullptr;
     }
 
+    /**
+     * \brief Move assignment.
+     *
+     * Takes over the responsibility of decreasing the reference count of the object.
+     * \param src the source pointer, will be left empty after this call
+     * \return this
+     */
     auto_ptr &operator=(auto_ptr &&src) {
         ptr = src.ptr;
         src.ptr = nullptr;
         return *this;
     }
 
+    /**
+     * \brief Dereferences the pointer.
+     * \return the object pointed to by this instance
+     */
     T &operator*() {
+        assert(ptr);
         return *get();
     }
 
+    /**
+     * \brief Dereferences the pointer.
+     * \return a pointer to the object pointed to by this instance
+     */
     T *operator->() {
+        assert(ptr);
         return get();
     }
 
+    /**
+     * \brief Returns a raw pointer to the object pointed to by this instance. Does not affect the referece count.
+     * \return a pointer to the object pointed to by this instance
+     */
     T *get() const {
         return ptr;
     }
 
+    /**
+     * \brief Returns true if this instance is not empty, i.e. points to some object.
+     */
     operator bool() const {
         return ptr != nullptr;
     }
 
+    /**
+     * \brief Returns true if this instance is empty, i.e. does not point to any object.
+     */
     bool operator!() const {
         return ptr == nullptr;
     }
 
+    /**
+     * \brief Duplicates the pointer by increasing the reference count of the object.
+     * \return a new smart pointer to the same object
+     */
     auto_ptr<T> dup() const {
         assert(ptr);
         ptr->incRefCount();
@@ -136,4 +195,4 @@ private:
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_REFCOUNTED_H_
+#endif // INCLUDE_QORE_CORE_REFCOUNTED_H_

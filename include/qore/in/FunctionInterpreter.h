@@ -36,6 +36,7 @@
 #include <vector>
 #include "qore/core/util/Debug.h"
 #include "qore/comp/as/is.h"
+#include "qore/core/Exception.h"
 
 namespace qore {
 namespace in {

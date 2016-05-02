@@ -34,7 +34,7 @@
 #include <string>
 #include "qore/BinaryOperator.h"
 #include "qore/Conversion.h"
-#include "qore/String.h"
+#include "qore/core/String.h"
 #include "qore/core/code/Instruction.h"
 #include "qore/core/code/Block.h"
 #include "qore/core/GlobalVariable.h"

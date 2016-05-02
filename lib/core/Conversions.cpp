@@ -32,7 +32,7 @@
 #include <cassert>
 #include "qore/Conversion.h"
 #include "qore/Int.h"
-#include "qore/String.h"
+#include "qore/core/String.h"
 #include "qore/core/Type.h"
 
 namespace qore {

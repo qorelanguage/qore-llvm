@@ -25,32 +25,69 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the String class which implements Qore's `string` type.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_ANY_H_
-#define INCLUDE_QORE_ANY_H_
+#ifndef INCLUDE_QORE_CORE_STRING_H_
+#define INCLUDE_QORE_CORE_STRING_H_
 
-#include "qore/RefCounted.h"
-#include "qore/core/Type.h"
+#include <string>
+#include "qore/core/Any.h"
+#include "qore/core/Value.h"
 
 namespace qore {
 
-class Any : public RefCounted {
+/**
+ * \brief Implementation of Qore's `string` type.
+ */
+class String : public Any {
 
 public:
-    Any() {
+    using Ptr = auto_ptr<String>;           //!< Pointer type.
+
+public:
+    /**
+     * \brief Creates a new instance.
+     * \param str the value of the string
+     */
+    explicit String(std::string str) : str(std::move(str)) {
+        LOG(this << " created");
     }
 
-    virtual const Type &getType() const = 0;
+    const Type &getType() const override {
+        return Type::String;
+    }
+
+    /**
+     * \brief Converts the string to an integer.
+     * \return integer value represented by this string
+     * \todo define the conversion - should it throw or behave like current qore does?
+     */
+    qint toInt() const;
+
+    /**
+     * \brief Appends another string to the string represented by this instance.
+     *
+     * Does not change this instance, instead returns the concatenation.
+     * \param right the string to append
+     * \return the concatenation of this string with `right`
+     */
+    String *append(String *right) const {
+        return new String(str + right->str);
+    }
+
+protected:
+    ~String() {
+        LOG(this << " destroyed");
+    }
+
+protected:
+    WRITE_TO_LOG("String \"" << str << "\"")
 
 private:
-    Any(const Any &) = delete;
-    Any(Any &&) = delete;
-    Any &operator=(const Any &) = delete;
-    Any &operator=(Any &&) = delete;
+    std::string str;
 };
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_ANY_H_
+#endif // INCLUDE_QORE_CORE_STRING_H_

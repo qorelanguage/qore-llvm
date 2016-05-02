@@ -25,51 +25,20 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief StringLiteralRefExpression definition.
+/// \brief Defines the runtime exception class.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_EXPR_STRINGLITERALREFEXPRESSION_H_
-#define INCLUDE_QORE_COMP_SEM_EXPR_STRINGLITERALREFEXPRESSION_H_
-
-#include "qore/comp/sem/expr/Expression.h"
-#include "qore/core/String.h"
+#ifndef INCLUDE_QORE_CORE_EXCEPTION_H_
+#define INCLUDE_QORE_CORE_EXCEPTION_H_
 
 namespace qore {
-namespace comp {
-namespace sem {
 
-class StringLiteralRefExpression : public Expression {
-
-public:
-    using Ptr = std::unique_ptr<StringLiteralRefExpression>;
-
-public:
-    static Ptr create(qore::String::Ptr string) {
-        return Ptr(new StringLiteralRefExpression(std::move(string)));
-    }
-
-    Kind getKind() const override {
-        return Kind::StringLiteralRef;
-    }
-
-    const Type &getType() const override {
-        return Type::String;
-    }
-
-    qore::String::Ptr getString() const {
-        return string.dup();
-    }
-
-private:
-    explicit StringLiteralRefExpression(qore::String::Ptr string) : string(std::move(string)) {
-    }
-
-private:
-    qore::String::Ptr string;
+/**
+ * \brief Describes an exception.
+ */
+class Exception {
 };
 
-} // namespace sem
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_EXPR_STRINGLITERALREFEXPRESSION_H_
+#endif // INCLUDE_QORE_CORE_EXCEPTION_H_

@@ -25,55 +25,19 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implementation of String methods.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_STRING_H_
-#define INCLUDE_QORE_STRING_H_
-
+#include "qore/core/String.h"
 #include <iostream>
-#include <string>
-#include "qore/Any.h"
 
 namespace qore {
 
-class String : public Any {
-
-public:
-    using Ptr = auto_ptr<String>;
-
-public:
-    explicit String(std::string str) : str(std::move(str)) {
-        LOG(this << " created");
-    }
-
-    const Type &getType() const override {
-        return Type::String;
-    }
-
-    qint toInt() const {
-        std::stringstream s(str);
-        qint i;
-        s >> i;
-        return i;
-    }
-
-    String *append(String *right) {
-        return new String(str + right->str);
-    }
-
-protected:
-    ~String() {
-        LOG(this << " destroyed");
-    }
-
-protected:
-    WRITE_TO_LOG("String \"" << str << "\"")
-
-private:
-    std::string str;
-};
+qint String::toInt() const {
+    std::stringstream s(str);
+    qint i;
+    s >> i;
+    return i;
+}
 
 } // namespace qore
-
-#endif // INCLUDE_QORE_STRING_H_

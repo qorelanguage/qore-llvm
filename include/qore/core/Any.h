@@ -25,20 +25,39 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the base class for all Qore values that are reference-counted.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_EXCEPTION_H_
-#define INCLUDE_QORE_EXCEPTION_H_
+#ifndef INCLUDE_QORE_CORE_ANY_H_
+#define INCLUDE_QORE_CORE_ANY_H_
 
-#include "qore/core/Value.h"
+#include "qore/core/RefCounted.h"
+#include "qore/core/Type.h"
 
 namespace qore {
 
-struct Exception {
-    qvalue value;
+/**
+ * \brief Base class for all Qore values that are reference-counted.
+ */
+class Any : public RefCounted {
+
+public:
+    /**
+     * \brief Returns the type of the value represented by this instance.
+     * \return the type of the value represented by this instance
+     */
+    virtual const Type &getType() const = 0;
+
+protected:
+    Any() = default;
+
+private:
+    Any(const Any &) = delete;
+    Any(Any &&) = delete;
+    Any &operator=(const Any &) = delete;
+    Any &operator=(Any &&) = delete;
 };
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_EXCEPTION_H_
+#endif // INCLUDE_QORE_CORE_ANY_H_

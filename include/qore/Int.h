@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_INT_H_
 #define INCLUDE_QORE_INT_H_
 
-#include "qore/Any.h"
+#include "qore/core/Any.h"
 
 namespace qore {
 
