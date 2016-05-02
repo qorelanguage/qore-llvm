@@ -33,7 +33,7 @@
 
 #include <memory>
 #include <string>
-#include "qore/core/Size.h"
+#include "qore/core/Defs.h"
 #include "qore/core/Type.h"
 
 namespace qore {
@@ -53,14 +53,14 @@ public:
      * \param name the name of the local variable
      * \param type the type of the local variable
      */
-    LocalVariable(Size index, std::string name, const Type &type) : index(index), name(std::move(name)), type(type) {
+    LocalVariable(Index index, std::string name, const Type &type) : index(index), name(std::move(name)), type(type) {
     }
 
     /**
      * \brief Returns the index of the local variable.
      * @return the index of the local variable
      */
-    Size getIndex() const {
+    Index getIndex() const {
         return index;
     }
 
@@ -81,7 +81,7 @@ public:
     }
 
 private:
-    Size index;
+    Index index;
     std::string name;
     const Type &type;
 };

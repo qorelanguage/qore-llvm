@@ -74,7 +74,7 @@ void FunctionScope::analyze() {
     Statement::Ptr body = core.doPass1(*this, *node.body);
 
     Builder b;
-    Id index = 0;
+    Index index = 0;
     for (auto it = node.params.begin(); it != node.params.end(); ++it) {
         LocalVariableInfo &lv = *args[std::get<1>(*it).str];
         b.startOfArgumentLifetime(core.ctx, lv, index++);

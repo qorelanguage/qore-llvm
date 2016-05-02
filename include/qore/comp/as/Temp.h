@@ -31,7 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_AS_TEMP_H_
 #define INCLUDE_QORE_COMP_AS_TEMP_H_
 
-#include "qore/Id.h"
+#include "qore/core/Defs.h"
 
 namespace qore {
 namespace comp {
@@ -40,15 +40,11 @@ namespace as {
 class Temp {
 
 public:
-    explicit Temp(Id index) : index(index) {
+    explicit Temp(Index index) : index(index) {
     }
 
-    Id getIndex() const {
+    Index getIndex() const {
         return index;
-    }
-
-    bool isValid() const {
-        return index != InvalidId;
     }
 
     Temp(const Temp &) = default;
@@ -57,7 +53,7 @@ public:
     Temp &operator=(Temp &&) = default;
 
 private:
-    Id index;
+    Index index;
 };
 
 } // namespace as

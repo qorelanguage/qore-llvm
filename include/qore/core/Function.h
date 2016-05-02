@@ -34,7 +34,6 @@
 #include <cassert>
 #include <string>
 #include <vector>
-#include "qore/Id.h"
 #include "qore/comp/as/Block.h"
 #include "qore/core/FunctionType.h"
 #include "qore/core/LocalVariable.h"

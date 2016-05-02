@@ -49,7 +49,7 @@ public:
 
     void run(comp::as::Block &bb) {
         const comp::as::Block *b = &bb;
-        Id i = 0;
+        Index i = 0;
         while (true) {
             assert(i < b->instructions.size());
             comp::as::Instruction *ins = b->instructions[i++].get();

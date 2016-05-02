@@ -58,9 +58,9 @@ void CodeGen::process(comp::as::Script &script) {
                 llvm::FunctionType::get(ret, args, false),
                 llvm::Function::ExternalLinkage, name, helper.module.get());
         functions[f.get()] = func;
-        Id i = 0;
+        Index i = 0;
         for (auto it = func->arg_begin(); it != func->arg_end(); ++it) {
-            (*it).setName(llvm::Twine("arg").concat(llvm::Twine(i)));
+            (*it).setName(llvm::Twine("arg").concat(llvm::Twine(i++)));
         }
     }
 

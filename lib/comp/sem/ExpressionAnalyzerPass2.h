@@ -89,13 +89,15 @@ class ExpressionAnalyzerPass2 {
 public:
     using ReturnType = void;
 
+    static constexpr Index InvalidIndex = -1;
+
 public:
     ExpressionAnalyzerPass2(Core &core, Builder &builder, as::Temp dest) : core(core), builder(builder),
             dest(dest), freeDest(false), destInCleanup(false) {
     }
 
     ExpressionAnalyzerPass2(Core &core, Builder &builder) : core(core), builder(builder),
-            dest(InvalidId), freeDest(false), destInCleanup(false) {
+            dest(InvalidIndex), freeDest(false), destInCleanup(false) {
     }
 
     ~ExpressionAnalyzerPass2() {
@@ -216,7 +218,7 @@ public:
 
 private:
     void noSideEffect() {
-        if (!dest.isValid()) {
+        if (dest.getIndex() == InvalidIndex) {
             dest = builder.getFreeTemp();
             freeDest = true;
             QORE_NOT_IMPLEMENTED("report error");
@@ -225,7 +227,7 @@ private:
     }
 
     void withSideEffect() {
-        if (!dest.isValid()) {
+        if (dest.getIndex() == InvalidIndex) {
             dest = builder.getFreeTemp();
             freeDest = true;
         }

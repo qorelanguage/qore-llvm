@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_CORE_FUNCTIONTYPE_H_
 
 #include <vector>
-#include "qore/core/Size.h"
+#include "qore/core/Defs.h"
 #include "qore/core/Type.h"
 
 namespace qore {

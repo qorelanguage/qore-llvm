@@ -132,8 +132,8 @@ public:
     }
 
 private:
-    std::map<Id, qvalue> temps;
-    std::map<Id, qvalue> locals;
+    std::map<Index, qvalue> temps;
+    std::map<Index, qvalue> locals;
 };
 
 class Interactive {

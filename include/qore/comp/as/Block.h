@@ -34,7 +34,6 @@
 #include <string>
 #include <vector>
 #include "qore/comp/as/Instruction.h"
-#include "qore/Id.h"
 
 namespace qore {
 namespace comp {
@@ -46,16 +45,15 @@ public:
     using Ptr = std::unique_ptr<Block>;
 
 public:
-    static Ptr create(Id id) {
-        return Ptr(new Block(id));
+    static Ptr create() {
+        return Ptr(new Block());
     }
 
 private:
-    explicit Block(Id id) : id(id) {
+    Block() {
     }
 
 public:
-    Id id;
     std::vector<Instruction::Ptr> instructions;
 };
 

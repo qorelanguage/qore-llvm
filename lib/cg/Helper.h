@@ -123,7 +123,7 @@ public:
                 llvm::Function::ExternalLinkage, name, module.get());
     }
 
-    llvm::Value *wrapId(Id id) {
+    llvm::Value *wrapId(Index id) {
         return llvm::ConstantInt::get(lt_Id, id, false);
     }
 

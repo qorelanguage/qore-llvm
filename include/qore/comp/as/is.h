@@ -32,7 +32,6 @@
 #define INCLUDE_QORE_COMP_AS_IS_H_
 
 #include <string>
-#include "qore/Id.h"
 #include "qore/BinaryOperator.h"
 #include "qore/Conversion.h"
 #include "qore/String.h"
@@ -95,7 +94,7 @@ private:
 class GetArg : public Instruction {
 
 public:
-    GetArg(Temp dest, Id index) : dest(dest), index(index) {
+    GetArg(Temp dest, Index index) : dest(dest), index(index) {
     }
 
     Kind getKind() const override {
@@ -106,13 +105,13 @@ public:
         return dest;
     }
 
-    Id getIndex() const {
+    Index getIndex() const {
         return index;
     }
 
 private:
     Temp dest;
-    Id index;
+    Index index;
 };
 
 

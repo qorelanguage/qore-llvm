@@ -25,21 +25,26 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the Size type.
+/// \brief Defines basic types.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CORE_SIZE_H_
-#define INCLUDE_QORE_CORE_SIZE_H_
+#ifndef INCLUDE_QORE_CORE_DEFS_H_
+#define INCLUDE_QORE_CORE_DEFS_H_
 
-#include <cstdint>
+#include <cstddef>
 
 namespace qore {
 
 /**
- * \brief An unsigned integer type used for collections sizes or element counts.
+ * \brief An unsigned integer type used for collection sizes or element counts.
  */
-using Size = uint64_t;
+using Size = std::size_t;
 
-}
+/**
+ * \brief An unsigned integer type used for indices to collections.
+ */
+using Index = Size;
 
-#endif // INCLUDE_QORE_CORE_SIZE_H_
+} // namespace qore
+
+#endif // INCLUDE_QORE_CORE_DEFS_H_

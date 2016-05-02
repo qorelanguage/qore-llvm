@@ -65,7 +65,7 @@ public:
         return terminated;
     }
 
-    void startOfArgumentLifetime(Context &ctx, LocalVariableInfo &lv, Id argIndex) {
+    void startOfArgumentLifetime(Context &ctx, LocalVariableInfo &lv, Index argIndex) {
         const LocalVariable &aslv = alloc(ctx, lv);
         assert(aslv.getIndex() == argIndex);
 
@@ -289,7 +289,7 @@ public:
 //        terminated = true;
 //    }
 
-    void createGetArg(as::Temp dest, Id index) {
+    void createGetArg(as::Temp dest, Index index) {
         add(util::make_unique<as::GetArg>(dest, index));
     }
 
@@ -312,7 +312,7 @@ public:
     }
 
     as::Block *createBlock() {
-        as::Block::Ptr ptr = as::Block::create(blocks.size());
+        as::Block::Ptr ptr = as::Block::create();
         as::Block *b = ptr.get();
         blocks.push_back(std::move(ptr));
         return b;
@@ -350,12 +350,12 @@ private:
     as::Block *currentBlock;
     bool terminated;
 
-    std::vector<Id> cleanupTemps;
+    std::vector<Index> cleanupTemps;
     std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
     std::vector<LocalVariable::Ptr> locals;
 
-    Id tempCount;
+    Size tempCount;
     as::Block *entry;
 };
 

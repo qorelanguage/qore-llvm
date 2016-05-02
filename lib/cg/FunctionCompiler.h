@@ -215,7 +215,7 @@ public:
                     comp::as::GetArg &ins = static_cast<comp::as::GetArg &>(*ii);
 
                     auto it = func->arg_begin();
-                    Id i = ins.getIndex();
+                    Index i = ins.getIndex();
                     while (i--) {
                         ++it;
                     }
