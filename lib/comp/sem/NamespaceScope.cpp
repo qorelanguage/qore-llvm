@@ -90,7 +90,8 @@ void NamespaceScope::processNamespaceDeclaration(ast::Namespace &node) {
             throw ReportedError();
         }
 
-        Ptr ptr = util::make_unique<NamespaceScope>(rt.addNamespace(core.ctx.getString(name)), *this, location);
+        Namespace &rtNs = rt.addNamespace(core.ctx.getString(name), location);
+        Ptr ptr = util::make_unique<NamespaceScope>(rtNs, *this);
         ns = ptr.get();
         namespaces[name] = std::move(ptr);
     } else {
@@ -110,7 +111,7 @@ void NamespaceScope::processClassDeclaration(ast::Class &node) {
     NamespaceScope *ns = findNamespace(ptr->getName());
     if (old || ns) {
         report(DiagId::SemaDuplicateClassName, ptr->getLocation()) << ptr->getName() << getNameForDiag();
-        report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : ns->getLocation());
+        report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : ns->rt.getLocation());
         throw ReportedError();
     }
 

@@ -9,7 +9,6 @@ add_library(comp STATIC
     Parser-routine.cpp
     Parser-statement.cpp
     Scanner.cpp
-    Source.cpp
     SourceManager.cpp
     Token.cpp
     sem/Analyzer.cpp

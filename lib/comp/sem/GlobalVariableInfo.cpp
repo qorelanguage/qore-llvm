@@ -40,7 +40,7 @@ namespace sem {
 void GlobalVariableInfo::pass2() {
     assert(rt == nullptr);
     const Type &type = parent.resolveType(node.type);
-    rt = &parent.getRt().addGlobalVariable(core.ctx.getString(getName()), type);
+    rt = &parent.getRt().addGlobalVariable(core.ctx.getString(getName()), type, getLocation());
     core.addInitializer(GlobalVariableInitializationStatement::create(*rt, core.defaultFor(type)));
 }
 

@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_AST_NODE_H_
 
 #include <memory>
-#include "qore/comp/SourceLocation.h"
+#include "qore/core/SourceLocation.h"
 
 namespace qore {
 namespace comp {

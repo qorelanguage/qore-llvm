@@ -56,18 +56,19 @@ void test(bool file, std::string str) {
     qore::comp::StringTable stringTable;
     qore::comp::DiagManager diagMgr(stringTable);
     qore::comp::SourceManager srcMgr(diagMgr);
-    qore::DiagPrinter diagPrinter(srcMgr);
+    qore::DiagPrinter diagPrinter;
     diagMgr.addProcessor(&diagPrinter);
-    qore::comp::Context ctx(stringTable, diagMgr, srcMgr);
-    qore::comp::Source &src = file ? srcMgr.createFromFile(str) : srcMgr.createFromString("<noname>", str);
+    qore::Env env;
+    qore::comp::Context ctx(env, stringTable, diagMgr, srcMgr);
+    qore::SourceInfo &info = env.createSourceInfo(file ? str : "<noname>");
+    qore::comp::Source &src = file ? srcMgr.createFromFile(info, str) : srcMgr.createFromString(info, str);
     qore::comp::DirectiveProcessor dp(ctx, src);
     qore::comp::Parser parser(ctx, dp);
 
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    qore::Env rtEnv;
-    qore::comp::as::Script::Ptr sss = qore::comp::sem::analyze(ctx, rtEnv, *script);
+    qore::comp::as::Script::Ptr sss = qore::comp::sem::analyze(ctx, env, *script);
     LOG("-------------------------------------------------------------------------------");
     qore::in::Interpreter::interpret(*sss);
     LOG("-------------------------------------------------------------------------------");

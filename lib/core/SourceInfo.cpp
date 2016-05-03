@@ -25,43 +25,13 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Representation of source locations in Qore scripts.
+/// \brief SourceInfo implementation.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SOURCELOCATION_H_
-#define INCLUDE_QORE_COMP_SOURCELOCATION_H_
+#include "qore/core/SourceInfo.h"
 
 namespace qore {
-namespace comp {
 
-/**
- * \brief Represents a location in the source code.
- */
-struct SourceLocation {
+const SourceInfo SourceInfo::Invalid("<unknown source>");
 
-public:
-    int sourceId;           //!< Id of the source.
-    int offset;             //!< Offset in the source.
-
-public:
-    /**
-     * \brief Constructs an empty location instance.
-     *
-     * The instance should be filled in later using copy assignment.
-     */
-    SourceLocation() : sourceId(-1), offset(-1) {
-    }
-
-    /**
-     * \brief Constructs a location with given parameters.
-     * \param sourceId the source id
-     * \param offset the offset in the source
-     */
-    SourceLocation(int sourceId, int offset) : sourceId(sourceId), offset(offset) {
-    }
-};
-
-} // namespace comp
 } // namespace qore
-
-#endif // INCLUDE_QORE_COMP_SOURCELOCATION_H_

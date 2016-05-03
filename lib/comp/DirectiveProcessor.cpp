@@ -113,7 +113,7 @@ void DirectiveProcessor::processDirective(Source &src, SourceLocation location, 
             if ((arg[0] == '"' && arg[arg.length() - 1] == '"') || (arg[0] == '\'' && arg[arg.length() - 1] == '\'')) {
                 arg = arg.substr(1, arg.length() - 2);
             }
-            srcStack.push(ctx.getSrcMgr().createFromFile(arg, location));
+            srcStack.push(ctx.getSrcMgr().createFromFile(ctx.getEnv().createSourceInfo(arg), arg, location));
             break;
     }
 }

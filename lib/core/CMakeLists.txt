@@ -4,6 +4,7 @@ add_library(core STATIC
     Conversion.cpp
     Conversions.cpp
     Data.cpp
+    SourceInfo.cpp
     String.cpp
     util/Logging.cpp
 )

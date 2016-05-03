@@ -31,6 +31,8 @@
 #ifndef INCLUDE_QORE_CORE_ENV_H_
 #define INCLUDE_QORE_CORE_ENV_H_
 
+#include <string>
+#include <vector>
 #include "qore/core/Namespace.h"
 
 namespace qore {
@@ -47,7 +49,7 @@ public:
     /**
      * \brief Default constructor.
      */
-    Env() : rootNamespace("") {
+    Env() : rootNamespace("", SourceLocation()) {
     }
 
     /**
@@ -58,6 +60,18 @@ public:
         return rootNamespace;
     }
 
+    /**
+     * \brief Creates a new source info.
+     * \param name the name of the source
+     * \return newly created source info
+     */
+    SourceInfo &createSourceInfo(std::string name) {
+        std::unique_ptr<SourceInfo> ptr = util::make_unique<SourceInfo>(std::move(name));
+        SourceInfo &info = *ptr;
+        sourceInfos.push_back(std::move(ptr));
+        return info;
+    }
+
 private:
     Env(const Env &) = delete;
     Env(Env &&) = delete;
@@ -65,6 +79,7 @@ private:
     Env &operator=(Env &&) = delete;
 
 private:
+    std::vector<std::unique_ptr<SourceInfo>> sourceInfos;
     Namespace rootNamespace;
 };
 

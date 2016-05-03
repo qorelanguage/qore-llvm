@@ -57,8 +57,8 @@ public:
     NamespaceScope(Core &core, Namespace &rt) : core(core), rt(rt), parentNamespace(nullptr) {
     }
 
-    NamespaceScope(Namespace &rt, NamespaceScope &parentNamespace, SourceLocation location)
-            : core(parentNamespace.core), rt(rt), parentNamespace(&parentNamespace), location(location) {
+    NamespaceScope(Namespace &rt, NamespaceScope &parentNamespace)
+            : core(parentNamespace.core), rt(rt), parentNamespace(&parentNamespace) {
     }
 
     Namespace &getRt() {
@@ -67,11 +67,6 @@ public:
 
     std::string getFullName() const {
         return isRoot() ? "" : parentNamespace->getFullName() + "::" + rt.getName();
-    }
-
-    SourceLocation getLocation() const {
-        assert(!isRoot());
-        return location;
     }
 
     bool isRoot() const {
@@ -198,7 +193,6 @@ private:
     Core &core;
     Namespace &rt;
     NamespaceScope *parentNamespace;
-    SourceLocation location;
     std::map<String::Ref, Ptr> namespaces;
     std::map<String::Ref, ClassScope::Ptr> classes;
     std::map<String::Ref, GlobalVariableInfo::Ptr> globalVariables;

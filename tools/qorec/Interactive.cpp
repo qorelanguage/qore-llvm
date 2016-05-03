@@ -46,7 +46,7 @@ class StdinWrapper : public comp::ITokenStream {
 
 public:
     explicit StdinWrapper(comp::Context &ctx)
-            : src(ctx.getSrcMgr().createFromString("<stdin>", "")), dp(ctx, src) {
+            : src(ctx.getSrcMgr().createFromString(ctx.getEnv().createSourceInfo("<stdin>"), "")), dp(ctx, src) {
     }
 
     comp::Token read(Mode mode) override {
@@ -147,8 +147,7 @@ public:
         Parser parser(compCtx, dp);
         Builder mainBuilder;
         Core analyzer(compCtx);
-        Env rtEnv;
-        NamespaceScope root(analyzer, rtEnv.getRootNamespace());
+        NamespaceScope root(analyzer, compCtx.getEnv().getRootNamespace());
         InteractiveScope topScope(root);
         BlockScopeImpl blockScope(topScope);
         TopLevelCtx topLevelCtx;
@@ -188,9 +187,10 @@ void interactive() {
     comp::StringTable stringTable;
     comp::DiagManager diagMgr(stringTable);
     comp::SourceManager srcMgr(diagMgr);
-    DiagPrinter diagPrinter(srcMgr);
+    DiagPrinter diagPrinter;
     diagMgr.addProcessor(&diagPrinter);
-    comp::Context ctx(stringTable, diagMgr, srcMgr);
+    Env env;
+    comp::Context ctx(env, stringTable, diagMgr, srcMgr);
     comp::sem::Interactive i(ctx);
     i.doIt();
 }

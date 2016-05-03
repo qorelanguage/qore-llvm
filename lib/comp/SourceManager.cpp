@@ -38,25 +38,25 @@
 namespace qore {
 namespace comp {
 
-Source &SourceManager::create(std::string name, std::vector<char> data) {
-    std::vector<int> nulls;
+Source &SourceManager::create(const SourceInfo &info, std::vector<char> data) {
+    assert(sources.find(&info) == sources.end());
 
+    bool hasNulls = false;
     for (auto it = std::find(data.begin(), data.end(), 0); it != data.end(); it = std::find(it, data.end(), 0)) {
-        nulls.push_back(static_cast<int>(it - data.begin()));
+        hasNulls = true;
         *it = ' ';
     }
-
-    int id = static_cast<int>(sources.size());
-    sources.push_back(util::make_unique<Source>(std::move(name), id, std::move(data)));
-
-    for (int offset : nulls) {
-        diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(id, offset));
+    if (hasNulls) {
+        diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(info, 0, 1, 1));
     }
 
-    return *sources.back();
+    std::unique_ptr<Source> ptr = util::make_unique<Source>(info, std::move(data));
+    Source &src = *ptr;
+    sources[&info] = std::move(ptr);
+    return src;
 }
 
-Source &SourceManager::createFromFile(std::string fileName, SourceLocation location) {
+Source &SourceManager::createFromFile(SourceInfo &info, std::string fileName, SourceLocation location) {
     std::string fullName = includePath + fileName;
     std::ifstream fileStream(fullName, std::ios::binary);
     std::vector<char> data{std::istreambuf_iterator<char>(fileStream), std::istreambuf_iterator<char>()};
@@ -64,7 +64,8 @@ Source &SourceManager::createFromFile(std::string fileName, SourceLocation locat
         diagMgr.report(DiagId::CompScriptFileIoError, location) << fullName;
         data.clear();
     }
-    return create(std::move(fullName), std::move(data));
+    info.setFullName(std::move(fullName));
+    return create(info, std::move(data));
 }
 
 } // namespace comp

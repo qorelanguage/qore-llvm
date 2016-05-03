@@ -134,7 +134,7 @@ private:
 
     std::string lexeme() {
         ensureToken();
-        return ctx.getSrcMgr().get(token.location.sourceId).getRange(token.location.offset, token.length);
+        return ctx.getLexeme(token);
     }
 
     void recoverDoNothing() {}

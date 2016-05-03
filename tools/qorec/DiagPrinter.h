@@ -32,7 +32,6 @@
 #define TOOLS_QOREC_DIAGPRINTER_H_
 
 #include <iostream>
-#include <utility>
 
 namespace qore {
 
@@ -44,20 +43,14 @@ class DiagPrinter : public comp::IDiagProcessor {
 public:
     /**
      * \brief Constructs the instance.
-     * \param srcMgr used for decoding source locations
      */
-    explicit DiagPrinter(const comp::SourceManager &srcMgr) : srcMgr(srcMgr) {
+    DiagPrinter() {
     }
 
     void process(comp::DiagRecord &record) override {
-        comp::Source &src = srcMgr.get(record.location.sourceId);
-        std::pair<int, int> l = src.decodeLocation(record.location.offset);
-        std::cerr << src.getName() << ':' << l.first << ':' << l.second
+        std::cerr << record.location.getSourceInfo().getName() << ':' << record.location
                 << ": " << record.level << ": " << record.code << ": " << record.message << '\n';
     }
-
-private:
-    const comp::SourceManager &srcMgr;
 };
 
 } // namespace qore

@@ -35,7 +35,6 @@
 #include <utility>
 #include <vector>
 #include "qore/comp/DiagManager.h"
-#include "qore/comp/SourceLocation.h"
 #include "qore/comp/String.h"
 
 namespace qore {

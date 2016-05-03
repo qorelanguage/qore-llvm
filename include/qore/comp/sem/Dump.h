@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_DUMP_H_
 
 #include <string>
+#include <utility>
 
 namespace qore {
 namespace comp {
@@ -49,7 +50,7 @@ public:
         if (ns.isRoot()) {
             os << "-root namespace";
         } else {
-            os << "-namespace " << ns.rt.getName() << " @" << ctx.decode(ns.location);
+            os << "-namespace " << ns.rt.getName() << " @" << ns.rt.getLocation();
         }
         os << "\n";
         for (auto &n : ns.namespaces) {
@@ -65,12 +66,12 @@ public:
     }
 
     void dump(const ClassScope &cs) {
-        os << indent << "-class " << ctx.getString(cs.getName()) << " @" << ctx.decode(cs.getLocation()) << "\n";
+        os << indent << "-class " << ctx.getString(cs.getName()) << " @" << cs.getLocation() << "\n";
     }
 
     void dump(const GlobalVariableInfo &gv) {
         os << indent << "-our " << gv.getType() << " " << ctx.getString(gv.getName())
-                << " @" << ctx.decode(gv.getLocation()) << "\n";
+                << " @" << gv.getLocation() << "\n";
     }
 
 private:

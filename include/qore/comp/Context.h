@@ -33,9 +33,11 @@
 
 #include <string>
 #include <utility>
+#include "qore/core/Env.h"
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/SourceManager.h"
 #include "qore/comp/String.h"
+#include "qore/comp/Token.h"
 
 namespace qore {
 namespace comp {
@@ -49,8 +51,16 @@ public:
     /**
      * \brief Creates a new context.
      */
-    explicit Context(StringTable &stringTable, DiagManager &diagMgr, SourceManager &srcMgr)
-            : stringTable(stringTable), diagMgr(diagMgr), srcMgr(srcMgr) {
+    explicit Context(Env &env, StringTable &stringTable, DiagManager &diagMgr, SourceManager &srcMgr)
+            : env(env), stringTable(stringTable), diagMgr(diagMgr), srcMgr(srcMgr) {
+    }
+
+    /**
+     * \brief Returns the runtime environment.
+     * \return the runtime environment
+     */
+    Env &getEnv() {
+        return env;
     }
 
     /**
@@ -87,16 +97,27 @@ public:
         return diagMgr.report(diagId, location);
     }
 
+    /**
+     * \brief Returns the string identified by given reference.
+     *
+     * Shortcut for
+     * \code
+     *     getStringTable().get(ref);
+     * \endcode
+     * \param ref a valid reference to the string table
+     * \return the string value
+     */
     const std::string &getString(String::Ref ref) const {
         return stringTable.get(ref);
     }
 
-    std::string decode(const SourceLocation &location) const {
-        assert(location.sourceId >= 0);
-        std::pair<int, int> l = srcMgr.get(location.sourceId).decodeLocation(location.offset);
-        std::ostringstream str;
-        str << l.first << ":" << l.second;
-        return str.str();
+    /**
+     * \brief Returns the lexeme of a token.
+     * \param token the token
+     * \return the characters of the token
+     */
+    std::string getLexeme(const Token &token) const {
+        return srcMgr.getRange(token.location, token.length);
     }
 
 private:
@@ -106,6 +127,7 @@ private:
     Context &operator=(Context &&) = delete;
 
 private:
+    Env &env;
     StringTable &stringTable;
     DiagManager &diagMgr;
     SourceManager &srcMgr;

@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_CORE_GLOBALVARIABLE_H_
 
 #include <string>
+#include "qore/core/SourceLocation.h"
 #include "qore/core/Type.h"
 #include "qore/core/Value.h"
 
@@ -55,8 +56,10 @@ public:
      * \brief Creates the global variable.
      * \param name the name of the variable
      * \param type the type of the variable
+     * \param location the location of the declaration in the source
      */
-    GlobalVariable(std::string name, const Type &type) : name(std::move(name)), type(type), hasValue(false) {
+    GlobalVariable(std::string name, const Type &type, SourceLocation location) : name(std::move(name)), type(type),
+            location(location), hasValue(false) {
     }
 
     /**
@@ -83,6 +86,14 @@ public:
      */
     const Type &getType() const {
         return type;
+    }
+
+    /**
+     * \brief Returns the location of the declaration.
+     * \return the location of the declaration
+     */
+    const SourceLocation &getLocation() const {
+        return location;
     }
 
     /**
@@ -165,6 +176,7 @@ private:
 private:
     std::string name;
     const Type &type;
+    SourceLocation location;
     bool hasValue;
     qvalue value;
 };

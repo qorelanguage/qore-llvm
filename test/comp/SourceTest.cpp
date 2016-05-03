@@ -31,15 +31,12 @@ namespace comp {
 
 struct SourceTest : ::testing::Test {
     std::string str{"ab\ncd"};
-    Source src{"abc", 123, std::vector<char>(str.begin(), str.end())};
+    SourceInfo info{"abc"};
+    Source src{info, std::vector<char>(str.begin(), str.end())};
 };
 
 TEST_F(SourceTest, getName) {
-    EXPECT_EQ("abc", src.getName());
-}
-
-TEST_F(SourceTest, getId) {
-    EXPECT_EQ(123, src.getId());
+    EXPECT_EQ(info, src.getInfo());
 }
 
 TEST_F(SourceTest, read) {
@@ -102,8 +99,8 @@ TEST_F(SourceTest, getMarkLocation) {
     src.read();
     src.read();
     SourceLocation l = src.getMarkLocation();
-    EXPECT_EQ(123, l.sourceId);
-    EXPECT_EQ(1, l.offset);
+    EXPECT_EQ(info, l.getSourceInfo());
+    EXPECT_EQ(1, l.getOffset());
 }
 
 TEST_F(SourceTest, getMarkedString) {
@@ -124,61 +121,67 @@ TEST_F(SourceTest, getMarkedLength) {
     EXPECT_EQ(3, src.getMarkedLength());
 }
 
+static std::tuple<int, int, int> loc(Source &src) {
+    src.setMark();
+    src.read();
+    SourceLocation l = src.getMarkLocation();
+    return std::make_tuple(l.getOffset(), l.getLine(), l.getColumn());
+}
+
 TEST_F(SourceTest, decodeLocation) {
-    EXPECT_EQ(std::make_pair(0, 0), src.decodeLocation(-1));
-    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0));
-    EXPECT_EQ(std::make_pair(1, 2), src.decodeLocation(1));
-    EXPECT_EQ(std::make_pair(1, 3), src.decodeLocation(2));
-    EXPECT_EQ(std::make_pair(2, 1), src.decodeLocation(3));
-    EXPECT_EQ(std::make_pair(2, 2), src.decodeLocation(4));
-    EXPECT_EQ(std::make_pair(2, 3), src.decodeLocation(5));
-    EXPECT_EQ(std::make_pair(0, 0), src.decodeLocation(6));
+    EXPECT_EQ(std::make_tuple(0, 1, 1), loc(src));
+    EXPECT_EQ(std::make_tuple(1, 1, 2), loc(src));
+    EXPECT_EQ(std::make_tuple(2, 1, 3), loc(src));
+    EXPECT_EQ(std::make_tuple(3, 2, 1), loc(src));
+    EXPECT_EQ(std::make_tuple(4, 2, 2), loc(src));
+    EXPECT_EQ(std::make_tuple(5, 2, 3), loc(src));
 }
 
 TEST_F(SourceTest, decodeLocationNewLines) {
     std::string str{"a\r\nc\nd\re"};
-    Source src{"abc", 123, std::vector<char>(str.begin(), str.end())};
+    Source src{info, std::vector<char>(str.begin(), str.end())};
 
-    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0));
-    EXPECT_EQ(std::make_pair(1, 2), src.decodeLocation(1));
-    EXPECT_EQ(std::make_pair(1, 3), src.decodeLocation(2));
-    EXPECT_EQ(std::make_pair(2, 1), src.decodeLocation(3));
-    EXPECT_EQ(std::make_pair(2, 2), src.decodeLocation(4));
-    EXPECT_EQ(std::make_pair(3, 1), src.decodeLocation(5));
-    EXPECT_EQ(std::make_pair(3, 2), src.decodeLocation(6));
-    EXPECT_EQ(std::make_pair(4, 1), src.decodeLocation(7));
-    EXPECT_EQ(std::make_pair(4, 2), src.decodeLocation(8));
+    EXPECT_EQ(std::make_tuple(0, 1, 1), loc(src));
+    EXPECT_EQ(std::make_tuple(1, 1, 2), loc(src));
+    EXPECT_EQ(std::make_tuple(2, 1, 3), loc(src));
+    EXPECT_EQ(std::make_tuple(3, 2, 1), loc(src));
+    EXPECT_EQ(std::make_tuple(4, 2, 2), loc(src));
+    EXPECT_EQ(std::make_tuple(5, 3, 1), loc(src));
+    EXPECT_EQ(std::make_tuple(6, 3, 2), loc(src));
+    EXPECT_EQ(std::make_tuple(7, 4, 1), loc(src));
+    EXPECT_EQ(std::make_tuple(8, 4, 2), loc(src));
 }
 
 TEST_F(SourceTest, decodeLocationTabs) {
     std::string str{"\ta\taa\taaa\taaaa\ta"};
-    Source src{"abc", 123, std::vector<char>(str.begin(), str.end())};
+    Source src{info, std::vector<char>(str.begin(), str.end())};
 
-    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0));
-    EXPECT_EQ(std::make_pair(1, 5), src.decodeLocation(1));
-    EXPECT_EQ(std::make_pair(1, 6), src.decodeLocation(2));
-    EXPECT_EQ(std::make_pair(1, 9), src.decodeLocation(3));
-    EXPECT_EQ(std::make_pair(1, 10), src.decodeLocation(4));
-    EXPECT_EQ(std::make_pair(1, 11), src.decodeLocation(5));
-    EXPECT_EQ(std::make_pair(1, 13), src.decodeLocation(6));
-    EXPECT_EQ(std::make_pair(1, 14), src.decodeLocation(7));
-    EXPECT_EQ(std::make_pair(1, 15), src.decodeLocation(8));
-    EXPECT_EQ(std::make_pair(1, 16), src.decodeLocation(9));
-    EXPECT_EQ(std::make_pair(1, 17), src.decodeLocation(10));
-    EXPECT_EQ(std::make_pair(1, 18), src.decodeLocation(11));
-    EXPECT_EQ(std::make_pair(1, 19), src.decodeLocation(12));
-    EXPECT_EQ(std::make_pair(1, 20), src.decodeLocation(13));
-    EXPECT_EQ(std::make_pair(1, 21), src.decodeLocation(14));
-    EXPECT_EQ(std::make_pair(1, 25), src.decodeLocation(15));
-    EXPECT_EQ(std::make_pair(1, 26), src.decodeLocation(16));
+    EXPECT_EQ(std::make_tuple(0, 1, 1), loc(src));
+    EXPECT_EQ(std::make_tuple(1, 1, 5), loc(src));
+    EXPECT_EQ(std::make_tuple(2, 1, 6), loc(src));
+    EXPECT_EQ(std::make_tuple(3, 1, 9), loc(src));
+    EXPECT_EQ(std::make_tuple(4, 1, 10), loc(src));
+    EXPECT_EQ(std::make_tuple(5, 1, 11), loc(src));
+    EXPECT_EQ(std::make_tuple(6, 1, 13), loc(src));
+    EXPECT_EQ(std::make_tuple(7, 1, 14), loc(src));
+    EXPECT_EQ(std::make_tuple(8, 1, 15), loc(src));
+    EXPECT_EQ(std::make_tuple(9, 1, 16), loc(src));
+    EXPECT_EQ(std::make_tuple(10, 1, 17), loc(src));
+    EXPECT_EQ(std::make_tuple(11, 1, 18), loc(src));
+    EXPECT_EQ(std::make_tuple(12, 1, 19), loc(src));
+    EXPECT_EQ(std::make_tuple(13, 1, 20), loc(src));
+    EXPECT_EQ(std::make_tuple(14, 1, 21), loc(src));
+    EXPECT_EQ(std::make_tuple(15, 1, 25), loc(src));
+    EXPECT_EQ(std::make_tuple(16, 1, 26), loc(src));
 
-    EXPECT_EQ(std::make_pair(1, 1), src.decodeLocation(0, 2));
-    EXPECT_EQ(std::make_pair(1, 3), src.decodeLocation(1, 2));
-    EXPECT_EQ(std::make_pair(1, 4), src.decodeLocation(2, 2));
-    EXPECT_EQ(std::make_pair(1, 5), src.decodeLocation(3, 2));
-    EXPECT_EQ(std::make_pair(1, 6), src.decodeLocation(4, 2));
-    EXPECT_EQ(std::make_pair(1, 7), src.decodeLocation(5, 2));
-    EXPECT_EQ(std::make_pair(1, 9), src.decodeLocation(6, 2));
+//tabSize == 2:
+//    EXPECT_EQ(std::make_tuple(0, 1, 1), loc(src));
+//    EXPECT_EQ(std::make_tuple(1, 1, 3), loc(src));
+//    EXPECT_EQ(std::make_tuple(2, 1, 4), loc(src));
+//    EXPECT_EQ(std::make_tuple(3, 1, 5), loc(src));
+//    EXPECT_EQ(std::make_tuple(4, 1, 6), loc(src));
+//    EXPECT_EQ(std::make_tuple(5, 1, 7), loc(src));
+//    EXPECT_EQ(std::make_tuple(6, 1, 9), loc(src));
 }
 
 TEST_F(SourceTest, getRange) {

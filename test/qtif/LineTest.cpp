@@ -43,16 +43,15 @@ public:
 
     virtual void checkEnd() = 0;
     virtual bool checkLine(const std::string &) = 0;
-    virtual bool checkDiag(qore::comp::Source &src, qore::comp::DiagRecord &record) {
-        QTIF_REPORT << formatDiagRecord(src, record);
+    virtual bool checkDiag(qore::comp::DiagRecord &record) {
+        QTIF_REPORT << formatDiagRecord(record);
         return false;
     }
 
 protected:
-    std::string formatDiagRecord(qore::comp::Source &src, qore::comp::DiagRecord &record) {
+    std::string formatDiagRecord(qore::comp::DiagRecord &record) {
         std::ostringstream s;
-        std::pair<int, int> l = src.decodeLocation(record.location.offset);
-        s << "unexpected " << record.level << " at " << l.first << ':' << l.second << "\n"
+        s << "unexpected " << record.level << " at " << record.location << "\n"
                 << "  id: " << record.id << "\n"
                 << "  code: " << record.code << "\n"
                 << "  message: " << record.message;
@@ -145,20 +144,18 @@ public:
         return true;
     }
 
-    bool checkDiag(qore::comp::Source &src, qore::comp::DiagRecord &record) override {
+    bool checkDiag(qore::comp::DiagRecord &record) override {
         bool match = true;
 
         std::ostringstream id;
         id << record.id;
 
-        std::pair<int, int> l = src.decodeLocation(record.location.offset);
-
         match &= id.str() == expId;
         if (expLine >= 0) {
-            match &= expLine == l.first;
+            match &= expLine == record.location.getLine();
         }
         if (expColumn >= 0) {
-            match &= expColumn == l.second;
+            match &= expColumn == record.location.getColumn();
         }
         if (expMsgMatched) {
             std::regex r(expMsg);
@@ -166,7 +163,7 @@ public:
         }
 
         if (!match) {
-            QTIF_REPORT << formatDiagRecord(src, record) << "\nexpected:\n" << describe();
+            QTIF_REPORT << formatDiagRecord(record) << "\nexpected:\n" << describe();
         }
         return true;
     }
@@ -227,11 +224,6 @@ LineTestOutput &LineTestOutput::operator<<(const std::string &str) {
     return *this;
 }
 
-LineTestOutput &LineTestOutput::operator<<(const qore::comp::SourceLocation &loc) {
-    std::pair<int, int> l = lineTest.getSrc().decodeLocation(loc.offset);
-    return *this << '@' << l.first << ':' << l.second;
-}
-
 LineTestOutput &LineTestOutput::operator<<(int i) {
     std::ostringstream s;
     s << i;
@@ -250,8 +242,8 @@ void LineTestDiagProcessor::process(qore::comp::DiagRecord &record) {
 }
 
 LineTest::LineTest(const std::string &includePath) : diagMgr(stringTable),
-        srcMgr(diagMgr, std::string(TEST_INPUT_DIR) + includePath), ctx(stringTable, diagMgr, srcMgr),
-        output(*this), diagProcessor(*this), sourceId(-1) {
+        srcMgr(diagMgr, std::string(TEST_INPUT_DIR) + includePath), ctx(env, stringTable, diagMgr, srcMgr),
+        output(*this), diagProcessor(*this), source(nullptr) {
     diagMgr.addProcessor(&diagProcessor);
 }
 
@@ -260,7 +252,8 @@ LineTest::~LineTest() {
 
 void LineTest::SetUp() {
     AbstractTest::SetUp();
-    sourceId = srcMgr.createFromString(getFileName(), std::string(getInput().begin(), getInput().end())).getId();
+    qore::SourceInfo &info = env.createSourceInfo(getFileName());
+    source = &srcMgr.createFromString(info, std::string(getInput().begin(), getInput().end()));
 }
 
 void LineTest::verify() {
@@ -275,7 +268,7 @@ void LineTest::processOutput(const std::string &str) {
 }
 
 void LineTest::processDiag(qore::comp::DiagRecord &record) {
-    if ((*current)->checkDiag(getSrc(), record)) {
+    if ((*current)->checkDiag(record)) {
         ++current;
     }
 }

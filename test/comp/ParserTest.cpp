@@ -46,13 +46,11 @@ QTIF_TEST_CASE(ParserTest, "parser/");
 TEST(AstCoverage, ArgList) {
     Token t1;
     Token t2;
-    t1.location.sourceId = 1;
-    t1.location.offset = 2;
-    t2.location.sourceId = 3;
-    t2.location.offset = 4;
+    t1.location = SourceLocation(SourceInfo::Invalid, 1, 2, 3);
+    t2.location = SourceLocation(SourceInfo::Invalid, 4, 5, 6);
     ast::ArgList::Ptr a = ast::ArgList::create(t1, ast::ArgList::Data(), t2);
-    EXPECT_EQ(1, a->getStart().sourceId);
-    EXPECT_EQ(2, a->getStart().offset);
+    EXPECT_EQ(1, a->getStart().getOffset());
+    EXPECT_EQ(4, a->getEnd().getOffset());
 }
 
 } // namespace comp

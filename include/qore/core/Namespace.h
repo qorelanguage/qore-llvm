@@ -52,8 +52,9 @@ public:
     /**
      * \brief Creates a namespace with given name.
      * \param name the name of the namespace
+     * \param location the location of the (first) declaration of the namespace
      */
-    explicit Namespace(std::string name) : name(std::move(name)) {
+    Namespace(std::string name, SourceLocation location) : name(std::move(name)), location(location) {
     }
 
     /**
@@ -65,13 +66,22 @@ public:
     }
 
     /**
+     * \brief Returns the location of the declaration.
+     * \return the location of the declaration
+     */
+    const SourceLocation &getLocation() const {
+        return location;
+    }
+
+    /**
      * \brief Creates a new namespace in this namespace.
      * \param name the name of the namespace
+     * \param location the location of the (first) declaration
      * \return newly created namespace
      */
-    Namespace &addNamespace(std::string name) {
+    Namespace &addNamespace(std::string name, SourceLocation location) {
         //assumes that name is unique
-        Ptr ptr = Ptr(new Namespace(std::move(name)));
+        Ptr ptr = Ptr(new Namespace(std::move(name), location));
         Namespace &ns = *ptr;
         namespaces.push_back(std::move(ptr));
         return ns;
@@ -83,10 +93,11 @@ public:
      * Note that global variables are created uninitialized (without value), see \ref GlobalVariable.
      * \param name the name of the global variable
      * \param type the type of the global variable
+     * \param location the location of the declaration in the source
      * \return newly created global variable
      */
-    GlobalVariable &addGlobalVariable(std::string name, const Type &type) {
-        GlobalVariable::Ptr ptr = GlobalVariable::Ptr(new GlobalVariable(std::move(name), type));
+    GlobalVariable &addGlobalVariable(std::string name, const Type &type, SourceLocation location) {
+        GlobalVariable::Ptr ptr = GlobalVariable::Ptr(new GlobalVariable(std::move(name), type, location));
         GlobalVariable &gv = *ptr;
         globalVariables.push_back(std::move(ptr));
         return gv;
@@ -112,6 +123,7 @@ private:
 
 private:
     std::string name;
+    SourceLocation location;
     std::vector<std::unique_ptr<Namespace>> namespaces;
     std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
     std::vector<std::unique_ptr<FunctionGroup>> functionGroups;
