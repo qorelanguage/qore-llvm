@@ -28,8 +28,8 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#include "qore/BinaryOperator.h"
-#include "qore/Conversion.h"
+#include "qore/core/BinaryOperator.h"
+#include "qore/core/Conversion.h"
 #include "qore/rt/BinaryOperators.h"
 #include "qore/rt/Conversions.h"
 

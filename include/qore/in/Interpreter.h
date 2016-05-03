@@ -54,11 +54,11 @@ public:
         return locals[lv.getIndex()];
     }
 
-    void setTemp(comp::as::Temp temp, qvalue value) {
+    void setTemp(code::Temp temp, qvalue value) {
         temps[temp.getIndex()] = value;
     }
 
-    qvalue getTemp(comp::as::Temp temp) {
+    qvalue getTemp(code::Temp temp) {
         return temps[temp.getIndex()];
     }
 

@@ -25,59 +25,61 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Implementation of Conversion methods.
+/// \brief Defines the GlobalSet instruction.
 ///
 //------------------------------------------------------------------------------
-#include "qore/core/Conversion.h"
+#ifndef INCLUDE_QORE_CORE_CODE_GLOBALSET_H_
+#define INCLUDE_QORE_CORE_CODE_GLOBALSET_H_
+
+#include "qore/core/GlobalVariable.h"
+#include "qore/core/code/Instruction.h"
+#include "qore/core/code/Temp.h"
 
 namespace qore {
+namespace code {
 
-const Conversion *Conversion::find(const Type &src, const Type &dest) {
-    //XXX can be replaced with a table
-    if (src == dest) {
-        return nullptr;
-    }
-    if (dest == Type::String) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftString) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Int) {
-            return &IntToString;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftBool) {
-        if (src == Type::Int) {
-            return &IntToBool;
-        }
-    }
-    if (dest == Type::SoftInt) {
-        if (src == Type::Int) {
-            return nullptr;
-        }
-        if (src == Type::String) {
-            return &StringToInt;
-        }
-    }
-    if (dest == Type::Any) {
-        if (src == Type::Int) {
-            return &IntToAny;
-        }
-        if (src == Type::String) {
-            return nullptr;
-        }
-    }
-    QORE_NOT_IMPLEMENTED("Conversion " << src.getName() << " to " << dest.getName());
-}
+/**
+ * \brief Instruction that stores a temporary value to a global variable.
+ *
+ * It is assumed that the thread executing this instruction has acquired the appropriate lock.
+ */
+class GlobalSet : public Instruction {
 
+public:
+    /**
+     * \brief Constructor.
+     * \param globalVariable the global variable
+     * \param src the temporary to store into the global variable
+     */
+    GlobalSet(GlobalVariable &globalVariable, Temp src) : globalVariable(globalVariable), src(src) {
+    }
+
+    Kind getKind() const override {
+        return Kind::GlobalSet;
+    }
+
+    /**
+     * \brief Returns the global variable.
+     * \return the global variable
+     */
+    GlobalVariable &getGlobalVariable() const {
+        return globalVariable;
+    }
+
+    /**
+     * \brief Returns the temporary to store into the global variable.
+     * \return the temporary to store into the global variable
+     */
+    Temp getSrc() const {
+        return src;
+    }
+
+private:
+    GlobalVariable &globalVariable;
+    Temp src;
+};
+
+} // namespace code
 } // namespace qore
+
+#endif // INCLUDE_QORE_CORE_CODE_GLOBALSET_H_

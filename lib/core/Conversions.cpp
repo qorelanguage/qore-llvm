@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/rt/Conversions.h"
 #include <cassert>
-#include "qore/Conversion.h"
+#include "qore/core/Conversion.h"
 #include "qore/Int.h"
 #include "qore/core/String.h"
 #include "qore/core/Type.h"

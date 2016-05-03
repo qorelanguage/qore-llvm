@@ -25,59 +25,54 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Implementation of Conversion methods.
+/// \brief Defines the RefDec instruction.
 ///
 //------------------------------------------------------------------------------
-#include "qore/core/Conversion.h"
+#ifndef INCLUDE_QORE_CORE_CODE_REFDEC_H_
+#define INCLUDE_QORE_CORE_CODE_REFDEC_H_
+
+#include "qore/core/code/Instruction.h"
+#include "qore/core/code/Temp.h"
 
 namespace qore {
+namespace code {
 
-const Conversion *Conversion::find(const Type &src, const Type &dest) {
-    //XXX can be replaced with a table
-    if (src == dest) {
-        return nullptr;
-    }
-    if (dest == Type::String) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftString) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Int) {
-            return &IntToString;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftBool) {
-        if (src == Type::Int) {
-            return &IntToBool;
-        }
-    }
-    if (dest == Type::SoftInt) {
-        if (src == Type::Int) {
-            return nullptr;
-        }
-        if (src == Type::String) {
-            return &StringToInt;
-        }
-    }
-    if (dest == Type::Any) {
-        if (src == Type::Int) {
-            return &IntToAny;
-        }
-        if (src == Type::String) {
-            return nullptr;
-        }
-    }
-    QORE_NOT_IMPLEMENTED("Conversion " << src.getName() << " to " << dest.getName());
-}
+/**
+ * \brief Instruction that decreases the reference count of a temporary value.
+ */
+class RefDec : public Instruction {
 
+public:
+    /**
+     * \brief Constructor.
+     * \param temp the temporary value whose reference count should be decreased
+     * \param lpad optional landing pad in case an exception occurs
+     */
+    RefDec(Temp temp, const Block *lpad) : temp(temp), lpad(lpad) {
+    }
+
+    Kind getKind() const override {
+        return Kind::RefDec;
+    }
+
+    const Block *getLpad() const override {
+        return lpad;
+    }
+
+    /**
+     * \brief Returns the temporary value whose reference count should be decreased.
+     * \return the temporary value whose reference count should be decreased
+     */
+    Temp getTemp() const {
+        return temp;
+    }
+
+private:
+    Temp temp;
+    const Block *lpad;
+};
+
+} // namespace code
 } // namespace qore
+
+#endif // INCLUDE_QORE_CORE_CODE_REFDEC_H_

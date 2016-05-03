@@ -25,68 +25,50 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the GlobalWriteLock instruction.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CONVERSION_H_
-#define INCLUDE_QORE_CONVERSION_H_
+#ifndef INCLUDE_QORE_CORE_CODE_GLOBALWRITELOCK_H_
+#define INCLUDE_QORE_CORE_CODE_GLOBALWRITELOCK_H_
 
-#include <string>
-#include "qore/core/Type.h"
-#include "qore/core/Value.h"
+#include "qore/core/GlobalVariable.h"
+#include "qore/core/code/Instruction.h"
 
 namespace qore {
+namespace code {
 
-class Conversion {
+/**
+ * \brief Instruction that acquires the write lock for a global variable.
+ *
+ * It is assumed that the thread executing this instruction is not holding any other locks.
+ */
+class GlobalWriteLock : public Instruction {
 
 public:
-    using Function = qvalue(qvalue);
-
-public:
-    static const Conversion *find(const Type &from, const Type &to);
-
-    const std::string &getFunctionName() const {
-        return functionName;
+    /**
+     * \brief Constructor.
+     * \param globalVariable the global variable
+     */
+    explicit GlobalWriteLock(GlobalVariable &globalVariable) : globalVariable(globalVariable) {
     }
 
-    const Function &getFunction() const {
-        return function;
+    Kind getKind() const override {
+        return Kind::GlobalWriteLock;
     }
 
-    const Type &getToType() const {
-        return to;
-    }
-
-    bool canThrow() const {
-        return throws;
-    }
-
-private:
-    Conversion(std::string functionName, const Function &function, const Type &from, const Type &to, bool throws)
-            : functionName(std::move(functionName)), function(function), from(from), to(to), throws(throws) {
+    /**
+     * \brief Returns the global variable.
+     * \return the global variable
+     */
+    GlobalVariable &getGlobalVariable() const {
+        return globalVariable;
     }
 
 private:
-    Conversion(const Conversion &) = delete;
-    Conversion(Conversion &&) = delete;
-    Conversion &operator=(const Conversion &) = delete;
-    Conversion &operator=(Conversion &&) = delete;
-
-private:
-    static const Conversion AnyToString;
-    static const Conversion IntToAny;
-    static const Conversion IntToBool;
-    static const Conversion IntToString;
-    static const Conversion StringToInt;
-
-private:
-    std::string functionName;
-    const Function &function;
-    const Type &from;
-    const Type &to;
-    bool throws;
+    GlobalVariable &globalVariable;
 };
 
+} // namespace code
 } // namespace qore
 
-#endif // INCLUDE_QORE_CONVERSION_H_
+#endif // INCLUDE_QORE_CORE_CODE_GLOBALWRITELOCK_H_

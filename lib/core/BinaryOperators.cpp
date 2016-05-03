@@ -31,7 +31,7 @@
 #include "qore/rt/BinaryOperators.h"
 #include <cassert>
 #include "qore/rt/Conversions.h"
-#include "qore/BinaryOperator.h"
+#include "qore/core/BinaryOperator.h"
 #include "qore/core/String.h"
 #include "qore/core/Type.h"
 
@@ -40,7 +40,7 @@ namespace rt {
 
 qvalue convertAny(qvalue src, const Type &type);
 
-qvalue binOpGeneric(BinaryOperator::Kind kind, qvalue left, qvalue right) {
+static qvalue binOpGeneric(BinaryOperator::Kind kind, qvalue left, qvalue right) {
     const BinaryOperator &op = BinaryOperator::find(kind, left.p->getType(), right.p->getType());
 
     //FIXME exceptions are not handled correctly

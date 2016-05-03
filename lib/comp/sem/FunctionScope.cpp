@@ -78,6 +78,7 @@ void FunctionScope::analyze() {
     for (auto it = node.params.begin(); it != node.params.end(); ++it) {
         LocalVariableInfo &lv = *args[std::get<1>(*it).str];
         b.startOfArgumentLifetime(core.ctx, lv, index++);
+        //both compiler and interpreter need to copy the function arguments into local slots (starting from 0)
     }
 
     StatementAnalyzerPass2 a2(core, b);

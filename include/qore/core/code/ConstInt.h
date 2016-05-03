@@ -25,59 +25,59 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Implementation of Conversion methods.
+/// \brief Defines the ConstInt instruction.
 ///
 //------------------------------------------------------------------------------
-#include "qore/core/Conversion.h"
+#ifndef INCLUDE_QORE_CORE_CODE_CONSTINT_H_
+#define INCLUDE_QORE_CORE_CODE_CONSTINT_H_
+
+#include "qore/core/Value.h"
+#include "qore/core/code/Instruction.h"
+#include "qore/core/code/Temp.h"
 
 namespace qore {
+namespace code {
 
-const Conversion *Conversion::find(const Type &src, const Type &dest) {
-    //XXX can be replaced with a table
-    if (src == dest) {
-        return nullptr;
-    }
-    if (dest == Type::String) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftString) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Int) {
-            return &IntToString;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftBool) {
-        if (src == Type::Int) {
-            return &IntToBool;
-        }
-    }
-    if (dest == Type::SoftInt) {
-        if (src == Type::Int) {
-            return nullptr;
-        }
-        if (src == Type::String) {
-            return &StringToInt;
-        }
-    }
-    if (dest == Type::Any) {
-        if (src == Type::Int) {
-            return &IntToAny;
-        }
-        if (src == Type::String) {
-            return nullptr;
-        }
-    }
-    QORE_NOT_IMPLEMENTED("Conversion " << src.getName() << " to " << dest.getName());
-}
+/**
+ * \brief Instruction that stores an integer constant to a temporary.
+ */
+class ConstInt : public Instruction {
 
+public:
+    /**
+     * \brief Constructor.
+     * \param dest the temporary to load the constant into
+     * \param value the constant value
+     */
+    ConstInt(Temp dest, qint value) : dest(dest), value(value) {
+    }
+
+    Kind getKind() const override {
+        return Kind::ConstInt;
+    }
+
+    /**
+     * \brief Return the temporary to load the constant into.
+     * \return the temporary to load the constant into
+     */
+    Temp getDest() const {
+        return dest;
+    }
+
+    /**
+     * \brief Returns the constant value.
+     * \return the constant value
+     */
+    qint getValue() const {
+        return value;
+    }
+
+private:
+    Temp dest;
+    qint value;
+};
+
+} // namespace code
 } // namespace qore
+
+#endif // INCLUDE_QORE_CORE_CODE_CONSTINT_H_

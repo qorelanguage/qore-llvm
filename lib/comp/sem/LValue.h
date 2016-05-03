@@ -44,7 +44,7 @@ public:
     LValue(Builder &builder, const Expression &expr) : builder(builder), expr(expr) {
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
-                builder.createWriteLockGlobal(asGlobal().getGlobalVariable());
+                builder.createGlobalWriteLock(asGlobal().getGlobalVariable());
                 break;
             case Expression::Kind::LocalVariableRef:
                 //TODO lock if shared
@@ -63,7 +63,7 @@ public:
     void cleanup(Builder &builder) {
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
-                builder.createWriteUnlockGlobal(asGlobal().getGlobalVariable());
+                builder.createGlobalWriteUnlock(asGlobal().getGlobalVariable());
                 break;
             case Expression::Kind::LocalVariableRef:
                 //TODO unlock if shared
@@ -74,14 +74,14 @@ public:
         }
     }
 
-    void get(as::Temp dest) {
+    void get(code::Temp dest) {
         //reference? any?
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
-                builder.createGetGlobal(dest, asGlobal().getGlobalVariable());
+                builder.createGlobalGet(dest, asGlobal().getGlobalVariable());
                 break;
             case Expression::Kind::LocalVariableRef:
-                builder.createGetLocal(dest, asLocal().getLocalVariable());
+                builder.createLocalGet(dest, asLocal().getLocalVariable());
                 break;
             default:
                 //error reported in ctor
@@ -89,13 +89,13 @@ public:
         }
     }
 
-    void set(as::Temp src) {
+    void set(code::Temp src) {
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
-                builder.createSetGlobal(asGlobal().getGlobalVariable(), src);
+                builder.createGlobalSet(asGlobal().getGlobalVariable(), src);
                 break;
             case Expression::Kind::LocalVariableRef:
-                builder.createSetLocal(asLocal().getLocalVariable(), src);
+                builder.createLocalSet(asLocal().getLocalVariable(), src);
                 break;
             default:
                 //error reported in ctor

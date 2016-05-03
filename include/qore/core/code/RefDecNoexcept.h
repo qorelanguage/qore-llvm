@@ -25,59 +25,52 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Implementation of Conversion methods.
+/// \brief Defines the RefDecNoexcept instruction.
 ///
 //------------------------------------------------------------------------------
-#include "qore/core/Conversion.h"
+#ifndef INCLUDE_QORE_CORE_CODE_REFDECNOEXCEPT_H_
+#define INCLUDE_QORE_CORE_CODE_REFDECNOEXCEPT_H_
+
+#include "qore/core/code/Instruction.h"
+#include "qore/core/code/Temp.h"
 
 namespace qore {
+namespace code {
 
-const Conversion *Conversion::find(const Type &src, const Type &dest) {
-    //XXX can be replaced with a table
-    if (src == dest) {
-        return nullptr;
-    }
-    if (dest == Type::String) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftString) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Int) {
-            return &IntToString;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftBool) {
-        if (src == Type::Int) {
-            return &IntToBool;
-        }
-    }
-    if (dest == Type::SoftInt) {
-        if (src == Type::Int) {
-            return nullptr;
-        }
-        if (src == Type::String) {
-            return &StringToInt;
-        }
-    }
-    if (dest == Type::Any) {
-        if (src == Type::Int) {
-            return &IntToAny;
-        }
-        if (src == Type::String) {
-            return nullptr;
-        }
-    }
-    QORE_NOT_IMPLEMENTED("Conversion " << src.getName() << " to " << dest.getName());
-}
+/**
+ * \brief Instruction that decreases the reference count of a temporary value as part of a cleanup during
+ * stack unwinding.
+ *
+ * Unlike \ref RefDec, this instruction must not throw an exception since there is an exception already being
+ * handled. Instead, any exceptions from destructors need to be linked to the current exception.
+ */
+class RefDecNoexcept : public Instruction {
 
+public:
+    /**
+     * \brief Constructor.
+     * \param temp the temporary value whose reference count should be decreased
+     */
+    explicit RefDecNoexcept(Temp temp) : temp(temp) {
+    }
+
+    Kind getKind() const override {
+        return Kind::RefDecNoexcept;
+    }
+
+    /**
+     * \brief Returns the temporary value whose reference count should be decreased.
+     * \return the temporary value whose reference count should be decreased
+     */
+    Temp getTemp() const {
+        return temp;
+    }
+
+private:
+    Temp temp;
+};
+
+} // namespace code
 } // namespace qore
+
+#endif // INCLUDE_QORE_CORE_CODE_REFDECNOEXCEPT_H_

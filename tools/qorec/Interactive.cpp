@@ -121,11 +121,11 @@ public:
         return it->second;
     }
 
-    void setTemp(as::Temp temp, qvalue value) {
+    void setTemp(code::Temp temp, qvalue value) {
         temps[temp.getIndex()] = value;
     }
 
-    qvalue getTemp(as::Temp temp) {
+    qvalue getTemp(code::Temp temp) {
         auto it = temps.find(temp.getIndex());
         assert(it != temps.end());
         return it->second;

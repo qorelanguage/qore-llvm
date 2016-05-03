@@ -25,59 +25,50 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Implementation of Conversion methods.
+/// \brief Defines the GlobalReadLock instruction.
 ///
 //------------------------------------------------------------------------------
-#include "qore/core/Conversion.h"
+#ifndef INCLUDE_QORE_CORE_CODE_GLOBALREADLOCK_H_
+#define INCLUDE_QORE_CORE_CODE_GLOBALREADLOCK_H_
+
+#include "qore/core/GlobalVariable.h"
+#include "qore/core/code/Instruction.h"
 
 namespace qore {
+namespace code {
 
-const Conversion *Conversion::find(const Type &src, const Type &dest) {
-    //XXX can be replaced with a table
-    if (src == dest) {
-        return nullptr;
-    }
-    if (dest == Type::String) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftString) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Int) {
-            return &IntToString;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftBool) {
-        if (src == Type::Int) {
-            return &IntToBool;
-        }
-    }
-    if (dest == Type::SoftInt) {
-        if (src == Type::Int) {
-            return nullptr;
-        }
-        if (src == Type::String) {
-            return &StringToInt;
-        }
-    }
-    if (dest == Type::Any) {
-        if (src == Type::Int) {
-            return &IntToAny;
-        }
-        if (src == Type::String) {
-            return nullptr;
-        }
-    }
-    QORE_NOT_IMPLEMENTED("Conversion " << src.getName() << " to " << dest.getName());
-}
+/**
+ * \brief Instruction that acquires the read lock for a global variable.
+ *
+ * It is assumed that the thread executing this instruction is not holding any other locks.
+ */
+class GlobalReadLock : public Instruction {
 
+public:
+    /**
+     * \brief Constructor.
+     * \param globalVariable the global variable
+     */
+    explicit GlobalReadLock(GlobalVariable &globalVariable) : globalVariable(globalVariable) {
+    }
+
+    Kind getKind() const override {
+        return Kind::GlobalReadLock;
+    }
+
+    /**
+     * \brief Returns the global variable.
+     * \return the global variable
+     */
+    GlobalVariable &getGlobalVariable() const {
+        return globalVariable;
+    }
+
+private:
+    GlobalVariable &globalVariable;
+};
+
+} // namespace code
 } // namespace qore
+
+#endif // INCLUDE_QORE_CORE_CODE_GLOBALREADLOCK_H_

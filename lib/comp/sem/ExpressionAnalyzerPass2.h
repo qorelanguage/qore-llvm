@@ -65,7 +65,7 @@ public:
         builder.setTempFree(temp);
     }
 
-    operator as::Temp() const {
+    operator code::Temp() const {
         return temp;
     }
 
@@ -79,7 +79,7 @@ public:
 
 private:
     Builder &builder;
-    as::Temp temp;
+    code::Temp temp;
     bool inCleanup;
     bool doRefDec;
 };
@@ -92,7 +92,7 @@ public:
     static constexpr Index InvalidIndex = -1;
 
 public:
-    ExpressionAnalyzerPass2(Core &core, Builder &builder, as::Temp dest) : core(core), builder(builder),
+    ExpressionAnalyzerPass2(Core &core, Builder &builder, code::Temp dest) : core(core), builder(builder),
             dest(dest), freeDest(false), destInCleanup(false) {
     }
 
@@ -137,7 +137,7 @@ public:
         LValue left(builder, expr.getLeft());
         left.get(old);
 
-        builder.createBinaryOperator(dest, expr.getOperator(), old, right);
+        builder.createInvokeBinaryOperator(dest, expr.getOperator(), old, right);
         if (refCounted(expr.getLeft())) {
             cleanupDest(true);
             refIncDestIfNeeded();
@@ -149,17 +149,17 @@ public:
     void visit(const GlobalVariableRefExpression &expr) {
         noSideEffect();
         const GlobalVariableInfo &gv = expr.getGlobalVariable();
-        builder.createReadLockGlobal(gv);
-        builder.createGetGlobal(dest, gv);
+        builder.createGlobalReadLock(gv);
+        builder.createGlobalGet(dest, gv);
         if (refCounted(expr.getGlobalVariable())) {
             refIncDestIfNeeded();
         }
-        builder.createReadUnlockGlobal(gv);
+        builder.createGlobalReadUnlock(gv);
     }
 
     void visit(const IntLiteralExpression &expr) {
         noSideEffect();
-        builder.createIntConstant(dest, expr.getValue());
+        builder.createConstInt(dest, expr.getValue());
     }
 
     void visit(const InvokeBinaryOperatorExpression &expr) {
@@ -173,7 +173,7 @@ public:
         evaluate(right, expr.getRight());
         right.needsCleanup(refCounted(expr.getRight()), true);
 
-        builder.createBinaryOperator(dest, expr.getOperator(), left, right);
+        builder.createInvokeBinaryOperator(dest, expr.getOperator(), left, right);
         cleanupDest(refCounted(expr));
     }
 
@@ -184,7 +184,7 @@ public:
         evaluate(arg, expr.getArg());
         arg.needsCleanup(refCounted(expr.getArg()), true);
 
-        builder.createConversion(dest, expr.getConversion(), arg);
+        builder.createInvokeConversion(dest, expr.getConversion(), arg);
         cleanupDest(refCounted(expr));
     }
 
@@ -199,7 +199,7 @@ public:
 
     void visit(const LocalVariableRefExpression &expr) {
         noSideEffect();
-        builder.createGetLocal(dest, expr.getLocalVariable());
+        builder.createLocalGet(dest, expr.getLocalVariable());
         if (refCounted(expr.getLocalVariable())) {
             refIncDestIfNeeded();
         }
@@ -212,7 +212,7 @@ public:
 
     void visit(const StringLiteralRefExpression &expr) {
         noSideEffect();
-        builder.createLoadString(dest, expr.getString());
+        builder.createConstString(dest, expr.getString());
         builder.createRefInc(dest);
     }
 
@@ -251,7 +251,7 @@ private:
         }
     }
 
-    void evaluate(as::Temp temp, const Expression &e) {
+    void evaluate(code::Temp temp, const Expression &e) {
         ExpressionAnalyzerPass2 a(core, builder, temp);
         e.accept(a);
     }
@@ -264,7 +264,7 @@ private:
 private:
     Core &core;
     Builder &builder;
-    as::Temp dest;
+    code::Temp dest;
     bool freeDest;
     bool destInCleanup;
 };

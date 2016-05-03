@@ -36,11 +36,11 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-as::Block *Builder::getLandingPad() {
+code::Block *Builder::getLandingPad() {
     return getLandingPad2(cleanupScopes.rbegin());
 }
 
-as::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator iit) {
+code::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator iit) {
     while (iit != cleanupScopes.rend()) {
         if (iit->b) {
             break;
@@ -56,33 +56,30 @@ as::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator i
 
         if (iit->lpad == nullptr) {
             iit->lpad = createBlock();
-            iit->lpad->append(util::make_unique<as::Jump>(*iit->b));
+            iit->lpad->appendJump(*iit->b);
         }
         return iit->lpad;
     }
 
-    bool savedTeminated = terminated;
-    as::Block *savedCurrent = currentBlock;
-    as::Block *block = createBlock();
+    code::Block *savedCurrent = currentBlock;
+    code::Block *block = createBlock();
     currentBlock = block;
-    terminated = false;
 
     if (cleanupLValue) {
         cleanupLValue->cleanup(*this);
     }
 
     for (auto it = cleanupTemps.rbegin(); it != cleanupTemps.rend(); ++it) {
-        createRefDecNoexcept(as::Temp(*it));
+        currentBlock->appendRefDecNoexcept(code::Temp(*it));
     }
 
     if (iit != cleanupScopes.rend()) {
-        currentBlock->append(util::make_unique<as::Jump>(*iit->b));
+        currentBlock->appendJump(*iit->b);
     } else {
-        currentBlock->append(util::make_unique<as::Rethrow>());
+        currentBlock->appendResumeUnwind();
     }
 
     currentBlock = savedCurrent;
-    terminated = savedTeminated;
     return block;
 }
 
@@ -92,9 +89,9 @@ void Builder::buildCleanupForRet() {
 
     for (auto it = cleanupScopes.rbegin(); it != cleanupScopes.rend(); ++it) {
         if (it->lv && it->lv->getType().isRefCounted()) {
-            as::Temp temp = getFreeTemp();
-            add(util::make_unique<as::GetLocal>(temp, *it->lv));
-            add(util::make_unique<as::RefDec>(temp, getLandingPad2(it + 1)));
+            code::Temp temp = getFreeTemp();
+            currentBlock->appendLocalGet(temp, *it->lv);
+            currentBlock->appendRefDec(temp, getLandingPad2(it + 1));
             setTempFree(temp);
         }
     }

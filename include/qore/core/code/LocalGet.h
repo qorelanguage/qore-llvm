@@ -25,59 +25,59 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Implementation of Conversion methods.
+/// \brief Defines the LocalGet instruction.
 ///
 //------------------------------------------------------------------------------
-#include "qore/core/Conversion.h"
+#ifndef INCLUDE_QORE_CORE_CODE_LOCALGET_H_
+#define INCLUDE_QORE_CORE_CODE_LOCALGET_H_
+
+#include "qore/core/LocalVariable.h"
+#include "qore/core/code/Instruction.h"
+#include "qore/core/code/Temp.h"
 
 namespace qore {
+namespace code {
 
-const Conversion *Conversion::find(const Type &src, const Type &dest) {
-    //XXX can be replaced with a table
-    if (src == dest) {
-        return nullptr;
-    }
-    if (dest == Type::String) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftString) {
-        if (src == Type::String) {
-            return nullptr;
-        }
-        if (src == Type::Int) {
-            return &IntToString;
-        }
-        if (src == Type::Any) {
-            return &AnyToString;
-        }
-    }
-    if (dest == Type::SoftBool) {
-        if (src == Type::Int) {
-            return &IntToBool;
-        }
-    }
-    if (dest == Type::SoftInt) {
-        if (src == Type::Int) {
-            return nullptr;
-        }
-        if (src == Type::String) {
-            return &StringToInt;
-        }
-    }
-    if (dest == Type::Any) {
-        if (src == Type::Int) {
-            return &IntToAny;
-        }
-        if (src == Type::String) {
-            return nullptr;
-        }
-    }
-    QORE_NOT_IMPLEMENTED("Conversion " << src.getName() << " to " << dest.getName());
-}
+/**
+ * \brief Instruction that loads the value of a local variable into a temporary.
+ */
+class LocalGet : public Instruction {
 
+public:
+    /**
+     * \brief Constructor.
+     * \param dest the temporary to load the value of the local variable into
+     * \param localVariable the local variable
+     */
+    LocalGet(Temp dest, const LocalVariable &localVariable) : dest(dest), localVariable(localVariable) {
+    }
+
+    Kind getKind() const override {
+        return Kind::LocalGet;
+    }
+
+    /**
+     * \brief Returns the temporary to load the value of the local variable into.
+     * \return the temporary to load the value of the local variable into
+     */
+    Temp getDest() const {
+        return dest;
+    }
+
+    /**
+     * \brief Returns the local variable to be loaded into the temporary.
+     * \return the local variable to be loaded into the temporary
+     */
+    const LocalVariable &getLocalVariable() const {
+        return localVariable;
+    }
+
+private:
+    Temp dest;
+    const LocalVariable &localVariable;
+};
+
+} // namespace code
 } // namespace qore
+
+#endif // INCLUDE_QORE_CORE_CODE_LOCALGET_H_

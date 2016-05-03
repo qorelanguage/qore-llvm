@@ -49,28 +49,27 @@ public:
      * \brief Identifies the kind of an instruction.
      */
     enum class Kind {
-        BinaryOperator,     //!< Identifies an instance of \ref BinaryOperator.
-        Conversion,         //!< Identifies an instance of \ref Conversion.
-        Branch,             //!< Identifies an instance of \ref Branch.
-        GetArg,             //!< Identifies an instance of \ref GetArg.
-        GetGlobal,          //!< Identifies an instance of \ref GetGlobal.
-        GetLocal,           //!< Identifies an instance of \ref GetLocal.
-        IntConstant,        //!< Identifies an instance of \ref IntConstant.
-        Jump,               //!< Identifies an instance of \ref Jump.
-        LoadString,         //!< Identifies an instance of \ref LoadString.
-        MakeGlobal,         //!< Identifies an instance of \ref MakeGlobal.
-        ReadLockGlobal,     //!< Identifies an instance of \ref ReadLockGlobal.
-        ReadUnlockGlobal,   //!< Identifies an instance of \ref ReadUnlockGlobal.
-        RefDec,             //!< Identifies an instance of \ref RefDec.
-        RefDecNoexcept,     //!< Identifies an instance of \ref RefDecNoexcept.
-        RefInc,             //!< Identifies an instance of \ref RefInc.
-        Ret,                //!< Identifies an instance of \ref Ret.
-        RetVoid,            //!< Identifies an instance of \ref RetVoid.
-        Rethrow,            //!< Identifies an instance of \ref Rethrow.
-        SetGlobal,          //!< Identifies an instance of \ref SetGlobal.
-        SetLocal,           //!< Identifies an instance of \ref SetLocal.
-        WriteLockGlobal,    //!< Identifies an instance of \ref WriteLockGlobal.
-        WriteUnlockGlobal,  //!< Identifies an instance of \ref WriteUnlockGlobal.
+        Branch,                     //!< Identifies an instance of \ref Branch.
+        ConstInt,                   //!< Identifies an instance of \ref ConstInt.
+        ConstString,                //!< Identifies an instance of \ref ConstString.
+        GlobalGet,                  //!< Identifies an instance of \ref GlobalGet.
+        GlobalInit,                 //!< Identifies an instance of \ref GlobalInit.
+        GlobalReadLock,             //!< Identifies an instance of \ref GlobalReadLock.
+        GlobalReadUnlock,           //!< Identifies an instance of \ref GlobalReadUnlock.
+        GlobalSet,                  //!< Identifies an instance of \ref GlobalSet.
+        GlobalWriteLock,            //!< Identifies an instance of \ref GlobalWriteLock.
+        GlobalWriteUnlock,          //!< Identifies an instance of \ref GlobalWriteUnlock.
+        InvokeBinaryOperator,       //!< Identifies an instance of \ref InvokeBinaryOperator.
+        InvokeConversion,           //!< Identifies an instance of \ref InvokeConversion.
+        Jump,                       //!< Identifies an instance of \ref Jump.
+        LocalGet,                   //!< Identifies an instance of \ref LocalGet.
+        LocalSet,                   //!< Identifies an instance of \ref LocalSet.
+        RefDec,                     //!< Identifies an instance of \ref RefDec.
+        RefDecNoexcept,             //!< Identifies an instance of \ref RefDecNoexcept.
+        RefInc,                     //!< Identifies an instance of \ref RefInc.
+        ResumeUnwind,               //!< Identifies an instance of \ref ResumeUnwind.
+        Ret,                        //!< Identifies an instance of \ref Ret.
+        RetVoid,                    //!< Identifies an instance of \ref RetVoid.
     };
 
 public:
@@ -97,11 +96,11 @@ public:
      */
     bool isTerminator() const {
         switch (getKind()) {
-            case Kind::Rethrow:
+            case Kind::Branch:
+            case Kind::Jump:
+            case Kind::ResumeUnwind:
             case Kind::Ret:
             case Kind::RetVoid:
-            case Kind::Jump:
-            case Kind::Branch:
                 return true;
             default:
                 return false;

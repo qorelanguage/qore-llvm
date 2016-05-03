@@ -25,10 +25,10 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implementation of BinaryOperator methods.
 ///
 //------------------------------------------------------------------------------
-#include "qore/BinaryOperator.h"
+#include "qore/core/BinaryOperator.h"
 
 namespace qore {
 
@@ -42,6 +42,7 @@ std::ostream &operator<<(std::ostream &os, BinaryOperator::Kind kind) {
             QORE_UNREACHABLE("Invalid BinaryOperator::Kind: " << static_cast<int>(kind));
     }
 }
+
 const BinaryOperator &BinaryOperator::find(Kind kind, const Type &left, const Type &right) {
     if (kind == Kind::Plus) {
         if (left == Type::Any || right == Type::Any) {

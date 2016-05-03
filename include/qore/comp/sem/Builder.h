@@ -34,13 +34,12 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "qore/core/Function.h"
+#include "qore/core/code/Block.h"
 #include "qore/core/util/Util.h"
-#include "qore/comp/as/Script.h"
-#include "qore/comp/as/is.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/LocalVariableInfo.h"
 #include "qore/comp/sem/CleanupScope.h"
-#include "qore/core/Function.h"
 
 namespace qore {
 namespace comp {
@@ -51,7 +50,7 @@ class LValue;
 class Builder {
 
 public:
-    Builder() : currentBlock(createBlock()), terminated(false), cleanupLValue(nullptr), tempCount(0) {
+    Builder() : currentBlock(createBlock()), cleanupLValue(nullptr), tempCount(0) {
         entry = currentBlock;
     }
 
@@ -60,7 +59,7 @@ public:
     }
 
     bool isTerminated() const {
-        return terminated;
+        return currentBlock->isTerminated();
     }
 
     void startOfArgumentLifetime(Context &ctx, LocalVariableInfo &lv, Index argIndex) {
@@ -69,9 +68,9 @@ public:
 
         //if not shared:
         if (lv.getType().isRefCounted()) {
-            as::Temp temp = getFreeTemp();
-            add(util::make_unique<as::GetLocal>(temp, aslv));
-            add(util::make_unique<as::RefInc>(temp));
+            code::Temp temp = getFreeTemp();
+            currentBlock->appendLocalGet(temp, aslv);
+            currentBlock->appendRefInc(temp);
             setTempFree(temp);
             x(aslv);
         }
@@ -84,11 +83,11 @@ public:
         // - push cleanup scope that dereferences the wrapper
     }
 
-    void startOfLocalVariableLifetime(Context &ctx, LocalVariableInfo &lv, as::Temp value) {
+    void startOfLocalVariableLifetime(Context &ctx, LocalVariableInfo &lv, code::Temp value) {
         const LocalVariable &aslv = alloc(ctx, lv);
 
         //if not shared:
-        add(util::make_unique<as::SetLocal>(aslv, value));
+        currentBlock->appendLocalSet(aslv, value);
         if (lv.getType().isRefCounted()) {
             x(aslv);
         }
@@ -102,22 +101,22 @@ public:
 
 private:
     void x(const LocalVariable &lv) {
-        as::Block *b = createBlock();
-        as::Temp temp = getFreeTemp();      //all temps are free at this point
-        b->append(util::make_unique<as::GetLocal>(temp, lv));
-        b->append(util::make_unique<as::RefDecNoexcept>(temp));
+        code::Block *b = createBlock();
+        code::Temp temp = getFreeTemp();      //all temps are free at this point
+        b->appendLocalGet(temp, lv);
+        b->appendRefDecNoexcept(temp);
         setTempFree(temp);
-        as::Block *b2 = fff(cleanupScopes.rbegin());
+        code::Block *b2 = fff(cleanupScopes.rbegin());
         if (b2) {
-            b->append(util::make_unique<as::Jump>(*b2));
+            b->appendJump(*b2);
         } else {
-            b->append(util::make_unique<as::Rethrow>());
+            b->appendResumeUnwind();
         }
         cleanupScopes.emplace_back(lv, b);
     }
 
 private:
-    as::Block *fff(std::vector<CleanupScope>::reverse_iterator iit) {
+    code::Block *fff(std::vector<CleanupScope>::reverse_iterator iit) {
         while (iit != cleanupScopes.rend()) {
             if (iit->b) {
                 return iit->b;
@@ -128,7 +127,7 @@ private:
     }
 
 public:
-    void pushCleanupScope(const Statement &stmt, as::Block *catchBlock = nullptr) {
+    void pushCleanupScope(const Statement &stmt, code::Block *catchBlock = nullptr) {
         cleanupScopes.emplace_back(stmt, catchBlock);
     }
 
@@ -138,9 +137,9 @@ public:
             cleanupScopes.pop_back();
 
             if (cs.lv) {
-                if (!terminated && cs.lv->getType().isRefCounted()) {
-                    as::Temp temp = getFreeTemp();
-                    add(util::make_unique<as::GetLocal>(temp, *cs.lv));
+                if (!currentBlock->isTerminated() && cs.lv->getType().isRefCounted()) {
+                    code::Temp temp = getFreeTemp();
+                    currentBlock->appendLocalGet(temp, *cs.lv);
                     createRefDec(temp);
                     setTempFree(temp);
                 }
@@ -158,9 +157,9 @@ public:
             cleanupScopes.pop_back();
 
             if (cs.lv) {
-                if (!terminated && cs.lv->getType().isRefCounted()) {
-                    as::Temp temp = getFreeTemp();
-                    add(util::make_unique<as::GetLocal>(temp, *cs.lv));
+                if (!currentBlock->isTerminated() && cs.lv->getType().isRefCounted()) {
+                    code::Temp temp = getFreeTemp();
+                    currentBlock->appendLocalGet(temp, *cs.lv);
                     createRefDec(temp);
                     setTempFree(temp);
                 }
@@ -168,13 +167,13 @@ public:
         }
     }
 
-    void addCleanup(as::Temp temp) {
+    void addCleanup(code::Temp temp) {
         LOG("ADD CLEANUP " << temp.getIndex());
         assert(std::find(cleanupTemps.begin(), cleanupTemps.end(), temp) == cleanupTemps.end());
         cleanupTemps.push_back(temp);
     }
 
-    void doneCleanup(as::Temp temp) {
+    void doneCleanup(code::Temp temp) {
         LOG("DONE CLEANUP " << temp.getIndex());
         auto it = std::find(cleanupTemps.begin(), cleanupTemps.end(), temp);
         assert(it != cleanupTemps.end());
@@ -191,146 +190,151 @@ public:
         cleanupLValue = nullptr;
     }
 
-    as::Temp getFreeTemp() {
+    code::Temp getFreeTemp() {
         if (!freeTemps.empty()) {
-            as::Temp t = freeTemps.back();
+            code::Temp t = freeTemps.back();
             freeTemps.pop_back();
             return t;
         }
-        return as::Temp(tempCount++);
+        return code::Temp(tempCount++);
     }
 
-    void setTempFree(as::Temp temp) {
+    void setTempFree(code::Temp temp) {
         freeTemps.push_back(temp);
     }
 
-    void createRefInc(as::Temp temp) {
-        add(util::make_unique<as::RefInc>(temp));
+    void createBranch(code::Temp condition, const code::Block &trueDest, const code::Block &falseDest) {
+        checkNotTerminated();
+        currentBlock->appendBranch(condition, trueDest, falseDest);
+        assert(isTerminated());
     }
 
-    void createLoadString(as::Temp dest, qore::String::Ptr string) {
-        add(util::make_unique<as::LoadString>(dest, std::move(string)));
+    void createConstInt(code::Temp dest, qint value) {
+        checkNotTerminated();
+        currentBlock->appendConstInt(dest, value);
     }
 
-    void createMakeGlobal(GlobalVariable &gv, as::Temp initValue) {
-        add(util::make_unique<as::MakeGlobal>(gv, initValue));
+    void createConstString(code::Temp dest, qore::String::Ptr string) {
+        checkNotTerminated();
+        currentBlock->appendConstString(dest, std::move(string));
     }
 
-    void createRet(as::Temp temp) {
+    void createGlobalGet(code::Temp dest, const GlobalVariableInfo &gv) {
+        checkNotTerminated();
+        currentBlock->appendGlobalGet(dest, gv.getRt());
+    }
+
+    void createGlobalInit(GlobalVariable &gv, code::Temp initValue) {
+        checkNotTerminated();
+        currentBlock->appendGlobalInit(gv, initValue);
+    }
+
+    void createGlobalReadLock(const GlobalVariableInfo &gv) {
+        checkNotTerminated();
+        currentBlock->appendGlobalReadLock(gv.getRt());
+    }
+
+    void createGlobalReadUnlock(const GlobalVariableInfo &gv) {
+        checkNotTerminated();
+        currentBlock->appendGlobalReadUnlock(gv.getRt());
+    }
+
+    void createGlobalSet(const GlobalVariableInfo &gv, code::Temp src) {
+        checkNotTerminated();
+        currentBlock->appendGlobalSet(gv.getRt(), src);
+    }
+
+    void createGlobalWriteLock(const GlobalVariableInfo &gv) {
+        checkNotTerminated();
+        currentBlock->appendGlobalWriteLock(gv.getRt());
+    }
+
+    void createGlobalWriteUnlock(const GlobalVariableInfo &gv) {
+        checkNotTerminated();
+        currentBlock->appendGlobalWriteUnlock(gv.getRt());
+    }
+
+    void createInvokeBinaryOperator(code::Temp dest, const BinaryOperator &op, code::Temp left, code::Temp right) {
+        checkNotTerminated();
+        currentBlock->appendInvokeBinaryOperator(dest, op, left, right, op.canThrow() ? getLandingPad() : nullptr);
+    }
+
+    void createInvokeConversion(code::Temp dest, const Conversion &conversion, code::Temp arg) {
+        checkNotTerminated();
+        currentBlock->appendInvokeConversion(dest, conversion, arg, conversion.canThrow() ? getLandingPad() : nullptr);
+    }
+
+    void createJump(const code::Block &dest) {
+        checkNotTerminated();
+        currentBlock->appendJump(dest);
+        assert(isTerminated());
+    }
+
+    void createLocalGet(code::Temp dest, const LocalVariableInfo &lv) {
+        checkNotTerminated();
+        currentBlock->appendLocalGet(dest, lv.getRt());
+    }
+
+    void createLocalSet(const LocalVariableInfo &lv, code::Temp src) {
+        checkNotTerminated();
+        currentBlock->appendLocalSet(lv.getRt(), src);
+    }
+
+    void createRefDec(code::Temp temp) {
+        assert(!cleanupLValue);
+        checkNotTerminated();
+        currentBlock->appendRefDec(temp, getLandingPad());
+    }
+
+    void createRefInc(code::Temp temp) {
+        checkNotTerminated();
+        currentBlock->appendRefInc(temp);
+    }
+
+    void createRet(code::Temp temp) {
+        checkNotTerminated();
         buildCleanupForRet();
-        add(util::make_unique<as::Ret>(temp));
-        terminated = true;
+        currentBlock->appendRet(temp);
+        assert(isTerminated());
     }
 
     void createRetVoid() {
+        checkNotTerminated();
         buildCleanupForRet();
-        add(util::make_unique<as::RetVoid>());
-        terminated = true;
-    }
-
-    void createSetLocal(const LocalVariableInfo &lv, as::Temp src) {
-        add(util::make_unique<as::SetLocal>(lv.getRt(), src));
-    }
-
-    void createIntConstant(as::Temp dest, qint value) {
-        add(util::make_unique<as::IntConstant>(dest, value));
-    }
-
-    void createGetLocal(as::Temp dest, const LocalVariableInfo &lv) {
-        add(util::make_unique<as::GetLocal>(dest, lv.getRt()));
-    }
-
-    void createRefDec(as::Temp temp) {
-        assert(!cleanupLValue);
-        add(util::make_unique<as::RefDec>(temp, getLandingPad()));
-    }
-
-    void createReadLockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::ReadLockGlobal>(gv.getRt()));
-    }
-
-    void createReadUnlockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::ReadUnlockGlobal>(gv.getRt()));
-    }
-
-    void createWriteLockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::WriteLockGlobal>(gv.getRt()));
-    }
-
-    void createWriteUnlockGlobal(const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::WriteUnlockGlobal>(gv.getRt()));
-    }
-
-    void createGetGlobal(as::Temp dest, const GlobalVariableInfo &gv) {
-        add(util::make_unique<as::GetGlobal>(dest, gv.getRt()));
-    }
-
-    void createSetGlobal(const GlobalVariableInfo &gv, as::Temp src) {
-        add(util::make_unique<as::SetGlobal>(gv.getRt(), src));
-    }
-
-    void createBinaryOperator(as::Temp dest, const BinaryOperator &op, as::Temp left, as::Temp right) {
-        add(util::make_unique<as::BinaryOperator>(dest, op, left, right, op.canThrow() ? getLandingPad() : nullptr));
-    }
-
-    void createConversion(as::Temp dest, const qore::Conversion &conversion, as::Temp arg) {
-        add(util::make_unique<as::Conversion>(dest, conversion, arg,
-                conversion.canThrow() ? getLandingPad() : nullptr));
-    }
-
-    void createRefDecNoexcept(as::Temp temp) {
-        add(util::make_unique<as::RefDecNoexcept>(temp));
-    }
-
-//    void createRethrow() {
-//        add(util::make_unique<as::Rethrow>());
-//        terminated = true;
-//    }
-
-    void createGetArg(as::Temp dest, Index index) {
-        add(util::make_unique<as::GetArg>(dest, index));
-    }
-
-    void createJump(const as::Block &dest) {
-        add(util::make_unique<as::Jump>(dest));
-    }
-
-    void createBranch(as::Temp condition, const as::Block &trueDest, const as::Block &falseDest) {
-        add(util::make_unique<as::Branch>(condition, trueDest, falseDest));
+        currentBlock->appendRetVoid();
+        assert(isTerminated());
     }
 
 
-    as::Block &getEntryForInteractiveMode() {
-        add(util::make_unique<as::RetVoid>());
-        as::Block *b = entry;
+
+    code::Block &getEntryForInteractiveMode() {
+        currentBlock->appendRetVoid();
+        code::Block *b = entry;
         entry = createBlock();
         currentBlock = entry;
-        terminated = false;
         return *b;
     }
 
-    as::Block *createBlock() {
-        as::Block::Ptr ptr = as::Block::Ptr(new as::Block());
-        as::Block *b = ptr.get();
+    code::Block *createBlock() {
+        code::Block::Ptr ptr = code::Block::Ptr(new code::Block());
+        code::Block *b = ptr.get();
         blocks.push_back(std::move(ptr));
         return b;
     }
 
-    void setCurrentBlock(as::Block *b) {
+    void setCurrentBlock(code::Block *b) {
         currentBlock = b;
-        terminated = false;
     }
 
 private:
-    void add(as::Instruction::Ptr ins) {
-        if (terminated) {
-            QORE_NOT_IMPLEMENTED("");   //unreachable
+    void checkNotTerminated() {
+        if (currentBlock->isTerminated()) {
+            QORE_NOT_IMPLEMENTED("");   //report unreachable?
         }
-        currentBlock->append(std::move(ins));
     }
 
-    as::Block *getLandingPad();
-    as::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
+    code::Block *getLandingPad();
+    code::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
     void buildCleanupForRet();
 
     const LocalVariable &alloc(Context &ctx, LocalVariableInfo &lv) {
@@ -343,18 +347,17 @@ private:
     }
 
 private:
-    std::vector<as::Temp> freeTemps;
-    std::vector<as::Block::Ptr> blocks;
-    as::Block *currentBlock;
-    bool terminated;
+    std::vector<code::Temp> freeTemps;
+    std::vector<code::Block::Ptr> blocks;
+    code::Block *currentBlock;
 
-    std::vector<as::Temp> cleanupTemps;
+    std::vector<code::Temp> cleanupTemps;
     std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
     std::vector<LocalVariable::Ptr> locals;
 
     Size tempCount;
-    as::Block *entry;
+    code::Block *entry;
 };
 
 } // namespace sem

@@ -36,7 +36,6 @@
 #include "qore/comp/sem/stmt/ExpressionStatement.h"
 #include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
 #include "qore/comp/sem/stmt/TryStatement.h"
-#include "qore/comp/as/is.h"
 #include "ExpressionAnalyzerPass2.h"
 
 namespace qore {
@@ -66,29 +65,29 @@ public:
     }
 
     void visit(const GlobalVariableInitializationStatement &stmt) {
-        as::Temp temp = builder.getFreeTemp();
+        code::Temp temp = builder.getFreeTemp();
         ExpressionAnalyzerPass2 a(core, builder, temp);
         stmt.getExpression().accept(a);
-        builder.createMakeGlobal(stmt.getGlobalVariable(), temp);    //throws
+        builder.createGlobalInit(stmt.getGlobalVariable(), temp);
         builder.setTempFree(temp);
     }
 
     void visit(const IfStatement &stmt) {
         builder.pushCleanupScope(stmt);
 
-        as::Temp temp = builder.getFreeTemp();
+        code::Temp temp = builder.getFreeTemp();
         ExpressionAnalyzerPass2 a(core, builder, temp);
         stmt.getCondition().accept(a);
 
-        as::Block *cont = nullptr;
-        as::Block *trueBlock = builder.createBlock();
+        code::Block *cont = nullptr;
+        code::Block *trueBlock = builder.createBlock();
 
         if (!stmt.getFalseBranch()) {
             cont = builder.createBlock();
             builder.createBranch(temp, *trueBlock, *cont);
             builder.setTempFree(temp);
         } else {
-            as::Block *falseBlock = builder.createBlock();
+            code::Block *falseBlock = builder.createBlock();
             builder.createBranch(temp, *trueBlock, *falseBlock);
             builder.setTempFree(temp);
             builder.setCurrentBlock(falseBlock);
@@ -121,7 +120,7 @@ public:
 
     void visit(const ReturnStatement &stmt) {
         if (stmt.getExpression()) {
-            as::Temp temp = builder.getFreeTemp();
+            code::Temp temp = builder.getFreeTemp();
             {
                 ExpressionAnalyzerPass2 a(core, builder, temp);
                 stmt.getExpression()->accept(a);
@@ -134,8 +133,8 @@ public:
     }
 
     void visit(const TryStatement &stmt) {
-        as::Block *cont = nullptr;
-        as::Block *catchBlock = builder.createBlock();
+        code::Block *cont = nullptr;
+        code::Block *catchBlock = builder.createBlock();
         builder.pushCleanupScope(stmt.getTryBody(), catchBlock);
         stmt.getTryBody().accept(*this);
         if (!builder.isTerminated()) {

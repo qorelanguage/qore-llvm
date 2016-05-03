@@ -34,9 +34,9 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "qore/comp/as/is.h"
-#include "Helper.h"
 #include "qore/core/Function.h"
+#include "qore/core/code/Block.h"
+#include "Helper.h"
 
 namespace qore {
 namespace cg {
@@ -56,19 +56,25 @@ public:
         for (auto &l : locals) {
             l = builder.CreateAlloca(helper.lt_qvalue, nullptr);    //FIXME name
         }
+        auto it = func->arg_begin();
+        Index i = 0;
+        while (it != func->arg_end()) {
+            builder.CreateStore(it, locals[i++]);
+        }
+
         excSlot = builder.CreateAlloca(helper.lt_exc, nullptr, "exc.slot");
 
         blockMap[&f.getEntryBlock()] = entry;
         queue.push_back(&f.getEntryBlock());
         while (!queue.empty()) {
-            const comp::as::Block *b = queue.back();
+            const code::Block *b = queue.back();
             queue.pop_back();
             doBlock(blockMap[b], *b);
         }
         //func->viewCFG();
     }
 
-    llvm::Value *makeCallOrInvoke(llvm::IRBuilder<> &builder, const comp::as::Instruction &ins,
+    llvm::Value *makeCallOrInvoke(llvm::IRBuilder<> &builder, const code::Instruction &ins,
             llvm::Function *f, llvm::ArrayRef<llvm::Value *> args) {
         if (!ins.getLpad()) {
             return builder.CreateCall(f, args);
@@ -93,48 +99,90 @@ public:
         return ret;
     }
 
-    void doBlock(llvm::BasicBlock *bb, const comp::as::Block &block) {
+    void doBlock(llvm::BasicBlock *bb, const code::Block &block) {
         llvm::IRBuilder<> builder(bb);
         for (const code::Instruction &ii : block) {
             switch (ii.getKind()) {
-                case comp::as::Instruction::Kind::IntConstant: {
-                    const comp::as::IntConstant &ins = static_cast<const comp::as::IntConstant &>(ii);
+                case code::Instruction::Kind::Branch: {
+                    const code::Branch &ins = static_cast<const code::Branch &>(ii);
+                    builder.CreateCondBr(
+                            builder.CreateCall(helper.lf_qvalue_to_qbool, temps[ins.getCondition().getIndex()]),
+                            mapBlock(ins.getTrueDest(), "if.true"),
+                            mapBlock(ins.getFalseDest(), "if.false"));
+                    break;
+                }
+                case code::Instruction::Kind::ConstInt: {
+                    const code::ConstInt &ins = static_cast<const code::ConstInt &>(ii);
                     temps[ins.getDest().getIndex()] = builder.CreateCall(
                             helper.lf_qint_to_qvalue, llvm::ConstantInt::get(helper.lt_qint, ins.getValue(), true));
                     break;
                 }
-                case comp::as::Instruction::Kind::GetLocal: {
-                    const comp::as::GetLocal &ins = static_cast<const comp::as::GetLocal &>(ii);
-                    temps[ins.getDest().getIndex()] = builder.CreateLoad(locals[ins.getLocalVariable().getIndex()]);
-                    break;
-                }
-                case comp::as::Instruction::Kind::SetLocal: {
-                    const comp::as::SetLocal &ins = static_cast<const comp::as::SetLocal &>(ii);
-                    builder.CreateStore(temps[ins.getSrc().getIndex()], locals[ins.getLocalVariable().getIndex()]);
-                    break;
-                }
-                case comp::as::Instruction::Kind::LoadString: {
-                    const comp::as::LoadString &ins = static_cast<const comp::as::LoadString &>(ii);
+                case code::Instruction::Kind::ConstString: {
+                    const code::ConstString &ins = static_cast<const code::ConstString &>(ii);
                     temps[ins.getDest().getIndex()] = helper.loadString(ins.getString());
                     break;
                 }
-                case comp::as::Instruction::Kind::RefInc: {
-                    const comp::as::RefInc &ins = static_cast<const comp::as::RefInc &>(ii);
-                    builder.CreateCall(helper.lf_incRef, temps[ins.getTemp().getIndex()]);
+                case code::Instruction::Kind::InvokeBinaryOperator: {
+                    const code::InvokeBinaryOperator &ins = static_cast<const code::InvokeBinaryOperator &>(ii);
+                    llvm::Value *args[2] = { temps[ins.getLeft().getIndex()], temps[ins.getRight().getIndex()] };
+                    temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
+                            helper.getBinaryOperator(ins.getOperator()), args);
                     break;
                 }
-                case comp::as::Instruction::Kind::RefDec: {
-                    const comp::as::RefDec &ins = static_cast<const comp::as::RefDec &>(ii);
+                case code::Instruction::Kind::InvokeConversion: {
+                    const code::InvokeConversion &ins = static_cast<const code::InvokeConversion &>(ii);
+                    temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
+                            helper.getConversion(ins.getConversion()), temps[ins.getArg().getIndex()]);
+                    break;
+                }
+                case code::Instruction::Kind::Jump: {
+                    const code::Jump &ins = static_cast<const code::Jump &>(ii);
+                    builder.CreateBr(mapBlock(ins.getDest(), "jump.dest"));
+                    break;
+                }
+                case code::Instruction::Kind::LocalGet: {
+                    const code::LocalGet &ins = static_cast<const code::LocalGet &>(ii);
+                    temps[ins.getDest().getIndex()] = builder.CreateLoad(locals[ins.getLocalVariable().getIndex()]);
+                    break;
+                }
+                case code::Instruction::Kind::LocalSet: {
+                    const code::LocalSet &ins = static_cast<const code::LocalSet &>(ii);
+                    builder.CreateStore(temps[ins.getSrc().getIndex()], locals[ins.getLocalVariable().getIndex()]);
+                    break;
+                }
+                case code::Instruction::Kind::RefDec: {
+                    const code::RefDec &ins = static_cast<const code::RefDec &>(ii);
                     makeCallOrInvoke(builder, ins, helper.lf_decRef, temps[ins.getTemp().getIndex()]);
                     break;
                 }
-                case comp::as::Instruction::Kind::RefDecNoexcept: {
-                    const comp::as::RefDecNoexcept &ins = static_cast<const comp::as::RefDecNoexcept &>(ii);
+                case code::Instruction::Kind::RefDecNoexcept: {
+                    const code::RefDecNoexcept &ins = static_cast<const code::RefDecNoexcept &>(ii);
                     auto e = llvm::Constant::getNullValue(helper.lt_qvalue); //FIXME top of exception stack
                     llvm::Value *args[2] = { temps[ins.getTemp().getIndex()], e };
                     builder.CreateCall(helper.lf_decRefNoexcept, args);
                     break;
                 }
+                case code::Instruction::Kind::RefInc: {
+                    const code::RefInc &ins = static_cast<const code::RefInc &>(ii);
+                    builder.CreateCall(helper.lf_incRef, temps[ins.getTemp().getIndex()]);
+                    break;
+                }
+                case code::Instruction::Kind::ResumeUnwind: {
+                    //FIXME pop from exception stack
+                    builder.CreateResume(builder.CreateLoad(excSlot));
+                    break;
+                }
+                case code::Instruction::Kind::Ret: {
+                    const code::Ret &ins = static_cast<const code::Ret &>(ii);
+                    builder.CreateRet(temps[ins.getValue().getIndex()]);
+                    break;
+                }
+                case code::Instruction::Kind::RetVoid:
+                    builder.CreateRetVoid();
+                    break;
+
+
+
                 //TODO replace ins.getGlobalVariable().getId() with a map
                 //of qore::GlobalVariable * -> llvm::GlobalVariable *
 //                case comp::as::Instruction::Kind::ReadLockGlobal: {
@@ -185,63 +233,13 @@ public:
 //                    builder.CreateCall(helper.lf_createGlobal, args);
 //                    break;
 //                }
-                case comp::as::Instruction::Kind::Rethrow: {
-                    //FIXME pop from exception stack
-                    builder.CreateResume(builder.CreateLoad(excSlot));
-                    break;
-                }
-                case comp::as::Instruction::Kind::BinaryOperator: {
-                    const comp::as::BinaryOperator &ins = static_cast<const comp::as::BinaryOperator &>(ii);
-                    llvm::Value *args[2] = { temps[ins.getLeft().getIndex()], temps[ins.getRight().getIndex()] };
-                    temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
-                            helper.getBinaryOperator(ins.getOperator()), args);
-                    break;
-                }
-                case comp::as::Instruction::Kind::Conversion: {
-                    const comp::as::Conversion &ins = static_cast<const comp::as::Conversion &>(ii);
-                    temps[ins.getDest().getIndex()] = makeCallOrInvoke(builder, ins,
-                            helper.getConversion(ins.getConversion()), temps[ins.getArg().getIndex()]);
-                    break;
-                }
-                case comp::as::Instruction::Kind::Ret: {
-                    const comp::as::Ret &ins = static_cast<const comp::as::Ret &>(ii);
-                    builder.CreateRet(temps[ins.getValue().getIndex()]);
-                    break;
-                }
-                case comp::as::Instruction::Kind::RetVoid:
-                    builder.CreateRetVoid();
-                    break;
-                case comp::as::Instruction::Kind::GetArg: {
-                    const comp::as::GetArg &ins = static_cast<const comp::as::GetArg &>(ii);
-
-                    auto it = func->arg_begin();
-                    Index i = ins.getIndex();
-                    while (i--) {
-                        ++it;
-                    }
-                    temps[ins.getDest().getIndex()] = it;
-                    break;
-                }
-                case comp::as::Instruction::Kind::Branch: {
-                    const comp::as::Branch &ins = static_cast<const comp::as::Branch &>(ii);
-                    builder.CreateCondBr(
-                            builder.CreateCall(helper.lf_qvalue_to_qbool, temps[ins.getCondition().getIndex()]),
-                            mapBlock(ins.getTrueDest(), "if.true"),
-                            mapBlock(ins.getFalseDest(), "if.false"));
-                    break;
-                }
-                case comp::as::Instruction::Kind::Jump: {
-                    const comp::as::Jump &ins = static_cast<const comp::as::Jump &>(ii);
-                    builder.CreateBr(mapBlock(ins.getDest(), "jump.dest"));
-                    break;
-                }
                 default:
                     QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ii.getKind()));
             }
         }
     }
 
-    llvm::BasicBlock *mapBlock(const comp::as::Block &b, const char *name) {
+    llvm::BasicBlock *mapBlock(const code::Block &b, const char *name) {
         llvm::BasicBlock *&bb = blockMap[&b];
         if (!bb) {
             bb = llvm::BasicBlock::Create(helper.ctx, name, func);
@@ -258,8 +256,8 @@ private:
     std::vector<llvm::AllocaInst *> locals;
     std::vector<llvm::Value *> temps;
     llvm::Value *excSlot;
-    std::map<const comp::as::Block *, llvm::BasicBlock *> blockMap;
-    std::vector<const comp::as::Block *> queue;
+    std::map<const code::Block *, llvm::BasicBlock *> blockMap;
+    std::vector<const code::Block *> queue;
 };
 
 } // namespace cg
