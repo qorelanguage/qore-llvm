@@ -37,11 +37,30 @@
 #include "qore/core/util/Debug.h"
 #include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Type.h"
-#include "qore/comp/ast/Visitor.h"
 
 namespace qore {
 namespace comp {
 namespace ast {
+
+class ErrorExpression;
+class LiteralExpression;
+class NameExpression;
+class ListExpression;
+class HashExpression;
+class VarDeclExpression;
+class CastExpression;
+class CallExpression;
+class UnaryExpression;
+class IndexExpression;
+class AccessExpression;
+class NewExpression;
+class BinaryExpression;
+class InstanceofExpression;
+class ConditionalExpression;
+class AssignmentExpression;
+class ListOperationExpression;
+class RegexExpression;
+class ClosureExpression;
 
 /**
  * \brief Base class for all nodes representing expressions.
@@ -49,40 +68,51 @@ namespace ast {
 class Expression : public Node {
 
 public:
+    /**
+     * \brief Identifies the concrete type of an instance.
+     */
     enum class Kind {
-        Error,
-        Literal,
-        Name,
-        List,
-        Hash,
-        VarDecl,
-        Cast,
-        Call,
-        Unary,
-        Index,
-        Access,
-        New,
-        Binary,
-        Instanceof,
-        Conditional,
-        Assignment,
-        ListOperation,
-        Regex,
-        Closure,
+        Error,              //!< Identifies an instance of \ref ErrorExpression.
+        Literal,            //!< Identifies an instance of \ref LiteralExpression.
+        Name,               //!< Identifies an instance of \ref NameExpression.
+        List,               //!< Identifies an instance of \ref ListExpression.
+        Hash,               //!< Identifies an instance of \ref HashExpression.
+        VarDecl,            //!< Identifies an instance of \ref VarDeclExpression.
+        Cast,               //!< Identifies an instance of \ref CastExpression.
+        Call,               //!< Identifies an instance of \ref CallExpression.
+        Unary,              //!< Identifies an instance of \ref UnaryExpression.
+        Index,              //!< Identifies an instance of \ref IndexExpression.
+        Access,             //!< Identifies an instance of \ref AccessExpression.
+        New,                //!< Identifies an instance of \ref NewExpression.
+        Binary,             //!< Identifies an instance of \ref BinaryExpression.
+        Instanceof,         //!< Identifies an instance of \ref InstanceofExpression.
+        Conditional,        //!< Identifies an instance of \ref ConditionalExpression.
+        Assignment,         //!< Identifies an instance of \ref AssignmentExpression.
+        ListOperation,      //!< Identifies an instance of \ref ListOperationExpression.
+        Regex,              //!< Identifies an instance of \ref RegexExpression.
+        Closure,            //!< Identifies an instance of \ref ClosureExpression.
     };
 
 public:
     using Ptr = std::unique_ptr<Expression>;                //!< Pointer type.
 
+    /**
+     * \brief Returns the kind of the expression.
+     * \return the kind of the expression
+     */
     virtual Kind getKind() const = 0;
 
     /**
-     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Node.
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Expression.
      * \param visitor the visitor to call
+     * \return the value returned from the visitor
+     * \tparam V the type of the visitor
      */
-    template<typename R>
-    R accept(ExpressionVisitor<R> &v) {
-        #define CASE(K) case Kind::K: return v.visit(static_cast<K ## Expression &>(*this))
+    template<typename V>
+    typename V::ReturnType accept(V &visitor) const {
+        /// \cond NoDoxygen
+        #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Expression &>(*this))
+        /// \endcond NoDoxygen
         switch (getKind()) {
             CASE(Error);
             CASE(Literal);

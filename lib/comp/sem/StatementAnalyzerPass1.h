@@ -43,7 +43,10 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-class StatementAnalyzerPass1 : public ast::StatementVisitor<Statement::Ptr> {
+class StatementAnalyzerPass1 {
+
+public:
+    using ReturnType = Statement::Ptr;
 
 public:
     static Statement::Ptr analyze(Core &core, Scope &scope, ast::Statement &stmt) {
@@ -57,11 +60,11 @@ public:
         return stmt.accept(a);
     }
 
-    Statement::Ptr visit(ast::ExpressionStatement &node) override {
+    Statement::Ptr visit(const ast::ExpressionStatement &node) {
         return ExpressionStatement::create(ExpressionAnalyzerPass1::eval(core, scope, *node.expression));
     }
 
-    Statement::Ptr visit(ast::CompoundStatement &node) override {
+    Statement::Ptr visit(const ast::CompoundStatement &node) {
         std::vector<Statement::Ptr> statements;
         BlockScopeImpl inner(scope);
         for (auto &s : node.statements) {
@@ -71,7 +74,7 @@ public:
         return CompoundStatement::create(std::move(statements));
     }
 
-    Statement::Ptr visit(ast::ReturnStatement &node) override {
+    Statement::Ptr visit(const ast::ReturnStatement &node) {
         if (!node.expression) {
             if (scope.getReturnType() != Type::Nothing) {
                 QORE_UNREACHABLE("report error");
@@ -85,7 +88,7 @@ public:
                 ExpressionAnalyzerPass1::evalAndConvert(core, scope, scope.getReturnType(), *node.expression));
     }
 
-    Statement::Ptr visit(ast::IfStatement &node) override {
+    Statement::Ptr visit(const ast::IfStatement &node) {
         BlockScopeImpl inner(scope);
         Expression::Ptr cond = ExpressionAnalyzerPass1::evalAndConvert(core, inner, Type::SoftBool,
                 *node.condition);
@@ -94,22 +97,22 @@ public:
         return IfStatement::create(std::move(cond), std::move(b1), std::move(b2));
     }
 
-    Statement::Ptr visit(ast::TryStatement &node) override {
+    Statement::Ptr visit(const ast::TryStatement &node) {
         Statement::Ptr tryStmt = analyzeWithNewBlock(core, scope, *node.stmtTry);
         Statement::Ptr catchStmt = analyzeWithNewBlock(core, scope, *node.stmtCatch);
         return TryStatement::create(std::move(tryStmt), std::move(catchStmt));
     }
 
 
-    Statement::Ptr visit(ast::EmptyStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::ForeachStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::ThrowStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::SimpleStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::ScopeGuardStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::WhileStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::DoWhileStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::ForStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Statement::Ptr visit(ast::SwitchStatement &node) override { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::EmptyStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::ForeachStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::ThrowStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::SimpleStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::ScopeGuardStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::WhileStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::DoWhileStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::ForStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    Statement::Ptr visit(const ast::SwitchStatement &node) { QORE_NOT_IMPLEMENTED(""); }
 
 private:
     StatementAnalyzerPass1(Core &core, Scope &scope) : core(core), scope(scope) {

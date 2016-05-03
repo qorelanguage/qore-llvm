@@ -80,9 +80,9 @@ class Scope {
 public:
     virtual ~Scope() = default;
 
-    virtual const Type &resolveType(ast::Type &node) const = 0;
+    virtual const Type &resolveType(const ast::Type &node) const = 0;
     virtual LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
-    virtual Symbol resolveSymbol(ast::Name &name) const = 0;
+    virtual Symbol resolveSymbol(const ast::Name &name) const = 0;
     virtual LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
     virtual const Type &getReturnType() const = 0;
 

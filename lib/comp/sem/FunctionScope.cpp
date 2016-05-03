@@ -43,7 +43,7 @@ FunctionScope::FunctionScope(Function &rt, Core &core, Scope &parent, ast::Routi
         : rt(rt), core(core), parent(parent), node(node) {
 }
 
-const Type &FunctionScope::resolveType(ast::Type &node) const {
+const Type &FunctionScope::resolveType(const ast::Type &node) const {
     return parent.resolveType(node);
 }
 
@@ -54,7 +54,7 @@ LocalVariableInfo &FunctionScope::createLocalVariable(String::Ref name, SourceLo
     return lv;
 }
 
-Symbol FunctionScope::resolveSymbol(ast::Name &name) const {
+Symbol FunctionScope::resolveSymbol(const ast::Name &name) const {
     if (name.isSimple()) {
         auto it = args.find(name.last().str);
         if (it != args.end()) {

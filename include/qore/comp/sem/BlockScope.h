@@ -71,11 +71,11 @@ public:
         return lv;
     }
 
-    const Type &resolveType(ast::Type &node) const override {
+    const Type &resolveType(const ast::Type &node) const override {
         return parent.resolveType(node);
     }
 
-    Symbol resolveSymbol(ast::Name &name) const override {
+    Symbol resolveSymbol(const ast::Name &name) const override {
         if (name.isSimple()) {
             auto it = locals.find(name.last().str);
             if (it != locals.end()) {

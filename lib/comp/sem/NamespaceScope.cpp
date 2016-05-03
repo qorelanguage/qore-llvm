@@ -235,7 +235,7 @@ NamespaceScope &NamespaceScope::findParentFor(const ast::Name &name) {
     return *parent;
 }
 
-Symbol NamespaceScope::resolveSymbol(ast::Name &name) const {
+Symbol NamespaceScope::resolveSymbol(const ast::Name &name) const {
     if (name.isSimple()) {
         auto it = globalVariables.find(name.last().str);
         if (it != globalVariables.end()) {
@@ -245,7 +245,7 @@ Symbol NamespaceScope::resolveSymbol(ast::Name &name) const {
     QORE_NOT_IMPLEMENTED("");
 }
 
-const Type &NamespaceScope::resolveType(ast::Type &node) const {
+const Type &NamespaceScope::resolveType(const ast::Type &node) const {
     if (node.getKind() == ast::Type::Kind::Implicit) {
         return Type::Nothing;
     }

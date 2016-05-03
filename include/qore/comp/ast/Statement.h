@@ -38,37 +38,67 @@ namespace qore {
 namespace comp {
 namespace ast {
 
+class EmptyStatement;
+class ExpressionStatement;
+class CompoundStatement;
+class ReturnStatement;
+class IfStatement;
+class TryStatement;
+class ForeachStatement;
+class ThrowStatement;
+class SimpleStatement;
+class ScopeGuardStatement;
+class WhileStatement;
+class DoWhileStatement;
+class ForStatement;
+class SwitchStatement;
+
 /**
  * \brief Base class for all nodes representing statements.
  */
 class Statement : public Node {
 
 public:
+    /**
+     * \brief Identifies the concrete type of an instance.
+     */
     enum class Kind {
-        Empty,
-        Expression,
-        Compound,
-        Return,
-        If,
-        Try,
-        Foreach,
-        Throw,
-        Simple,
-        ScopeGuard,
-        While,
-        DoWhile,
-        For,
-        Switch,
+        Empty,          //!< Identifies an instance of \ref EmptyStatement.
+        Expression,     //!< Identifies an instance of \ref ExpressionStatement.
+        Compound,       //!< Identifies an instance of \ref CompoundStatement.
+        Return,         //!< Identifies an instance of \ref ReturnStatement.
+        If,             //!< Identifies an instance of \ref IfStatement.
+        Try,            //!< Identifies an instance of \ref TryStatement.
+        Foreach,        //!< Identifies an instance of \ref ForeachStatement.
+        Throw,          //!< Identifies an instance of \ref ThrowStatement.
+        Simple,         //!< Identifies an instance of \ref SimpleStatement.
+        ScopeGuard,     //!< Identifies an instance of \ref ScopeGuardStatement.
+        While,          //!< Identifies an instance of \ref WhileStatement.
+        DoWhile,        //!< Identifies an instance of \ref DoWhileStatement.
+        For,            //!< Identifies an instance of \ref ForStatement.
+        Switch,         //!< Identifies an instance of \ref SwitchStatement.
     };
 
 public:
     using Ptr = std::unique_ptr<Statement>;                 //!< Pointer type.
 
+    /**
+     * \brief Returns the kind of the statement.
+     * \return the kind of the statement
+     */
     virtual Kind getKind() const = 0;
 
-    template<typename R>
-    R accept(StatementVisitor<R> &v) {
-        #define CASE(K) case Kind::K: return v.visit(static_cast<K ## Statement &>(*this))
+    /**
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Statement.
+     * \param visitor the visitor to call
+     * \return the value returned from the visitor
+     * \tparam V the type of the visitor
+     */
+    template<typename V>
+    typename V::ReturnType accept(V &visitor) const {
+        /// \cond NoDoxygen
+        #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Statement &>(*this))
+        /// \endcond NoDoxygen
         switch (getKind()) {
             CASE(Empty);
             CASE(Expression);

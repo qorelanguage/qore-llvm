@@ -91,9 +91,9 @@ public:
 
     ClassScope &resolveClass(const ast::Name &name) const;
 
-    const Type &resolveType(ast::Type &node) const override;
+    const Type &resolveType(const ast::Type &node) const override;
 
-    Symbol resolveSymbol(ast::Name &name) const override;
+    Symbol resolveSymbol(const ast::Name &name) const override;
 
     LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         //this will happen if a local variable is declared in a constant initializer - report error and return

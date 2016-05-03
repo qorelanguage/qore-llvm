@@ -43,6 +43,34 @@ TEST_P(ParserTest, Run) {
 
 QTIF_TEST_CASE(ParserTest, "parser/");
 
+TEST(ParserTest2, declOrStmt) {
+    StringTable stringTable;
+    DiagManager diagMgr(stringTable);
+    SourceManager srcMgr(diagMgr, "");
+    Env env;
+    Context ctx(env, stringTable, diagMgr, srcMgr);
+    Scanner scanner(ctx);
+    Source &src = srcMgr.createFromString(env.createSourceInfo(""), "our int x; x = 5;");
+    DirectiveProcessor dp(ctx, src);
+    Parser parser(ctx, dp);
+
+    DeclOrStmt dos;
+
+    dos = parser.parseDeclOrStmt();
+    EXPECT_TRUE(dos.isDeclaration());
+    EXPECT_FALSE(dos.isStatement());
+    EXPECT_EQ(ast::Declaration::Kind::GlobalVariable, dos.getDeclaration().getKind());
+
+    dos = parser.parseDeclOrStmt();
+    EXPECT_FALSE(dos.isDeclaration());
+    EXPECT_TRUE(dos.isStatement());
+    EXPECT_EQ(ast::Statement::Kind::Expression, dos.getStatement().getKind());
+
+    dos = parser.parseDeclOrStmt();
+    EXPECT_FALSE(dos.isDeclaration());
+    EXPECT_FALSE(dos.isStatement());
+}
+
 TEST(AstCoverage, ArgList) {
     Token t1;
     Token t2;
@@ -52,6 +80,54 @@ TEST(AstCoverage, ArgList) {
     EXPECT_EQ(1, a->getStart().getOffset());
     EXPECT_EQ(4, a->getEnd().getOffset());
 }
+
+#ifdef QORE_COVERAGE
+TEST(AstCoverage, ExpressionAccept) {
+    struct Expr : public ast::Expression {
+        Kind getKind() const override {
+            return static_cast<Kind>(666);
+        }
+        SourceLocation getStart() const override {
+            return SourceLocation();
+        }
+        SourceLocation getEnd() const override {
+            return SourceLocation();
+        }
+    };
+
+    struct Visitor {
+        using ReturnType = void;
+        void visit(const ast::Expression &e) {}
+    };
+
+    Expr e;
+    Visitor v;
+    EXPECT_THROW(e.accept(v), util::Unreachable);
+}
+
+TEST(AstCoverage, StatementAccept) {
+    struct Stmt : public ast::Statement {
+        Kind getKind() const override {
+            return static_cast<Kind>(666);
+        }
+        SourceLocation getStart() const override {
+            return SourceLocation();
+        }
+        SourceLocation getEnd() const override {
+            return SourceLocation();
+        }
+    };
+
+    struct Visitor {
+        using ReturnType = void;
+        void visit(const ast::Statement &e) {}
+    };
+
+    Stmt s;
+    Visitor v;
+    EXPECT_THROW(s.accept(v), util::Unreachable);
+}
+#endif
 
 } // namespace comp
 } // namespace qore

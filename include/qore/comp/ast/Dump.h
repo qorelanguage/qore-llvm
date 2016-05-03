@@ -34,7 +34,6 @@
 #include <string>
 #include <utility>
 #include "qore/comp/Context.h"
-#include "qore/comp/ast/Visitor.h"
 #include "qore/comp/ast/Script.h"
 
 namespace qore {
@@ -45,7 +44,7 @@ namespace ast {
 #define NODE_HEADER(name)   os << indent++ << "-" << #name << "@" << node.getStart() \
                                << "-" << node.getEnd() << "\n"
 #define NODE_FOOTER()       --indent
-#define NODE(name, body)    void visit(name &node) { \
+#define NODE(name, body)    void visit(const name &node) { \
                                 NODE_HEADER(name); \
                                 body \
                                 NODE_FOOTER(); \
@@ -63,7 +62,10 @@ namespace ast {
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
-class DumpVisitor : public StatementVisitor<void>, public ExpressionVisitor<void> {
+class DumpVisitor {
+
+public:
+    using ReturnType = void;
 
 public:
     DumpVisitor(Context &ctx, OS &os) : ctx(ctx), os(os) {
@@ -356,7 +358,7 @@ public:
         VISIT(initializer);
     })
 
-    void visit(Type &node) {
+    void visit(const Type &node) {
         if (node.getKind() == Type::Kind::Implicit) {
             NODE_HEADER(ImplicitType);
         } else {
@@ -370,7 +372,7 @@ public:
         NODE_FOOTER();
     }
 
-    void visit(Routine &node) {
+    void visit(const Routine &node) {
         MODIFIERS(modifiers);
         TYPE(type);
         ARRAY(params, {
@@ -386,7 +388,7 @@ public:
         }
     }
 
-    void visit(ArgList &node) {
+    void visit(const ArgList &node) {
         for (auto &i : node.data) {
             i->accept(*this);
         }

@@ -79,7 +79,7 @@ public:
     explicit InteractiveScope(const Scope &rootScope) : rootScope(rootScope) {
     }
 
-    const Type &resolveType(ast::Type &node) const override {
+    const Type &resolveType(const ast::Type &node) const override {
         return rootScope.resolveType(node);
     }
 
@@ -91,7 +91,7 @@ public:
         return lv;
     }
 
-    Symbol resolveSymbol(ast::Name &name) const override {
+    Symbol resolveSymbol(const ast::Name &name) const override {
         return rootScope.resolveSymbol(name);
     }
 
@@ -152,12 +152,12 @@ public:
         BlockScopeImpl blockScope(topScope);
         TopLevelCtx topLevelCtx;
         while (true) {
-            comp::Parser::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
-            if (declOrStmt.decl) {
-                root.processDeclaration(*declOrStmt.decl);
+            comp::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
+            if (declOrStmt.isDeclaration()) {
+                root.processDeclaration(declOrStmt.getDeclaration());
                 analyzer.processPendingDeclarations();
-            } else if (declOrStmt.stmt) {
-                Statement::Ptr stmt = analyzer.doPass1(blockScope, *declOrStmt.stmt);
+            } else if (declOrStmt.isStatement()) {
+                Statement::Ptr stmt = analyzer.doPass1(blockScope, declOrStmt.getStatement());
                 auto initializers = analyzer.takeInitializers();
                 for (auto &stmt : initializers) {
                     analyzer.doPass2(mainBuilder, *stmt);

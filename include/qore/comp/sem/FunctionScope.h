@@ -58,9 +58,9 @@ public:
     FunctionScope(Function &rt, Core &core, Scope &parent, ast::Routine &node);
 
 
-    const Type &resolveType(ast::Type &node) const override;
+    const Type &resolveType(const ast::Type &node) const override;
     LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override;
-    Symbol resolveSymbol(ast::Name &name) const override;
+    Symbol resolveSymbol(const ast::Name &name) const override;
     LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }

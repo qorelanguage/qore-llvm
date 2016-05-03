@@ -50,18 +50,6 @@ namespace comp {
 class Parser {
 
 public:
-    struct DeclOrStmt {
-        DeclOrStmt() {      //indicates eof
-        }
-        explicit DeclOrStmt(ast::Declaration::Ptr decl) : decl(std::move(decl)) {
-        }
-        explicit DeclOrStmt(ast::Statement::Ptr stmt) : stmt(std::move(stmt)) {
-        }
-        ast::Declaration::Ptr decl;
-        ast::Statement::Ptr stmt;
-    };
-
-public:
     /**
      * \brief Constructs the parser for given source of tokens.
      * \param ctx the compiler context
@@ -76,7 +64,11 @@ public:
      */
     ast::Script::Ptr parseScript();
 
-    DeclOrStmt parseDeclOrStmt();
+    /**
+     * \brief Parses a top-level statement or declaration.
+     * \return parsed statement, declaration, or eof
+     */
+    class DeclOrStmt parseDeclOrStmt();
 
 private:
     Parser(const Parser &) = delete;
@@ -224,6 +216,71 @@ private:
     Token token;
     bool hasToken;
     Recorder *recorder;
+};
+
+/**
+ * \brief Helper class for returning either a declaration or a statement from the parser.
+ */
+class DeclOrStmt {
+
+public:
+    /**
+     * \brief Constructs an instance that represents eof.
+     */
+    DeclOrStmt() : decl(false) {
+    }
+
+    /**
+     * \brief Constructs an instance that represents a declaration.
+     * \param decl the declaration
+     */
+    explicit DeclOrStmt(ast::Declaration::Ptr decl) : node(std::move(decl)), decl(true) {
+    }
+
+    /**
+     * \brief Constructs an instance that represents a statement.
+     * \param stmt the statement
+     */
+    explicit DeclOrStmt(ast::Statement::Ptr stmt) : node(std::move(stmt)), decl(false) {
+    }
+
+    /**
+     * \brief Returns true if this instance represents a declaration.
+     * \return true if this instance represents a declaration
+     */
+    bool isDeclaration() const {
+        return node && decl;
+    }
+
+    /**
+     * \brief Returns true if this instance represents a statement.
+     * \return true if this instance represents a statement
+     */
+    bool isStatement() const {
+        return node && !decl;
+    }
+
+    /**
+     * \brief Returns the declaration represented by this instance.
+     * \return the declaration represented by this instance
+     */
+    ast::Declaration &getDeclaration() {
+        assert(isDeclaration());
+        return static_cast<ast::Declaration &>(*node);
+    }
+
+    /**
+     * \brief Returns the statement represented by this instance.
+     * \return the statement represented by this instance
+     */
+    ast::Statement &getStatement() {
+        assert(isStatement());
+        return static_cast<ast::Statement &>(*node);
+    }
+
+private:
+    ast::Node::Ptr node;
+    bool decl;
 };
 
 } // namespace comp

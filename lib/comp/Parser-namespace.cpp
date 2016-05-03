@@ -33,7 +33,7 @@
 namespace qore {
 namespace comp {
 
-Parser::DeclOrStmt Parser::parseDeclOrStmt() {
+DeclOrStmt Parser::parseDeclOrStmt() {
     LOG_FUNCTION();
 
     if (tokenType() == TokenType::EndOfFile) {

@@ -51,7 +51,10 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-class ExpressionAnalyzerPass1 : public ast::ExpressionVisitor<Expression::Ptr> {
+class ExpressionAnalyzerPass1 {
+
+public:
+    using ReturnType = Expression::Ptr;
 
 public:
     static Expression::Ptr eval(Core &core, Scope &scope, ast::Expression &node) {
@@ -64,7 +67,7 @@ public:
         return a.convert(node.accept(a), type);
     }
 
-    Expression::Ptr visit(ast::VarDeclExpression &node) override {
+    Expression::Ptr visit(const ast::VarDeclExpression &node) {
         const Type &type = scope.resolveType(node.type);
         LocalVariableInfo &lv = scope.declareLocalVariable(node.name, node.location, type);
 
@@ -79,7 +82,7 @@ public:
         return LifetimeStartExpression::create(lv, std::move(rhs));
     }
 
-    Expression::Ptr visit(ast::BinaryExpression &node) override {
+    Expression::Ptr visit(const ast::BinaryExpression &node) {
         Expression::Ptr left = eval(*node.left);
         Expression::Ptr right = eval(*node.right);
         const BinaryOperator &op = resolveOperator(BinaryOperator::Kind::Plus, left->getType(), right->getType());
@@ -89,7 +92,7 @@ public:
                 convert(std::move(right), op.getRightType()));
     }
 
-    Expression::Ptr visit(ast::NameExpression &node) override {
+    Expression::Ptr visit(const ast::NameExpression &node) {
         Symbol s = scope.resolveSymbol(node.name);
         if (s.getKind() == Symbol::Kind::Global) {
             return GlobalVariableRefExpression::create(s.asGlobal());
@@ -100,7 +103,7 @@ public:
         }
     }
 
-    Expression::Ptr visit(ast::LiteralExpression &node) override {
+    Expression::Ptr visit(const ast::LiteralExpression &node) {
         if (node.token.type == qore::comp::TokenType::String) {
             //FIXME proper string literal parsing - no quotes, escapes etc.
             std::string s = core.ctx.getLexeme(node.token);
@@ -118,7 +121,7 @@ public:
         }
     }
 
-    Expression::Ptr visit(ast::AssignmentExpression &node) override {
+    Expression::Ptr visit(const ast::AssignmentExpression &node) {
         if (node.op.type == qore::comp::TokenType::Equals) {
             Expression::Ptr left = eval(*node.left);
             Expression::Ptr right = evalAndConvert(*node.right, left->getType());
@@ -137,20 +140,20 @@ public:
         }
     }
 
-    Expression::Ptr visit(ast::ErrorExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::ListExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::HashExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::CastExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::CallExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::UnaryExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::IndexExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::AccessExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::NewExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::InstanceofExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::ConditionalExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::ListOperationExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::RegexExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(ast::ClosureExpression &node) override { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::ErrorExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::ListExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::HashExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::CastExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::CallExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::UnaryExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::IndexExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::AccessExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::NewExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::InstanceofExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::ConditionalExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::ListOperationExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::RegexExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    Expression::Ptr visit(const ast::ClosureExpression &node) { QORE_NOT_IMPLEMENTED(""); }
 
 private:
     ExpressionAnalyzerPass1(Core &core, Scope &scope, const Type *typeHint = nullptr)
