@@ -55,7 +55,7 @@ protected:
     }
 
     virtual code::Temp createTemp() = 0;
-    virtual LocalVariable &createLocalVariable(std::string name, const Type &type) = 0;
+    virtual LocalVariable &createLocalVariable(std::string name, const Type &type, SourceLocation location) = 0;
 
 public:
     virtual ~Builder() = default;
@@ -108,7 +108,7 @@ private:
     // for local variables, this can be done for all of them before starting pass2
     // Builder then can rely on lv.getRt everywhere, no need for createLocalVariable and ctx
     void finalizeLocalVariable(LocalVariableInfo &lv) {
-        lv.setRt(createLocalVariable(ctx.getString(lv.getName()), lv.getType()));
+        lv.setRt(createLocalVariable(ctx.getString(lv.getName()), lv.getType(), lv.getLocation()));
     }
 
     void x(const LocalVariable &lv) {
@@ -355,8 +355,8 @@ public:
         return f.addTemp();
     }
 
-    LocalVariable &createLocalVariable(std::string name, const Type &type) override {
-        return f.addLocalVariable(std::move(name), type);
+    LocalVariable &createLocalVariable(std::string name, const Type &type, SourceLocation location) override {
+        return f.addLocalVariable(std::move(name), type, location);
     }
 
     code::Block *createBlock() override {

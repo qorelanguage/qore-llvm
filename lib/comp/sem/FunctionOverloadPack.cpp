@@ -38,7 +38,8 @@ namespace comp {
 namespace sem {
 
 void FunctionOverloadPack::pass2() {
-    for (auto node : queue) {
+    for (auto q : queue) {
+        ast::Routine *node = q.first;
         try {
             FunctionType type(parent.resolveType(node->type));
             for (auto &p : node->params) {
@@ -46,7 +47,7 @@ void FunctionOverloadPack::pass2() {
             }
             checkOverload(type);
 
-            Function &f = rt.addFunction(std::move(type));
+            Function &f = rt.addFunction(std::move(type), q.second);
             FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(f, core, parent, *node);
             core.addToQueue(*ptr);
             functions.push_back(std::move(ptr));

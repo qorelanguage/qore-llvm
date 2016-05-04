@@ -52,6 +52,9 @@ template<typename C>
 class IteratorAdapter {
 
 public:
+    using difference_type = typename C::Iterator::difference_type;  //!< Represents the difference of two iterators.
+
+public:
     /**
      * \brief Constructs the adapter.
      * \param it the underlying iterator
@@ -100,6 +103,15 @@ public:
      */
     bool operator!=(const IteratorAdapter<C> &other) const {
         return !(*this == other);
+    }
+
+    /**
+     * \brief Returns the distance between two iterators.
+     * \param other the other iterator
+     * \return the distance between `this` and `other`
+     */
+    difference_type operator-(const IteratorAdapter<C> &other) const {
+        return it - other.it;
     }
 
 private:
@@ -298,6 +310,14 @@ public:
      */
     I end() const {
         return e;
+    }
+
+    /**
+     * \brief Returns the size of the range.
+     * \return the size of the range
+     */
+    typename I::difference_type size() const {
+        return e - b;
     }
 
 private:

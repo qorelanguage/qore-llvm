@@ -66,10 +66,11 @@ public:
     /**
      * \brief Creates a new function.
      * \param type the type of the function
+     * \param location the location of the declaration
      * \return newly created function
      */
-    Function &addFunction(FunctionType type) {
-        Function::Ptr ptr = Function::Ptr(new Function(std::move(type)));
+    Function &addFunction(FunctionType type, SourceLocation location) {
+        Function::Ptr ptr = Function::Ptr(new Function(std::move(type), location));
         Function &f = *ptr;
         functions.push_back(std::move(ptr));
         return f;

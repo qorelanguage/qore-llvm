@@ -49,7 +49,7 @@ public:
         if (isRoot) {
             os << "-root namespace";
         } else {
-            os << "-namespace " << ns.getName() << " @" << ns.getLocation();
+            os << "-namespace " << ns.getName() << location(ns);
         }
         os << "\n";
         for (auto &n : ns.getNamespaces()) {
@@ -61,15 +61,42 @@ public:
         for (auto &gv : ns.getGlobalVariables()) {
             dump(gv);
         }
+        for (auto &fg : ns.getFunctionGroups()) {
+            dump(fg);
+        }
         --indent;
     }
 
     void dump(const Class &c) {
-        os << indent << "-class " << c.getName() << " @" << c.getLocation() << "\n";
+        os << indent << "-class " << c.getName() << location(c) << "\n";
     }
 
     void dump(const GlobalVariable &gv) {
-        os << indent << "-our " << gv.getType() << " " << gv.getName() << " @" << gv.getLocation() << "\n";
+        os << indent << "-our " << gv.getType() << " " << gv.getName() << location(gv) << "\n";
+    }
+
+    void dump(const FunctionGroup &fg) {
+        for (auto &f : fg.getFunctions()) {
+            dump(fg, f);
+        }
+    }
+
+    void dump(const FunctionGroup &fg, const Function &f) {
+        os << indent++ << "-sub " << f.getType() << " " << fg.getName() << location(f)
+                << ", " << f.getTempCount() << " temps, " << f.getLocalVariables().size() << " locals\n";
+        for (auto &lv : f.getLocalVariables()) {
+            os << indent << "[" << lv.getIndex() << "] " << lv.getType() << " " << lv.getName() << location(lv) << "\n";
+        }
+        //TODO blocks
+        --indent;
+    }
+
+private:
+    template<typename T>
+    std::string location(const T &t) {
+        std::ostringstream str;
+        str << " @" << t.getLocation();
+        return str.str();
     }
 
 private:

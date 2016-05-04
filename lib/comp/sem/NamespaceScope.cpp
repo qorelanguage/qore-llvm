@@ -161,7 +161,7 @@ void NamespaceScope::processFunctionDeclaration(ast::Function &node) {
         functions[name] = std::move(ptr);
     }
 
-    fp->addOverload(*node.routine);
+    fp->addOverload(*node.routine, location);
 }
 
 

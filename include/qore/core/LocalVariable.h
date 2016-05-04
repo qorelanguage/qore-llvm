@@ -34,6 +34,7 @@
 #include <memory>
 #include <string>
 #include "qore/core/Defs.h"
+#include "qore/core/SourceLocation.h"
 #include "qore/core/Type.h"
 
 namespace qore {
@@ -52,8 +53,10 @@ public:
      * \param index the index of the local variable
      * \param name the name of the local variable
      * \param type the type of the local variable
+     * \param location the location of the declaration
      */
-    LocalVariable(Index index, std::string name, const Type &type) : index(index), name(std::move(name)), type(type) {
+    LocalVariable(Index index, std::string name, const Type &type, SourceLocation location) : index(index),
+            name(std::move(name)), type(type), location(location) {
     }
 
     /**
@@ -80,10 +83,19 @@ public:
         return type;
     }
 
+    /**
+     * \brief Returns the location of the declaration.
+     * \return the location of the declaration
+     */
+    const SourceLocation &getLocation() const {
+        return location;
+    }
+
 private:
     Index index;
     std::string name;
     const Type &type;
+    SourceLocation location;
 };
 
 } // namespace qore

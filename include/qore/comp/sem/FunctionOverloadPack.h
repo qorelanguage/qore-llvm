@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
 #define INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
 
+#include <utility>
 #include <vector>
 #include "qore/comp/sem/FunctionScope.h"
 #include "qore/core/FunctionGroup.h"
@@ -53,11 +54,11 @@ public:
         return location;
     }
 
-    void addOverload(ast::Routine &node) {
+    void addOverload(ast::Routine &node, SourceLocation location) {
         if (queue.empty()) {
             core.addToQueue(*this);
         }
-        queue.push_back(&node);
+        queue.emplace_back(&node, location);
     }
 
     void pass2();
@@ -74,7 +75,7 @@ private:
     Core &core;
     Scope &parent;
     SourceLocation location;
-    std::vector<ast::Routine *> queue;
+    std::vector<std::pair<ast::Routine *, SourceLocation>> queue;
     std::vector<FunctionScope::Ptr> functions;
 };
 

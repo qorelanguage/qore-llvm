@@ -49,6 +49,10 @@ public:
         return VectorIterator(vector.end());
     }
 
+    IteratorRange<VectorIterator> getVector() const {
+        return IteratorRange<VectorIterator>(vector);
+    }
+
     IteratorRange<MapIterator> getMap() const {
         return IteratorRange<MapIterator>(map);
     }
@@ -85,6 +89,11 @@ TEST_F(IteratorsTest, mapForEach) {
         str << item << "|";
     }
     EXPECT_EQ("|Item 1|Item 2|", str.str());
+}
+
+TEST_F(IteratorsTest, rangeSize) {
+    ClassWithVectorAndMapOfUniquePtrs c;
+    EXPECT_EQ(2, c.getVector().size());
 }
 
 } // namespace util

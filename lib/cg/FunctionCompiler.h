@@ -45,8 +45,8 @@ class FunctionCompiler {
 
 public:
     FunctionCompiler(const Function &f, llvm::Function *func, Helper &helper, llvm::GlobalVariable *rtctx)
-            : f(f), func(func), helper(helper), rtctx(rtctx), locals(f.getLocalCount()), temps(f.getTempCount()),
-              excSlot(nullptr) {
+            : f(f), func(func), helper(helper), rtctx(rtctx), locals(f.getLocalVariables().size()),
+              temps(f.getTempCount()), excSlot(nullptr) {
         func->setPersonalityFn(llvm::ConstantExpr::getBitCast(helper.lf_personality, helper.lt_char_ptr));
     }
 

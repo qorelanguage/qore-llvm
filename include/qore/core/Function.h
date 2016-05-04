@@ -37,6 +37,7 @@
 #include "qore/core/FunctionType.h"
 #include "qore/core/LocalVariable.h"
 #include "qore/core/code/Block.h"
+#include "qore/core/util/Iterators.h"
 
 namespace qore {
 
@@ -46,14 +47,17 @@ namespace qore {
 class Function {
 
 public:
-    using Ptr = std::unique_ptr<Function>;          //!< Pointer type.
+    using Ptr = std::unique_ptr<Function>;                                                  //!< Pointer type.
+    using LocalVariableIterator = util::VectorOfUniquePtrIteratorAdapter<LocalVariable>;    //!< Locals iterator.
 
 public:
     /**
      * \brief Creates the function.
      * \param type the type of the function
+     * \param location the location of the declaration
      */
-    explicit Function(FunctionType type) : type(std::move(type)), tempCount(0) {
+    explicit Function(FunctionType type, SourceLocation location) : type(std::move(type)), location(location),
+            tempCount(0) {
     }
 
     /**
@@ -65,6 +69,14 @@ public:
     }
 
     /**
+     * \brief Returns the location of the declaration.
+     * \return the location of the declaration
+     */
+    const SourceLocation &getLocation() const {
+        return location;
+    }
+
+    /**
      * \brief Returns the number of temporaries needed for interpreting this functions.
      *
      * It is guaranteed that every \ref code::Temp::getIndex() in the function's code is less than this value.
@@ -72,14 +84,6 @@ public:
      */
     Size getTempCount() const {
         return tempCount;
-    }
-
-    /**
-     * \brief Returns the number of local variables.
-     * \return the number of local variables
-     */
-    Size getLocalCount() const {
-        return locals.size();
     }
 
     /**
@@ -103,10 +107,11 @@ public:
      * \brief Adds a new local variable.
      * \param name the name of the variable
      * \param type the type of the variable
+     * \param location the location of the declaration
      * \return the new local variable
      */
-    LocalVariable &addLocalVariable(std::string name, const Type &type) {
-        LocalVariable::Ptr ptr = LocalVariable::Ptr(new LocalVariable(locals.size(), std::move(name), type));
+    LocalVariable &addLocalVariable(std::string name, const Type &type, SourceLocation location) {
+        LocalVariable::Ptr ptr = LocalVariable::Ptr(new LocalVariable(locals.size(), std::move(name), type, location));
         LocalVariable &lv = *ptr;
         locals.push_back(std::move(ptr));
         return lv;
@@ -125,6 +130,14 @@ public:
         return b;
     }
 
+    /**
+     * \brief Returns a range for iterating local variables.
+     * \return a range for iterating local variables
+     */
+    util::IteratorRange<LocalVariableIterator> getLocalVariables() const {
+        return util::IteratorRange<LocalVariableIterator>(locals);
+    }
+
 private:
     Function(const Function &) = delete;
     Function(Function &&) = delete;
@@ -133,6 +146,7 @@ private:
 
 private:
     FunctionType type;
+    SourceLocation location;
 
     Size tempCount;
     std::vector<LocalVariable::Ptr> locals;

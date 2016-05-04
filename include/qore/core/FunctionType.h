@@ -87,6 +87,16 @@ public:
         return paramTypes.size();
     }
 
+    /**
+     * \brief Returns the type of the parameter with given index.
+     * \param index the index of the parameter
+     * \return the type of the parameter with given index
+     */
+    const Type &getParameterType(Size index) const {
+        assert(index >= 0 && index < paramTypes.size());
+        return *paramTypes[index];
+    }
+
 private:
     FunctionType(const FunctionType &) = delete;
     FunctionType &operator=(const FunctionType &) = delete;
@@ -95,6 +105,24 @@ private:
     const Type &returnType;
     std::vector<const Type *> paramTypes;
 };
+
+/**
+ * \brief Writes the function type to an output stream.
+ * \param os the output stream
+ * \param ft the function type
+ * \return the output stream
+ */
+template<typename OS>
+inline OS &operator<<(OS &os, const FunctionType &ft) {
+    os << ft.getReturnType() << "(";
+    for (Size i = 0; i < ft.getParameterCount(); ++i) {
+        if (i > 0) {
+            os << ", ";
+        }
+        os << ft.getParameterType(i);
+    }
+    return os << ")";
+}
 
 } // namespace qore
 

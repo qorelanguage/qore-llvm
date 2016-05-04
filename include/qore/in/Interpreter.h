@@ -43,7 +43,7 @@ namespace in {
 class X {
 
 public:
-    explicit X(Function &f) : temps(f.getTempCount()), locals(f.getLocalCount()) {
+    explicit X(Function &f) : temps(f.getTempCount()), locals(f.getLocalVariables().size()) {
     }
 
     void setLocal(const LocalVariable &lv, qvalue value) {

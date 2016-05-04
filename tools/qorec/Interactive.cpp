@@ -148,8 +148,8 @@ public:
         return code::Temp(tempCount++);
     }
 
-    LocalVariable &createLocalVariable(std::string name, const Type &type) override {
-        LocalVariable::Ptr ptr = util::make_unique<LocalVariable>(locals.size(), std::move(name), type);
+    LocalVariable &createLocalVariable(std::string name, const Type &type, SourceLocation location) override {
+        LocalVariable::Ptr ptr = util::make_unique<LocalVariable>(locals.size(), std::move(name), type, location);
         LocalVariable &v = *ptr;
         locals.push_back(std::move(ptr));
         return v;

@@ -62,12 +62,14 @@ inline std::pair<Function *, Function *> analyze(Context &ctx, Env &rtEnv, ast::
     r->body->statements = std::move(node.statements);
     r->type = ast::Type::createImplicit(SourceLocation());
 
-    Function &qMain = rtEnv.getRootNamespace().addFunctionGroup("<qmain>").addFunction(FunctionType(Type::Nothing));
+    Function &qMain = rtEnv.getRootNamespace().addFunctionGroup("<qmain>")
+            .addFunction(FunctionType(Type::Nothing), SourceLocation());
     FunctionScope mainFs(qMain, analyzer, root, *r);
     mainFs.analyze();
 
     //qinit - pass2
-    Function &qInit = rtEnv.getRootNamespace().addFunctionGroup("<qinit>").addFunction(FunctionType(Type::Nothing));
+    Function &qInit = rtEnv.getRootNamespace().addFunctionGroup("<qinit>")
+            .addFunction(FunctionType(Type::Nothing), SourceLocation());
     FBuilder initBuilder(qInit, ctx);
     auto initializers = analyzer.takeInitializers();
     for (auto &stmt : initializers) {
