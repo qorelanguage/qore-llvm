@@ -44,7 +44,7 @@ namespace cg {
 class FunctionCompiler {
 
 public:
-    FunctionCompiler(Function &f, llvm::Function *func, Helper &helper, llvm::GlobalVariable *rtctx)
+    FunctionCompiler(const Function &f, llvm::Function *func, Helper &helper, llvm::GlobalVariable *rtctx)
             : f(f), func(func), helper(helper), rtctx(rtctx), locals(f.getLocalCount()), temps(f.getTempCount()),
               excSlot(nullptr) {
         func->setPersonalityFn(llvm::ConstantExpr::getBitCast(helper.lf_personality, helper.lt_char_ptr));
@@ -249,7 +249,7 @@ public:
     }
 
 private:
-    Function &f;
+    const Function &f;
     llvm::Function *func;
     Helper &helper;
     llvm::GlobalVariable *rtctx;

@@ -34,7 +34,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "qore/comp/as/Script.h"
+#include "qore/core/Env.h"
 
 namespace qore {
 namespace cg {
@@ -42,8 +42,7 @@ namespace cg {
 class CodeGen {
 
 public:
-    static void process(comp::as::Script &script);
-
+    static void process(Env &env);
 };
 
 } // namespace cg

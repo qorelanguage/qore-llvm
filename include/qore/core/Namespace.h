@@ -33,8 +33,10 @@
 
 #include <string>
 #include <vector>
+#include "qore/core/Class.h"
 #include "qore/core/FunctionGroup.h"
 #include "qore/core/GlobalVariable.h"
+#include "qore/core/util/Iterators.h"
 
 namespace qore {
 
@@ -46,7 +48,11 @@ namespace qore {
 class Namespace {
 
 public:
-    using Ptr = std::unique_ptr<Namespace>;         //!< Pointer type.
+    using Ptr = std::unique_ptr<Namespace>;                                               //!< Pointer type.
+    using NamespaceItartor = util::VectorOfUniquePtrIteratorAdapter<Namespace>;           //!< Namespace iterator.
+    using ClassItartor = util::VectorOfUniquePtrIteratorAdapter<Class>;                   //!< Class iterator.
+    using GlobalVariableItartor = util::VectorOfUniquePtrIteratorAdapter<GlobalVariable>; //!< Globals iterator.
+    using FunctionGroupItartor = util::VectorOfUniquePtrIteratorAdapter<FunctionGroup>;   //!< Function groups iterator.
 
 public:
     /**
@@ -80,11 +86,23 @@ public:
      * \return newly created namespace
      */
     Namespace &addNamespace(std::string name, SourceLocation location) {
-        //assumes that name is unique
         Ptr ptr = Ptr(new Namespace(std::move(name), location));
         Namespace &ns = *ptr;
         namespaces.push_back(std::move(ptr));
         return ns;
+    }
+
+    /**
+     * \brief Creates a new class in this namespace.
+     * \param name the name of the class
+     * \param location the location of the declaration
+     * \return newly created class
+     */
+    Class &addClass(std::string name, SourceLocation location) {
+        Class::Ptr ptr = Class::Ptr(new Class(std::move(name), location));
+        Class &c = *ptr;
+        classes.push_back(std::move(ptr));
+        return c;
     }
 
     /**
@@ -115,6 +133,38 @@ public:
         return fg;
     }
 
+    /**
+     * \brief Returns a range for iterating namespaces.
+     * \return a range for iterating namespaces
+     */
+    util::IteratorRange<NamespaceItartor> getNamespaces() const {
+        return util::IteratorRange<NamespaceItartor>(namespaces);
+    }
+
+    /**
+     * \brief Returns a range for iterating classes.
+     * \return a range for iterating classes
+     */
+    util::IteratorRange<ClassItartor> getClasses() const {
+        return util::IteratorRange<ClassItartor>(classes);
+    }
+
+    /**
+     * \brief Returns a range for iterating global variables.
+     * \return a range for iterating global variables
+     */
+    util::IteratorRange<GlobalVariableItartor> getGlobalVariables() const {
+        return util::IteratorRange<GlobalVariableItartor>(globalVariables);
+    }
+
+    /**
+     * \brief Returns a range for iterating function groups.
+     * \return a range for iterating function groups
+     */
+    util::IteratorRange<FunctionGroupItartor> getFunctionGroups() const {
+        return util::IteratorRange<FunctionGroupItartor>(functionGroups);
+    }
+
 private:
     Namespace(const Namespace &) = delete;
     Namespace(Namespace &&) = delete;
@@ -125,6 +175,7 @@ private:
     std::string name;
     SourceLocation location;
     std::vector<std::unique_ptr<Namespace>> namespaces;
+    std::vector<std::unique_ptr<Class>> classes;
     std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
     std::vector<std::unique_ptr<FunctionGroup>> functionGroups;
 };

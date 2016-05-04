@@ -40,7 +40,6 @@
 #include "qore/comp/ast/Declaration.h"
 #include "qore/comp/ast/Statement.h"
 #include "qore/comp/ast/Type.h"
-#include "qore/comp/as/Script.h"
 #include "qore/comp/sem/BlockScope.h"
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
 #include "qore/comp/sem/expr/NothingLiteralExpression.h"
@@ -58,51 +57,13 @@ class FunctionOverloadPack;
 class FunctionScope;
 class FunctionBuilder;
 
-class ScriptBuilder {
-
-public:
-    explicit ScriptBuilder(StringTable &strings) {
-        builtinTypes[strings.put("int")] = std::make_pair(&Type::Int, &Type::IntOpt);
-        builtinTypes[strings.put("string")] = std::make_pair(&Type::String, &Type::StringOpt);
-        builtinTypes[strings.put("any")] = std::make_pair(&Type::Any, nullptr);
-    }
-
-    const Type *getBuiltinType(const ast::Name::Id &name, bool asterisk) const {
-        auto it = builtinTypes.find(name.str);
-        if (it == builtinTypes.end()) {
-            return nullptr;
-        }
-
-        if (asterisk) {
-            if (!it->second.second) {
-                //FIXME report error (any with asterisk)
-                return &Type::Error;
-            }
-            return it->second.second;
-        }
-        return it->second.first;
-    }
-
-    qore::String::Ptr createStringLiteral(const std::string &value) {
-        auto it = strings.find(value);
-        if (it != strings.end()) {
-            return it->second.dup();
-        }
-        qore::String::Ptr string = qore::String::Ptr(new qore::String(value));
-        strings.insert(std::make_pair(value, string.dup()));
-        return std::move(string);
-    }
-
-private:
-    std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;  //XXX could be static
-    std::unordered_map<std::string, qore::String::Ptr> strings;
-};
-
-
 class Core {
 
 public:
-    explicit Core(Context &ctx) : ctx(ctx), scriptBuilder(ctx.getStringTable()) {
+    explicit Core(Context &ctx) : ctx(ctx) {
+        builtinTypes[ctx.getStringTable().put("int")] = std::make_pair(&Type::Int, &Type::IntOpt);
+        builtinTypes[ctx.getStringTable().put("string")] = std::make_pair(&Type::String, &Type::StringOpt);
+        builtinTypes[ctx.getStringTable().put("any")] = std::make_pair(&Type::Any, nullptr);
     }
 
     void processPendingDeclarations();
@@ -144,7 +105,7 @@ public:
 
     Expression::Ptr defaultFor(const Type &type) {
         if (type == Type::String) {
-            return StringLiteralRefExpression::create(scriptBuilder.createStringLiteral(""));
+            return StringLiteralRefExpression::create(createStringLiteral(""));
         }
         if (type == Type::Int) {
             return IntLiteralExpression::create(0);
@@ -155,6 +116,32 @@ public:
         QORE_NOT_IMPLEMENTED("Default value");
     }
 
+    qore::String::Ptr createStringLiteral(const std::string &value) {
+        auto it = strings.find(value);
+        if (it != strings.end()) {
+            return it->second.dup();
+        }
+        qore::String::Ptr string = qore::String::Ptr(new qore::String(value));
+        strings.insert(std::make_pair(value, string.dup()));
+        return std::move(string);
+    }
+
+    const Type *getBuiltinType(const ast::Name::Id &name, bool asterisk) const {
+        auto it = builtinTypes.find(name.str);
+        if (it == builtinTypes.end()) {
+            return nullptr;
+        }
+
+        if (asterisk) {
+            if (!it->second.second) {
+                //FIXME report error (any with asterisk)
+                return &Type::Error;
+            }
+            return it->second.second;
+        }
+        return it->second.first;
+    }
+
 private:
     Core(const Core &) = delete;
     Core(Core &&) = delete;
@@ -163,7 +150,6 @@ private:
 
 public:
     Context &ctx;
-    ScriptBuilder scriptBuilder;
 
 private:
     std::vector<ClassScope *> classQueue;
@@ -171,6 +157,8 @@ private:
     std::vector<FunctionOverloadPack *> functionOverloadPackQueue;
     std::vector<FunctionScope *> functionQueue;
     std::vector<Statement::Ptr> initializers;
+    std::unordered_map<std::string, qore::String::Ptr> strings;
+    std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;
 };
 
 } // namespace sem

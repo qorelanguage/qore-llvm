@@ -37,7 +37,7 @@ namespace comp {
 namespace sem {
 
 std::string ClassScope::getFullName() const {
-    return parent.getFullName() + "::" + core.ctx.getString(getName());
+    return parent.getFullName() + "::" + rt.getName();
 }
 
 } // namespace sem

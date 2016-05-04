@@ -33,9 +33,9 @@
 
 #include <unordered_map>
 #include <vector>
+#include "qore/core/Function.h"
 #include "qore/core/Value.h"
 #include "qore/in/FunctionInterpreter.h"
-#include "qore/comp/as/Script.h"
 
 namespace qore {
 namespace in {
@@ -70,19 +70,14 @@ private:
 class Interpreter {
 
 public:
-    static void interpret(comp::as::Script &script) {
-        run(script.getInit());
-        run(script.getMain());
+    static void interpret(Function &f) {
+        X x(f);
+        FunctionInterpreter<X> fi(x);
+        fi.run(f.getEntryBlock());
     }
 
 private:
     Interpreter() {
-    }
-
-    static void run(Function &f) {
-        X x(f);
-        FunctionInterpreter<X> fi(x);
-        fi.run(f.getEntryBlock());
     }
 };
 

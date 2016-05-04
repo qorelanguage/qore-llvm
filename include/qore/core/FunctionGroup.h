@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 #include "qore/core/Function.h"
+#include "qore/core/util/Iterators.h"
 
 namespace qore {
 
@@ -43,7 +44,8 @@ namespace qore {
 class FunctionGroup {
 
 public:
-    using Ptr = std::unique_ptr<FunctionGroup>;         //!< Pointer type.
+    using Ptr = std::unique_ptr<FunctionGroup>;                                 //!< Pointer type.
+    using FunctionItartor = util::VectorOfUniquePtrIteratorAdapter<Function>;   //!< Function iterator.
 
 public:
     /**
@@ -71,6 +73,14 @@ public:
         Function &f = *ptr;
         functions.push_back(std::move(ptr));
         return f;
+    }
+
+    /**
+     * \brief Returns a range for iterating functions.
+     * \return a range for iterating functions
+     */
+    util::IteratorRange<FunctionItartor> getFunctions() const {
+        return util::IteratorRange<FunctionItartor>(functions);
     }
 
 private:

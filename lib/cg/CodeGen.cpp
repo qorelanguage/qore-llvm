@@ -30,46 +30,74 @@
 //------------------------------------------------------------------------------
 #include "qore/cg/CodeGen.h"
 #include <iostream>
+#include <string>
 #include <vector>
 #include "llvm/IR/AssemblyAnnotationWriter.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/raw_os_ostream.h"
-
 #include "FunctionCompiler.h"
 
 namespace qore {
 namespace cg {
 
-void CodeGen::process(comp::as::Script &script) {
-    Helper helper;
+class Compiler {
 
-    llvm::GlobalVariable *rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
-            llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
-    std::unordered_map<Function *, llvm::Function *> functions;
+public:
+    std::unique_ptr<llvm::Module> compile(Env &env) {
+        compile(env.getRootNamespace());
+        return std::move(helper.module);
+    }
 
-    for (auto &f : script.getFunctions()) {
-        const char *name = "xxx";   //TODO mangled name
-        std::vector<llvm::Type *> args(f->getType().getParameterCount(), helper.lt_qvalue);
-        //llvm::Type *ret = f->isVoid() ? helper.lt_void : helper.lt_qvalue;
-        llvm::Type *ret = helper.lt_void;
+private:
+    void compile(const Namespace &ns) {
+        llvm::GlobalVariable *rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
+                llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
+
+        for (auto &n : ns.getNamespaces()) {
+            compile(n);
+        }
+//        for (auto &gv : ns.getGlobalVariables()) {
+//        }
+        for (auto &fg : ns.getFunctionGroups()) {
+            declare(fg);
+        }
+
+        for (auto &p : functions) {
+            FunctionCompiler fc(*p.first, p.second, helper, rtctx);
+            fc.x();
+        }
+    }
+
+    void declare(const FunctionGroup &fg) {
+        for (auto &f : fg.getFunctions()) {
+            declare(fg, f);
+        }
+    }
+
+    void declare(const FunctionGroup &fg, const Function &f) {
+        std::string name = fg.getName();   //TODO mangled name
+        std::vector<llvm::Type *> args(f.getType().getParameterCount(), helper.lt_qvalue);
+        llvm::Type *ret = f.getType().getReturnType() == Type::Nothing ? helper.lt_void : helper.lt_qvalue;
         llvm::Function *func = llvm::Function::Create(
                 llvm::FunctionType::get(ret, args, false),
                 llvm::Function::ExternalLinkage, name, helper.module.get());
-        functions[f.get()] = func;
+        functions[&f] = func;
         Index i = 0;
         for (auto it = func->arg_begin(); it != func->arg_end(); ++it) {
             (*it).setName(llvm::Twine("arg").concat(llvm::Twine(i++)));
         }
     }
 
-    for (auto &f : script.getFunctions()) {
-        FunctionCompiler fc(*f, functions[f.get()], helper, rtctx);
-        fc.x();
-    }
+private:
+    Helper helper;
+    std::unordered_map<const Function *, llvm::Function *> functions;
+};
 
-    std::unique_ptr<llvm::Module> module = std::move(helper.module);
+void CodeGen::process(Env &env) {
+    Compiler compiler;
+    std::unique_ptr<llvm::Module> module = compiler.compile(env);
 
     module->dump();
 

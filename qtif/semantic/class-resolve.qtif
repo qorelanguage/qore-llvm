@@ -27,8 +27,8 @@ our *N g4;
 -root namespace
   -namespace N @1:11
     -namespace N @4:15
-      -class N @24:13
       -class C @5:15
+      -class N @24:13
       -our *::N::N::C g1 @7:16
       -our *::N::N::C g2 @8:19
       -our *::N::N::C g3 @9:22

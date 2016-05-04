@@ -25,69 +25,65 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Utility class for dumping the runtime data structures.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_DUMP_H_
-#define INCLUDE_QORE_COMP_SEM_DUMP_H_
+#ifndef INCLUDE_QORE_CORE_DUMP_H_
+#define INCLUDE_QORE_CORE_DUMP_H_
 
 #include <string>
-#include <utility>
+#include "qore/core/Env.h"
 
 namespace qore {
-namespace comp {
-namespace sem {
 
+/// \cond IGNORED_BY_DOXYGEN
 template<typename OS>
 class Dump {
 
 public:
-    Dump(Context &ctx, OS os) : ctx(ctx), os(os) {
+    explicit Dump(OS &os) : os(os) {
     }
 
-    void dump(const NamespaceScope &ns) {
+    void dump(const Namespace &ns, bool isRoot = false) {
         os << indent++;
-        if (ns.isRoot()) {
+        if (isRoot) {
             os << "-root namespace";
         } else {
-            os << "-namespace " << ns.rt.getName() << " @" << ns.rt.getLocation();
+            os << "-namespace " << ns.getName() << " @" << ns.getLocation();
         }
         os << "\n";
-        for (auto &n : ns.namespaces) {
-            dump(*n.second);
+        for (auto &n : ns.getNamespaces()) {
+            dump(n);
         }
-        for (auto &c : ns.classes) {
-            dump(*c.second);
+        for (auto &c : ns.getClasses()) {
+            dump(c);
         }
-        for (auto &gv : ns.globalVariables) {
-            dump(*gv.second);
+        for (auto &gv : ns.getGlobalVariables()) {
+            dump(gv);
         }
         --indent;
     }
 
-    void dump(const ClassScope &cs) {
-        os << indent << "-class " << ctx.getString(cs.getName()) << " @" << cs.getLocation() << "\n";
+    void dump(const Class &c) {
+        os << indent << "-class " << c.getName() << " @" << c.getLocation() << "\n";
     }
 
-    void dump(const GlobalVariableInfo &gv) {
-        os << indent << "-our " << gv.getType() << " " << ctx.getString(gv.getName())
-                << " @" << gv.getLocation() << "\n";
+    void dump(const GlobalVariable &gv) {
+        os << indent << "-our " << gv.getType() << " " << gv.getName() << " @" << gv.getLocation() << "\n";
     }
 
 private:
-    Context &ctx;
-    OS os;
+    OS &os;
     util::Indent indent;
 };
 
 template<typename OS>
-void dump(OS os, Context &ctx, NamespaceScope &ns) {
-    Dump<OS> dump(ctx, os);
-    dump.dump(ns);
+void dump(OS &os, Env &env) {
+    Dump<OS> dump(os);
+    dump.dump(env.getRootNamespace(), true);
 }
+/// \endcond IGNORED_BY_DOXYGEN
 
-} // namespace sem
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_DUMP_H_
+#endif // INCLUDE_QORE_CORE_DUMP_H_

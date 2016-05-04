@@ -73,10 +73,6 @@ public:
         return parentNamespace == nullptr;
     }
 
-    ScriptBuilder &getScriptBuilder() {
-        return core.scriptBuilder;
-    }
-
     /**
      * \brief Finds a namespace with given name.
      * \param name the name to find
@@ -197,8 +193,6 @@ private:
     std::map<String::Ref, ClassScope::Ptr> classes;
     std::map<String::Ref, GlobalVariableInfo::Ptr> globalVariables;
     std::map<String::Ref, FunctionOverloadPack::Ptr> functions;
-
-    template<typename OS> friend class Dump;
 };
 
 } // namespace sem

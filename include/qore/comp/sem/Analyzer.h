@@ -36,7 +36,6 @@
 #include <utility>
 #include <vector>
 #include "qore/comp/Context.h"
-#include "qore/comp/as/Script.h"
 #include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Declaration.h"
 #include "qore/comp/sem/NamespaceScope.h"
@@ -49,7 +48,7 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-inline as::Script::Ptr analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
+inline std::pair<Function *, Function *> analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
     Core analyzer(ctx);
     NamespaceScope root(analyzer, rtEnv.getRootNamespace());
 
@@ -78,7 +77,8 @@ inline as::Script::Ptr analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
     Function &qInit = rtEnv.getRootNamespace().addFunctionGroup("<qinit>").addFunction(FunctionType(Type::Nothing));
     initBuilder.build(qInit);
 
-    return util::make_unique<as::Script>(&qInit, &qMain);
+
+    return std::make_pair(&qInit, &qMain);
 }
 
 } // namespace sem

@@ -36,6 +36,7 @@
 #include <utility>
 #include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Class.h"
+#include "qore/core/Class.h"
 
 namespace qore {
 namespace comp {
@@ -48,7 +49,8 @@ public:
     using Ptr = std::unique_ptr<ClassScope>;
 
 public:
-    ClassScope(Core &core, NamespaceScope &parent, ast::Class &node) : core(core), parent(parent), node(node) {
+    ClassScope(Class &rt, Core &core, NamespaceScope &parent, ast::Class &node) : rt(rt), core(core),
+            parent(parent), node(node) {
         type = Type::createForClass(getFullName(), false);
         typeOpt = Type::createForClass(getFullName(), true);
 //        for (auto &decl : node.members) {
@@ -58,12 +60,8 @@ public:
 
     std::string getFullName() const;
 
-    String::Ref getName() const {
-        return node.name.last().str;
-    }
-
-    SourceLocation getLocation() const {
-        return node.name.last().location;
+    Class &getRt() {
+        return rt;
     }
 
     const Type &getType(bool optional) const {
@@ -71,13 +69,12 @@ public:
     }
 
 private:
+    Class &rt;
     Core &core;
     NamespaceScope &parent;
     ast::Class &node;
-    Type::Ptr type;
+    Type::Ptr type;         //FIXME this must be in qore::Class
     Type::Ptr typeOpt;
-
-    template<typename OS> friend class Dump;
 };
 
 } // namespace sem

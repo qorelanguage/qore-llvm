@@ -86,7 +86,7 @@ void NamespaceScope::processNamespaceDeclaration(ast::Namespace &node) {
     if (!ns) {
         if (ClassScope *c = findClass(name)) {
             report(DiagId::SemaDuplicateNamespaceName, location) << name << getNameForDiag();
-            report(DiagId::SemaPreviousDeclaration, c->getLocation());
+            report(DiagId::SemaPreviousDeclaration, c->getRt().getLocation());
             throw ReportedError();
         }
 
@@ -104,36 +104,41 @@ void NamespaceScope::processNamespaceDeclaration(ast::Namespace &node) {
 }
 
 void NamespaceScope::processClassDeclaration(ast::Class &node) {
-    ClassScope::Ptr ptr = util::make_unique<ClassScope>(core, *this, node);
+    String::Ref name = node.name.last().str;
+    SourceLocation location = node.name.last().location;
 
     //TODO check modifiers, reserved words
-    ClassScope *old = findClass(ptr->getName());
-    NamespaceScope *ns = findNamespace(ptr->getName());
+    ClassScope *old = findClass(name);
+    NamespaceScope *ns = findNamespace(name);
     if (old || ns) {
-        report(DiagId::SemaDuplicateClassName, ptr->getLocation()) << ptr->getName() << getNameForDiag();
-        report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : ns->rt.getLocation());
+        report(DiagId::SemaDuplicateClassName, location) << name << getNameForDiag();
+        report(DiagId::SemaPreviousDeclaration, old ? old->getRt().getLocation() : ns->rt.getLocation());
         throw ReportedError();
     }
 
+    Class &c = rt.addClass(core.ctx.getString(name), location); //XXX when should this be created?
+    ClassScope::Ptr ptr = util::make_unique<ClassScope>(c, core, *this, node);
     core.addToQueue(*ptr);
-    classes[ptr->getName()] = std::move(ptr);
+    classes[name] = std::move(ptr);
 }
 
 void NamespaceScope::processGlobalVariableDeclaration(ast::GlobalVariable &node) {
-    GlobalVariableInfo::Ptr ptr = util::make_unique<GlobalVariableInfo>(core, *this, node);
+    String::Ref name = node.name.last().str;
+    SourceLocation location = node.name.last().location;
 
     //TODO check modifiers, reserved words
-    GlobalVariableInfo *old = findGlobalVariable(ptr->getName());
-    FunctionOverloadPack *fp = findFunctionOverloadPack(ptr->getName());
+    GlobalVariableInfo *old = findGlobalVariable(name);
+    FunctionOverloadPack *fp = findFunctionOverloadPack(name);
     //FIXME function
     if (old || fp) {
-        report(DiagId::SemaDuplicateGlobalVariableName, ptr->getLocation()) << ptr->getName() << getNameForDiag();
+        report(DiagId::SemaDuplicateGlobalVariableName, location) << name << getNameForDiag();
         report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : fp->getLocation());
         throw ReportedError();
     }
 
+    GlobalVariableInfo::Ptr ptr = util::make_unique<GlobalVariableInfo>(core, *this, node);
     core.addToQueue(*ptr);
-    globalVariables[ptr->getName()] = std::move(ptr);
+    globalVariables[name] = std::move(ptr);
 }
 
 void NamespaceScope::processFunctionDeclaration(ast::Function &node) {
@@ -257,7 +262,7 @@ const Type &NamespaceScope::resolveType(const ast::Type &node) const {
     bool asterisk = node.getKind() == ast::Type::Kind::Asterisk;
 
     if (node.getName().isSimple()) {
-        const Type *t = core.scriptBuilder.getBuiltinType(node.getName().last(), asterisk);
+        const Type *t = core.getBuiltinType(node.getName().last(), asterisk);
         if (t) {
             return *t;
         }

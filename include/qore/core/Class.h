@@ -25,57 +25,62 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Runtime representation of a class.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AS_SCRIPT_H_
-#define INCLUDE_QORE_COMP_AS_SCRIPT_H_
+#ifndef INCLUDE_QORE_CORE_CLASS_H_
+#define INCLUDE_QORE_CORE_CLASS_H_
 
-#include <map>
 #include <memory>
 #include <string>
-#include <vector>
-#include "qore/core/Function.h"
+#include "qore/core/SourceLocation.h"
 
 namespace qore {
-namespace comp {
-namespace as {
 
-class Script {
-
-public:
-    using Ptr = std::unique_ptr<Script>;
+/**
+ * \brief Runtime representation of a class.
+ */
+class Class {
 
 public:
-    Script(Function *qInit, Function *qMain) : qInit(qInit), qMain(qMain) {
+    using Ptr = std::unique_ptr<Class>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Creates the class.
+     * \param name the name of the class
+     * \param location the location of the declaration in the source
+     */
+    Class(std::string name, SourceLocation location) : name(std::move(name)), location(location) {
     }
 
-    const std::vector<std::unique_ptr<Function>> &getFunctions() const {
-        return functions;
+    /**
+     * \brief Returns the name of the class.
+     * \return the name of the class
+     */
+    const std::string &getName() const {
+        return name;
     }
 
-    Function &getInit() const {
-        return *qInit;
-    }
-
-    Function &getMain() const {
-        return *qMain;
+    /**
+     * \brief Returns the location of the declaration.
+     * \return the location of the declaration
+     */
+    const SourceLocation &getLocation() const {
+        return location;
     }
 
 private:
-    Script(const Script &) = delete;
-    Script &operator=(const Script &) = delete;
-    Script(Script &&) = delete;
-    Script &operator=(Script &&) = delete;
+    Class(const Class &) = delete;
+    Class(Class &&) = delete;
+    Class &operator=(const Class &) = delete;
+    Class &operator=(Class &&) = delete;
 
 private:
-    std::vector<std::unique_ptr<Function>> functions;
-    Function *qInit;
-    Function *qMain;
+    std::string name;
+    SourceLocation location;
 };
 
-} // namespace as
-} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_AS_SCRIPT_H_
+#endif // INCLUDE_QORE_CORE_CLASS_H_

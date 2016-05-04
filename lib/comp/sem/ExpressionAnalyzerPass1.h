@@ -108,7 +108,7 @@ public:
             //FIXME proper string literal parsing - no quotes, escapes etc.
             std::string s = core.ctx.getLexeme(node.token);
             s = s.substr(1, s.length() - 2);
-            return StringLiteralRefExpression::create(core.scriptBuilder.createStringLiteral(s));
+            return StringLiteralRefExpression::create(core.createStringLiteral(s));
         } else if (node.token.type == qore::comp::TokenType::Integer) {
             //FIXME proper integer literal parsing
             std::string s = core.ctx.getLexeme(node.token);

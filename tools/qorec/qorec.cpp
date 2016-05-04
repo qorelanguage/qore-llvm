@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 #include "qore/core/util/Debug.h"
+#include "qore/core/Dump.h"
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/ast/Dump.h"
@@ -68,11 +69,13 @@ void test(bool file, std::string str) {
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    qore::comp::as::Script::Ptr sss = qore::comp::sem::analyze(ctx, env, *script);
+    std::pair<qore::Function *, qore::Function *> sss = qore::comp::sem::analyze(ctx, env, *script);
+    qore::dump(std::cout, env);
     LOG("-------------------------------------------------------------------------------");
-    qore::in::Interpreter::interpret(*sss);
-    LOG("-------------------------------------------------------------------------------");
-//    qore::cg::CodeGen::process(*sss);
+    qore::in::Interpreter::interpret(*sss.first);
+    qore::in::Interpreter::interpret(*sss.second);
+//    LOG("-------------------------------------------------------------------------------");
+//    qore::cg::CodeGen::process(env);
 }
 
 /// \endcond NoDoxygen

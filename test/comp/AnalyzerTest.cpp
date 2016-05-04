@@ -28,8 +28,8 @@
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/sem/Analyzer.h"
-#include "qore/comp/sem/Dump.h"
 #include "qore/core/Env.h"
+#include "qore/core/Dump.h"
 
 namespace qore {
 namespace comp {
@@ -49,7 +49,7 @@ TEST_P(AnalyzerTest, Run) {
         root.processDeclaration(*decl);
     }
     analyzer.processPendingDeclarations();
-    dump(output, ctx, root);
+    dump(output, rtEnv);
 }
 
 QTIF_TEST_CASE(AnalyzerTest, "semantic/");
