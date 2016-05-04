@@ -194,7 +194,7 @@ public:
         if (refCounted(expr.getLocalVariable())) {
             refIncDestIfNeeded();
         }
-        builder.startOfLocalVariableLifetime(core.ctx, expr.getLocalVariable(), dest);
+        builder.startOfLocalVariableLifetime(expr.getLocalVariable(), dest);
     }
 
     void visit(const LocalVariableRefExpression &expr) {
@@ -262,7 +262,7 @@ private:
     }
 
 private:
-    Core &core;
+    Core &core;     //XXX is this really needed?
     Builder &builder;
     code::Temp dest;
     bool freeDest;

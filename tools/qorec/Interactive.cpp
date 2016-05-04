@@ -136,6 +136,46 @@ private:
     std::map<Index, qvalue> locals;
 };
 
+//XXX: this class can work with TopLevelCtx::temps and locals -> no need for map
+class IBuilder : public Builder {
+
+public:
+    explicit IBuilder(Context &ctx) : Builder(ctx), tempCount(0) {
+        currentBlock = entry = createBlock();
+    }
+
+    code::Temp createTemp() override {
+        return code::Temp(tempCount++);
+    }
+
+    LocalVariable &createLocalVariable(std::string name, const Type &type) override {
+        LocalVariable::Ptr ptr = util::make_unique<LocalVariable>(locals.size(), std::move(name), type);
+        LocalVariable &v = *ptr;
+        locals.push_back(std::move(ptr));
+        return v;
+    }
+
+    code::Block *createBlock() override {
+        code::Block::Ptr ptr = code::Block::Ptr(new code::Block());
+        code::Block *b = ptr.get();
+        blocks.push_back(std::move(ptr));
+        return b;
+    }
+
+    code::Block &getEntryForInteractiveMode() {
+        currentBlock->appendRetVoid();
+        code::Block *b = entry;
+        currentBlock = entry = createBlock();
+        return *b;
+    }
+
+private:
+    Size tempCount;
+    std::vector<LocalVariable::Ptr> locals;
+    std::vector<code::Block::Ptr> blocks;
+    code::Block *entry;
+};
+
 class Interactive {
 
 public:
@@ -145,7 +185,7 @@ public:
     void doIt() {
         StdinWrapper dp(compCtx);
         Parser parser(compCtx, dp);
-        Builder mainBuilder;
+        IBuilder mainBuilder(compCtx);
         Core analyzer(compCtx);
         NamespaceScope root(analyzer, compCtx.getEnv().getRootNamespace());
         InteractiveScope topScope(root);

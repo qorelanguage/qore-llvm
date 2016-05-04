@@ -64,32 +64,66 @@ public:
         return type;
     }
 
-    //FIXME
+    /**
+     * \brief Returns the number of temporaries needed for interpreting this functions.
+     *
+     * It is guaranteed that every \ref code::Temp::getIndex() in the function's code is less than this value.
+     * \return the number of temporaries needed for interpreting this functions
+     */
     Size getTempCount() const {
         return tempCount;
     }
 
+    /**
+     * \brief Returns the number of local variables.
+     * \return the number of local variables
+     */
     Size getLocalCount() const {
         return locals.size();
     }
 
+    /**
+     * \brief Returns the block with the entry point of the function.
+     * \return the block with the entry point of the function
+     */
     code::Block &getEntryBlock() const {
         assert(!blocks.empty());
         return *blocks[0];
     }
 
-    void setBody(Size tempCount, std::vector<LocalVariable::Ptr> locals, std::vector<code::Block::Ptr> blocks) {
-        this->tempCount = tempCount;
-        this->locals = std::move(locals);
-        this->blocks = std::move(blocks);
+    /**
+     * \brief Adds a new temporary by increasing the number of temporaries by one.
+     * \return the new temporary value
+     */
+    code::Temp addTemp() {
+        return code::Temp(tempCount++);
     }
 
-//    LocalVariable &addLocalVariable(std::string name, const Type &type) {
-//        LocalVariable::Ptr ptr = LocalVariable::Ptr(new LocalVariable(locals.size(), std::move(name), type));
-//        LocalVariable &lv = *ptr;
-//        locals.push_back(std::move(ptr));
-//        return lv;
-//    }
+    /**
+     * \brief Adds a new local variable.
+     * \param name the name of the variable
+     * \param type the type of the variable
+     * \return the new local variable
+     */
+    LocalVariable &addLocalVariable(std::string name, const Type &type) {
+        LocalVariable::Ptr ptr = LocalVariable::Ptr(new LocalVariable(locals.size(), std::move(name), type));
+        LocalVariable &lv = *ptr;
+        locals.push_back(std::move(ptr));
+        return lv;
+    }
+
+    /**
+     * \brief Adds a new block to the function.
+     *
+     * The first block created serves as the entry point to the function.
+     * \return the new block
+     */
+    code::Block *addBlock() {
+        code::Block::Ptr ptr = code::Block::Ptr(new code::Block());
+        code::Block *b = ptr.get();
+        blocks.push_back(std::move(ptr));
+        return b;
+    }
 
 private:
     Function(const Function &) = delete;

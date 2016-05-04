@@ -73,11 +73,11 @@ void FunctionScope::analyze() {
 
     Statement::Ptr body = core.doPass1(*this, *node.body);
 
-    Builder b;
+    FBuilder b(rt, core.ctx);
     Index index = 0;
     for (auto it = node.params.begin(); it != node.params.end(); ++it) {
         LocalVariableInfo &lv = *args[std::get<1>(*it).str];
-        b.startOfArgumentLifetime(core.ctx, lv, index++);
+        b.startOfArgumentLifetime(lv, index++);
         //both compiler and interpreter need to copy the function arguments into local slots (starting from 0)
     }
 
@@ -91,8 +91,6 @@ void FunctionScope::analyze() {
             QORE_UNREACHABLE("");   //missing return statement
         }
     }
-
-    b.build(rt);
 }
 
 } // namespace sem

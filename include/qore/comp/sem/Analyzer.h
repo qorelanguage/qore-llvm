@@ -67,16 +67,13 @@ inline std::pair<Function *, Function *> analyze(Context &ctx, Env &rtEnv, ast::
     mainFs.analyze();
 
     //qinit - pass2
-    Builder initBuilder;
+    Function &qInit = rtEnv.getRootNamespace().addFunctionGroup("<qinit>").addFunction(FunctionType(Type::Nothing));
+    FBuilder initBuilder(qInit, ctx);
     auto initializers = analyzer.takeInitializers();
     for (auto &stmt : initializers) {
         analyzer.doPass2(initBuilder, *stmt);
     }
     initBuilder.createRetVoid();
-
-    Function &qInit = rtEnv.getRootNamespace().addFunctionGroup("<qinit>").addFunction(FunctionType(Type::Nothing));
-    initBuilder.build(qInit);
-
 
     return std::make_pair(&qInit, &qMain);
 }

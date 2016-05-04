@@ -53,7 +53,6 @@ public:
         code::Block::Iterator ins = b->begin();
         while (true) {
             assert(ins != b->end());
-            ++ins;
             try {
                 switch (ins->getKind()) {
                     case code::Instruction::Kind::ConstInt:
@@ -93,7 +92,7 @@ public:
                         const code::Jump &ii = static_cast<const code::Jump &>(*ins);
                         b = &ii.getDest();
                         ins = b->begin();
-                        break;
+                        continue;
                     }
                     case code::Instruction::Kind::LocalGet:
                         exec(static_cast<const code::LocalGet &>(*ins));
@@ -112,6 +111,7 @@ public:
                     default:
                         QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins->getKind()));
                 }
+                ++ins;
             } catch (Exception &e) {
                 if (!ins->getLpad()) {
                     throw;

@@ -49,30 +49,34 @@ class LValue;
 
 class Builder {
 
-public:
-    Builder() : currentBlock(createBlock()), cleanupLValue(nullptr), tempCount(0) {
-        entry = currentBlock;
+protected:
+    //derived class must set currentBlock!
+    explicit Builder(Context &ctx) : currentBlock(nullptr), ctx(ctx), cleanupLValue(nullptr) {
     }
 
-    void build(Function &f) {
-        f.setBody(tempCount, std::move(locals), std::move(blocks));
-    }
+    virtual code::Temp createTemp() = 0;
+    virtual LocalVariable &createLocalVariable(std::string name, const Type &type) = 0;
+
+public:
+    virtual ~Builder() = default;
+
+    virtual code::Block *createBlock() = 0;
 
     bool isTerminated() const {
         return currentBlock->isTerminated();
     }
 
-    void startOfArgumentLifetime(Context &ctx, LocalVariableInfo &lv, Index argIndex) {
-        const LocalVariable &aslv = alloc(ctx, lv);
-        assert(aslv.getIndex() == argIndex);
+    void startOfArgumentLifetime(LocalVariableInfo &lv, Index argIndex) {
+        finalizeLocalVariable(lv);
+        assert(lv.getRt().getIndex() == argIndex);
 
         //if not shared:
         if (lv.getType().isRefCounted()) {
             code::Temp temp = getFreeTemp();
-            currentBlock->appendLocalGet(temp, aslv);
+            currentBlock->appendLocalGet(temp, lv.getRt());
             currentBlock->appendRefInc(temp);
             setTempFree(temp);
-            x(aslv);
+            x(lv.getRt());
         }
 
         //if shared:
@@ -83,13 +87,13 @@ public:
         // - push cleanup scope that dereferences the wrapper
     }
 
-    void startOfLocalVariableLifetime(Context &ctx, LocalVariableInfo &lv, code::Temp value) {
-        const LocalVariable &aslv = alloc(ctx, lv);
+    void startOfLocalVariableLifetime(LocalVariableInfo &lv, code::Temp value) {
+        finalizeLocalVariable(lv);
 
         //if not shared:
-        currentBlock->appendLocalSet(aslv, value);
+        currentBlock->appendLocalSet(lv.getRt(), value);
         if (lv.getType().isRefCounted()) {
-            x(aslv);
+            x(lv.getRt());
         }
 
         //if shared:
@@ -100,6 +104,13 @@ public:
     }
 
 private:
+    //this should not be here: for arguments, FunctionScope can do this (it needs to make sure the indices fit anyway)
+    // for local variables, this can be done for all of them before starting pass2
+    // Builder then can rely on lv.getRt everywhere, no need for createLocalVariable and ctx
+    void finalizeLocalVariable(LocalVariableInfo &lv) {
+        lv.setRt(createLocalVariable(ctx.getString(lv.getName()), lv.getType()));
+    }
+
     void x(const LocalVariable &lv) {
         code::Block *b = createBlock();
         code::Temp temp = getFreeTemp();      //all temps are free at this point
@@ -196,7 +207,7 @@ public:
             freeTemps.pop_back();
             return t;
         }
-        return code::Temp(tempCount++);
+        return createTemp();
     }
 
     void setTempFree(code::Temp temp) {
@@ -305,23 +316,6 @@ public:
         assert(isTerminated());
     }
 
-
-
-    code::Block &getEntryForInteractiveMode() {
-        currentBlock->appendRetVoid();
-        code::Block *b = entry;
-        entry = createBlock();
-        currentBlock = entry;
-        return *b;
-    }
-
-    code::Block *createBlock() {
-        code::Block::Ptr ptr = code::Block::Ptr(new code::Block());
-        code::Block *b = ptr.get();
-        blocks.push_back(std::move(ptr));
-        return b;
-    }
-
     void setCurrentBlock(code::Block *b) {
         currentBlock = b;
     }
@@ -337,27 +331,40 @@ private:
     code::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
     void buildCleanupForRet();
 
-    const LocalVariable &alloc(Context &ctx, LocalVariableInfo &lv) {
-        LocalVariable::Ptr ptr = util::make_unique<LocalVariable>(locals.size(),
-                ctx.getString(lv.getName()), lv.getType());
-        LocalVariable &v = *ptr;
-        locals.push_back(std::move(ptr));
-        lv.setRt(v);
-        return v;
-    }
+protected:
+    code::Block *currentBlock;
 
 private:
+    Context &ctx;
     std::vector<code::Temp> freeTemps;
-    std::vector<code::Block::Ptr> blocks;
-    code::Block *currentBlock;
 
     std::vector<code::Temp> cleanupTemps;
     std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
-    std::vector<LocalVariable::Ptr> locals;
+};
 
-    Size tempCount;
-    code::Block *entry;
+//If Builder were a template, we could use Function directly and this class would not be needed at all
+class FBuilder : public Builder {
+
+public:
+    explicit FBuilder(Function &f, Context &ctx) : Builder(ctx), f(f) {
+        currentBlock = createBlock();
+    }
+
+    code::Temp createTemp() override {
+        return f.addTemp();
+    }
+
+    LocalVariable &createLocalVariable(std::string name, const Type &type) override {
+        return f.addLocalVariable(std::move(name), type);
+    }
+
+    code::Block *createBlock() override {
+        return f.addBlock();
+    }
+
+private:
+    Function &f;
 };
 
 } // namespace sem
