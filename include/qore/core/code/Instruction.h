@@ -36,6 +36,28 @@
 namespace qore {
 namespace code {
 
+class Branch;
+class ConstInt;
+class ConstString;
+class GlobalGet;
+class GlobalInit;
+class GlobalReadLock;
+class GlobalReadUnlock;
+class GlobalSet;
+class GlobalWriteLock;
+class GlobalWriteUnlock;
+class InvokeBinaryOperator;
+class InvokeConversion;
+class Jump;
+class LocalGet;
+class LocalSet;
+class RefDec;
+class RefDecNoexcept;
+class RefInc;
+class ResumeUnwind;
+class Ret;
+class RetVoid;
+
 /**
  * \brief Represents an instruction.
  */
@@ -105,6 +127,43 @@ public:
             default:
                 return false;
         }
+    }
+
+    /**
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Instruction.
+     * \param visitor the visitor to call
+     * \return the value returned from the visitor
+     * \tparam V the type of the visitor
+     */
+    template<typename V>
+    typename V::ReturnType accept(V &v) const {
+        #define CASE(K) case Kind::K: return v.visit(static_cast<const K &>(*this));
+        switch (getKind()) {
+            CASE(Branch);
+            CASE(ConstInt);
+            CASE(ConstString);
+            CASE(GlobalGet);
+            CASE(GlobalInit);
+            CASE(GlobalReadLock);
+            CASE(GlobalReadUnlock);
+            CASE(GlobalSet);
+            CASE(GlobalWriteLock);
+            CASE(GlobalWriteUnlock);
+            CASE(InvokeBinaryOperator);
+            CASE(InvokeConversion);
+            CASE(Jump);
+            CASE(LocalGet);
+            CASE(LocalSet);
+            CASE(RefDec);
+            CASE(RefDecNoexcept);
+            CASE(RefInc);
+            CASE(ResumeUnwind);
+            CASE(Ret);
+            CASE(RetVoid);
+            default:
+                QORE_UNREACHABLE("Invalid Instruction::Kind: " << static_cast<int>(getKind()));
+        }
+        #undef CASE
     }
 
 protected:

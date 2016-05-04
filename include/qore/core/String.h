@@ -76,6 +76,14 @@ public:
         return new String(str + right->str);
     }
 
+    /**
+     * \brief Returns the value.
+     * \return the value
+     */
+    const std::string &get() const {
+        return str;
+    }
+
 protected:
     ~String() {
         LOG(this << " destroyed");

@@ -84,9 +84,6 @@ code::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator
 }
 
 void Builder::buildCleanupForRet() {
-    assert(!cleanupLValue);
-    assert(cleanupTemps.empty());
-
     for (auto it = cleanupScopes.rbegin(); it != cleanupScopes.rend(); ++it) {
         if (it->lv && it->lv->getType().isRefCounted()) {
             code::Temp temp = getFreeTemp();

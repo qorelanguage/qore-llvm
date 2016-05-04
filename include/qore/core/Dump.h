@@ -33,6 +33,7 @@
 
 #include <string>
 #include "qore/core/Env.h"
+#include "qore/core/code/Dump.h"
 
 namespace qore {
 
@@ -87,7 +88,8 @@ public:
         for (auto &lv : f.getLocalVariables()) {
             os << indent << "[" << lv.getIndex() << "] " << lv.getType() << " " << lv.getName() << location(lv) << "\n";
         }
-        //TODO blocks
+        code::Dump<OS> codeDump(os, indent);
+        codeDump.dump(f.getEntryBlock());
         --indent;
     }
 

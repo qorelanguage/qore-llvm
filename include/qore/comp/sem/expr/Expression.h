@@ -90,6 +90,7 @@ public:
             default:
                 QORE_UNREACHABLE("Invalid Expression::Kind: " << static_cast<int>(getKind()));
         }
+        #undef CASE
     }
 
 protected:

@@ -88,10 +88,10 @@ int main(int argc, char *argv[]) {
     LOG_FUNCTION();
 
     std::string src = R"(
-#any sub f(int i) {
-#    if (i += string x) {string s1 = "aaa"; return 21;}
-#    return 42;
-#}
+any sub f(int i) {
+    if (i += string x) {string s1 = "aaa"; return 21;}
+    return 42;
+}
 
 int i;
 our string s;
@@ -104,15 +104,16 @@ s += i;
 any a = 1;
 a = a + 2;
 a += "8";
-)";
+if (i) a = 1; else a = 2;
 
-    std::string src2 = R"(
-string s = "A";
-try {
-    string s2 = "B";
-    s = "1";
-} catch (hash e) {
-    string s3 = "C";
+sub f2() {
+    string s = "A";
+    try {
+        string s2 = "B";
+        s = "1";
+    } catch (hash e) {
+        string s3 = "C";
+    }
 }
 )";
 

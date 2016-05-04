@@ -291,7 +291,7 @@ public:
         currentBlock->appendLocalSet(lv.getRt(), src);
     }
 
-    void createRefDec(code::Temp temp) {
+    void createRefDec(code::Temp temp) {    //XXX no need to create landing pad for simple types (e.g. string)
         assert(!cleanupLValue);
         checkNotTerminated();
         currentBlock->appendRefDec(temp, getLandingPad());

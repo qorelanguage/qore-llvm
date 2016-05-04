@@ -125,7 +125,13 @@ public:
                 ExpressionAnalyzerPass2 a(core, builder, temp);
                 stmt.getExpression()->accept(a);
             }
+            if (stmt.getExpression()->getType().isRefCounted()) {
+                builder.addCleanup(temp);
+            }
             builder.createRet(temp);
+            if (stmt.getExpression()->getType().isRefCounted()) {
+                builder.doneCleanup(temp);
+            }
             builder.setTempFree(temp);
         } else {
             builder.createRetVoid();

@@ -55,6 +55,16 @@ public:
             assert(ins != b->end());
             try {
                 switch (ins->getKind()) {
+                    case code::Instruction::Kind::Branch: {
+                        const code::Branch &i = static_cast<const code::Branch &>(*ins);
+                        if (f.getTemp(i.getCondition()).b) {
+                            b = &i.getTrueDest();
+                        } else {
+                            b = &i.getFalseDest();
+                        }
+                        ins = b->begin();
+                        continue;
+                    }
                     case code::Instruction::Kind::ConstInt:
                         exec(static_cast<const code::ConstInt &>(*ins));
                         break;
