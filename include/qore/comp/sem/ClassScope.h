@@ -51,8 +51,6 @@ public:
 public:
     ClassScope(Class &rt, Core &core, NamespaceScope &parent, ast::Class &node) : rt(rt), core(core),
             parent(parent), node(node) {
-        type = Type::createForClass(getFullName(), false);
-        typeOpt = Type::createForClass(getFullName(), true);
 //        for (auto &decl : node.members) {
 //            try {processDeclaration(*decl); } catch (ReportedError &) { ignore }
 //        }
@@ -64,17 +62,11 @@ public:
         return rt;
     }
 
-    const Type &getType(bool optional) const {
-        return optional ? *typeOpt : *type;
-    }
-
 private:
     Class &rt;
     Core &core;
     NamespaceScope &parent;
     ast::Class &node;
-    Type::Ptr type;         //FIXME this must be in qore::Class
-    Type::Ptr typeOpt;
 };
 
 } // namespace sem

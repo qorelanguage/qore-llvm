@@ -225,6 +225,11 @@ public:
         currentBlock->appendConstInt(dest, value);
     }
 
+    void createConstNothing(code::Temp dest) {
+        checkNotTerminated();
+        currentBlock->appendConstNothing(dest);
+    }
+
     void createConstString(code::Temp dest, qore::String::Ptr string) {
         checkNotTerminated();
         currentBlock->appendConstString(dest, std::move(string));

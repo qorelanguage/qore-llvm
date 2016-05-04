@@ -116,7 +116,9 @@ void NamespaceScope::processClassDeclaration(ast::Class &node) {
         throw ReportedError();
     }
 
-    Class &c = rt.addClass(core.ctx.getString(name), location); //XXX when should this be created?
+    auto n = core.ctx.getString(name);
+    //XXX use short or full names?
+    Class &c = rt.addClass(n, getFullName() + "::" + n, location); //XXX when should this be created?
     ClassScope::Ptr ptr = util::make_unique<ClassScope>(c, core, *this, node);
     core.addToQueue(*ptr);
     classes[name] = std::move(ptr);
@@ -270,7 +272,7 @@ const Type &NamespaceScope::resolveType(const ast::Type &node) const {
 
     try {
         ClassScope &c = resolveClass(node.getName());
-        return c.getType(asterisk);
+        return c.getRt().getType(asterisk);
     } catch (ReportedError &) {
         return Type::Error;
     }

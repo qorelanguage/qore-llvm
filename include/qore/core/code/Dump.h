@@ -86,6 +86,10 @@ public:
         os << "ConstInt " << temp(ins.getDest()) << ", " << ins.getValue();
     }
 
+    void visit(const ConstNothing &ins) {
+        os << "ConstNothing " << temp(ins.getDest());
+    }
+
     void visit(const ConstString &ins) {
         os << "ConstString " << temp(ins.getDest()) << ", \"";
         const std::string &s = ins.getString()->get();
@@ -194,7 +198,7 @@ private:
         }
 
         std::ostringstream str;
-        str << " #" << i;
+        str << "#" << i;
         return str.str();
     }
 

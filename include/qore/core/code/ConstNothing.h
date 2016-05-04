@@ -25,72 +25,48 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Runtime representation of a class.
+/// \brief Defines the ConstNothing instruction.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CORE_CLASS_H_
-#define INCLUDE_QORE_CORE_CLASS_H_
+#ifndef INCLUDE_QORE_CORE_CODE_CONSTNOTHING_H_
+#define INCLUDE_QORE_CORE_CODE_CONSTNOTHING_H_
 
-#include <memory>
-#include <string>
-#include "qore/core/SourceLocation.h"
-#include "qore/core/Type.h"
+#include "qore/core/code/Instruction.h"
+#include "qore/core/code/Temp.h"
 
 namespace qore {
+namespace code {
 
 /**
- * \brief Runtime representation of a class.
+ * \brief Instruction that stores the NOTHING constant to a temporary.
  */
-class Class {
-
-public:
-    using Ptr = std::unique_ptr<Class>;         //!< Pointer type.
+class ConstNothing : public Instruction {
 
 public:
     /**
-     * \brief Creates the class.
-     * \param name the name of the class
-     * \param location the location of the declaration in the source
+     * \brief Constructor.
+     * \param dest the temporary to load the constant into
      */
-    Class(std::string name, const std::string &fullName, SourceLocation location)
-            : name(std::move(name)), location(location) {
-        type = Type::createForClass(fullName, false);
-        typeOpt = Type::createForClass(fullName, true);
+    explicit ConstNothing(Temp dest) : dest(dest) {
+    }
+
+    Kind getKind() const override {
+        return Kind::ConstNothing;
     }
 
     /**
-     * \brief Returns the name of the class.
-     * \return the name of the class
+     * \brief Return the temporary to load the constant into.
+     * \return the temporary to load the constant into
      */
-    const std::string &getName() const {
-        return name;
-    }
-
-    /**
-     * \brief Returns the location of the declaration.
-     * \return the location of the declaration
-     */
-    const SourceLocation &getLocation() const {
-        return location;
-    }
-
-    const Type &getType(bool optional) const {
-        return optional ? *typeOpt : *type;
+    Temp getDest() const {
+        return dest;
     }
 
 private:
-    Class(const Class &) = delete;
-    Class(Class &&) = delete;
-    Class &operator=(const Class &) = delete;
-    Class &operator=(Class &&) = delete;
-
-private:
-    std::string name;
-    SourceLocation location;
-    Type::Ptr type;
-    Type::Ptr typeOpt;
+    Temp dest;
 };
 
+} // namespace code
 } // namespace qore
 
-#endif // INCLUDE_QORE_CORE_CLASS_H_
+#endif // INCLUDE_QORE_CORE_CODE_CONSTNOTHING_H_

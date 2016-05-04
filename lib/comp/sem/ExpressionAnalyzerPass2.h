@@ -207,7 +207,7 @@ public:
 
     void visit(const NothingLiteralExpression &expr) {
         noSideEffect();
-        QORE_NOT_IMPLEMENTED("");
+        builder.createConstNothing(dest);
     }
 
     void visit(const StringLiteralRefExpression &expr) {

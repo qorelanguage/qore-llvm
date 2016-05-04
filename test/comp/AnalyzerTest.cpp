@@ -43,13 +43,9 @@ TEST_P(AnalyzerTest, Run) {
     Parser parser(ctx, dp);
     ast::Script::Ptr scriptNode = parser.parseScript();
     Core analyzer(ctx);
-    Env rtEnv;
-    NamespaceScope root(analyzer, rtEnv.getRootNamespace());
-    for (auto &decl : scriptNode->members) {
-        root.processDeclaration(*decl);
-    }
-    analyzer.processPendingDeclarations();
-    dump(output, rtEnv);
+    Env env;
+    analyze(ctx, env, *scriptNode);
+    dump(output, env);
 }
 
 QTIF_TEST_CASE(AnalyzerTest, "semantic/");

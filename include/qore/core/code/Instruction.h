@@ -38,6 +38,7 @@ namespace code {
 
 class Branch;
 class ConstInt;
+class ConstNothing;
 class ConstString;
 class GlobalGet;
 class GlobalInit;
@@ -74,6 +75,7 @@ public:
         Branch,                     //!< Identifies an instance of \ref Branch.
         ConstInt,                   //!< Identifies an instance of \ref ConstInt.
         ConstString,                //!< Identifies an instance of \ref ConstString.
+        ConstNothing,               //!< Identifies an instance of \ref ConstNothing.
         GlobalGet,                  //!< Identifies an instance of \ref GlobalGet.
         GlobalInit,                 //!< Identifies an instance of \ref GlobalInit.
         GlobalReadLock,             //!< Identifies an instance of \ref GlobalReadLock.
@@ -136,11 +138,14 @@ public:
      * \tparam V the type of the visitor
      */
     template<typename V>
-    typename V::ReturnType accept(V &v) const {
-        #define CASE(K) case Kind::K: return v.visit(static_cast<const K &>(*this));
+    typename V::ReturnType accept(V &visitor) const {
+        /// \cond NoDoxygen
+        #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K &>(*this));
+        /// \endcond NoDoxygen
         switch (getKind()) {
             CASE(Branch);
             CASE(ConstInt);
+            CASE(ConstNothing);
             CASE(ConstString);
             CASE(GlobalGet);
             CASE(GlobalInit);

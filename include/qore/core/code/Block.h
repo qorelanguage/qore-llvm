@@ -35,6 +35,7 @@
 #include <vector>
 #include "qore/core/code/Branch.h"
 #include "qore/core/code/ConstInt.h"
+#include "qore/core/code/ConstNothing.h"
 #include "qore/core/code/ConstString.h"
 #include "qore/core/code/GlobalGet.h"
 #include "qore/core/code/GlobalInit.h"
@@ -122,6 +123,14 @@ public:
      */
     void appendConstInt(Temp dest, qint value) {
         append(util::make_unique<ConstInt>(dest, value));
+    }
+
+    /**
+     * \brief Appends a ConstNothing instruction to the end of the block.
+     * \param dest the temporary to load the constant into
+     */
+    void appendConstNothing(Temp dest) {
+        append(util::make_unique<ConstNothing>(dest));
     }
 
     /**

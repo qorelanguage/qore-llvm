@@ -98,8 +98,8 @@ public:
      * \param location the location of the declaration
      * \return newly created class
      */
-    Class &addClass(std::string name, SourceLocation location) {
-        Class::Ptr ptr = Class::Ptr(new Class(std::move(name), location));
+    Class &addClass(std::string name, const std::string &fullName, SourceLocation location) {
+        Class::Ptr ptr = Class::Ptr(new Class(std::move(name), fullName, location));
         Class &c = *ptr;
         classes.push_back(std::move(ptr));
         return c;
