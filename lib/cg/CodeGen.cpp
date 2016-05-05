@@ -46,15 +46,15 @@ class Compiler {
 
 public:
     std::unique_ptr<llvm::Module> compile(Env &env) {
+//        llvm::GlobalVariable *rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
+//                llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
         compile(env.getRootNamespace());
+        //helper.createStringInitDone();
         return std::move(helper.module);
     }
 
 private:
     void compile(const Namespace &ns) {
-        llvm::GlobalVariable *rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
-                llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
-
         for (auto &n : ns.getNamespaces()) {
             compile(n);
         }
@@ -65,8 +65,8 @@ private:
         }
 
         for (auto &p : functions) {
-            FunctionCompiler fc(*p.first, p.second, helper, rtctx);
-            fc.x();
+            FunctionCompiler fc(*p.first, p.second, helper);
+            fc.compile();
         }
     }
 

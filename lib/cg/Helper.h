@@ -147,13 +147,13 @@ public:
         return ref;
     }
 
-    llvm::Value *loadString(String *string) {
-        QORE_NOT_IMPLEMENTED("");
-        //find entry in a map of String * -> llvm::GlobalVariable *
-        //if not found:
-        //      create a llvm::GlobalVariable of type String *
-        //      create the mapping
-        //return builder.CreateLoad(gv);
+    llvm::GlobalVariable *getString(String *string) {
+        llvm::GlobalVariable *&ref = strings[string];
+        if (!ref) {
+            ref = new llvm::GlobalVariable(*module, lt_qvalue, true,
+                    llvm::GlobalVariable::PrivateLinkage, llvm::Constant::getNullValue(lt_qvalue), "str");
+        }
+        return ref;
         //before the module is built, go through the mapping and create init & cleanup code for each string
         //            case comp::as::Instruction::Kind::MakeStringLiteral: {
         //                comp::as::MakeStringLiteral &ins = static_cast<comp::as::MakeStringLiteral &>(*ii);
@@ -215,6 +215,7 @@ public:
 private:
     std::unordered_map<const Conversion *, llvm::Function *> convFunctions;
     std::unordered_map<const BinaryOperator *, llvm::Function *> binOpFunctions;
+    std::unordered_map<String *, llvm::GlobalVariable *> strings;
 };
 
 } // namespace cg

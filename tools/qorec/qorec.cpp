@@ -72,8 +72,12 @@ void test(bool file, std::string str) {
     std::pair<qore::Function *, qore::Function *> sss = qore::comp::sem::analyze(ctx, env, *script);
     qore::dump(std::cout, env);
     LOG("-------------------------------------------------------------------------------");
-    qore::in::Interpreter::interpret(*sss.first);
-    qore::in::Interpreter::interpret(*sss.second);
+    if (sss.first) {
+        qore::in::Interpreter::interpret(*sss.first);
+    }
+    if (sss.second) {
+        qore::in::Interpreter::interpret(*sss.second);
+    }
 //    LOG("-------------------------------------------------------------------------------");
 //    qore::cg::CodeGen::process(env);
 }
