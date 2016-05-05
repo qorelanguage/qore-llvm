@@ -25,29 +25,30 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implementation of conversions.
 ///
 //------------------------------------------------------------------------------
-#include "qore/rt/Conversions.h"
+#include "Conversions.h"
 #include <cassert>
 #include "qore/core/Conversion.h"
-#include "qore/Int.h"
+#include "qore/core/Int.h"
 #include "qore/core/String.h"
-#include "qore/core/Type.h"
 
 namespace qore {
-namespace rt {
+namespace impl {
 
 qvalue convertAny(qvalue src, const Type &type) {
-    const Conversion *conversion = Conversion::find(src.p->getType(), type);
+    const Type &srcType = src.p ? src.p->getType() : Type::Nothing;
+    const Conversion *conversion = Conversion::find(srcType, type);
 
-    if (src.p->getType() == Type::Int) {
+    if (srcType == Type::Int) {
         src.i = static_cast<Int *>(src.p)->get();
     }
+    //XXX unboxing of bool and float
+
     if (conversion != nullptr) {
         src = conversion->getFunction()(src);
     } else if (type.isRefCounted()) {
-        //TODO identity conversion causes increased refCount
         src.p->incRefCount();
     }
     return src;
@@ -88,5 +89,5 @@ qvalue convertStringToInt(qvalue value) {
     return result;
 }
 
-} // namespace rt
+} // namespace impl
 } // namespace qore

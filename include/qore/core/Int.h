@@ -25,20 +25,55 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Qore runtime namespace.
+/// \brief Defines the String class which implements a wrapper around Qore's `int` type.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_RT_RT_H_
-#define INCLUDE_QORE_RT_RT_H_
+#ifndef INCLUDE_QORE_CORE_INT_H_
+#define INCLUDE_QORE_CORE_INT_H_
+
+#include "qore/core/Any.h"
+#include "qore/core/Value.h"
 
 namespace qore {
 
 /**
- * \brief The namespace used by the Qore runtime.
+ * \brief Wrapper for Qore's `int` type.
  */
-namespace rt {
-}
+class Int : public Any {
+
+public:
+    /**
+     * \brief Creates a new instance.
+     * \param i the value
+     */
+    explicit Int(qint i) : i(i) {
+        LOG(this << " created");
+    }
+
+    const Type &getType() const override {
+        return Type::Int;
+    }
+
+    /**
+     * \brief Returns the value.
+     * \return the value
+     */
+    qint get() const {
+        return i;
+    }
+
+protected:
+    ~Int() {
+        LOG(this << " destroyed");
+    }
+
+protected:
+    WRITE_TO_LOG("Int \"" << i << "\"")
+
+private:
+    qint i;
+};
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_RT_RT_H_
+#endif // INCLUDE_QORE_CORE_INT_H_

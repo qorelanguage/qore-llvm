@@ -25,50 +25,55 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the static fields of runtime classes.
+///
+/// These are put into one file to ensure their initialization order.
 ///
 //------------------------------------------------------------------------------
 #include "qore/core/BinaryOperator.h"
 #include "qore/core/Conversion.h"
-#include "qore/rt/BinaryOperators.h"
-#include "qore/rt/Conversions.h"
+#include "impl/BinaryOperators.h"
+#include "impl/Conversions.h"
 
 namespace qore {
 
+/// \cond NoDoxygen
 #define TYPE(KIND, NAME)     const Type Type::KIND(Type::Kind::KIND, NAME)
-TYPE(Error,         "<error>");
-TYPE(Any,           "any");
-TYPE(Nothing,       "nothing");
-TYPE(Bool,          "bool");
-TYPE(SoftBool,      "softbool");
-TYPE(Int,           "int");
-TYPE(IntOpt,        "*int");
-TYPE(SoftInt,       "softint");
-TYPE(String,        "string");
-TYPE(StringOpt,     "*string");
-TYPE(SoftString,    "softstring");
+    TYPE(Error,         "<error>");
+    TYPE(Any,           "any");
+    TYPE(Nothing,       "nothing");
+    TYPE(Bool,          "bool");
+    TYPE(SoftBool,      "softbool");
+    TYPE(Int,           "int");
+    TYPE(IntOpt,        "*int");
+    TYPE(SoftInt,       "softint");
+    TYPE(String,        "string");
+    TYPE(StringOpt,     "*string");
+    TYPE(SoftString,    "softstring");
 #undef TYPE
 
 #define CONVERSION2(NAME, FROM, TO, THROWS) const Conversion Conversion::NAME("convert" #NAME, \
-        rt::convert ## NAME, Type::FROM, Type::TO, THROWS)
+        impl::convert ## NAME, Type::FROM, Type::TO, THROWS)
 #define CONVERSION(FROM, TO, THROWS) CONVERSION2(FROM ## To ## TO, FROM, TO, THROWS)
-CONVERSION(Any, String,     true);
-CONVERSION(Int, Any,        true);
-CONVERSION(Int, Bool,       false);
-CONVERSION(Int, String,     true);
-CONVERSION(String, Int,     true);
+             //from     to          canThrow
+    CONVERSION(Any,     String,     true);
+    CONVERSION(Int,     Any,        true);
+    CONVERSION(Int,     Bool,       false);
+    CONVERSION(Int,     String,     true);
+    CONVERSION(String,  Int,        true);
 #undef CONVERSION
 #undef CONVERSION2
 
 #define BINOP2(NAME, KIND, LEFT, RIGHT, RESULT, THROWS)   const BinaryOperator BinaryOperator::NAME("binOp" #NAME, \
-        rt::binOp ## NAME, BinaryOperator::Kind::KIND, Type::LEFT, Type::RIGHT, Type::RESULT, THROWS)
+        impl::binOp ## NAME, BinaryOperator::Kind::KIND, Type::LEFT, Type::RIGHT, Type::RESULT, THROWS)
 #define BINOP(LEFT, KIND, RIGHT, RESULT, THROWS) BINOP2(LEFT ## KIND ## RIGHT, KIND, LEFT, RIGHT, RESULT, THROWS)
-
-BINOP(Any, Plus, Any, Any, true);
-BINOP(Any, PlusEquals, Any, Any, true);
-BINOP(SoftString, Plus, SoftString, String, true);
-BINOP(SoftInt, Plus, SoftInt, Int, false);
-
+        //left          kind        right       result  canThrow
+    BINOP(Any,          Plus,       Any,        Any,    true);
+    BINOP(Any,          PlusEquals, Any,        Any,    true);
+    BINOP(SoftString,   Plus,       SoftString, String, true);
+    BINOP(SoftInt,      Plus,       SoftInt,    Int,    false);
 #undef BINOP
 #undef BINOP2
+/// \endcond NoDoxygen
+
 } // namespace qore

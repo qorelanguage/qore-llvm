@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the base class for all instructions.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_CORE_CODE_INSTRUCTION_H_
@@ -60,7 +60,7 @@ class Ret;
 class RetVoid;
 
 /**
- * \brief Represents an instruction.
+ * \brief Base class for instruction representations.
  */
 class Instruction {
 

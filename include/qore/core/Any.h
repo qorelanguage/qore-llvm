@@ -33,6 +33,7 @@
 
 #include "qore/core/RefCounted.h"
 #include "qore/core/Type.h"
+#include "qore/core/Value.h"
 
 namespace qore {
 
@@ -56,6 +57,92 @@ private:
     Any(Any &&) = delete;
     Any &operator=(const Any &) = delete;
     Any &operator=(Any &&) = delete;
+};
+
+/**
+ * \brief Simple smart pointer for qvalue. The decrease of reference count in destructor is done optionally based
+ * on a `refCounted` parameter specified during construction.
+ */
+template<>
+class auto_ptr<qvalue> {
+
+public:
+    auto_ptr() : refCounted(false) {
+        value.p = nullptr;
+    }
+
+    /**
+     * \brief Creates the pointer.
+     *
+     * Takes over the responsibility of optionally decreasing the reference count of a qvalue.
+     * \param value the qvalue (with increased reference count if `refCounted` is true)
+     * \param refCounted true if value needs its reference count decreased
+     */
+    auto_ptr(qvalue value, bool refCounted) : value(value), refCounted(refCounted) {
+    }
+
+    /**
+     * \brief Optionally decreases the reference count of the value.
+     */
+    ~auto_ptr() {
+        if (refCounted && value.p) {
+            value.p->decRefCount();
+        }
+    }
+
+    /**
+     * \brief Move constructor.
+     *
+     * Takes over the responsibility of optionally decreasing the reference count of the value.
+     * \param src the source pointer, will be left empty after this call
+     */
+    auto_ptr(auto_ptr<qvalue> &&src) : value(src.value), refCounted(src.refCounted) {
+        src.value.p = nullptr;
+        src.refCounted = false;
+    }
+
+    /**
+     * \brief Move assignment.
+     *
+     * Takes over the responsibility of optionally decreasing the reference count of the value.
+     * \param src the source pointer, will be left empty after this call
+     * \return this
+     */
+    auto_ptr &operator=(auto_ptr<qvalue> &&src) {
+        value = src.value;
+        refCounted = src.refCounted;
+        src.value.p = nullptr;
+        src.refCounted = false;
+        return *this;
+    }
+
+    /**
+     * \brief Dereferences the pointer.
+     * \return the qvalue pointed to by this pointer
+     */
+    qvalue &operator*() {
+        return value;
+    }
+
+    /**
+     * \brief Hands over the responsibility of optionally decreasing the reference count of the value and
+     * leaves this instance empty.
+     * \return the value
+     */
+    qvalue release() {
+        qvalue r = value;
+        value.p = nullptr;
+        refCounted = false;
+        return r;
+    }
+
+private:
+    auto_ptr(const auto_ptr &) = delete;
+    auto_ptr &operator=(const auto_ptr &) = delete;
+
+private:
+    qvalue value;
+    bool refCounted;
 };
 
 } // namespace qore

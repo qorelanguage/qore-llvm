@@ -1,10 +1,10 @@
 add_library(core STATIC
     BinaryOperator.cpp
-    BinaryOperators.cpp
     Conversion.cpp
-    Conversions.cpp
     Data.cpp
     SourceInfo.cpp
     String.cpp
+    impl/BinaryOperators.cpp
+    impl/Conversions.cpp
     util/Logging.cpp
 )

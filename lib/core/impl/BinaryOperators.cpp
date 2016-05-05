@@ -25,48 +25,52 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implementation of binary operators.
 ///
 //------------------------------------------------------------------------------
-#include "qore/rt/BinaryOperators.h"
+#include "BinaryOperators.h"
 #include <cassert>
-#include "qore/rt/Conversions.h"
+#include "Conversions.h"
 #include "qore/core/BinaryOperator.h"
 #include "qore/core/String.h"
 #include "qore/core/Type.h"
 
 namespace qore {
-namespace rt {
+namespace impl {
 
-qvalue convertAny(qvalue src, const Type &type);
+/**
+ * \brief Performs a binary operation determined at runtime based on the actual types of operands.
+ * \param kind the kind of the binary operator to perform
+ * \param l the value of the left operand, must be reference counted (the `p` member is active) but may be `nullptr`
+ * \param r the value of the right operand, must be reference counted (the `p` member is active) but may be `nullptr`
+ * \return the result of the operation with reference count increased (it is always reference counted)
+ * \throws Exception if the specified kind of binary operator does not apply for the types of the values
+ */
+static qvalue binOpGeneric(BinaryOperator::Kind kind, qvalue l, qvalue r) {
+    const BinaryOperator &op = BinaryOperator::find(kind,
+            l.p ? l.p->getType() : Type::Nothing, r.p ? r.p->getType() : Type::Nothing);
 
-static qvalue binOpGeneric(BinaryOperator::Kind kind, qvalue left, qvalue right) {
-    const BinaryOperator &op = BinaryOperator::find(kind, left.p->getType(), right.p->getType());
-
-    //FIXME exceptions are not handled correctly
-    left = convertAny(left, op.getLeftType());
-    right = convertAny(right, op.getRightType());
-    qvalue result = op.getFunction()(left, right);
-    if (op.getRightType().isRefCounted()) {
-        right.p->decRefCount();
-    }
-    if (op.getLeftType().isRefCounted()) {
-        left.p->decRefCount();
+    auto_ptr<qvalue> result;
+    {
+        auto_ptr<qvalue> left(convertAny(l, op.getLeftType()), op.getLeftType().isRefCounted());
+        {
+            auto_ptr<qvalue> right(convertAny(r, op.getRightType()), op.getRightType().isRefCounted());
+            result = auto_ptr<qvalue>(op.getFunction()(*left, *right), op.getResultType().isRefCounted());
+        }
     }
     if (op.getResultType() == Type::Int) {
-        result = convertIntToAny(result);
+        return convertIntToAny(*result);
     }
-    return result;
+    //XXX boxing of float and bool
+    return result.release();
 }
 
 qvalue binOpAnyPlusAny(qvalue left, qvalue right) {
-    //left or right can be nullptr
     LOG("binOpAnyPlusAny: " << left.p << " + " << right.p);
     return binOpGeneric(BinaryOperator::Kind::Plus, left, right);
 }
 
 qvalue binOpAnyPlusEqualsAny(qvalue left, qvalue right) {
-    //left or right can be nullptr
     LOG("binOpAnyPlusEqualsAny: " << left.p << " + " << right.p);
     return binOpGeneric(BinaryOperator::Kind::PlusEquals, left, right);
 }
@@ -86,5 +90,5 @@ qvalue binOpSoftIntPlusSoftInt(qvalue left, qvalue right) noexcept {
     return result;
 }
 
-} // namespace rt
+} // namespace impl
 } // namespace qore

@@ -25,43 +25,20 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Declares the namespace for implementation of runtime functions.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_INT_H_
-#define INCLUDE_QORE_INT_H_
-
-#include "qore/core/Any.h"
+#ifndef INCLUDE_QORE_CORE_IMPL_IMPL_H_
+#define INCLUDE_QORE_CORE_IMPL_IMPL_H_
 
 namespace qore {
 
-class Int : public Any {
-
-public:
-    explicit Int(qint i) : i(i) {
-        LOG(this << " created");
-    }
-
-    const Type &getType() const override {
-        return Type::Int;
-    }
-
-    qint get() const {
-        return i;
-    }
-
-protected:
-    ~Int() {
-        LOG(this << " destroyed");
-    }
-
-protected:
-    WRITE_TO_LOG("Int \"" << i << "\"")
-
-private:
-    qint i;
-};
+/**
+ * \brief The namespace used for implementation of runtime functions.
+ */
+namespace impl {
+}
 
 } // namespace qore
 
-#endif // INCLUDE_QORE_INT_H_
+#endif // INCLUDE_QORE_CORE_IMPL_IMPL_H_
