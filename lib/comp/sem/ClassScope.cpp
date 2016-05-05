@@ -36,10 +36,6 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-std::string ClassScope::getFullName() const {
-    return parent.getFullName() + "::" + rt.getName();
-}
-
 } // namespace sem
 } // namespace comp
 } // namespace qore

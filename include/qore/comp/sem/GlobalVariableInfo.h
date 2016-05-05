@@ -58,10 +58,6 @@ public:
             : core(core), parent(parent), node(node), rt(nullptr) {
     }
 
-    String::Ref getName() const {
-        return node.name.last().str;
-    }
-
     SourceLocation getLocation() const {
         return node.name.last().location;
     }
@@ -77,8 +73,6 @@ public:
     }
 
     void pass2();
-
-    std::string getFullName() const;
 
 private:
     Core &core;

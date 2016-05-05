@@ -50,7 +50,7 @@ public:
         if (isRoot) {
             os << "-root namespace";
         } else {
-            os << "-namespace " << ns.getName() << location(ns);
+            os << "-namespace " << name(ns) << location(ns);
         }
         os << "\n";
         for (auto &n : ns.getNamespaces()) {
@@ -69,11 +69,11 @@ public:
     }
 
     void dump(const Class &c) {
-        os << indent << "-class " << c.getName() << location(c) << "\n";
+        os << indent << "-class " << name(c) << location(c) << "\n";
     }
 
     void dump(const GlobalVariable &gv) {
-        os << indent << "-our " << gv.getType() << " " << gv.getName() << location(gv) << "\n";
+        os << indent << "-our " << gv.getType() << " " << name(gv) << location(gv) << "\n";
     }
 
     void dump(const FunctionGroup &fg) {
@@ -83,7 +83,7 @@ public:
     }
 
     void dump(const FunctionGroup &fg, const Function &f) {
-        os << indent++ << "-sub " << f.getType() << " " << fg.getName() << location(f)
+        os << indent++ << "-sub " << f.getType() << " " << name(fg) << location(f)
                 << ", " << f.getTempCount() << " temps, " << f.getLocalVariables().size() << " locals\n";
         for (auto &lv : f.getLocalVariables()) {
             os << indent << "[" << lv.getIndex() << "] " << lv.getType() << " " << lv.getName() << location(lv) << "\n";
@@ -99,6 +99,14 @@ private:
         std::ostringstream str;
         str << " @" << t.getLocation();
         return str.str();
+    }
+
+    template<typename T>
+    std::string name(const T &t) {
+        const std::string &fullName = t.getFullName();
+        auto pos = fullName.rfind(':');
+        assert(pos != std::string::npos);
+        return fullName.substr(pos + 1);
     }
 
 private:

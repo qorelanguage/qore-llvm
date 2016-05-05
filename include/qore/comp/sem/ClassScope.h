@@ -56,8 +56,6 @@ public:
 //        }
     }
 
-    std::string getFullName() const;
-
     Class &getRt() {
         return rt;
     }

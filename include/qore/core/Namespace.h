@@ -57,18 +57,19 @@ public:
 public:
     /**
      * \brief Creates a namespace with given name.
-     * \param name the name of the namespace
+     * \param fullName the full name of the namespace
      * \param location the location of the (first) declaration of the namespace
      */
-    Namespace(std::string name, SourceLocation location) : name(std::move(name)), location(location) {
+    Namespace(std::string fullName, SourceLocation location) : fullName(std::move(fullName)), location(location) {
+        assert(this->fullName == "" || this->fullName.find(':') != std::string::npos);
     }
 
     /**
-     * \brief Returns the name of the namespace.
-     * \return the name of the namespace
+     * \brief Returns the full name of the namespace.
+     * \return the full name of the namespace
      */
-    const std::string &getName() const {
-        return name;
+    const std::string &getFullName() const {
+        return fullName;
     }
 
     /**
@@ -81,12 +82,13 @@ public:
 
     /**
      * \brief Creates a new namespace in this namespace.
-     * \param name the name of the namespace
+     * \param name the name (relative to this namespace) of the namespace
      * \param location the location of the (first) declaration
      * \return newly created namespace
      */
-    Namespace &addNamespace(std::string name, SourceLocation location) {
-        Ptr ptr = Ptr(new Namespace(std::move(name), location));
+    Namespace &addNamespace(const std::string &name, SourceLocation location) {
+        assert(name.find(':') == std::string::npos);
+        Ptr ptr = Ptr(new Namespace(fullName + "::" + name, location));
         Namespace &ns = *ptr;
         namespaces.push_back(std::move(ptr));
         return ns;
@@ -94,12 +96,13 @@ public:
 
     /**
      * \brief Creates a new class in this namespace.
-     * \param name the name of the class
+     * \param name the name (relative to this namespace) of the class
      * \param location the location of the declaration
      * \return newly created class
      */
-    Class &addClass(std::string name, const std::string &fullName, SourceLocation location) {
-        Class::Ptr ptr = Class::Ptr(new Class(std::move(name), fullName, location));
+    Class &addClass(const std::string &name, SourceLocation location) {
+        assert(name.find(':') == std::string::npos);
+        Class::Ptr ptr = Class::Ptr(new Class(fullName + "::" + name, location));
         Class &c = *ptr;
         classes.push_back(std::move(ptr));
         return c;
@@ -109,13 +112,14 @@ public:
      * \brief Creates a new global variable in this namespace.
      *
      * Note that global variables are created uninitialized (without value), see \ref GlobalVariable.
-     * \param name the name of the global variable
+     * \param name the name (relative to this namespace) of the global variable
      * \param type the type of the global variable
      * \param location the location of the declaration in the source
      * \return newly created global variable
      */
-    GlobalVariable &addGlobalVariable(std::string name, const Type &type, SourceLocation location) {
-        GlobalVariable::Ptr ptr = GlobalVariable::Ptr(new GlobalVariable(std::move(name), type, location));
+    GlobalVariable &addGlobalVariable(const std::string &name, const Type &type, SourceLocation location) {
+        assert(name.find(':') == std::string::npos);
+        GlobalVariable::Ptr ptr = GlobalVariable::Ptr(new GlobalVariable(fullName + "::" + name, type, location));
         GlobalVariable &gv = *ptr;
         globalVariables.push_back(std::move(ptr));
         return gv;
@@ -123,11 +127,12 @@ public:
 
     /**
      * \brief Creates a new function group in this namespace.
-     * \param name the name of the function group
+     * \param name the name (relative to this namespace) of the function group
      * \return newly created function group
      */
-    FunctionGroup &addFunctionGroup(std::string name) {
-        FunctionGroup::Ptr ptr = FunctionGroup::Ptr(new FunctionGroup(std::move(name)));
+    FunctionGroup &addFunctionGroup(const std::string &name) {
+        assert(name.find(':') == std::string::npos);
+        FunctionGroup::Ptr ptr = FunctionGroup::Ptr(new FunctionGroup(fullName + "::" + name));
         FunctionGroup &fg = *ptr;
         functionGroups.push_back(std::move(ptr));
         return fg;
@@ -172,7 +177,7 @@ private:
     Namespace &operator=(Namespace &&) = delete;
 
 private:
-    std::string name;
+    std::string fullName;
     SourceLocation location;
     std::vector<std::unique_ptr<Namespace>> namespaces;
     std::vector<std::unique_ptr<Class>> classes;

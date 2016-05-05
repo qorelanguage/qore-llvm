@@ -77,7 +77,7 @@ private:
     }
 
     void declare(const FunctionGroup &fg, const Function &f) {
-        std::string name = fg.getName();   //TODO mangled name
+        std::string name = fg.getFullName();   //TODO mangled name
         std::vector<llvm::Type *> args(f.getType().getParameterCount(), helper.lt_qvalue);
         llvm::Type *ret = f.getType().getReturnType() == Type::Nothing ? helper.lt_void : helper.lt_qvalue;
         llvm::Function *func = llvm::Function::Create(

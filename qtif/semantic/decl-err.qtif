@@ -9,5 +9,5 @@ our int g;
     Block #1:
       ConstString temp.0, ""
       RefInc temp.0
-      GlobalInit our string g, temp.0
+      GlobalInit our string ::g, temp.0
       RetVoid

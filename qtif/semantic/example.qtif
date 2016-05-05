@@ -1,0 +1,69 @@
+our int i;
+sub f() {
+    i = 42;
+    any a = "X";
+    a = a + i;
+}
+int sub g(int i) {
+    if (i) return 1; else return 2;
+}
+#$$$
+-root namespace
+  -our int i @1:9
+  -sub nothing() f @2:5, 4 temps, 1 locals
+    [0] any a @4:9
+    Block #1:
+      ConstInt temp.0, 42
+      GlobalWriteLock our int ::i
+      GlobalSet our int ::i, temp.0
+      GlobalWriteUnlock our int ::i
+      ConstString temp.0, "X"
+      RefInc temp.0
+      LocalSet local.0, temp.0
+      LocalGet temp.1, local.0
+      RefInc temp.1
+      GlobalReadLock our int ::i
+      GlobalGet temp.3, our int ::i
+      GlobalReadUnlock our int ::i
+      InvokeConversion convertIntToAny temp.2, temp.3 with landing pad:
+        RefDecNoexcept temp.1
+        Jump #2
+      InvokeBinaryOperator binOpAnyPlusAny temp.0, temp.1, temp.2 with landing pad:
+        RefDecNoexcept temp.2
+        RefDecNoexcept temp.1
+        Jump #2
+      RefDec temp.2 with landing pad:
+        RefDecNoexcept temp.0
+        RefDecNoexcept temp.1
+        Jump #2
+      RefDec temp.1 with landing pad:
+        RefDecNoexcept temp.0
+        Jump #2
+      LocalGet temp.1, local.0
+      LocalSet local.0, temp.0
+      RefDec temp.1 with landing pad:
+        Jump #2
+      LocalGet temp.0, local.0
+      RefDec temp.0
+      RetVoid
+    Block #2:
+      LocalGet temp.1, local.0
+      RefDecNoexcept temp.1
+      ResumeUnwind
+  -sub int(int) g @7:9, 2 temps, 1 locals
+    [0] int i @7:15
+    Block #1:
+      LocalGet temp.1, local.0
+      InvokeConversion convertIntToBool temp.0, temp.1
+      Branch temp.0, #3, #2
+    Block #2:
+      ConstInt temp.0, 2
+      Ret temp.0
+    Block #3:
+      ConstInt temp.0, 1
+      Ret temp.0
+  -sub nothing() <qinit> @0:0, 1 temps, 0 locals
+    Block #1:
+      ConstInt temp.0, 0
+      GlobalInit our int ::i, temp.0
+      RetVoid

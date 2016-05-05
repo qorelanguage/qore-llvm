@@ -50,17 +50,18 @@ public:
 public:
     /**
      * \brief Creates the function group.
-     * \param name the name of the function group
+     * \param fullName the full name of the function group
      */
-    explicit FunctionGroup(std::string name) : name(std::move(name)) {
+    explicit FunctionGroup(std::string fullName) : fullName(std::move(fullName)) {
+        assert(this->fullName.find(':') != std::string::npos);
     }
 
     /**
-     * \brief Returns the name of the function group.
-     * \return the name of the function group
+     * \brief Returns the full name of the function group.
+     * \return the full name of the function group
      */
-    const std::string &getName() const {
-        return name;
+    const std::string &getFullName() const {
+        return fullName;
     }
 
     /**
@@ -91,7 +92,7 @@ private:
     FunctionGroup &operator=(FunctionGroup &&) = delete;
 
 private:
-    std::string name;
+    std::string fullName;
     std::vector<Function::Ptr> functions;
 };
 

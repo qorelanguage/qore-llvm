@@ -65,10 +65,6 @@ public:
         return rt;
     }
 
-    std::string getFullName() const {
-        return isRoot() ? "" : parentNamespace->getFullName() + "::" + rt.getName();
-    }
-
     bool isRoot() const {
         return parentNamespace == nullptr;
     }
@@ -182,7 +178,7 @@ private:
     }
 
     std::string getNameForDiag() const {
-        return isRoot() ? "the root namespace" : ("namespace " + getFullName());
+        return isRoot() ? "the root namespace" : ("namespace " + rt.getFullName());
     }
 
 private:

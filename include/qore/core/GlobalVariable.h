@@ -54,12 +54,13 @@ public:
 public:
     /**
      * \brief Creates the global variable.
-     * \param name the name of the variable
+     * \param fullName the full name of the variable
      * \param type the type of the variable
      * \param location the location of the declaration in the source
      */
-    GlobalVariable(std::string name, const Type &type, SourceLocation location) : name(std::move(name)), type(type),
-            location(location), hasValue(false) {
+    GlobalVariable(std::string fullName, const Type &type, SourceLocation location) : fullName(std::move(fullName)),
+            type(type), location(location), hasValue(false) {
+        assert(this->fullName.find(':') != std::string::npos);
     }
 
     /**
@@ -69,15 +70,15 @@ public:
         if (hasValue && type.isRefCounted() && value.p) {
             value.p->decRefCount();
         }
-        LOG("GlobalVariable " << name << " destroyed");
+        LOG("GlobalVariable " << fullName << " destroyed");
     }
 
     /**
-     * \brief Returns the name of the global variable.
-     * \return the name of the global variable
+     * \brief Returns the full name of the global variable.
+     * \return the full name of the global variable
      */
-    const std::string &getName() const {
-        return name;
+    const std::string &getFullName() const {
+        return fullName;
     }
 
     /**
@@ -100,28 +101,28 @@ public:
      * \brief Acquires the read lock for the global variable.
      */
     void readLock() {
-        LOG("GlobalVariable " << name << " read lock");
+        LOG("GlobalVariable " << fullName << " read lock");
     }
 
     /**
      * \brief Releases the read lock for the global variable.
      */
     void readUnlock() {
-        LOG("GlobalVariable " << name << " read unlock");
+        LOG("GlobalVariable " << fullName << " read unlock");
     }
 
     /**
      * \brief Acquires the write lock for the global variable.
      */
     void writeLock() {
-        LOG("GlobalVariable " << name << " write lock");
+        LOG("GlobalVariable " << fullName << " write lock");
     }
 
     /**
      * \brief Releases the write lock for the global variable.
      */
     void writeUnlock() {
-        LOG("GlobalVariable " << name << " write unlock");
+        LOG("GlobalVariable " << fullName << " write unlock");
     }
 
     /**
@@ -134,7 +135,7 @@ public:
     qvalue getValue() {
         assert(hasValue);
         //assert read or write lock acquired by current thread
-        LOG("GlobalVariable " << name << " get");
+        LOG("GlobalVariable " << fullName << " get");
         return value;
     }
 
@@ -148,7 +149,7 @@ public:
     void setValue(qvalue v) {
         assert(hasValue);
         //assert write lock acquired by current thread
-        LOG("GlobalVariable " << name << " set");
+        LOG("GlobalVariable " << fullName << " set");
         value = v;
     }
 
@@ -162,7 +163,7 @@ public:
      */
     void initValue(qvalue v) {
         assert(!hasValue);
-        LOG("GlobalVariable " << name << " created");
+        LOG("GlobalVariable " << fullName << " created");
         hasValue = true;
         value = v;
     }
@@ -174,7 +175,7 @@ private:
     GlobalVariable &operator=(GlobalVariable &&) = delete;
 
 private:
-    std::string name;
+    std::string fullName;
     const Type &type;
     SourceLocation location;
     bool hasValue;

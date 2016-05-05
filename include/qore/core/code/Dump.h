@@ -204,7 +204,7 @@ private:
 
     std::string global(const GlobalVariable &gv) {
         std::ostringstream str;
-        str << "our " << gv.getType() << " " << gv.getName();
+        str << "our " << gv.getType() << " " << gv.getFullName();
         return str.str();
     }
 

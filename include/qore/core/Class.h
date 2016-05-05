@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_CORE_CLASS_H_
 #define INCLUDE_QORE_CORE_CLASS_H_
 
+#include <cassert>
 #include <memory>
 #include <string>
 #include "qore/core/SourceLocation.h"
@@ -49,21 +50,21 @@ public:
 public:
     /**
      * \brief Creates the class.
-     * \param name the name of the class
+     * \param fullName the full name of the class
      * \param location the location of the declaration in the source
      */
-    Class(std::string name, const std::string &fullName, SourceLocation location)
-            : name(std::move(name)), location(location) {
-        type = Type::createForClass(fullName, false);
-        typeOpt = Type::createForClass(fullName, true);
+    Class(std::string fullName, SourceLocation location) : fullName(std::move(fullName)), location(location) {
+        assert(this->fullName.find(':') != std::string::npos);
+        type = Type::createForClass(this->fullName, false);
+        typeOpt = Type::createForClass(this->fullName, true);
     }
 
     /**
-     * \brief Returns the name of the class.
-     * \return the name of the class
+     * \brief Returns the full name of the class.
+     * \return the full name of the class
      */
-    const std::string &getName() const {
-        return name;
+    const std::string &getFullName() const {
+        return fullName;
     }
 
     /**
@@ -74,6 +75,11 @@ public:
         return location;
     }
 
+    /**
+     * \brief Returns the type this class defines.
+     * \param optional true if the `*C` should be returned, false for just `C`
+     * \return the type defined by this class
+     */
     const Type &getType(bool optional) const {
         return optional ? *typeOpt : *type;
     }
@@ -85,7 +91,7 @@ private:
     Class &operator=(Class &&) = delete;
 
 private:
-    std::string name;
+    std::string fullName;
     SourceLocation location;
     Type::Ptr type;
     Type::Ptr typeOpt;

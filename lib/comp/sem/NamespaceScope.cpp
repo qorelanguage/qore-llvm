@@ -116,9 +116,7 @@ void NamespaceScope::processClassDeclaration(ast::Class &node) {
         throw ReportedError();
     }
 
-    auto n = core.ctx.getString(name);
-    //XXX use short or full names?
-    Class &c = rt.addClass(n, getFullName() + "::" + n, location); //XXX when should this be created?
+    Class &c = rt.addClass(core.ctx.getString(name), location); //XXX when should this be created?
     ClassScope::Ptr ptr = util::make_unique<ClassScope>(c, core, *this, node);
     core.addToQueue(*ptr);
     classes[name] = std::move(ptr);
