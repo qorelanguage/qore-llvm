@@ -100,7 +100,9 @@ TEST_F(SourceTest, getMarkLocation) {
     src.read();
     SourceLocation l = src.getMarkLocation();
     EXPECT_EQ(info, l.getSourceInfo());
-    EXPECT_EQ(1, l.getOffset());
+    EXPECT_EQ(1, l.getLine());
+    EXPECT_EQ(2, l.getColumn());
+    EXPECT_EQ(1, src.getMarkOffset());
 }
 
 TEST_F(SourceTest, getMarkedString) {
@@ -125,7 +127,7 @@ static std::tuple<int, int, int> loc(Source &src) {
     src.setMark();
     src.read();
     SourceLocation l = src.getMarkLocation();
-    return std::make_tuple(l.getOffset(), l.getLine(), l.getColumn());
+    return std::make_tuple(src.getMarkOffset(), l.getLine(), l.getColumn());
 }
 
 TEST_F(SourceTest, decodeLocation) {

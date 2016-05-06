@@ -117,7 +117,7 @@ public:
      * \return the characters of the token
      */
     std::string getLexeme(const Token &token) const {
-        return srcMgr.getRange(token.location, token.length);
+        return token.length == 0 ? "" : srcMgr.getRange(token.location.getSourceInfo(), token.offset, token.length);
     }
 
 private:

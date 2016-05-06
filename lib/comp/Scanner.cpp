@@ -123,7 +123,7 @@ Token Scanner::read(Source &src, ITokenStream::Mode mode) {
 
         if (type != TokenType::None) {
             LOG("Returning token " << type);
-            return Token(type, src.getMarkLocation(), src.getMarkedLength());
+            return Token(type, src.getMarkLocation(), src.getMarkOffset(), src.getMarkedLength());
         }
     }
 }

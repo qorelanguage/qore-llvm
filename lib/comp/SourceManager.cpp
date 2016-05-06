@@ -47,7 +47,7 @@ Source &SourceManager::create(const SourceInfo &info, std::vector<char> data) {
         *it = ' ';
     }
     if (hasNulls) {
-        diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(info, 0, 1, 1));
+        diagMgr.report(DiagId::CompNulCharactersIgnored, SourceLocation(info, 1, 1));
     }
 
     std::unique_ptr<Source> ptr = util::make_unique<Source>(info, std::move(data));

@@ -46,17 +46,16 @@ public:
     /**
      * \brief Creates an invalid location.
      */
-    SourceLocation() : source(&SourceInfo::Invalid), offset(-1), lineAndColumn(0) {
+    SourceLocation() : source(&SourceInfo::Invalid), lineAndColumn(0) {
     }
 
     /**
      * \brief Constructor.
      * \param source the information about the source file
-     * \param offset the offset in the source
      * \param line the line number
      * \param column the column number
      */
-    SourceLocation(const SourceInfo &source, int offset, int line, int column) : source(&source), offset(offset) {
+    SourceLocation(const SourceInfo &source, int line, int column) : source(&source) {
         if (column > 255) {
             column = 255;
         }
@@ -85,14 +84,6 @@ public:
     }
 
     /**
-     * \brief Returns the offset in the source.
-     * \return the offset in the source
-     */
-    int getOffset() const {
-        return offset;
-    }
-
-    /**
      * \brief Returns the line number.
      * \return the line number
      */
@@ -110,7 +101,6 @@ public:
 
 private:
     const SourceInfo *source;
-    int offset;
     int lineAndColumn;
 };
 

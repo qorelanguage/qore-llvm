@@ -77,14 +77,15 @@ public:
 
     /**
      * \brief Returns the substring of given length starting at given location.
-     * \param location the location of the first character of the substring
+     * \param sourceInfo the source info
+     * \param offset the offset of the first character of the substring in the source
      * \param length the length of the substring
      * \return the substring of `length` starting at `location`
      */
-    std::string getRange(const SourceLocation &location, int length) const {
-        auto it = sources.find(&location.getSourceInfo());
+    std::string getRange(const SourceInfo &sourceInfo, int offset, int length) const {
+        auto it = sources.find(&sourceInfo);
         assert(it != sources.end());
-        return it->second->getRange(location.getOffset(), length);
+        return it->second->getRange(offset, length);
     }
 
 private:

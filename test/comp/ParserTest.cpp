@@ -74,11 +74,11 @@ TEST(ParserTest2, declOrStmt) {
 TEST(AstCoverage, ArgList) {
     Token t1;
     Token t2;
-    t1.location = SourceLocation(SourceInfo::Invalid, 1, 2, 3);
-    t2.location = SourceLocation(SourceInfo::Invalid, 4, 5, 6);
+    t1.location = SourceLocation(SourceInfo::Invalid, 2, 3);
+    t2.location = SourceLocation(SourceInfo::Invalid, 5, 6);
     ast::ArgList::Ptr a = ast::ArgList::create(t1, ast::ArgList::Data(), t2);
-    EXPECT_EQ(1, a->getStart().getOffset());
-    EXPECT_EQ(4, a->getEnd().getOffset());
+    EXPECT_EQ(2, a->getStart().getLine());
+    EXPECT_EQ(5, a->getEnd().getLine());
 }
 
 #ifdef QORE_COVERAGE

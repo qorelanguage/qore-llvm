@@ -64,7 +64,7 @@ public:
         data.push_back('\0');
         ptr = data.begin();
         mark = data.begin();
-        markLocation = SourceLocation(info, 0, line, column);
+        markLocation = SourceLocation(info, line, column);
     }
 
     /**
@@ -160,7 +160,15 @@ public:
      */
     void setMark() {
         mark = ptr;
-        markLocation = SourceLocation(info, static_cast<int>(mark - data.begin()), line, column);
+        markLocation = SourceLocation(info, line, column);
+    }
+
+    /**
+     * \brief Returns the marked offset.
+     * \return the marked offset
+     */
+    int getMarkOffset() const {
+        return static_cast<int>(mark - data.begin());
     }
 
     /**
