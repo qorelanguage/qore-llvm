@@ -45,8 +45,8 @@ namespace util {
  * wrapping another iterator (`C::Iterator`). The actual conversion of `C::Iterator` to `C::ElementType &` is
  * delegated to `C::convert()`.
  * \tparam C a class that defines both types and actually performs the conversion
- * \see VectorOfUniquePtrIteratorAdapter
- * \see MapToUniquePtrIteratorAdapter
+ * \see VectorOfPtrIteratorAdapter
+ * \see MapToPtrIteratorAdapter
  */
 template<typename C>
 class IteratorAdapter {
@@ -119,20 +119,21 @@ private:
 };
 
 /**
- * \brief Converter for dereferencing `std::unique_ptr` in a `std::vector`.
+ * \brief Converter for dereferencing pointers in a `std::vector`.
  *
  * This class can be used as the `C` template parameter of \ref IteratorAdapter for providing an iterator of `E`
- * in cases where the underlying collection is actually a vector of unique pointers to `E`.
+ * in cases where the underlying collection is actually a vector of `P`, where `P` is a pointer to `E`.
  *
  * \tparam E the type of the elements of the collection
- * \see VectorOfUniquePtrIteratorAdapter
+ * \tparam P the type of the pointer to E
+ * \see VectorOfPtrIteratorAdapter
  */
-template<typename E>
-struct VectorOfUniquePtrInteratorConverter {
+template<typename E, typename P = typename E::Ptr>
+struct VectorOfPtrInteratorConverter {
     /**
      * \brief The type of the original iterator.
      */
-    using Iterator = typename std::vector<typename std::unique_ptr<E>>::const_iterator;
+    using Iterator = typename std::vector<P>::const_iterator;
 
     /**
      * \brief The type of the elements.
@@ -140,7 +141,7 @@ struct VectorOfUniquePtrInteratorConverter {
     using ElementType = const E;
 
     /**
-     * \brief Converts the iterator of `std::unique_ptr` to a reference of `E` by dereferencing the pointer.
+     * \brief Converts the iterator of pointers to `E` to a reference of `E` by dereferencing the pointer.
      * \param it the original iterator
      * \return a reference to the element pointed to by the iterator
      */
@@ -150,14 +151,14 @@ struct VectorOfUniquePtrInteratorConverter {
 };
 
 /**
- * \brief An iterator adapter for dereferencing `std::unique_ptr` in a `std::vector`.
+ * \brief An iterator adapter for dereferencing pointers in a `std::vector`.
  *
  * This class is useful for classes that need to provide iterator of type `E` where the underlying collection
- * is a vector of unique pointers to `E`. For example:
+ * is a vector of `P`, where `P` is a pointer to `E`. For example:
  * \code
  * class C {
  * public:
- *     using Iterator = VectorOfUniquePtrIteratorAdapter<Item>;
+ *     using Iterator = VectorOfPtrIteratorAdapter<Item, std::unique_ptr<Item>>;
  *     Iterator begin() const {
  *         return Iterator(data.begin());
  *     }
@@ -176,25 +177,27 @@ struct VectorOfUniquePtrInteratorConverter {
  * }
  * \endcode
  * \tparam E the type of the elements of the collection
+ * \tparam P the type of the pointer to E
  */
-template<typename E>
-using VectorOfUniquePtrIteratorAdapter = IteratorAdapter<VectorOfUniquePtrInteratorConverter<E>>;
+template<typename E, typename P = typename E::Ptr>
+using VectorOfPtrIteratorAdapter = IteratorAdapter<VectorOfPtrInteratorConverter<E, P>>;
 
 /**
- * \brief Converter for dereferencing `std::unique_ptr` in a `std::map`.
+ * \brief Converter for dereferencing pointers in a `std::map`.
  *
  * This class can be used as the `C` template parameter of \ref IteratorAdapter for providing an iterator of `E`
- * in cases where the underlying collection is actually a map of `K` to unique pointers to `E`.
+ * in cases where the underlying collection is actually a map of `K` to `P`, where `P` is a pointer to `E`.
  * \tparam K the type of the key in the map
  * \tparam E the type of the elements of the collection
- * \see MapToUniquePtrIteratorAdapter
+ * \tparam P the type of the pointer to E
+ * \see MapToPtrIteratorAdapter
  */
-template<typename K, typename E>
-struct MapToUniquePtrInteratorConverter {
+template<typename K, typename E, typename P = typename E::Ptr>
+struct MapToPtrInteratorConverter {
     /**
      * \brief The type of the original iterator.
      */
-    using Iterator = typename std::map<K, typename std::unique_ptr<E>>::const_iterator;
+    using Iterator = typename std::map<K, P>::const_iterator;
 
     /**
      * \brief The type of the elements.
@@ -202,7 +205,7 @@ struct MapToUniquePtrInteratorConverter {
     using ElementType = const E;
 
     /**
-     * \brief Converts the iterator of `std::pair<K, std::unique_ptr>` to a reference of `E` by dereferencing the
+     * \brief Converts the iterator of `std::pair<K, P>` to a reference of `E` by dereferencing the
      * pointer in the `second` field of the pair.
      * \param it the original iterator
      * \return a reference to the element pointed to by the iterator
@@ -213,14 +216,14 @@ struct MapToUniquePtrInteratorConverter {
 };
 
 /**
- * \brief An iterator adapter for dereferencing `std::unique_ptr` in a `std::map`.
+ * \brief An iterator adapter for dereferencing pointers in a `std::map`.
  *
  * This class is useful for classes that need to provide iterator of type `E` where the underlying collection
- * is a map of `K` to unique pointers to `E`. For example:
+ * is a map of `K` to `P`, where `P` is a pointer to `E`. For example:
  * \code
  * class C {
  * public:
- *     using Iterator = MapToUniquePtrIteratorAdapter<std::string, Item>;
+ *     using Iterator = MapToPtrIteratorAdapter<std::string, Item, std::unique_ptr<Item>>;
  *     Iterator begin() const {
  *         return Iterator(data.begin());
  *     }
@@ -240,9 +243,10 @@ struct MapToUniquePtrInteratorConverter {
  * \endcode
  * \tparam K the type of the key in the map
  * \tparam E the type of the elements of the collection
+ * \tparam P the type of the pointer to E
  */
-template<typename K, typename E>
-using MapToUniquePtrInteratorAdapter = IteratorAdapter<MapToUniquePtrInteratorConverter<K, E>>;
+template<typename K, typename E, typename P = typename E::Ptr>
+using MapToPtrInteratorAdapter = IteratorAdapter<MapToPtrInteratorConverter<K, E, P>>;
 
 /**
  * \brief Represents a pair of iterators.

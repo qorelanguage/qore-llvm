@@ -73,7 +73,7 @@ class Block {
 
 public:
     using Ptr = std::unique_ptr<Block>;                                     //!< Pointer type.
-    using Iterator = util::VectorOfUniquePtrIteratorAdapter<Instruction>;   //!< Iterator type.
+    using Iterator = util::VectorOfPtrIteratorAdapter<Instruction>;         //!< Iterator type.
 
 public:
     /**

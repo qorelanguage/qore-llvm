@@ -47,8 +47,8 @@ namespace qore {
 class Function {
 
 public:
-    using Ptr = std::unique_ptr<Function>;                                                  //!< Pointer type.
-    using LocalVariableIterator = util::VectorOfUniquePtrIteratorAdapter<LocalVariable>;    //!< Locals iterator.
+    using Ptr = std::unique_ptr<Function>;                                          //!< Pointer type.
+    using LocalVariableIterator = util::VectorOfPtrIteratorAdapter<LocalVariable>;  //!< Locals iterator.
 
 public:
     /**

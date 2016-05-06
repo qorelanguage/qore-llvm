@@ -44,8 +44,8 @@ namespace qore {
 class FunctionGroup {
 
 public:
-    using Ptr = std::unique_ptr<FunctionGroup>;                                 //!< Pointer type.
-    using FunctionItartor = util::VectorOfUniquePtrIteratorAdapter<Function>;   //!< Function iterator.
+    using Ptr = std::unique_ptr<FunctionGroup>;                             //!< Pointer type.
+    using FunctionItartor = util::VectorOfPtrIteratorAdapter<Function>;     //!< Function iterator.
 
 public:
     /**

@@ -48,11 +48,11 @@ namespace qore {
 class Namespace {
 
 public:
-    using Ptr = std::unique_ptr<Namespace>;                                               //!< Pointer type.
-    using NamespaceItartor = util::VectorOfUniquePtrIteratorAdapter<Namespace>;           //!< Namespace iterator.
-    using ClassItartor = util::VectorOfUniquePtrIteratorAdapter<Class>;                   //!< Class iterator.
-    using GlobalVariableItartor = util::VectorOfUniquePtrIteratorAdapter<GlobalVariable>; //!< Globals iterator.
-    using FunctionGroupItartor = util::VectorOfUniquePtrIteratorAdapter<FunctionGroup>;   //!< Function groups iterator.
+    using Ptr = std::unique_ptr<Namespace>;                                             //!< Pointer type.
+    using NamespaceItartor = util::VectorOfPtrIteratorAdapter<Namespace>;               //!< Namespace iterator.
+    using ClassItartor = util::VectorOfPtrIteratorAdapter<Class>;                       //!< Class iterator.
+    using GlobalVariableItartor = util::VectorOfPtrIteratorAdapter<GlobalVariable>;     //!< Globals iterator.
+    using FunctionGroupItartor = util::VectorOfPtrIteratorAdapter<FunctionGroup>;       //!< Function groups iterator.
 
 public:
     /**

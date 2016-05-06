@@ -29,12 +29,12 @@
 namespace qore {
 namespace util {
 
-class ClassWithVectorAndMapOfUniquePtrs {
+class ClassWithVectorAndMapOfPtrs {
 public:
-    using VectorIterator = VectorOfUniquePtrIteratorAdapter<std::string>;
-    using MapIterator = MapToUniquePtrInteratorAdapter<int, std::string>;
+    using VectorIterator = VectorOfPtrIteratorAdapter<std::string, std::unique_ptr<std::string>>;
+    using MapIterator = MapToPtrInteratorAdapter<int, std::string, std::unique_ptr<std::string>>;
 
-    ClassWithVectorAndMapOfUniquePtrs() {
+    ClassWithVectorAndMapOfPtrs() {
         vector.push_back(std::unique_ptr<std::string>(new std::string("Item 1")));
         vector.push_back(std::unique_ptr<std::string>(new std::string("Item 2")));
         map[4] = std::unique_ptr<std::string>(new std::string("Item 1"));
@@ -66,7 +66,7 @@ class IteratorsTest : public testing::Test {
 };
 
 TEST_F(IteratorsTest, vectorForEach) {
-    ClassWithVectorAndMapOfUniquePtrs c;
+    ClassWithVectorAndMapOfPtrs c;
     std::ostringstream str;
     str << "|";
     for (const std::string &item : c) {
@@ -76,13 +76,13 @@ TEST_F(IteratorsTest, vectorForEach) {
 }
 
 TEST_F(IteratorsTest, derefOperator) {
-    ClassWithVectorAndMapOfUniquePtrs c;
+    ClassWithVectorAndMapOfPtrs c;
     auto it = c.begin();
     EXPECT_EQ(6U, it->length());
 }
 
 TEST_F(IteratorsTest, mapForEach) {
-    ClassWithVectorAndMapOfUniquePtrs c;
+    ClassWithVectorAndMapOfPtrs c;
     std::ostringstream str;
     str << "|";
     for (const std::string &item : c.getMap()) {
@@ -92,7 +92,7 @@ TEST_F(IteratorsTest, mapForEach) {
 }
 
 TEST_F(IteratorsTest, rangeSize) {
-    ClassWithVectorAndMapOfUniquePtrs c;
+    ClassWithVectorAndMapOfPtrs c;
     EXPECT_EQ(2, c.getVector().size());
 }
 
