@@ -63,8 +63,9 @@ private:
  * \brief Simple smart pointer for qvalue. The decrease of reference count in destructor is done optionally based
  * on a `refCounted` parameter specified during construction.
  */
-template<>
-class auto_ptr<qvalue> {
+//cppcheck-suppress noConstructor
+//http://trac.cppcheck.net/ticket/6589
+template<> class auto_ptr<qvalue> {
 
 public:
     auto_ptr() : refCounted(false) {
@@ -108,7 +109,7 @@ public:
      * \param src the source pointer, will be left empty after this call
      * \return this
      */
-    auto_ptr &operator=(auto_ptr<qvalue> &&src) {
+    auto_ptr<qvalue> &operator=(auto_ptr<qvalue> &&src) {
         value = src.value;
         refCounted = src.refCounted;
         src.value.p = nullptr;

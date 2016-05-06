@@ -34,60 +34,79 @@
 namespace qore {
 namespace nrt {
 
+// cppcheck-suppress unusedFunction
 Namespace *env_getRootNamespace(Env *env) {
     return &env->getRootNamespace();
 }
 
+// cppcheck-suppress unusedFunction
+SourceInfo *env_addSourceInfo(Env *env, const char *name) {
+    return &env->addSourceInfo(name);
+}
+
+// cppcheck-suppress unusedFunction
 qvalue env_addString(Env *env, const char *str) {
     qvalue v;
     v.p = &env->addString(str);
     return v;
 }
 
+// cppcheck-suppress unusedFunction
 Namespace *namespace_addNamespace(Namespace *ns, const char *name) {
     return &ns->addNamespace(name, SourceLocation());
 }
 
+// cppcheck-suppress unusedFunction
 FunctionGroup *namespace_addFunctionGroup(Namespace *ns, const char *name) {
     return &ns->addFunctionGroup(name);
 }
 
+// cppcheck-suppress unusedFunction
 GlobalVariable *namespace_addGlobalVariable(Namespace *ns, const char *name, const Type *type) {
     return &ns->addGlobalVariable(name, *type, SourceLocation());
 }
 
+// cppcheck-suppress unusedFunction
 void globalVariable_initValue(GlobalVariable *gv, qvalue value) {
     gv->initValue(value);
 }
 
+// cppcheck-suppress unusedFunction
 void globalVariable_setValue(GlobalVariable *gv, qvalue value) {
     gv->setValue(value);
 }
 
+// cppcheck-suppress unusedFunction
 qvalue globalVariable_getValue(GlobalVariable *gv) {
     return gv->getValue();
 }
 
+// cppcheck-suppress unusedFunction
 void globalVariable_readLock(GlobalVariable *gv) {
     gv->readLock();
 }
 
+// cppcheck-suppress unusedFunction
 void globalVariable_readUnlock(GlobalVariable *gv) {
     gv->readUnlock();
 }
 
+// cppcheck-suppress unusedFunction
 void globalVariable_writeLock(GlobalVariable *gv) {
     gv->writeLock();
 }
 
+// cppcheck-suppress unusedFunction
 void globalVariable_writeUnlock(GlobalVariable *gv) {
     gv->writeUnlock();
 }
 
+// cppcheck-suppress unusedFunction
 const Type *type_String() {
     return &Type::String;
 }
 
+// cppcheck-suppress unusedFunction
 void ref_dec(qvalue value) {
     if (value.p) {
         value.p->decRefCount();
@@ -95,24 +114,28 @@ void ref_dec(qvalue value) {
     }
 }
 
+// cppcheck-suppress unusedFunction
 void ref_dec_noexcept(qvalue value) {
     if (value.p) {
         value.p->decRefCount();
     }
 }
 
+// cppcheck-suppress unusedFunction
 void ref_inc(qvalue value) {
     if (value.p) {
         value.p->incRefCount();
     }
 }
 
+// cppcheck-suppress unusedFunction
 qvalue qint_to_qvalue(qint i) {
     qvalue v;
     v.i = i;
     return v;
 }
 
+// cppcheck-suppress unusedFunction
 qbool qvalue_to_qbool(qvalue v) {
     return v.b;
 }

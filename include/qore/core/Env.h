@@ -47,7 +47,8 @@ namespace qore {
 class Env {
 
 public:
-    using StringItartor = util::VectorOfPtrIteratorAdapter<String, String::Ptr>;    //!< String iterator.
+    using SourceInfoIterator = util::VectorOfPtrIteratorAdapter<SourceInfo>;        //!< SourceInfo iterator.
+    using StringIterator = util::VectorOfPtrIteratorAdapter<String>;                //!< String iterator.
 
 public:
     /**
@@ -91,11 +92,19 @@ public:
     }
 
     /**
+     * \brief Returns a range for iterating source infos.
+     * \return a range for iterating source infos
+     */
+    util::IteratorRange<SourceInfoIterator> getSourceInfos() {
+        return util::IteratorRange<SourceInfoIterator>(sourceInfos);
+    }
+
+    /**
      * \brief Returns a range for iterating string literals.
      * \return a range for iterating string literals
      */
-    util::IteratorRange<StringItartor> getStrings() {
-        return util::IteratorRange<StringItartor>(strings);
+    util::IteratorRange<StringIterator> getStrings() {
+        return util::IteratorRange<StringIterator>(strings);
     }
 
 private:

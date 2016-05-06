@@ -52,20 +52,24 @@ public:
     std::unique_ptr<llvm::Module> compile(Env &env, Function *qInit, Function *qMain) {
         llvm::Value *rtEnv = &*qstart->arg_begin();
         llvm::Value *rtNs = builder.CreateCall(helper.lf_env_getRootNamespace, rtEnv);
-        compile(rtNs, env.getRootNamespace());
+
+        for (const SourceInfo &src : env.getSourceInfos()) {
+            llvm::Value *args[2] = { rtEnv, stringLiteral(src.getName(), "src_info") };
+            sourceInfos[&src] = builder.CreateCall(helper.lf_env_addSourceInfo, args);
+        }
 
         for (const String &str : env.getStrings()) {
             llvm::GlobalVariable *strGv = new llvm::GlobalVariable(*helper.module, helper.lt_qvalue, false,
                     llvm::GlobalVariable::PrivateLinkage, llvm::Constant::getNullValue(helper.lt_qvalue), "str");
-            llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, str.get(), true);
-            llvm::GlobalVariable *strLitGv = new llvm::GlobalVariable(*helper.module, val->getType(), true,
-                    llvm::GlobalValue::PrivateLinkage, val, "str_lit");
-            strLitGv->setUnnamedAddr(true);
-            llvm::Value *args[2] = { rtEnv, builder.CreateConstGEP2_32(nullptr, strLitGv, 0, 0) };
+
+
+            llvm::Value *args[2] = { rtEnv, stringLiteral(str.get(), "str_lit") };
             llvm::Value *v = builder.CreateCall(helper.lf_env_addString, args);
             builder.CreateStore(v, strGv);
             strings[&str] = strGv;
         }
+
+        compile(rtNs, env.getRootNamespace());
         builder.CreateRetVoid();
 
         if (qInit) {
@@ -125,12 +129,16 @@ private:
         }
     }
 
-    llvm::Value *name(const std::string &str) {
-        llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, str.substr(str.rfind(':') + 1), true);
+    llvm::Value *stringLiteral(const std::string &str, const std::string &name) {
+        llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, str, true);
         llvm::GlobalVariable *gv = new llvm::GlobalVariable(*helper.module, val->getType(), true,
-                llvm::GlobalValue::PrivateLinkage, val, llvm::Twine("name"));
+                llvm::GlobalValue::PrivateLinkage, val, name);
         gv->setUnnamedAddr(true);
         return builder.CreateConstGEP2_32(nullptr, gv, 0, 0);
+    }
+
+    llvm::Value *name(const std::string &str) {
+        return stringLiteral(str.substr(str.rfind(':') + 1), "name");
     }
 
     llvm::Value *type(const Type &type) {
@@ -148,6 +156,7 @@ private:
 
 private:
     Helper helper;
+    std::unordered_map<const SourceInfo *, llvm::Value *> sourceInfos;
     FunctionContext::StringsMap strings;
     FunctionContext::GlobalsMap globals;
     llvm::Function *qstart;

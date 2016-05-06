@@ -36,9 +36,10 @@
 namespace qore {
 
 class Env;
-class Namespace;
 class FunctionGroup;
 class GlobalVariable;
+class Namespace;
+class SourceInfo;
 class Type;
 
 /**
@@ -54,6 +55,14 @@ namespace nrt {
  * \return the root namespace
  */
 extern "C" Namespace *env_getRootNamespace(Env *env);
+
+/**
+ * \brief Wraps the ref Env::addSourceInfo() method.
+ * \param env `this` for the method invocation
+ * \param name the name of the source
+ * \return created \ref SourceInfo instance
+ */
+extern "C" SourceInfo *env_addSourceInfo(Env *env, const char *name);
 
 /**
  * \brief Wraps the ref Env::addString() method.

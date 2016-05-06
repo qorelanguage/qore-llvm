@@ -66,6 +66,7 @@ public:
         lt_Function_ptr = llvm::StructType::create(ctx, "::qore::Function")->getPointerTo();
         lt_GlobalVariable_ptr = llvm::StructType::create(ctx, "::qore::GlobalVariable")->getPointerTo();
         lt_Namespace_ptr = llvm::StructType::create(ctx, "::qore::Namespace")->getPointerTo();
+        lt_SourceInfo_ptr = llvm::StructType::create(ctx, "::qore::SourceInfo")->getPointerTo();
         lt_Type_ptr = llvm::StructType::create(ctx, "::qore::Type")->getPointerTo();
 
         //personality function
@@ -78,6 +79,7 @@ public:
 
         //nrt wrappers for Env
         lf_env_getRootNamespace = createFunction("env_getRootNamespace", lt_Namespace_ptr, lt_Env_ptr);
+        lf_env_addSourceInfo = createFunction("env_addSourceInfo", lt_SourceInfo_ptr, lt_Env_ptr, lt_char_ptr);
         lf_env_addString = createFunction("env_addString", lt_qvalue, lt_Env_ptr, lt_char_ptr);
 
         //nrt wrappers for Namespace
@@ -177,6 +179,7 @@ public:
     llvm::Type *lt_FunctionGroup_ptr;
     llvm::Type *lt_GlobalVariable_ptr;
     llvm::Type *lt_Namespace_ptr;
+    llvm::Type *lt_SourceInfo_ptr;
     llvm::Type *lt_Type_ptr;
 
     llvm::Function *lf_personality;
@@ -185,7 +188,9 @@ public:
     llvm::Function *lf_qvalue_to_qbool;
 
     llvm::Function *lf_env_getRootNamespace;
+    llvm::Function *lf_env_addSourceInfo;
     llvm::Function *lf_env_addString;
+
     llvm::Function *lf_namespace_addNamespace;
     llvm::Function *lf_namespace_addFunctionGroup;
     llvm::Function *lf_namespace_addGlobalVariable;
