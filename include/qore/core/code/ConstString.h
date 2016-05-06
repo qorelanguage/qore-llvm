@@ -49,7 +49,7 @@ public:
      * \param dest the temporary to load the constant into
      * \param value the constant value
      */
-    ConstString(Temp dest, String::Ptr value) : dest(dest), value(std::move(value)) {
+    ConstString(Temp dest, String *value) : dest(dest), value(value) {
     }
 
     Kind getKind() const override {
@@ -66,17 +66,15 @@ public:
 
     /**
      * \brief Returns the constant value.
-     *
-     * Note that this does not increase the reference count of the string, a RefInc instruction should follow.
      * \return the constant value
      */
     qore::String *getString() const {
-        return value.get();
+        return value;
     }
 
 private:
     Temp dest;
-    String::Ptr value;
+    String *value;
 };
 
 } // namespace code

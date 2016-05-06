@@ -54,6 +54,7 @@ public:
         while (true) {
             assert(ins != b->end());
             try {
+                //FIXME replace with visitor
                 switch (ins->getKind()) {
                     case code::Instruction::Kind::Branch: {
                         const code::Branch &i = static_cast<const code::Branch &>(*ins);
@@ -197,6 +198,7 @@ private:
         qvalue v = f.getTemp(ins.getTemp());
         if (v.p) {
             v.p->decRefCount();
+            //FIXME if an exception was created, throw it
         }
     }
 

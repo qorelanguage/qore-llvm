@@ -42,7 +42,7 @@ namespace cg {
 class CodeGen {
 
 public:
-    static void process(Env &env);
+    static void process(Env &env, Function *qInit, Function *qMain);
 };
 
 } // namespace cg

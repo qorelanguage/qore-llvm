@@ -230,9 +230,9 @@ public:
         currentBlock->appendConstNothing(dest);
     }
 
-    void createConstString(code::Temp dest, qore::String::Ptr string) {
+    void createConstString(code::Temp dest, qore::String *string) {
         checkNotTerminated();
-        currentBlock->appendConstString(dest, std::move(string));
+        currentBlock->appendConstString(dest, string);
     }
 
     void createGlobalGet(code::Temp dest, const GlobalVariableInfo &gv) {

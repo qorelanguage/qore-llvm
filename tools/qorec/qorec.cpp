@@ -69,7 +69,7 @@ void test(bool file, std::string str) {
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    std::pair<qore::Function *, qore::Function *> sss = qore::comp::sem::analyze(ctx, env, *script);
+    std::pair<qore::Function::Ptr, qore::Function::Ptr> sss = qore::comp::sem::analyze(ctx, env, *script);
     qore::dump(std::cout, env);
     LOG("-------------------------------------------------------------------------------");
     if (sss.first) {
@@ -78,8 +78,8 @@ void test(bool file, std::string str) {
     if (sss.second) {
         qore::in::Interpreter::interpret(*sss.second);
     }
-//    LOG("-------------------------------------------------------------------------------");
-//    qore::cg::CodeGen::process(env);
+    LOG("-------------------------------------------------------------------------------");
+    qore::cg::CodeGen::process(env, sss.first.get(), sss.second.get());
 }
 
 /// \endcond NoDoxygen

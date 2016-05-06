@@ -44,8 +44,8 @@ public:
     using Ptr = std::unique_ptr<StringLiteralRefExpression>;
 
 public:
-    static Ptr create(qore::String::Ptr string) {
-        return Ptr(new StringLiteralRefExpression(std::move(string)));
+    static Ptr create(qore::String *str) {
+        return Ptr(new StringLiteralRefExpression(str));
     }
 
     Kind getKind() const override {
@@ -56,16 +56,16 @@ public:
         return Type::String;
     }
 
-    qore::String::Ptr getString() const {
-        return string.dup();
+    qore::String *getString() const {
+        return str;
     }
 
 private:
-    explicit StringLiteralRefExpression(qore::String::Ptr string) : string(std::move(string)) {
+    explicit StringLiteralRefExpression(qore::String *str) : str(str) {
     }
 
 private:
-    qore::String::Ptr string;
+    qore::String *str;
 };
 
 } // namespace sem

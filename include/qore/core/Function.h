@@ -56,8 +56,7 @@ public:
      * \param type the type of the function
      * \param location the location of the declaration
      */
-    explicit Function(FunctionType type, SourceLocation location) : type(std::move(type)), location(location),
-            tempCount(0) {
+    Function(FunctionType type, SourceLocation location) : type(std::move(type)), location(location), tempCount(0) {
     }
 
     /**

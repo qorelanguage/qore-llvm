@@ -5,9 +5,9 @@ our int g;
 #$!SemaPreviousDeclaration@1:12
 -root namespace
   -our string g @1:12
-  -sub nothing() <qinit> @0:0, 1 temps, 0 locals
-    Block #1:
-      ConstString temp.0, ""
-      RefInc temp.0
-      GlobalInit our string ::g, temp.0
-      RetVoid
+-sub nothing() <qinit> @0:0, 1 temps, 0 locals
+  Block #1:
+    ConstString temp.0, ""
+    RefInc temp.0
+    GlobalInit our string ::g, temp.0
+    RetVoid

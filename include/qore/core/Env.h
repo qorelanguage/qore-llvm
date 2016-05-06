@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 #include "qore/core/Namespace.h"
+#include "qore/core/String.h"
 
 namespace qore {
 
@@ -72,6 +73,20 @@ public:
         return info;
     }
 
+    /**
+     * \brief Creates a new string literal.
+     *
+     * The reference count of the string will not drop to zero before this instance of Env gets destroyed.
+     * \param value the value of the string
+     * \return a pointer to the new string
+     */
+    String *addString(std::string value) {
+        String::Ptr ptr = String::Ptr(new String(std::move(value)));
+        String *str = ptr.get();
+        strings.push_back(std::move(ptr));
+        return str;
+    }
+
 private:
     Env(const Env &) = delete;
     Env(Env &&) = delete;
@@ -80,6 +95,7 @@ private:
 
 private:
     std::vector<std::unique_ptr<SourceInfo>> sourceInfos;
+    std::vector<String::Ptr> strings;
     Namespace rootNamespace;
 };
 

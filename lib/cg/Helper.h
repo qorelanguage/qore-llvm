@@ -48,44 +48,60 @@ class Helper {
 public:
     Helper() : ctx(llvm::getGlobalContext()) {
         module = util::make_unique<llvm::Module>("Q", ctx);
-        lt_void = llvm::Type::getVoidTy(ctx);
-        lt_qint = llvm::Type::getInt64Ty(ctx);
-        lt_qptr = llvm::StructType::create(ctx, "Q")->getPointerTo();
-        lt_qsize = llvm::Type::getInt64Ty(ctx);
-        lt_qvalue = llvm::StructType::create(lt_qint, "qvalue", false);
-        lt_qvalue_ptr = lt_qvalue->getPointerTo();
-        lt_Context = llvm::StructType::create(ctx, "Context");
-        lt_Context_ptr = lt_Context->getPointerTo();
 
+        //basic ("C") types
+        lt_void = llvm::Type::getVoidTy(ctx);
+        lt_void_ptr = llvm::Type::getInt8PtrTy(ctx);
+        lt_bool = llvm::Type::getInt1Ty(ctx);
         lt_char_ptr = llvm::Type::getInt8PtrTy(ctx);
         lt_int32 = llvm::Type::getInt32Ty(ctx);
-        lt_Id = llvm::Type::getInt32Ty(ctx);
         lt_exc = llvm::StructType::get(lt_char_ptr, lt_int32, nullptr);
 
-        lt_bool = llvm::Type::getInt1Ty(ctx);
+        //Qore core types
+        lt_qint = llvm::Type::getInt64Ty(ctx);
+        lt_qvalue = llvm::StructType::create(lt_qint, "qvalue", false);
 
+        lt_Env_ptr = llvm::StructType::create(ctx, "::qore::Env")->getPointerTo();
+        lt_Namespace_ptr = llvm::StructType::create(ctx, "::qore::Namespace")->getPointerTo();
+        lt_GlobalVariable_ptr = llvm::StructType::create(ctx, "::qore::GlobalVariable")->getPointerTo();
+        lt_Type_ptr = llvm::StructType::create(ctx, "::qore::Type")->getPointerTo();
+
+        //personality function
         lf_personality = llvm::Function::Create(llvm::FunctionType::get(lt_int32, true),
                 llvm::Function::ExternalLinkage, "__gxx_personality_v0", module.get());
 
-
-        lf_incRef = createFunction("incRef", lt_void, lt_qvalue);
-        lf_decRef = createFunction("decRef", lt_void, lt_qvalue);
-        lf_decRefNoexcept = createFunction("decRefNoexcept", lt_void, lt_qvalue, lt_qvalue);
-
-        lf_gv_read_lock = createFunction("gv_read_lock", lt_void, lt_Context_ptr, lt_Id);
-        lf_gv_read_unlock = createFunction("gv_read_unlock", lt_void, lt_Context_ptr, lt_Id);
-        lf_gv_write_lock = createFunction("gv_write_lock", lt_void, lt_Context_ptr, lt_Id);
-        lf_gv_write_unlock = createFunction("gv_write_unlock", lt_void, lt_Context_ptr, lt_Id);
-        lf_gv_get = createFunction("gv_get", lt_qvalue, lt_Context_ptr, lt_Id);
-        lf_gv_set = createFunction("gv_set", lt_void, lt_Context_ptr, lt_Id, lt_qvalue);
-
+        //nrt utility functions
         lf_qint_to_qvalue = createFunction("qint_to_qvalue", lt_qvalue, lt_qint);
         lf_qvalue_to_qbool = createFunction("qvalue_to_qbool", lt_bool, lt_qvalue);
 
-        lf_createString = createFunction("createString", lt_void, lt_Context_ptr, lt_Id, lt_char_ptr, lt_qsize);
-        lf_loadString = createFunction("loadString", lt_qvalue, lt_Context_ptr, lt_Id);
+        //nrt wrappers for Env
+        lf_env_getRootNamespace = createFunction("env_getRootNamespace", lt_Namespace_ptr, lt_Env_ptr);
+        lf_env_addString = createFunction("env_addString", lt_qvalue, lt_Env_ptr, lt_char_ptr);
 
-        lf_createGlobal = createFunction("createGlobal", lt_void, lt_Context_ptr, lt_Id, lt_bool, lt_qvalue);
+        //nrt wrappers for Namespace
+        lf_namespace_addNamespace = createFunction("namespace_addNamespace",
+                lt_Namespace_ptr, lt_Namespace_ptr, lt_char_ptr);
+        lf_namespace_addGlobalVariable = createFunction("namespace_addGlobalVariable",
+                lt_GlobalVariable_ptr, lt_Namespace_ptr, lt_char_ptr, lt_Type_ptr);
+
+        //nrt wrappers for GlobalVariable
+        lf_globalVariable_initValue = createFunction("globalVariable_initValue",
+                lt_void, lt_GlobalVariable_ptr, lt_qvalue);
+        lf_globalVariable_setValue = createFunction("globalVariable_setValue",
+                lt_void, lt_GlobalVariable_ptr, lt_qvalue);
+        lf_globalVariable_getValue = createFunction("globalVariable_getValue", lt_qvalue, lt_GlobalVariable_ptr);
+        lf_globalVariable_readLock = createFunction("globalVariable_readLock", lt_void, lt_GlobalVariable_ptr);
+        lf_globalVariable_readUnlock = createFunction("globalVariable_readUnlock", lt_void, lt_GlobalVariable_ptr);
+        lf_globalVariable_writeLock = createFunction("globalVariable_writeLock", lt_void, lt_GlobalVariable_ptr);
+        lf_globalVariable_writeUnlock = createFunction("globalVariable_writeUnlock", lt_void, lt_GlobalVariable_ptr);
+
+        //nrt wrappers for Type
+        lf_type_String = createFunction("type_String", lt_Type_ptr);
+
+        //nrt instruction implementations
+        lf_ref_dec = createFunction("ref_dec", lt_void, lt_qvalue);
+        lf_ref_dec_noexcept = createFunction("ref_dec_noexcept", lt_void, lt_qvalue);
+        lf_ref_inc = createFunction("ref_inc", lt_void, lt_qvalue);
     }
 
     llvm::Function *createFunction(const std::string &name, llvm::Type *ret) {
@@ -123,14 +139,6 @@ public:
                 llvm::Function::ExternalLinkage, name, module.get());
     }
 
-    llvm::Value *wrapId(Index id) {
-        return llvm::ConstantInt::get(lt_Id, id, false);
-    }
-
-    llvm::Value *wrapBool(bool b) {
-        return llvm::ConstantInt::get(lt_bool, b, false);
-    }
-
     llvm::Function *getConversion(const Conversion &conversion) {
         llvm::Function *&ref = convFunctions[&conversion];
         if (!ref) {
@@ -147,75 +155,50 @@ public:
         return ref;
     }
 
-    llvm::GlobalVariable *getString(String *string) {
-        llvm::GlobalVariable *&ref = strings[string];
-        if (!ref) {
-            ref = new llvm::GlobalVariable(*module, lt_qvalue, true,
-                    llvm::GlobalVariable::PrivateLinkage, llvm::Constant::getNullValue(lt_qvalue), "str");
-        }
-        return ref;
-        //before the module is built, go through the mapping and create init & cleanup code for each string
-        //            case comp::as::Instruction::Kind::MakeStringLiteral: {
-        //                comp::as::MakeStringLiteral &ins = static_cast<comp::as::MakeStringLiteral &>(*ii);
-        //                Id id = ins.getStringLiteral().getId();
-        //                llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, ins.getValue(), true);
-        //                llvm::GlobalVariable *str = new llvm::GlobalVariable(*helper.module, val->getType(), true,
-        //                        llvm::GlobalValue::PrivateLinkage, val, llvm::Twine("str").concat(llvm::Twine(id)));
-        //                str->setUnnamedAddr(true);
-        //
-        //                llvm::Value *args[4] = {
-        //                        rtctx,
-        //                        helper.wrapId(id),
-        //                        builder.CreateConstGEP2_32(nullptr, str, 0, 0),
-        //                        llvm::ConstantInt::get(helper.lt_qsize, ins.getValue().length(), false),
-        //                };
-        //                builder.CreateCall(helper.lf_createString, args);
-        //                break;
-        //            }
-    }
-
 public:
     llvm::LLVMContext &ctx;
     std::unique_ptr<llvm::Module> module;
 
     llvm::Type *lt_void;
-    llvm::Type *lt_qint;
-    llvm::Type *lt_qptr;
-    llvm::Type *lt_qsize;
-    llvm::Type *lt_qvalue;
-    llvm::Type *lt_qvalue_ptr;
-    llvm::Type *lt_Context;
-    llvm::Type *lt_Context_ptr;
+    llvm::Type *lt_void_ptr;
+    llvm::Type *lt_bool;
     llvm::Type *lt_char_ptr;
     llvm::Type *lt_int32;
     llvm::Type *lt_exc;
-    llvm::Type *lt_Id;
-    llvm::Type *lt_bool;
 
-    llvm::Function *lf_incRef;
-    llvm::Function *lf_decRef;
-    llvm::Function *lf_decRefNoexcept;
+    llvm::Type *lt_qint;
+    llvm::Type *lt_qvalue;
+    llvm::Type *lt_Env_ptr;
+    llvm::Type *lt_Namespace_ptr;
+    llvm::Type *lt_GlobalVariable_ptr;
+    llvm::Type *lt_Type_ptr;
 
-    llvm::Function *lf_gv_read_lock;
-    llvm::Function *lf_gv_read_unlock;
-    llvm::Function *lf_gv_write_lock;
-    llvm::Function *lf_gv_write_unlock;
-    llvm::Function *lf_gv_get;
-    llvm::Function *lf_gv_set;
+    llvm::Function *lf_personality;
 
     llvm::Function *lf_qint_to_qvalue;
     llvm::Function *lf_qvalue_to_qbool;
 
-    llvm::Function *lf_createString;
-    llvm::Function *lf_loadString;
-    llvm::Function *lf_createGlobal;
+    llvm::Function *lf_env_getRootNamespace;
+    llvm::Function *lf_env_addString;
+    llvm::Function *lf_namespace_addNamespace;
+    llvm::Function *lf_namespace_addGlobalVariable;
+    llvm::Function *lf_globalVariable_initValue;
+    llvm::Function *lf_globalVariable_setValue;
+    llvm::Function *lf_globalVariable_getValue;
+    llvm::Function *lf_globalVariable_readLock;
+    llvm::Function *lf_globalVariable_readUnlock;
+    llvm::Function *lf_globalVariable_writeLock;
+    llvm::Function *lf_globalVariable_writeUnlock;
 
-    llvm::Function *lf_personality;
+    llvm::Function *lf_type_String;
+
+    llvm::Function *lf_ref_dec;
+    llvm::Function *lf_ref_dec_noexcept;
+    llvm::Function *lf_ref_inc;
 
 private:
     std::unordered_map<const Conversion *, llvm::Function *> convFunctions;
     std::unordered_map<const BinaryOperator *, llvm::Function *> binOpFunctions;
-    std::unordered_map<String *, llvm::GlobalVariable *> strings;
 };
 
 } // namespace cg

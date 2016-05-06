@@ -44,12 +44,19 @@ namespace cg {
 class FunctionContext {
 
 public:
-    FunctionContext(Helper &helper, Size localCount, Size tempCount) : helper(helper), locals(localCount),
-            temps(tempCount), excSlot(nullptr) {
+    using StringsMap = std::unordered_map<String *, llvm::GlobalVariable *>;
+    using GlobalsMap = std::unordered_map<const GlobalVariable *, llvm::GlobalVariable *>;
+
+public:
+    FunctionContext(Helper &helper, StringsMap &strings, GlobalsMap &globals, Size localCount, Size tempCount)
+            : helper(helper), strings(strings), globals(globals), locals(localCount),
+              temps(tempCount), excSlot(nullptr) {
     }
 
 public:
     Helper &helper;
+    StringsMap &strings;
+    GlobalsMap &globals;
     std::vector<llvm::AllocaInst *> locals;
     std::vector<llvm::Value *> temps;
     llvm::Value *excSlot;
@@ -60,8 +67,9 @@ public:
 class FunctionCompiler {
 
 public:
-    FunctionCompiler(const Function &f, llvm::Function *func, Helper &helper) : f(f), func(func),
-            ctx(helper, f.getLocalVariables().size(), f.getTempCount()) {
+    FunctionCompiler(const Function &f, FunctionContext::StringsMap &strings, FunctionContext::GlobalsMap &globals,
+            llvm::Function *func, Helper &helper)
+            : f(f), func(func), ctx(helper, strings, globals, f.getLocalVariables().size(), f.getTempCount()) {
         func->setPersonalityFn(llvm::ConstantExpr::getBitCast(helper.lf_personality, helper.lt_char_ptr));
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(helper.ctx, "entry", func);
         llvm::IRBuilder<> builder(entry);

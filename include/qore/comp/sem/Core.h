@@ -116,14 +116,14 @@ public:
         QORE_NOT_IMPLEMENTED("Default value");
     }
 
-    qore::String::Ptr createStringLiteral(const std::string &value) {
+    qore::String *createStringLiteral(const std::string &value) {
         auto it = strings.find(value);
         if (it != strings.end()) {
-            return it->second.dup();
+            return it->second;
         }
-        qore::String::Ptr string = qore::String::Ptr(new qore::String(value));
-        strings.insert(std::make_pair(value, string.dup()));
-        return std::move(string);
+        qore::String *str = ctx.getEnv().addString(value);
+        strings.insert(std::make_pair(std::move(value), str));
+        return str;
     }
 
     const Type *getBuiltinType(const ast::Name::Id &name, bool asterisk) const {
@@ -157,7 +157,7 @@ private:
     std::vector<FunctionOverloadPack *> functionOverloadPackQueue;
     std::vector<FunctionScope *> functionQueue;
     std::vector<Statement::Ptr> initializers;
-    std::unordered_map<std::string, qore::String::Ptr> strings;
+    std::unordered_map<std::string, qore::String *> strings;
     std::map<String::Ref, std::pair<const Type *, const Type *>> builtinTypes;
 };
 

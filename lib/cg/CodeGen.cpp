@@ -45,39 +45,70 @@ namespace cg {
 class Compiler {
 
 public:
-    std::unique_ptr<llvm::Module> compile(Env &env) {
-//        llvm::GlobalVariable *rtctx = new llvm::GlobalVariable(*helper.module, helper.lt_Context, false,
-//                llvm::GlobalValue::ExternalLinkage, nullptr, "rtctx");
-        compile(env.getRootNamespace());
-        //helper.createStringInitDone();
+    Compiler() : qstart(helper.createFunction("qstart", helper.lt_void, helper.lt_Env_ptr)), builder(helper.ctx) {
+        builder.SetInsertPoint(llvm::BasicBlock::Create(helper.ctx, "entry", qstart));
+    }
+
+    std::unique_ptr<llvm::Module> compile(Env &env, Function *qInit, Function *qMain) {
+        llvm::Value *rtEnv = &*qstart->arg_begin();
+        llvm::Value *rtNs = builder.CreateCall(helper.lf_env_getRootNamespace, rtEnv);
+        compile(rtNs, env.getRootNamespace());
+
+        if (qInit) {
+            declare("qinit", *qInit);
+        }
+        if (qMain) {
+            declare("qmain", *qMain);
+        }
+        for (auto &p : functions) {
+            FunctionCompiler fc(*p.first, strings, globals, p.second, helper);
+            fc.compile();
+        }
+
+        for (auto &p : strings) {
+            llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, p.first->get(), true);
+            llvm::GlobalVariable *s = new llvm::GlobalVariable(*helper.module, val->getType(), true,
+                    llvm::GlobalValue::PrivateLinkage, val, "str_lit");
+            s->setUnnamedAddr(true);
+            llvm::Value *args[2] = { rtEnv, builder.CreateConstGEP2_32(nullptr, s, 0, 0) };
+            llvm::Value *v = builder.CreateCall(helper.lf_env_addString, args);
+            builder.CreateStore(v, p.second);
+        }
+        builder.CreateRetVoid();
+
         return std::move(helper.module);
     }
 
 private:
-    void compile(const Namespace &ns) {
+    void compile(llvm::Value *rtNs, const Namespace &ns) {
         for (auto &n : ns.getNamespaces()) {
-            compile(n);
+            llvm::Value *args[2] = { rtNs, name(n.getFullName()) };
+            llvm::Value *rtNs2 = builder.CreateCall(helper.lf_namespace_addNamespace, args);
+            compile(rtNs2, n);
         }
-//        for (auto &gv : ns.getGlobalVariables()) {
-//        }
+        for (auto &gv : ns.getGlobalVariables()) {
+            llvm::Value *args[3] = { rtNs, name(gv.getFullName()), type(gv.getType()) };
+            llvm::Value *rtGv = builder.CreateCall(helper.lf_namespace_addGlobalVariable, args);
+            llvm::GlobalVariable *g = new llvm::GlobalVariable(*helper.module, helper.lt_GlobalVariable_ptr, false,
+                    llvm::GlobalValue::PrivateLinkage, llvm::Constant::getNullValue(helper.lt_GlobalVariable_ptr),
+                    gv.getFullName());  //FIXME mangled name
+            builder.CreateStore(rtGv, g);
+            globals[&gv] = g;
+        }
         for (auto &fg : ns.getFunctionGroups()) {
+            //generate call for lf_namespace_addFunctionGroup
             declare(fg);
-        }
-
-        for (auto &p : functions) {
-            FunctionCompiler fc(*p.first, p.second, helper);
-            fc.compile();
         }
     }
 
     void declare(const FunctionGroup &fg) {
         for (auto &f : fg.getFunctions()) {
-            declare(fg, f);
+            declare(fg.getFullName(), f);   //TODO mangled name
+            //generate call for lf_functionGroup_addFunction
         }
     }
 
-    void declare(const FunctionGroup &fg, const Function &f) {
-        std::string name = fg.getFullName();   //TODO mangled name
+    void declare(const std::string &name, const Function &f) {
         std::vector<llvm::Type *> args(f.getType().getParameterCount(), helper.lt_qvalue);
         llvm::Type *ret = f.getType().getReturnType() == Type::Nothing ? helper.lt_void : helper.lt_qvalue;
         llvm::Function *func = llvm::Function::Create(
@@ -90,14 +121,40 @@ private:
         }
     }
 
+    llvm::Value *name(const std::string &str) {
+        llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, str.substr(str.rfind(':') + 1), true);
+        llvm::GlobalVariable *gv = new llvm::GlobalVariable(*helper.module, val->getType(), true,
+                llvm::GlobalValue::PrivateLinkage, val, llvm::Twine("name"));
+        gv->setUnnamedAddr(true);
+        return builder.CreateConstGEP2_32(nullptr, gv, 0, 0);
+    }
+
+    llvm::Value *type(const Type &type) {
+        llvm::Value *&ref = types[&type];
+        if (!ref) {
+            //must be built-in, class types will be handled in a different way
+            if (type == Type::String) {
+                ref = builder.CreateCall(helper.lf_type_String);
+            } else {
+                QORE_NOT_IMPLEMENTED("");
+            }
+        }
+        return ref;
+    }
+
 private:
     Helper helper;
+    FunctionContext::StringsMap strings;
+    FunctionContext::GlobalsMap globals;
+    llvm::Function *qstart;
+    llvm::IRBuilder<> builder;
+    std::unordered_map<const Type *, llvm::Value *> types;
     std::unordered_map<const Function *, llvm::Function *> functions;
 };
 
-void CodeGen::process(Env &env) {
+void CodeGen::process(Env &env, Function *qInit, Function *qMain) {
     Compiler compiler;
-    std::unique_ptr<llvm::Module> module = compiler.compile(env);
+    std::unique_ptr<llvm::Module> module = compiler.compile(env, qInit, qMain);
 
     module->dump();
 

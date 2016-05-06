@@ -21,12 +21,12 @@ our N::C g2;
     -our <error> g @8:13
   -our <error> g1 @10:7
   -our <error> g2 @11:10
-  -sub nothing() <qinit> @0:0, 1 temps, 0 locals
-    Block #1:
-      ConstNothing temp.0
-      GlobalInit our <error> ::N::g, temp.0
-      ConstNothing temp.0
-      GlobalInit our <error> ::g1, temp.0
-      ConstNothing temp.0
-      GlobalInit our <error> ::g2, temp.0
-      RetVoid
+-sub nothing() <qinit> @0:0, 1 temps, 0 locals
+  Block #1:
+    ConstNothing temp.0
+    GlobalInit our <error> ::N::g, temp.0
+    ConstNothing temp.0
+    GlobalInit our <error> ::g1, temp.0
+    ConstNothing temp.0
+    GlobalInit our <error> ::g2, temp.0
+    RetVoid

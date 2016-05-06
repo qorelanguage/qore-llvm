@@ -8,8 +8,8 @@ our int g;
   -namespace N @1:11
     -class C @2:11
   -our int g @5:9
-  -sub nothing() <qinit> @0:0, 1 temps, 0 locals
-    Block #1:
-      ConstInt temp.0, 0
-      GlobalInit our int ::g, temp.0
-      RetVoid
+-sub nothing() <qinit> @0:0, 1 temps, 0 locals
+  Block #1:
+    ConstInt temp.0, 0
+    GlobalInit our int ::g, temp.0
+    RetVoid

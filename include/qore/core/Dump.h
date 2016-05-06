@@ -78,12 +78,12 @@ public:
 
     void dump(const FunctionGroup &fg) {
         for (auto &f : fg.getFunctions()) {
-            dump(fg, f);
+            dump(name(fg), f);
         }
     }
 
-    void dump(const FunctionGroup &fg, const Function &f) {
-        os << indent++ << "-sub " << f.getType() << " " << name(fg) << location(f)
+    void dump(const std::string &name, const Function &f) {
+        os << indent++ << "-sub " << f.getType() << " " << name << location(f)
                 << ", " << f.getTempCount() << " temps, " << f.getLocalVariables().size() << " locals\n";
         for (auto &lv : f.getLocalVariables()) {
             os << indent << "[" << lv.getIndex() << "] " << lv.getType() << " " << lv.getName() << location(lv) << "\n";
@@ -118,6 +118,12 @@ template<typename OS>
 void dump(OS &os, Env &env) {
     Dump<OS> dump(os);
     dump.dump(env.getRootNamespace(), true);
+}
+
+template<typename OS>
+void dump(OS &os, const std::string &name, const Function &f) {
+    Dump<OS> dump(os);
+    dump.dump(name, f);
 }
 /// \endcond IGNORED_BY_DOXYGEN
 

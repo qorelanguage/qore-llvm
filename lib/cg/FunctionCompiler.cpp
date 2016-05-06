@@ -61,45 +61,54 @@ public:
     }
 
     void visit(const code::ConstString &ins) {
-        ctx.temps[ins.getDest().getIndex()] = builder.CreateLoad(ctx.helper.getString(ins.getString()));
+        llvm::GlobalVariable *&ref = ctx.strings[ins.getString()];
+        if (!ref) {
+            ref = new llvm::GlobalVariable(*ctx.helper.module, ctx.helper.lt_qvalue, false,
+                    llvm::GlobalVariable::PrivateLinkage, llvm::Constant::getNullValue(ctx.helper.lt_qvalue), "str");
+        }
+        ctx.temps[ins.getDest().getIndex()] = builder.CreateLoad(ref);
     }
 
-    //TODO replace ins.getGlobalVariable().getId() with a map
-    //of qore::GlobalVariable * -> llvm::GlobalVariable *
-//    void visit(const code::GlobalGet &ins) {
-//        llvm::Value *args[2] = { rtctx, ctx.helper.wrapId(ins.getGlobalVariable().getId()) };
-//        ctx.temps[ins.getDest().getIndex()] = builder.CreateCall(ctx.helper.lf_gv_get, args);
-//    }
-//    void visit(const code::GlobalInit &ins) {
-//        llvm::Value *args[4] = {
-//                rtctx,
-//                ctx.helper.wrapId(ins.getGlobalVariable().getId()),
-//                ctx.helper.wrapBool(ins.getGlobalVariable().getType().isRefCounted()),
-//                ctx.temps[ins.getInitValue().getIndex()]
-//        };
-//        builder.CreateCall(ctx.helper.lf_createGlobal, args);
-//    }
-//    void visit(const code::GlobalReadLock &ins) {
-//        llvm::Value *args[2] = { rtctx, ctx.helper.wrapId(ins.getGlobalVariable().getId()) };
-//        builder.CreateCall(ctx.helper.lf_gv_read_lock, args);
-//    }
-//    void visit(const code::GlobalReadUnlock &ins) {
-//        llvm::Value *args[2] = { rtctx, ctx.helper.wrapId(ins.getGlobalVariable().getId()) };
-//        builder.CreateCall(ctx.helper.lf_gv_read_unlock, args);
-//    }
-//    void visit(const code::GlobalSet &ins) {
-//        llvm::Value *args[3] = { rtctx, ctx.helper.wrapId(ins.getGlobalVariable().getId()),
-//                ctx.temps[ins.getSrc().getIndex()] };
-//        builder.CreateCall(ctx.helper.lf_gv_set, args);
-//    }
-//    void visit(const code::GlobalWriteLock &ins) {
-//        llvm::Value *args[2] = { rtctx, ctx.helper.wrapId(ins.getGlobalVariable().getId()) };
-//        builder.CreateCall(ctx.helper.lf_gv_write_lock, args);
-//    }
-//    void visit(const code::GlobalWriteUnlock &ins) {
-//        llvm::Value *args[2] = { rtctx, ctx.helper.wrapId(ins.getGlobalVariable().getId()) };
-//        builder.CreateCall(ctx.helper.lf_gv_write_unlock, args);
-//    }
+    void visit(const code::GlobalGet &ins) {
+        ctx.temps[ins.getDest().getIndex()] = builder.CreateCall(ctx.helper.lf_globalVariable_getValue,
+                builder.CreateLoad(ctx.globals[&ins.getGlobalVariable()]));
+    }
+
+    void visit(const code::GlobalInit &ins) {
+        llvm::Value *args[2] = {
+                builder.CreateLoad(ctx.globals[&ins.getGlobalVariable()]),
+                ctx.temps[ins.getInitValue().getIndex()]
+        };
+        builder.CreateCall(ctx.helper.lf_globalVariable_initValue, args);
+    }
+
+    void visit(const code::GlobalReadLock &ins) {
+        builder.CreateCall(ctx.helper.lf_globalVariable_readLock,
+                builder.CreateLoad(ctx.globals[&ins.getGlobalVariable()]));
+    }
+
+    void visit(const code::GlobalReadUnlock &ins) {
+        builder.CreateCall(ctx.helper.lf_globalVariable_readUnlock,
+                builder.CreateLoad(ctx.globals[&ins.getGlobalVariable()]));
+    }
+
+    void visit(const code::GlobalSet &ins) {
+        llvm::Value *args[2] = {
+                builder.CreateLoad(ctx.globals[&ins.getGlobalVariable()]),
+                ctx.temps[ins.getSrc().getIndex()]
+        };
+        builder.CreateCall(ctx.helper.lf_globalVariable_setValue, args);
+    }
+
+    void visit(const code::GlobalWriteLock &ins) {
+        builder.CreateCall(ctx.helper.lf_globalVariable_writeLock,
+                builder.CreateLoad(ctx.globals[&ins.getGlobalVariable()]));
+    }
+
+    void visit(const code::GlobalWriteUnlock &ins) {
+        builder.CreateCall(ctx.helper.lf_globalVariable_writeUnlock,
+                builder.CreateLoad(ctx.globals[&ins.getGlobalVariable()]));
+    }
 
     void visit(const code::InvokeBinaryOperator &ins) {
         llvm::Value *args[2] = { ctx.temps[ins.getLeft().getIndex()], ctx.temps[ins.getRight().getIndex()] };
@@ -125,17 +134,15 @@ public:
     }
 
     void visit(const code::RefDec &ins) {
-        makeCallOrInvoke(ins, ctx.helper.lf_decRef, ctx.temps[ins.getTemp().getIndex()]);
+        makeCallOrInvoke(ins, ctx.helper.lf_ref_dec, ctx.temps[ins.getTemp().getIndex()]);
     }
 
     void visit(const code::RefDecNoexcept &ins) {
-        auto e = llvm::Constant::getNullValue(ctx.helper.lt_qvalue); //FIXME top of exception stack
-        llvm::Value *args[2] = { ctx.temps[ins.getTemp().getIndex()], e };
-        builder.CreateCall(ctx.helper.lf_decRefNoexcept, args);
+        builder.CreateCall(ctx.helper.lf_ref_dec_noexcept, ctx.temps[ins.getTemp().getIndex()]);
     }
 
     void visit(const code::RefInc &ins) {
-        builder.CreateCall(ctx.helper.lf_incRef, ctx.temps[ins.getTemp().getIndex()]);
+        builder.CreateCall(ctx.helper.lf_ref_inc, ctx.temps[ins.getTemp().getIndex()]);
     }
 
     void visit(const code::ResumeUnwind &ins) {
@@ -178,7 +185,6 @@ private:
         llvm::LandingPadInst *l = builder.CreateLandingPad(ctx.helper.lt_exc, 1);
         l->setCleanup(true);
         builder.CreateStore(l, ctx.excSlot);
-        //FIXME extract exception and use it in decRefNoExcept
     }
 
     llvm::BasicBlock *mapBlock(const code::Block &b, const char *name) {

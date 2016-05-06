@@ -44,8 +44,14 @@ TEST_P(AnalyzerTest, Run) {
     ast::Script::Ptr scriptNode = parser.parseScript();
     Core analyzer(ctx);
     Env env;
-    analyze(ctx, env, *scriptNode);
+    auto r = analyze(ctx, env, *scriptNode);
     dump(output, env);
+    if (r.first) {
+        dump(output, "<qinit>", *r.first);
+    }
+    if (r.second) {
+        dump(output, "<qmain>", *r.second);
+    }
 }
 
 QTIF_TEST_CASE(AnalyzerTest, "semantic/");

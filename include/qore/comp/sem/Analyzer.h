@@ -48,7 +48,7 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-inline std::pair<Function *, Function *> analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
+inline std::pair<Function::Ptr, Function::Ptr> analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
     Core analyzer(ctx);
     NamespaceScope root(analyzer, rtEnv.getRootNamespace());
 
@@ -57,25 +57,22 @@ inline std::pair<Function *, Function *> analyze(Context &ctx, Env &rtEnv, ast::
     }
     analyzer.processPendingDeclarations();
 
-    Function *qMain = nullptr;
+    Function::Ptr qMain;
     if (!node.statements.empty()) {
         ast::Routine::Ptr r = ast::Routine::create();
         r->body = ast::CompoundStatement::create();
         r->body->statements = std::move(node.statements);
         r->type = ast::Type::createImplicit(SourceLocation());
 
-        qMain = &rtEnv.getRootNamespace().addFunctionGroup("<qmain>")
-                .addFunction(FunctionType(Type::Nothing), SourceLocation());
+        qMain = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
         FunctionScope mainFs(*qMain, analyzer, root, *r);
         mainFs.analyze();
     }
 
-    Function *qInit = nullptr;
-    //qinit - pass2
+    Function::Ptr qInit;
     auto initializers = analyzer.takeInitializers();
     if (!initializers.empty()) {
-        qInit = &rtEnv.getRootNamespace().addFunctionGroup("<qinit>")
-                .addFunction(FunctionType(Type::Nothing), SourceLocation());
+        qInit = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
         FBuilder initBuilder(*qInit, ctx);
         for (auto &stmt : initializers) {
             analyzer.doPass2(initBuilder, *stmt);
@@ -83,7 +80,7 @@ inline std::pair<Function *, Function *> analyze(Context &ctx, Env &rtEnv, ast::
         initBuilder.createRetVoid();
     }
 
-    return std::make_pair(qInit, qMain);
+    return std::make_pair(std::move(qInit), std::move(qMain));
 }
 
 } // namespace sem
