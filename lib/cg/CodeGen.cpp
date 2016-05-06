@@ -87,14 +87,16 @@ public:
     }
 
 private:
+    #define LOCATION(x) sourceInfos[&x.getLocation().getSourceInfo()], \
+        llvm::ConstantInt::get(helper.lt_int32, x.getLocation().getPacked())
     void compile(llvm::Value *rtNs, const Namespace &ns) {
         for (auto &n : ns.getNamespaces()) {
-            llvm::Value *args[2] = { rtNs, name(n.getFullName()) };
+            llvm::Value *args[4] = { rtNs, name(n.getFullName()), LOCATION(n) };
             llvm::Value *rtNs2 = builder.CreateCall(helper.lf_namespace_addNamespace, args);
             compile(rtNs2, n);
         }
         for (auto &gv : ns.getGlobalVariables()) {
-            llvm::Value *args[3] = { rtNs, name(gv.getFullName()), type(gv.getType()) };
+            llvm::Value *args[5] = { rtNs, name(gv.getFullName()), type(gv.getType()), LOCATION(gv) };
             llvm::Value *rtGv = builder.CreateCall(helper.lf_namespace_addGlobalVariable, args);
             llvm::GlobalVariable *g = new llvm::GlobalVariable(*helper.module, helper.lt_GlobalVariable_ptr, false,
                     llvm::GlobalValue::PrivateLinkage, llvm::Constant::getNullValue(helper.lt_GlobalVariable_ptr),
@@ -108,6 +110,7 @@ private:
             declare(rtFg, fg);
         }
     }
+    #undef LOCATION
 
     void declare(llvm::Value *rtFg, const FunctionGroup &fg) {
         for (auto &f : fg.getFunctions()) {

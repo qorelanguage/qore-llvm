@@ -79,9 +79,12 @@ extern "C" qvalue env_addString(Env *env, const char *str);
  * \brief Wraps the \ref Namespace::addNamespace() method.
  * \param ns `this` for the method invocation
  * \param name the name of the new namespace
+ * \param sourceInfo identifies the script
+ * \param location encoded location
  * \return the new namespace
  */
-extern "C" Namespace *namespace_addNamespace(Namespace *ns, const char *name);
+extern "C" Namespace *namespace_addNamespace(Namespace *ns, const char *name,
+        SourceInfo *sourceInfo, int location);
 
 /**
  * \brief Wraps the \ref Namespace::addFunctionGroup() method.
@@ -96,9 +99,12 @@ extern "C" FunctionGroup *namespace_addFunctionGroup(Namespace *ns, const char *
  * \param ns `this` for the method invocation
  * \param name the name of the global variable
  * \param type the type of the global variable
+ * \param sourceInfo identifies the script
+ * \param location encoded location
  * \return the new global variable
  */
-extern "C" GlobalVariable *namespace_addGlobalVariable(Namespace *ns, const char *name, const Type *type);
+extern "C" GlobalVariable *namespace_addGlobalVariable(Namespace *ns, const char *name, const Type *type,
+        SourceInfo *sourceInfo, int location);
 ///\}
 
 ///\name Wrappers for GlobalVariable methods

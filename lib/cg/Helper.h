@@ -84,11 +84,11 @@ public:
 
         //nrt wrappers for Namespace
         lf_namespace_addNamespace = createFunction("namespace_addNamespace",
-                lt_Namespace_ptr, lt_Namespace_ptr, lt_char_ptr);
+                lt_Namespace_ptr, lt_Namespace_ptr, lt_char_ptr, lt_SourceInfo_ptr, lt_int32);
         lf_namespace_addFunctionGroup = createFunction("namespace_addFunctionGroup",
                 lt_FunctionGroup_ptr, lt_Namespace_ptr, lt_char_ptr);
         lf_namespace_addGlobalVariable = createFunction("namespace_addGlobalVariable",
-                lt_GlobalVariable_ptr, lt_Namespace_ptr, lt_char_ptr, lt_Type_ptr);
+                lt_GlobalVariable_ptr, lt_Namespace_ptr, lt_char_ptr, lt_Type_ptr, lt_SourceInfo_ptr, lt_int32);
 
         //nrt wrappers for GlobalVariable
         lf_globalVariable_initValue = createFunction("globalVariable_initValue",
@@ -140,6 +140,14 @@ public:
     llvm::Function *createFunction(const std::string &name, llvm::Type *ret, llvm::Type *arg1, llvm::Type *arg2,
             llvm::Type *arg3, llvm::Type *arg4) {
         llvm::Type *args[4] = {arg1, arg2, arg3, arg4};
+        return llvm::Function::Create(
+                llvm::FunctionType::get(ret, args, false),
+                llvm::Function::ExternalLinkage, name, module.get());
+    }
+
+    llvm::Function *createFunction(const std::string &name, llvm::Type *ret, llvm::Type *arg1, llvm::Type *arg2,
+            llvm::Type *arg3, llvm::Type *arg4, llvm::Type *arg5) {
+        llvm::Type *args[5] = {arg1, arg2, arg3, arg4, arg5};
         return llvm::Function::Create(
                 llvm::FunctionType::get(ret, args, false),
                 llvm::Function::ExternalLinkage, name, module.get());

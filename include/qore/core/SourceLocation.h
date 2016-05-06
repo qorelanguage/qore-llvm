@@ -52,6 +52,14 @@ public:
     /**
      * \brief Constructor.
      * \param source the information about the source file
+     * \param packed the packed line and column number
+     */
+    SourceLocation(const SourceInfo &source, int packed) : source(&source), lineAndColumn(packed) {
+    }
+
+    /**
+     * \brief Constructor.
+     * \param source the information about the source file
      * \param line the line number
      * \param column the column number
      */
@@ -97,6 +105,14 @@ public:
      */
     int getColumn() const {
         return lineAndColumn & 255;
+    }
+
+    /**
+     * \brief Returns line and column number packed into a single value.
+     * \return line and column number packed into a single value
+     */
+    int getPacked() const {
+        return lineAndColumn;
     }
 
 private:

@@ -52,8 +52,8 @@ qvalue env_addString(Env *env, const char *str) {
 }
 
 // cppcheck-suppress unusedFunction
-Namespace *namespace_addNamespace(Namespace *ns, const char *name) {
-    return &ns->addNamespace(name, SourceLocation());
+Namespace *namespace_addNamespace(Namespace *ns, const char *name, SourceInfo *sourceInfo, int location) {
+    return &ns->addNamespace(name, SourceLocation(*sourceInfo, location));
 }
 
 // cppcheck-suppress unusedFunction
@@ -62,8 +62,9 @@ FunctionGroup *namespace_addFunctionGroup(Namespace *ns, const char *name) {
 }
 
 // cppcheck-suppress unusedFunction
-GlobalVariable *namespace_addGlobalVariable(Namespace *ns, const char *name, const Type *type) {
-    return &ns->addGlobalVariable(name, *type, SourceLocation());
+GlobalVariable *namespace_addGlobalVariable(Namespace *ns, const char *name, const Type *type,
+        SourceInfo *sourceInfo, int location) {
+    return &ns->addGlobalVariable(name, *type, SourceLocation(*sourceInfo, location));
 }
 
 // cppcheck-suppress unusedFunction
