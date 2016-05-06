@@ -48,6 +48,10 @@ Namespace *namespace_addNamespace(Namespace *ns, const char *name) {
     return &ns->addNamespace(name, SourceLocation());
 }
 
+FunctionGroup *namespace_addFunctionGroup(Namespace *ns, const char *name) {
+    return &ns->addFunctionGroup(name);
+}
+
 GlobalVariable *namespace_addGlobalVariable(Namespace *ns, const char *name, const Type *type) {
     return &ns->addGlobalVariable(name, *type, SourceLocation());
 }

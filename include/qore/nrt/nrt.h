@@ -37,6 +37,7 @@ namespace qore {
 
 class Env;
 class Namespace;
+class FunctionGroup;
 class GlobalVariable;
 class Type;
 
@@ -72,6 +73,14 @@ extern "C" qvalue env_addString(Env *env, const char *str);
  * \return the new namespace
  */
 extern "C" Namespace *namespace_addNamespace(Namespace *ns, const char *name);
+
+/**
+ * \brief Wraps the \ref Namespace::addFunctionGroup() method.
+ * \param ns `this` for the method invocation
+ * \param name the name of the new function group
+ * \return the new function group
+ */
+extern "C" FunctionGroup *namespace_addFunctionGroup(Namespace *ns, const char *name);
 
 /**
  * \brief Wraps the \ref Namespace::addGlobalVariable() method.

@@ -96,15 +96,16 @@ private:
             globals[&gv] = g;
         }
         for (auto &fg : ns.getFunctionGroups()) {
-            //generate call for lf_namespace_addFunctionGroup
-            declare(fg);
+            llvm::Value *args[2] = { rtNs, name(fg.getFullName()) };
+            llvm::Value *rtFg = builder.CreateCall(helper.lf_namespace_addFunctionGroup, args);
+            declare(rtFg, fg);
         }
     }
 
-    void declare(const FunctionGroup &fg) {
+    void declare(llvm::Value *rtFg, const FunctionGroup &fg) {
         for (auto &f : fg.getFunctions()) {
             declare(fg.getFullName(), f);   //TODO mangled name
-            //generate call for lf_functionGroup_addFunction
+            //generate call for lf_functionGroup_addFunction, save the pointer to the function
         }
     }
 

@@ -62,8 +62,10 @@ public:
         lt_qvalue = llvm::StructType::create(lt_qint, "qvalue", false);
 
         lt_Env_ptr = llvm::StructType::create(ctx, "::qore::Env")->getPointerTo();
-        lt_Namespace_ptr = llvm::StructType::create(ctx, "::qore::Namespace")->getPointerTo();
+        lt_FunctionGroup_ptr = llvm::StructType::create(ctx, "::qore::FunctionGroup")->getPointerTo();
+        lt_Function_ptr = llvm::StructType::create(ctx, "::qore::Function")->getPointerTo();
         lt_GlobalVariable_ptr = llvm::StructType::create(ctx, "::qore::GlobalVariable")->getPointerTo();
+        lt_Namespace_ptr = llvm::StructType::create(ctx, "::qore::Namespace")->getPointerTo();
         lt_Type_ptr = llvm::StructType::create(ctx, "::qore::Type")->getPointerTo();
 
         //personality function
@@ -81,6 +83,8 @@ public:
         //nrt wrappers for Namespace
         lf_namespace_addNamespace = createFunction("namespace_addNamespace",
                 lt_Namespace_ptr, lt_Namespace_ptr, lt_char_ptr);
+        lf_namespace_addFunctionGroup = createFunction("namespace_addFunctionGroup",
+                lt_FunctionGroup_ptr, lt_Namespace_ptr, lt_char_ptr);
         lf_namespace_addGlobalVariable = createFunction("namespace_addGlobalVariable",
                 lt_GlobalVariable_ptr, lt_Namespace_ptr, lt_char_ptr, lt_Type_ptr);
 
@@ -169,8 +173,10 @@ public:
     llvm::Type *lt_qint;
     llvm::Type *lt_qvalue;
     llvm::Type *lt_Env_ptr;
-    llvm::Type *lt_Namespace_ptr;
+    llvm::Type *lt_Function_ptr;
+    llvm::Type *lt_FunctionGroup_ptr;
     llvm::Type *lt_GlobalVariable_ptr;
+    llvm::Type *lt_Namespace_ptr;
     llvm::Type *lt_Type_ptr;
 
     llvm::Function *lf_personality;
@@ -181,6 +187,7 @@ public:
     llvm::Function *lf_env_getRootNamespace;
     llvm::Function *lf_env_addString;
     llvm::Function *lf_namespace_addNamespace;
+    llvm::Function *lf_namespace_addFunctionGroup;
     llvm::Function *lf_namespace_addGlobalVariable;
     llvm::Function *lf_globalVariable_initValue;
     llvm::Function *lf_globalVariable_setValue;
