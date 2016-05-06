@@ -40,7 +40,7 @@ Namespace *env_getRootNamespace(Env *env) {
 
 qvalue env_addString(Env *env, const char *str) {
     qvalue v;
-    v.p = env->addString(str);
+    v.p = &env->addString(str);
     return v;
 }
 

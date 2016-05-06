@@ -49,7 +49,7 @@ public:
      * \param dest the temporary to load the constant into
      * \param value the constant value
      */
-    ConstString(Temp dest, String *value) : dest(dest), value(value) {
+    ConstString(Temp dest, String &value) : dest(dest), value(value) {
     }
 
     Kind getKind() const override {
@@ -68,13 +68,13 @@ public:
      * \brief Returns the constant value.
      * \return the constant value
      */
-    qore::String *getString() const {
+    qore::String &getString() const {
         return value;
     }
 
 private:
     Temp dest;
-    String *value;
+    String &value;
 };
 
 } // namespace code

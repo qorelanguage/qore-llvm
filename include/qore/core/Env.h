@@ -78,11 +78,11 @@ public:
      *
      * The reference count of the string will not drop to zero before this instance of Env gets destroyed.
      * \param value the value of the string
-     * \return a pointer to the new string
+     * \return the new string
      */
-    String *addString(std::string value) {
+    String &addString(std::string value) {
         String::Ptr ptr = String::Ptr(new String(std::move(value)));
-        String *str = ptr.get();
+        String &str = *ptr;
         strings.push_back(std::move(ptr));
         return str;
     }

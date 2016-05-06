@@ -138,7 +138,7 @@ public:
      * \param dest the temporary to load the constant into
      * \param value the constant value
      */
-    void appendConstString(Temp dest, String *value) {
+    void appendConstString(Temp dest, String &value) {
         append(util::make_unique<ConstString>(dest, value));
     }
 

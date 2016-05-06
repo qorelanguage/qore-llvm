@@ -230,7 +230,7 @@ public:
         currentBlock->appendConstNothing(dest);
     }
 
-    void createConstString(code::Temp dest, qore::String *string) {
+    void createConstString(code::Temp dest, qore::String &string) {
         checkNotTerminated();
         currentBlock->appendConstString(dest, string);
     }

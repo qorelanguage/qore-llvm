@@ -44,7 +44,7 @@ public:
     using Ptr = std::unique_ptr<StringLiteralRefExpression>;
 
 public:
-    static Ptr create(qore::String *str) {
+    static Ptr create(qore::String &str) {
         return Ptr(new StringLiteralRefExpression(str));
     }
 
@@ -56,16 +56,16 @@ public:
         return Type::String;
     }
 
-    qore::String *getString() const {
+    qore::String &getString() const {
         return str;
     }
 
 private:
-    explicit StringLiteralRefExpression(qore::String *str) : str(str) {
+    explicit StringLiteralRefExpression(qore::String &str) : str(str) {
     }
 
 private:
-    qore::String *str;
+    qore::String &str;
 };
 
 } // namespace sem

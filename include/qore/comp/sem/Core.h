@@ -116,13 +116,13 @@ public:
         QORE_NOT_IMPLEMENTED("Default value");
     }
 
-    qore::String *createStringLiteral(const std::string &value) {
+    qore::String &createStringLiteral(const std::string &value) {
         auto it = strings.find(value);
         if (it != strings.end()) {
-            return it->second;
+            return *it->second;
         }
-        qore::String *str = ctx.getEnv().addString(value);
-        strings.insert(std::make_pair(std::move(value), str));
+        qore::String &str = ctx.getEnv().addString(value);
+        strings.insert(std::make_pair(std::move(value), &str));
         return str;
     }
 

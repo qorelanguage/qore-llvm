@@ -92,7 +92,7 @@ public:
 
     void visit(const ConstString &ins) {
         os << "ConstString " << temp(ins.getDest()) << ", \"";
-        const std::string &s = ins.getString()->get();
+        const std::string &s = ins.getString().get();
         for (Index i = 0; i < s.length(); i++) {
             if (i > 15) {
                 os << "...";

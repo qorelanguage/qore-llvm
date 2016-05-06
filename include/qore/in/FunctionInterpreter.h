@@ -146,7 +146,7 @@ private:
 
     void exec(const code::ConstString &ins) {
         qvalue v;
-        v.p = ins.getString();
+        v.p = &ins.getString();
         f.setTemp(ins.getDest(), v);
     }
 
