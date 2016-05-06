@@ -87,7 +87,7 @@ TEST_F(ScannerCoverageTest, InvalidCharacter) {
     Env env;
     Context ctx(env, stringTable, diagMgr, srcMgr);
     Scanner scanner(ctx);
-    Source &src = srcMgr.createFromString(env.createSourceInfo(""), "\x7f;");
+    Source &src = srcMgr.createFromString(env.addSourceInfo(""), "\x7f;");
 
     EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::ScannerInvalidCharacter))).Times(1);
     EXPECT_EQ(TokenType::Semicolon, scanner.read(src, ITokenStream::Mode::Normal).type);

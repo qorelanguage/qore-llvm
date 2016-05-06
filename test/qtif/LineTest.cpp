@@ -252,7 +252,7 @@ LineTest::~LineTest() {
 
 void LineTest::SetUp() {
     AbstractTest::SetUp();
-    qore::SourceInfo &info = env.createSourceInfo(getFileName());
+    qore::SourceInfo &info = env.addSourceInfo(getFileName());
     source = &srcMgr.createFromString(info, std::string(getInput().begin(), getInput().end()));
 }
 

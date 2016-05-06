@@ -46,7 +46,7 @@ class StdinWrapper : public comp::ITokenStream {
 
 public:
     explicit StdinWrapper(comp::Context &ctx)
-            : src(ctx.getSrcMgr().createFromString(ctx.getEnv().createSourceInfo("<stdin>"), "")), dp(ctx, src) {
+            : src(ctx.getSrcMgr().createFromString(ctx.getEnv().addSourceInfo("<stdin>"), "")), dp(ctx, src) {
     }
 
     comp::Token read(Mode mode) override {

@@ -50,7 +50,7 @@ TEST(ParserTest2, declOrStmt) {
     Env env;
     Context ctx(env, stringTable, diagMgr, srcMgr);
     Scanner scanner(ctx);
-    Source &src = srcMgr.createFromString(env.createSourceInfo(""), "our int x; x = 5;");
+    Source &src = srcMgr.createFromString(env.addSourceInfo(""), "our int x; x = 5;");
     DirectiveProcessor dp(ctx, src);
     Parser parser(ctx, dp);
 

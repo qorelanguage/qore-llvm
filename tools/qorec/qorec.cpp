@@ -61,7 +61,7 @@ void test(bool file, std::string str) {
     diagMgr.addProcessor(&diagPrinter);
     qore::Env env;
     qore::comp::Context ctx(env, stringTable, diagMgr, srcMgr);
-    qore::SourceInfo &info = env.createSourceInfo(file ? str : "<noname>");
+    qore::SourceInfo &info = env.addSourceInfo(file ? str : "<noname>");
     qore::comp::Source &src = file ? srcMgr.createFromFile(info, str) : srcMgr.createFromString(info, str);
     qore::comp::DirectiveProcessor dp(ctx, src);
     qore::comp::Parser parser(ctx, dp);

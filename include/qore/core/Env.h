@@ -69,8 +69,8 @@ public:
      * \param name the name of the source
      * \return newly created source info
      */
-    SourceInfo &createSourceInfo(std::string name) {
-        std::unique_ptr<SourceInfo> ptr = util::make_unique<SourceInfo>(std::move(name));
+    SourceInfo &addSourceInfo(std::string name) {
+        SourceInfo::Ptr ptr = SourceInfo::Ptr(new SourceInfo(std::move(name)));
         SourceInfo &info = *ptr;
         sourceInfos.push_back(std::move(ptr));
         return info;
@@ -105,7 +105,7 @@ private:
     Env &operator=(Env &&) = delete;
 
 private:
-    std::vector<std::unique_ptr<SourceInfo>> sourceInfos;
+    std::vector<SourceInfo::Ptr> sourceInfos;
     std::vector<String::Ptr> strings;
     Namespace rootNamespace;
 };

@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_CORE_SOURCEINFO_H_
 #define INCLUDE_QORE_CORE_SOURCEINFO_H_
 
+#include <memory>
 #include <string>
 
 namespace qore {
@@ -39,6 +40,9 @@ namespace qore {
  * \brief Describes a source file.
  */
 class SourceInfo {
+
+public:
+    using Ptr = std::unique_ptr<SourceInfo>;        //!< Pointer type.
 
 public:
     /**
