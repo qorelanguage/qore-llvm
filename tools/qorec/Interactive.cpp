@@ -203,15 +203,15 @@ public:
                     analyzer.doPass2(mainBuilder, *stmt);
                 }
                 analyzer.doPass2(mainBuilder, *stmt);
-                in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx);
-                fi.run(mainBuilder.getEntryForInteractiveMode());
+                in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
+                fi.run();
             } else {
                 break;
             }
         }
         mainBuilder.popCleanupScopes();
-        in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx);
-        fi.run(mainBuilder.getEntryForInteractiveMode());
+        in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
+        fi.run();
     }
 
 private:

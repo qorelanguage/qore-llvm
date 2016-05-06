@@ -72,8 +72,8 @@ class Interpreter {
 public:
     static void interpret(Function &f) {
         X x(f);
-        FunctionInterpreter<X> fi(x);
-        fi.run(f.getEntryBlock());
+        FunctionInterpreter<X> fi(x, f.getEntryBlock());
+        fi.run();
     }
 
 private:
