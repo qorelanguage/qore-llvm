@@ -61,12 +61,7 @@ public:
     }
 
     void visit(const code::ConstString &ins) {
-        llvm::GlobalVariable *&ref = ctx.strings[&ins.getString()];
-        if (!ref) {
-            ref = new llvm::GlobalVariable(*ctx.helper.module, ctx.helper.lt_qvalue, false,
-                    llvm::GlobalVariable::PrivateLinkage, llvm::Constant::getNullValue(ctx.helper.lt_qvalue), "str");
-        }
-        ctx.temps[ins.getDest().getIndex()] = builder.CreateLoad(ref);
+        ctx.temps[ins.getDest().getIndex()] = builder.CreateLoad(ctx.strings[&ins.getString()]);
     }
 
     void visit(const code::GlobalGet &ins) {

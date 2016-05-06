@@ -139,7 +139,7 @@ public:
      * \brief Dereferences the pointer.
      * \return the object pointed to by this instance
      */
-    T &operator*() {
+    T &operator*() const {
         assert(ptr);
         return *get();
     }
@@ -148,7 +148,7 @@ public:
      * \brief Dereferences the pointer.
      * \return a pointer to the object pointed to by this instance
      */
-    T *operator->() {
+    T *operator->() const {
         assert(ptr);
         return get();
     }

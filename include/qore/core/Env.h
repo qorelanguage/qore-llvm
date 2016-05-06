@@ -47,6 +47,9 @@ namespace qore {
 class Env {
 
 public:
+    using StringItartor = util::VectorOfPtrIteratorAdapter<String, String::Ptr>;    //!< String iterator.
+
+public:
     /**
      * \brief Default constructor.
      */
@@ -85,6 +88,14 @@ public:
         String &str = *ptr;
         strings.push_back(std::move(ptr));
         return str;
+    }
+
+    /**
+     * \brief Returns a range for iterating string literals.
+     * \return a range for iterating string literals
+     */
+    util::IteratorRange<StringItartor> getStrings() {
+        return util::IteratorRange<StringItartor>(strings);
     }
 
 private:

@@ -44,7 +44,7 @@ namespace cg {
 class FunctionContext {
 
 public:
-    using StringsMap = std::unordered_map<String *, llvm::GlobalVariable *>;
+    using StringsMap = std::unordered_map<const String *, llvm::GlobalVariable *>;
     using GlobalsMap = std::unordered_map<const GlobalVariable *, llvm::GlobalVariable *>;
 
 public:

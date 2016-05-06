@@ -54,6 +54,20 @@ public:
         llvm::Value *rtNs = builder.CreateCall(helper.lf_env_getRootNamespace, rtEnv);
         compile(rtNs, env.getRootNamespace());
 
+        for (const String &str : env.getStrings()) {
+            llvm::GlobalVariable *strGv = new llvm::GlobalVariable(*helper.module, helper.lt_qvalue, false,
+                    llvm::GlobalVariable::PrivateLinkage, llvm::Constant::getNullValue(helper.lt_qvalue), "str");
+            llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, str.get(), true);
+            llvm::GlobalVariable *strLitGv = new llvm::GlobalVariable(*helper.module, val->getType(), true,
+                    llvm::GlobalValue::PrivateLinkage, val, "str_lit");
+            strLitGv->setUnnamedAddr(true);
+            llvm::Value *args[2] = { rtEnv, builder.CreateConstGEP2_32(nullptr, strLitGv, 0, 0) };
+            llvm::Value *v = builder.CreateCall(helper.lf_env_addString, args);
+            builder.CreateStore(v, strGv);
+            strings[&str] = strGv;
+        }
+        builder.CreateRetVoid();
+
         if (qInit) {
             declare("qinit", *qInit);
         }
@@ -64,17 +78,6 @@ public:
             FunctionCompiler fc(*p.first, strings, globals, p.second, helper);
             fc.compile();
         }
-
-        for (auto &p : strings) {
-            llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, p.first->get(), true);
-            llvm::GlobalVariable *s = new llvm::GlobalVariable(*helper.module, val->getType(), true,
-                    llvm::GlobalValue::PrivateLinkage, val, "str_lit");
-            s->setUnnamedAddr(true);
-            llvm::Value *args[2] = { rtEnv, builder.CreateConstGEP2_32(nullptr, s, 0, 0) };
-            llvm::Value *v = builder.CreateCall(helper.lf_env_addString, args);
-            builder.CreateStore(v, p.second);
-        }
-        builder.CreateRetVoid();
 
         return std::move(helper.module);
     }
