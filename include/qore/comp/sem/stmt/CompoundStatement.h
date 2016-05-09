@@ -33,17 +33,27 @@
 
 #include <vector>
 #include "qore/comp/sem/stmt/Statement.h"
+#include "qore/core/util/Iterators.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents a compound statement.
+ */
 class CompoundStatement : public Statement {
 
 public:
-    using Ptr = std::unique_ptr<CompoundStatement>;
+    using Ptr = std::unique_ptr<CompoundStatement>;                 //!< Pointer type.
+    using Iterator = util::VectorOfPtrIteratorAdapter<Statement>;   //!< Iterator type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param statements the statements of this compound statement
+     * \return the new instance
+     */
     static Ptr create(std::vector<Statement::Ptr> statements) {
         return Ptr(new CompoundStatement(std::move(statements)));
     }
@@ -52,8 +62,12 @@ public:
         return Kind::Compound;
     }
 
-    const std::vector<Statement::Ptr> &getStatements() const {
-        return statements;
+    /**
+     * \brief Returns the statements of this compound statement.
+     * \return the statements of this compound statement
+     */
+    util::IteratorRange<Iterator> getStatements() const {
+        return util::IteratorRange<Iterator>(statements);
     }
 
 private:

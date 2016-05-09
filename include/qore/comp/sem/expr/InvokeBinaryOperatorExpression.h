@@ -37,12 +37,22 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents binary expressions.
+ */
 class InvokeBinaryOperatorExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<InvokeBinaryOperatorExpression>;
+    using Ptr = std::unique_ptr<InvokeBinaryOperatorExpression>;        //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param op the binary operator
+     * \param left the left subexpression
+     * \param right the right subexpression
+     * \return the new instance
+     */
     static Ptr create(const BinaryOperator &op, Expression::Ptr left, Expression::Ptr right) {
         return Ptr(new InvokeBinaryOperatorExpression(op, std::move(left), std::move(right)));
     }
@@ -55,14 +65,26 @@ public:
         return op.getResultType();
     }
 
+    /**
+     * \brief Returns the binary operator.
+     * \return the binary operator
+     */
     const BinaryOperator &getOperator() const {
         return op;
     }
 
+    /**
+     * \brief Returns the left subexpression.
+     * \return the left subexpression
+     */
     const Expression &getLeft() const {
         return *left;
     }
 
+    /**
+     * \brief Returns the right subexpression.
+     * \return the right subexpression
+     */
     const Expression &getRight() const {
         return *right;
     }

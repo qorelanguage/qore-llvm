@@ -38,12 +38,20 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents a string literal.
+ */
 class StringLiteralRefExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<StringLiteralRefExpression>;
+    using Ptr = std::unique_ptr<StringLiteralRefExpression>;        //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param str the value of the string literal
+     * \return the new instance
+     */
     static Ptr create(qore::String &str) {
         return Ptr(new StringLiteralRefExpression(str));
     }
@@ -56,6 +64,10 @@ public:
         return Type::String;
     }
 
+    /**
+     * \brief Returns the value of the string literal.
+     * \return the value of the string literal
+     */
     qore::String &getString() const {
         return str;
     }

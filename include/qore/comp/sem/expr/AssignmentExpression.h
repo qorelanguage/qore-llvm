@@ -37,12 +37,21 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Temporary representation of assignment expressions.
+ */
 class AssignmentExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<AssignmentExpression>;
+    using Ptr = std::unique_ptr<AssignmentExpression>;      //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param left the left subexpression
+     * \param right the right subexpression
+     * \return the new instance
+     */
     static Ptr create(Expression::Ptr left, Expression::Ptr right) {
         return Ptr(new AssignmentExpression(std::move(left), std::move(right)));
     }
@@ -55,10 +64,18 @@ public:
         return left->getType();
     }
 
+    /**
+     * \brief Returns the left subexpression.
+     * \return the left subexpression
+     */
     const Expression &getLeft() const {
         return *left;
     }
 
+    /**
+     * \brief Returns the right subexpression.
+     * \return the right subexpression
+     */
     const Expression &getRight() const {
         return *right;
     }

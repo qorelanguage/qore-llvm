@@ -38,12 +38,20 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents a `return` expression.
+ */
 class ReturnStatement : public Statement {
 
 public:
-    using Ptr = std::unique_ptr<ReturnStatement>;
+    using Ptr = std::unique_ptr<ReturnStatement>;       //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param expression the expression representing the return value, can be nullptr
+     * \return the new instance
+     */
     static Ptr create(Expression::Ptr expression = nullptr) {
         return Ptr(new ReturnStatement(std::move(expression)));
     }
@@ -52,6 +60,10 @@ public:
         return Kind::Return;
     }
 
+    /**
+     * \brief Returns the expression representing the return value, can be nullptr.
+     * \return the expression representing the return value, can be nullptr
+     */
     const Expression *getExpression() const {
         return expression.get();
     }

@@ -42,7 +42,7 @@
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
 #include "qore/comp/sem/expr/InvokeBinaryOperatorExpression.h"
 #include "qore/comp/sem/expr/InvokeConversionExpression.h"
-#include "qore/comp/sem/expr/LifetimeStartExpression.h"
+#include "qore/comp/sem/expr/LocalVariableInitExpression.h"
 #include "qore/comp/sem/expr/LocalVariableRefExpression.h"
 #include "qore/comp/sem/expr/NothingLiteralExpression.h"
 #include "qore/comp/sem/expr/StringLiteralRefExpression.h"
@@ -79,7 +79,7 @@ public:
         } else {
             rhs = core.defaultFor(type);
         }
-        return LifetimeStartExpression::create(lv, std::move(rhs));
+        return LocalVariableInitExpression::create(lv, std::move(rhs));
     }
 
     Expression::Ptr visit(const ast::BinaryExpression &node) {

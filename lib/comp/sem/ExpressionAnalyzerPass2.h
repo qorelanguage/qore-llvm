@@ -37,7 +37,7 @@
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
 #include "qore/comp/sem/expr/InvokeBinaryOperatorExpression.h"
 #include "qore/comp/sem/expr/InvokeConversionExpression.h"
-#include "qore/comp/sem/expr/LifetimeStartExpression.h"
+#include "qore/comp/sem/expr/LocalVariableInitExpression.h"
 #include "qore/comp/sem/expr/LocalVariableRefExpression.h"
 #include "qore/comp/sem/expr/NothingLiteralExpression.h"
 #include "qore/comp/sem/expr/StringLiteralRefExpression.h"
@@ -188,7 +188,7 @@ public:
         cleanupDest(refCounted(expr));
     }
 
-    void visit(const LifetimeStartExpression &expr) {
+    void visit(const LocalVariableInitExpression &expr) {
         withSideEffect();
         evaluate(dest, expr.getInitExpression());
         if (refCounted(expr.getLocalVariable())) {

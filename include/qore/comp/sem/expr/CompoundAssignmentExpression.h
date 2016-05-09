@@ -37,12 +37,22 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Temporary representation of compound assignment expressions.
+ */
 class CompoundAssignmentExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<CompoundAssignmentExpression>;
+    using Ptr = std::unique_ptr<CompoundAssignmentExpression>;      //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param left the left subexpression
+     * \param op the binary operator to apply before the assignment
+     * \param right the right subexpression
+     * \return the new instance
+     */
     static Ptr create(Expression::Ptr left, const qore::BinaryOperator &op, Expression::Ptr right) {
         return Ptr(new CompoundAssignmentExpression(std::move(left), op, std::move(right)));
     }
@@ -55,14 +65,26 @@ public:
         return left->getType();
     }
 
+    /**
+     * \brief Returns the left subexpression.
+     * \return the left subexpression
+     */
     const Expression &getLeft() const {
         return *left;
     }
 
+    /**
+     * \brief Returns the binary operator to apply before the assignment.
+     * \return the binary operator to apply before the assignment
+     */
     const qore::BinaryOperator &getOperator() const {
         return op;
     }
 
+    /**
+     * \brief Returns the right subexpression.
+     * \return the right subexpression
+     */
     const Expression &getRight() const {
         return *right;
     }

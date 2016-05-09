@@ -37,12 +37,19 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents the `NOTHING` literal.
+ */
 class NothingLiteralExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<NothingLiteralExpression>;
+    using Ptr = std::unique_ptr<NothingLiteralExpression>;      //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \return the new instance
+     */
     static Ptr create() {
         return Ptr(new NothingLiteralExpression());
     }

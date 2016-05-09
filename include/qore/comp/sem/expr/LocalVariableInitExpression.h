@@ -25,11 +25,11 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief LifetimeStartExpression definition.
+/// \brief LocalVariableInitExpression definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_EXPR_LIFETIMESTARTEXPRESSION_H_
-#define INCLUDE_QORE_COMP_SEM_EXPR_LIFETIMESTARTEXPRESSION_H_
+#ifndef INCLUDE_QORE_COMP_SEM_EXPR_LOCALVARIABLEINITEXPRESSION_H_
+#define INCLUDE_QORE_COMP_SEM_EXPR_LOCALVARIABLEINITEXPRESSION_H_
 
 #include "qore/comp/sem/LocalVariableInfo.h"
 #include "qore/comp/sem/expr/Expression.h"
@@ -38,34 +38,51 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-class LifetimeStartExpression : public Expression {
+/**
+ * \brief Represents the initialization of a local variable.
+ */
+class LocalVariableInitExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<LifetimeStartExpression>;
+    using Ptr = std::unique_ptr<LocalVariableInitExpression>;       //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param localVariable the local variable
+     * \param initExpression the subexpression representing the initialization value for the local variable
+     * \return the new instance
+     */
     static Ptr create(LocalVariableInfo &localVariable, Expression::Ptr initExpression) {
-        return Ptr(new LifetimeStartExpression(localVariable, std::move(initExpression)));
+        return Ptr(new LocalVariableInitExpression(localVariable, std::move(initExpression)));
     }
 
     Kind getKind() const override {
-        return Kind::LifetimeStart;
+        return Kind::LocalVariableInit;
     }
 
     const Type &getType() const override {
         return localVariable.getType();
     }
 
+    /**
+     * \brief Returns the local variable.
+     * \return the local variable
+     */
     LocalVariableInfo &getLocalVariable() const {
         return localVariable;
     }
 
+    /**
+     * \brief Returns the subexpression representing the initialization value for the local variable.
+     * \return the subexpression representing the initialization value for the local variable
+     */
     const Expression &getInitExpression() const {
         return *initExpression;
     }
 
 private:
-    LifetimeStartExpression(LocalVariableInfo &localVariable, Expression::Ptr initExpression)
+    LocalVariableInitExpression(LocalVariableInfo &localVariable, Expression::Ptr initExpression)
             : localVariable(localVariable), initExpression(std::move(initExpression)) {
     }
 
@@ -78,4 +95,4 @@ private:
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_EXPR_LIFETIMESTARTEXPRESSION_H_
+#endif // INCLUDE_QORE_COMP_SEM_EXPR_LOCALVARIABLEINITEXPRESSION_H_

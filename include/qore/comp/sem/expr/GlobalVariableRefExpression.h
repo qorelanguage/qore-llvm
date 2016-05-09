@@ -38,12 +38,20 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents an expression that references a global variable.
+ */
 class GlobalVariableRefExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<GlobalVariableRefExpression>;
+    using Ptr = std::unique_ptr<GlobalVariableRefExpression>;       //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param globalVariable the global variable referenced by the expression
+     * \return the new instance
+     */
     static Ptr create(const GlobalVariableInfo &globalVariable) {
         return Ptr(new GlobalVariableRefExpression(globalVariable));
     }
@@ -56,6 +64,10 @@ public:
         return globalVariable.getType();
     }
 
+    /**
+     * \brief Returns the global variable referenced by the expression.
+     * \return the global variable referenced by the expression
+     */
     const GlobalVariableInfo &getGlobalVariable() const {
         return globalVariable;
     }

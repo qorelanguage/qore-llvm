@@ -39,12 +39,22 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represent an `if` statement.
+ */
 class IfStatement : public Statement {
 
 public:
-    using Ptr = std::unique_ptr<IfStatement>;
+    using Ptr = std::unique_ptr<IfStatement>;       //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param condition the expression representing the condition
+     * \param trueBranch the statement to execute if `condition` evaluates to `true`
+     * \param falseBranch the statement to execute if `condition` evaluates to `false`, can be nullptr
+     * \return the new instance
+     */
     static Ptr create(Expression::Ptr condition, Statement::Ptr trueBranch, Statement::Ptr falseBranch) {
         assert(condition);
         assert(trueBranch);
@@ -55,14 +65,26 @@ public:
         return Kind::If;
     }
 
+    /**
+     * \brief Returns the expression representing the condition.
+     * \return the expression representing the condition
+     */
     const Expression &getCondition() const {
         return *condition;
     }
 
+    /**
+     * \brief Returns the statement to execute if `condition` evaluates to `true`.
+     * \return the statement to execute if `condition` evaluates to `true`
+     */
     const Statement &getTrueBranch() const {
         return *trueBranch;
     }
 
+    /**
+     * \brief Returns the statement to execute if `condition` evaluates to `false`, can be nullptr.
+     * \return the statement to execute if `condition` evaluates to `false`, can be nullptr
+     */
     const Statement *getFalseBranch() const {
         return falseBranch.get();
     }

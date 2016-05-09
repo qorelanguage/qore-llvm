@@ -39,12 +39,22 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents the initialization of a global variable.
+ */
 class GlobalVariableInitializationStatement : public Statement {
 
 public:
-    using Ptr = std::unique_ptr<GlobalVariableInitializationStatement>;
+    using Ptr = std::unique_ptr<GlobalVariableInitializationStatement>;     //!< Pointer type.
 
 public:
+
+    /**
+     * \brief Creates a new instance.
+     * \param globalVariable the global variable to initialize
+     * \param expression the expression representing the initialization value
+     * \return the new instance
+     */
     static Ptr create(GlobalVariable &globalVariable, Expression::Ptr expression) {
         return Ptr(new GlobalVariableInitializationStatement(globalVariable, std::move(expression)));
     }
@@ -53,10 +63,18 @@ public:
         return Kind::GlobalVariableInitialization;
     }
 
+    /**
+     * \brief Returns the global variable to initialize.
+     * \return the global variable to initialize
+     */
     GlobalVariable &getGlobalVariable() const {
         return globalVariable;
     }
 
+    /**
+     * \brief Returns the expression representing the initialization value.
+     * \return the expression representing the initialization value
+     */
     const Expression &getExpression() const {
         return *expression;
     }

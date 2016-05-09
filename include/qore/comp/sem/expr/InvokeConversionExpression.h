@@ -37,12 +37,21 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents an expression that converts the type of a value.
+ */
 class InvokeConversionExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<InvokeConversionExpression>;
+    using Ptr = std::unique_ptr<InvokeConversionExpression>;        //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param conversion the conversion to apply
+     * \param arg the subexpression representing the value to convert
+     * \return the new instance
+     */
     static Ptr create(const qore::Conversion &conversion, Expression::Ptr arg) {
         return Ptr(new InvokeConversionExpression(conversion, std::move(arg)));
     }
@@ -55,10 +64,18 @@ public:
         return conversion.getToType();
     }
 
+    /**
+     * \brief Returns the conversion to apply.
+     * \return the conversion to apply
+     */
     const qore::Conversion &getConversion() const {
         return conversion;
     }
 
+    /**
+     * \brief Returns the subexpression representing the value to convert.
+     * \return the subexpression representing the value to convert
+     */
     const Expression &getArg() const {
         return *arg;
     }

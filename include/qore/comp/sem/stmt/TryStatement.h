@@ -37,12 +37,21 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents a `try` statement.
+ */
 class TryStatement : public Statement {
 
 public:
-    using Ptr = std::unique_ptr<TryStatement>;
+    using Ptr = std::unique_ptr<TryStatement>;      //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param tryBody the body of the try statement
+     * \param catchBody the statement to execute if an exception is thrown in the try block
+     * \return the new instance
+     */
     static Ptr create(Statement::Ptr tryBody, Statement::Ptr catchBody) {
         return Ptr(new TryStatement(std::move(tryBody), std::move(catchBody)));
     }
@@ -51,10 +60,18 @@ public:
         return Kind::Try;
     }
 
+    /**
+     * \brief Returns the body of the try statement.
+     * \return the body of the try statement
+     */
     const Statement &getTryBody() const {
         return *tryBody;
     }
 
+    /**
+     * \brief Returns the statement to execute if an exception is thrown in the try block.
+     * \return the statement to execute if an exception is thrown in the try block
+     */
     const Statement &getCatchBody() const {
         return *catchBody;
     }

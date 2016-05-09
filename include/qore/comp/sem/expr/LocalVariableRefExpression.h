@@ -38,12 +38,20 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents an expression that references a local variable.
+ */
 class LocalVariableRefExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<LocalVariableRefExpression>;
+    using Ptr = std::unique_ptr<LocalVariableRefExpression>;        //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param localVariable the local variable referenced by the expression
+     * \return the new instance
+     */
     static Ptr create(const LocalVariableInfo &localVariable) {
         return Ptr(new LocalVariableRefExpression(localVariable));
     }
@@ -56,6 +64,10 @@ public:
         return localVariable.getType();
     }
 
+    /**
+     * \brief Returns the local variable referenced by the expression.
+     * \return the local variable referenced by the expression
+     */
     const LocalVariableInfo &getLocalVariable() const {
         return localVariable;
     }

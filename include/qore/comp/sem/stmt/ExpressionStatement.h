@@ -38,12 +38,20 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents an expression statement.
+ */
 class ExpressionStatement : public Statement {
 
 public:
-    using Ptr = std::unique_ptr<ExpressionStatement>;
+    using Ptr = std::unique_ptr<ExpressionStatement>;       //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param expression the expression
+     * \return the new instance
+     */
     static Ptr create(Expression::Ptr expression) {
         return Ptr(new ExpressionStatement(std::move(expression)));
     }
@@ -52,6 +60,10 @@ public:
         return Kind::Expression;
     }
 
+    /**
+     * \brief Returns the expression.
+     * \return the expression
+     */
     const Expression &getExpression() const {
         return *expression;
     }

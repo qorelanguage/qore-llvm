@@ -44,28 +44,47 @@ class IfStatement;
 class ReturnStatement;
 class TryStatement;
 
+/**
+ * \brief Base class for temporary representations of statements.
+ */
 class Statement {
 
 public:
+    /**
+     * \brief Identifies the concrete type of an instance.
+     */
     enum class Kind {
-        Compound,
-        Expression,
-        GlobalVariableInitialization,
-        If,
-        Return,
-        Try,
+        Compound,                       //!< Identifies an instance of \ref CompoundStatement.
+        Expression,                     //!< Identifies an instance of \ref ExpressionStatement.
+        GlobalVariableInitialization,   //!< Identifies an instance of \ref GlobalVariableInitializationStatement.
+        If,                             //!< Identifies an instance of \ref IfStatement.
+        Return,                         //!< Identifies an instance of \ref ReturnStatement.
+        Try,                            //!< Identifies an instance of \ref TryStatement.
     };
 
 public:
-    using Ptr = std::unique_ptr<Statement>;
+    using Ptr = std::unique_ptr<Statement>;     //!< Pointer type.
 
 public:
     virtual ~Statement() = default;
+
+    /**
+     * \brief Returns the kind of the expression.
+     * \return the kind of the expression
+     */
     virtual Kind getKind() const = 0;
 
+    /**
+     * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Statement.
+     * \param visitor the visitor to call
+     * \return the value returned from the visitor
+     * \tparam V the type of the visitor
+     */
     template<typename V>
-    typename V::ReturnType accept(V &v) const {
-        #define CASE(K) case Kind::K:   return v.visit(static_cast<const K ## Statement &>(*this))
+    typename V::ReturnType accept(V &visitor) const {
+        /// \cond NoDoxygen
+        #define CASE(K) case Kind::K:   return visitor.visit(static_cast<const K ## Statement &>(*this))
+        /// \endcond NoDoxygen
         switch (getKind()) {
             CASE(Compound);
             CASE(Expression);
@@ -74,7 +93,7 @@ public:
             CASE(Return);
             CASE(Try);
             default:
-                QORE_UNREACHABLE("");
+                QORE_UNREACHABLE("Invalid Statement::Kind: " << static_cast<int>(getKind()));
         }
         #undef CASE
     }

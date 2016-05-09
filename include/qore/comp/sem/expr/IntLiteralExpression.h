@@ -38,12 +38,20 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents an integer literal.
+ */
 class IntLiteralExpression : public Expression {
 
 public:
-    using Ptr = std::unique_ptr<IntLiteralExpression>;
+    using Ptr = std::unique_ptr<IntLiteralExpression>;      //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a new instance.
+     * \param value the constant value
+     * \return the new instance
+     */
     static Ptr create(qint value) {
         return Ptr(new IntLiteralExpression(value));
     }
@@ -56,6 +64,10 @@ public:
         return Type::Int;
     }
 
+    /**
+     * \brief Returns the constant value.
+     * \return the constant value
+     */
     qint getValue() const {
         return value;
     }

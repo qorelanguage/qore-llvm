@@ -53,8 +53,8 @@ public:
 
     void visit(const CompoundStatement &stmt) {
         builder.pushCleanupScope(stmt);
-        for (const Statement::Ptr &ptr : stmt.getStatements()) {
-            ptr->accept(*this);
+        for (const Statement &s : stmt.getStatements()) {
+            s.accept(*this);
         }
         builder.popCleanupScope(stmt);
     }
