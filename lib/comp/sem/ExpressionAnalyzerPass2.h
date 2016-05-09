@@ -194,7 +194,18 @@ public:
         if (refCounted(expr.getLocalVariable())) {
             refIncDestIfNeeded();
         }
-        builder.startOfLocalVariableLifetime(expr.getLocalVariable(), dest);
+
+        //if not shared:
+        builder.createLocalSet(expr.getLocalVariable(), dest);
+        if (refCounted(expr.getLocalVariable())) {
+            builder.pushCleanup(expr.getLocalVariable());
+        }
+
+        //if shared:
+        // - emit instruction for allocating the wrapper with 'value' as the initial value (its refcount is
+        //          already increased)
+        // - emit instruction for storing the wrapper ptr to local slot aslv
+        // - push cleanup scope that dereferences the wrapper
     }
 
     void visit(const LocalVariableRefExpression &expr) {

@@ -55,7 +55,7 @@ public:
     }
 
     static Statement::Ptr analyzeWithNewBlock(Core &core, Scope &scope, ast::Statement &stmt) {
-        BlockScopeImpl inner(scope);
+        BlockScope inner(scope);
         StatementAnalyzerPass1 a(core, inner);
         return stmt.accept(a);
     }
@@ -66,7 +66,7 @@ public:
 
     Statement::Ptr visit(const ast::CompoundStatement &node) {
         std::vector<Statement::Ptr> statements;
-        BlockScopeImpl inner(scope);
+        BlockScope inner(scope);
         for (auto &s : node.statements) {
             StatementAnalyzerPass1 a(core, inner);
             statements.push_back(s->accept(a));
@@ -89,7 +89,7 @@ public:
     }
 
     Statement::Ptr visit(const ast::IfStatement &node) {
-        BlockScopeImpl inner(scope);
+        BlockScope inner(scope);
         Expression::Ptr cond = ExpressionAnalyzerPass1::evalAndConvert(core, inner, Type::SoftBool,
                 *node.condition);
         Statement::Ptr b1 = analyzeWithNewBlock(core, inner, *node.stmtTrue);

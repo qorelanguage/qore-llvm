@@ -73,7 +73,7 @@ inline std::pair<Function::Ptr, Function::Ptr> analyze(Context &ctx, Env &rtEnv,
     auto initializers = analyzer.takeInitializers();
     if (!initializers.empty()) {
         qInit = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
-        FBuilder initBuilder(*qInit, ctx);
+        FBuilder initBuilder(*qInit);
         for (auto &stmt : initializers) {
             analyzer.doPass2(initBuilder, *stmt);
         }

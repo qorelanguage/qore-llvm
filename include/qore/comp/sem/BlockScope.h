@@ -45,16 +45,7 @@ namespace sem {
 class BlockScope : public Scope {
 
 public:
-
-protected:
-    BlockScope() = default;
-};
-
-
-class BlockScopeImpl : public BlockScope {
-
-public:
-    explicit BlockScopeImpl(Scope &parent) : parent(parent) {
+    explicit BlockScope(Scope &parent) : parent(parent) {
     }
 
     LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {

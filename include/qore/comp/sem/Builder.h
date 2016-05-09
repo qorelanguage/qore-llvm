@@ -51,11 +51,10 @@ class Builder {
 
 protected:
     //derived class must set currentBlock!
-    explicit Builder(Context &ctx) : currentBlock(nullptr), ctx(ctx), cleanupLValue(nullptr) {
+    Builder() : currentBlock(nullptr), cleanupLValue(nullptr) {
     }
 
     virtual code::Temp createTemp() = 0;
-    virtual LocalVariable &createLocalVariable(std::string name, const Type &type, SourceLocation location) = 0;
 
 public:
     virtual ~Builder() = default;
@@ -66,75 +65,19 @@ public:
         return currentBlock->isTerminated();
     }
 
-    void startOfArgumentLifetime(LocalVariableInfo &lv, Index argIndex) {
-        finalizeLocalVariable(lv);
-        assert(lv.getRt().getIndex() == argIndex);
-
-        //if not shared:
-        if (lv.getType().isRefCounted()) {
-            code::Temp temp = getFreeTemp();
-            currentBlock->appendLocalGet(temp, lv.getRt());
-            currentBlock->appendRefInc(temp);
-            setTempFree(temp);
-            x(lv.getRt());
-        }
-
-        //if shared:
-        // - get value from aslv to temp
-        // - if not primitive, emit refInc
-        // - emit instruction for allocating the wrapper with 'temp' as the initial value
-        // - emit instruction for storing the wrapper ptr to local slot aslv
-        // - push cleanup scope that dereferences the wrapper
-    }
-
-    void startOfLocalVariableLifetime(LocalVariableInfo &lv, code::Temp value) {
-        finalizeLocalVariable(lv);
-
-        //if not shared:
-        currentBlock->appendLocalSet(lv.getRt(), value);
-        if (lv.getType().isRefCounted()) {
-            x(lv.getRt());
-        }
-
-        //if shared:
-        // - emit instruction for allocating the wrapper with 'value' as the initial value (its refcount is
-        //          already increased)
-        // - emit instruction for storing the wrapper ptr to local slot aslv
-        // - push cleanup scope that dereferences the wrapper
-    }
-
-private:
-    //this should not be here: for arguments, FunctionScope can do this (it needs to make sure the indices fit anyway)
-    // for local variables, this can be done for all of them before starting pass2
-    // Builder then can rely on lv.getRt everywhere, no need for createLocalVariable and ctx
-    void finalizeLocalVariable(LocalVariableInfo &lv) {
-        lv.setRt(createLocalVariable(ctx.getString(lv.getName()), lv.getType(), lv.getLocation()));
-    }
-
-    void x(const LocalVariable &lv) {
+    void pushCleanup(const LocalVariableInfo &lv) {
         code::Block *b = createBlock();
         code::Temp temp = getFreeTemp();      //all temps are free at this point
-        b->appendLocalGet(temp, lv);
+        b->appendLocalGet(temp, lv.getRt());
         b->appendRefDecNoexcept(temp);
         setTempFree(temp);
-        code::Block *b2 = fff(cleanupScopes.rbegin());
+        code::Block *b2 = findPrevCleanupBlock(cleanupScopes.rbegin());
         if (b2) {
             b->appendJump(*b2);
         } else {
             b->appendResumeUnwind();
         }
-        cleanupScopes.emplace_back(lv, b);
-    }
-
-private:
-    code::Block *fff(std::vector<CleanupScope>::reverse_iterator iit) {
-        while (iit != cleanupScopes.rend()) {
-            if (iit->b) {
-                return iit->b;
-            }
-            ++iit;
-        }
-        return nullptr;
+        cleanupScopes.emplace_back(lv.getRt(), b);
     }
 
 public:
@@ -179,13 +122,11 @@ public:
     }
 
     void addCleanup(code::Temp temp) {
-        LOG("ADD CLEANUP " << temp.getIndex());
         assert(std::find(cleanupTemps.begin(), cleanupTemps.end(), temp) == cleanupTemps.end());
         cleanupTemps.push_back(temp);
     }
 
     void doneCleanup(code::Temp temp) {
-        LOG("DONE CLEANUP " << temp.getIndex());
         auto it = std::find(cleanupTemps.begin(), cleanupTemps.end(), temp);
         assert(it != cleanupTemps.end());
         cleanupTemps.erase(it);
@@ -321,6 +262,12 @@ public:
         assert(isTerminated());
     }
 
+    void createRetVoidInteractive() {
+        checkNotTerminated();
+        currentBlock->appendRetVoid();
+        assert(isTerminated());
+    }
+
     void setCurrentBlock(code::Block *b) {
         currentBlock = b;
     }
@@ -332,17 +279,23 @@ private:
         }
     }
 
+    code::Block *findPrevCleanupBlock(std::vector<CleanupScope>::reverse_iterator iit) {
+        while (iit != cleanupScopes.rend()) {
+            if (iit->b) {
+                return iit->b;
+            }
+            ++iit;
+        }
+        return nullptr;
+    }
+
     code::Block *getLandingPad();
     code::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
     void buildCleanupForRet();
 
-protected:
-    code::Block *currentBlock;
-
 private:
-    Context &ctx;
+    code::Block *currentBlock;
     std::vector<code::Temp> freeTemps;
-
     std::vector<code::Temp> cleanupTemps;
     std::vector<CleanupScope> cleanupScopes;
     LValue *cleanupLValue;
@@ -352,16 +305,12 @@ private:
 class FBuilder : public Builder {
 
 public:
-    explicit FBuilder(Function &f, Context &ctx) : Builder(ctx), f(f) {
-        currentBlock = createBlock();
+    explicit FBuilder(Function &f) : f(f) {
+        setCurrentBlock(createBlock());
     }
 
     code::Temp createTemp() override {
         return f.addTemp();
-    }
-
-    LocalVariable &createLocalVariable(std::string name, const Type &type, SourceLocation location) override {
-        return f.addLocalVariable(std::move(name), type, location);
     }
 
     code::Block *createBlock() override {

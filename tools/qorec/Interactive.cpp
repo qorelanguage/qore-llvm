@@ -76,7 +76,7 @@ namespace sem {
 class InteractiveScope : public Scope {
 
 public:
-    explicit InteractiveScope(const Scope &rootScope) : rootScope(rootScope) {
+    InteractiveScope(Context &ctx, const Scope &rootScope) : ctx(ctx), rootScope(rootScope) {
     }
 
     const Type &resolveType(const ast::Type &node) const override {
@@ -88,6 +88,9 @@ public:
         LocalVariableInfo &lv = *ptr;
         locals.push_back(std::move(ptr));
         //lv.setShared();
+        LocalVariable::Ptr ptr2 = util::make_unique<LocalVariable>(locals2.size(), ctx.getString(name), type, location);
+        lv.setRt(*ptr2);
+        locals2.push_back(std::move(ptr2));
         return lv;
     }
 
@@ -104,8 +107,10 @@ public:
     }
 
 private:
+    Context &ctx;
     const Scope &rootScope;
     std::vector<std::unique_ptr<LocalVariableInfo>> locals;
+    std::vector<std::unique_ptr<LocalVariable>> locals2;
 };
 
 class TopLevelCtx {
@@ -140,19 +145,13 @@ private:
 class IBuilder : public Builder {
 
 public:
-    explicit IBuilder(Context &ctx) : Builder(ctx), tempCount(0) {
-        currentBlock = entry = createBlock();
+    IBuilder() : tempCount(0) {
+        entry = createBlock();
+        setCurrentBlock(entry);
     }
 
     code::Temp createTemp() override {
         return code::Temp(tempCount++);
-    }
-
-    LocalVariable &createLocalVariable(std::string name, const Type &type, SourceLocation location) override {
-        LocalVariable::Ptr ptr = util::make_unique<LocalVariable>(locals.size(), std::move(name), type, location);
-        LocalVariable &v = *ptr;
-        locals.push_back(std::move(ptr));
-        return v;
     }
 
     code::Block *createBlock() override {
@@ -163,15 +162,15 @@ public:
     }
 
     code::Block &getEntryForInteractiveMode() {
-        currentBlock->appendRetVoid();
+        createRetVoidInteractive();
         code::Block *b = entry;
-        currentBlock = entry = createBlock();
+        entry = createBlock();
+        setCurrentBlock(entry);
         return *b;
     }
 
 private:
     Size tempCount;
-    std::vector<LocalVariable::Ptr> locals;
     std::vector<code::Block::Ptr> blocks;
     code::Block *entry;
 };
@@ -185,11 +184,11 @@ public:
     void doIt() {
         StdinWrapper dp(compCtx);
         Parser parser(compCtx, dp);
-        IBuilder mainBuilder(compCtx);
+        IBuilder mainBuilder;
         Core analyzer(compCtx);
         NamespaceScope root(analyzer, compCtx.getEnv().getRootNamespace());
-        InteractiveScope topScope(root);
-        BlockScopeImpl blockScope(topScope);
+        InteractiveScope topScope(compCtx, root);
+        BlockScope blockScope(topScope);
         TopLevelCtx topLevelCtx;
         while (true) {
             comp::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();

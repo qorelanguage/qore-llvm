@@ -90,9 +90,6 @@ public:
      */
     Statement::Ptr doPass1(Scope &scope, ast::Statement &stmt);
 
-    /*
-     * transforms ir to as (exception safety, temporaries, ...)
-     */
     void doPass2(Builder &builder, Statement &stmt);
 
     std::vector<Statement::Ptr> takeInitializers() {

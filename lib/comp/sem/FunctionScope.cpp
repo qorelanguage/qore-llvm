@@ -73,11 +73,32 @@ void FunctionScope::analyze() {
 
     Statement::Ptr body = core.doPass1(*this, *node.body);
 
-    FBuilder b(rt, core.ctx);
-    Index index = 0;
-    for (auto it = node.params.begin(); it != node.params.end(); ++it) {
-        LocalVariableInfo &lv = *args[std::get<1>(*it).str];
-        b.startOfArgumentLifetime(lv, index++);
+    FBuilder b(rt);
+
+    for (auto &lv : locals) {
+        //change type if lv is shared
+        lv->setRt(rt.addLocalVariable(core.ctx.getString(lv->getName()), lv->getType(), lv->getLocation()));
+    }
+
+    for (auto &p : args) {
+        LocalVariableInfo &lv = *p.second;
+
+        //if not shared:
+        if (lv.getType().isRefCounted()) {
+            code::Temp temp = b.getFreeTemp();
+            b.createLocalGet(temp, lv);
+            b.createRefInc(temp);
+            b.setTempFree(temp);
+            b.pushCleanup(lv);
+        }
+
+        //if shared:
+        // - get value from lv to temp
+        // - if not primitive, emit refInc
+        // - emit instruction for allocating the wrapper with 'temp' as the initial value
+        // - emit instruction for storing the wrapper ptr to local slot aslv
+        // - push cleanup scope that dereferences the wrapper
+
         //both compiler and interpreter need to copy the function arguments into local slots (starting from 0)
     }
 

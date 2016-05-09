@@ -72,9 +72,6 @@ Statement::Ptr Core::doPass1(Scope &scope, ast::Statement &stmt) {
     return StatementAnalyzerPass1::analyze(*this, scope, stmt);
 }
 
-/*
- * transforms ir to as (exception safety, temporaries, ...)
- */
 void Core::doPass2(Builder &builder, Statement &stmt) {
     StatementAnalyzerPass2 a(*this, builder);
     stmt.accept(a);
