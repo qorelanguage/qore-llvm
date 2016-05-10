@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Visitor for the first pass of statement analysis.
 ///
 //------------------------------------------------------------------------------
 #ifndef LIB_COMP_SEM_STATEMENTANALYZERPASS1_H_
@@ -43,22 +43,44 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Translates the AST representation of a statement to a temporary representation.
+ *
+ * Deals mainly with scopes.
+ *
+ * Implements the visitor for ast::Statement.
+ */
 class StatementAnalyzerPass1 {
 
 public:
-    using ReturnType = Statement::Ptr;
-
-public:
+    /**
+     * \brief Analyzes a statement.
+     * \param core the shared state of the analyzer
+     * \param scope the current scope
+     * \param stmt the AST node to analyze
+     * \return analyzed statement
+     */
     static Statement::Ptr analyze(Core &core, Scope &scope, ast::Statement &stmt) {
         StatementAnalyzerPass1 a(core, scope);
         return stmt.accept(a);
     }
 
+    /**
+     * \brief Analyzes a statement in a new block scope.
+     * \param core the shared state of the analyzer
+     * \param scope the current scope
+     * \param stmt the AST node to analyze
+     * \return analyzed statement
+     */
     static Statement::Ptr analyzeWithNewBlock(Core &core, Scope &scope, ast::Statement &stmt) {
         BlockScope inner(scope);
         StatementAnalyzerPass1 a(core, inner);
         return stmt.accept(a);
     }
+
+    ///\name Implementation of ast::Statement visitor
+    ///\{
+    using ReturnType = Statement::Ptr;
 
     Statement::Ptr visit(const ast::ExpressionStatement &node) {
         return ExpressionStatement::create(ExpressionAnalyzerPass1::eval(core, scope, *node.expression));
@@ -68,8 +90,7 @@ public:
         std::vector<Statement::Ptr> statements;
         BlockScope inner(scope);
         for (auto &s : node.statements) {
-            StatementAnalyzerPass1 a(core, inner);
-            statements.push_back(s->accept(a));
+            statements.push_back(analyze(core, inner, *s));
         }
         return CompoundStatement::create(std::move(statements));
     }
@@ -103,7 +124,6 @@ public:
         return TryStatement::create(std::move(tryStmt), std::move(catchStmt));
     }
 
-
     Statement::Ptr visit(const ast::EmptyStatement &node) { QORE_NOT_IMPLEMENTED(""); }
     Statement::Ptr visit(const ast::ForeachStatement &node) { QORE_NOT_IMPLEMENTED(""); }
     Statement::Ptr visit(const ast::ThrowStatement &node) { QORE_NOT_IMPLEMENTED(""); }
@@ -113,6 +133,7 @@ public:
     Statement::Ptr visit(const ast::DoWhileStatement &node) { QORE_NOT_IMPLEMENTED(""); }
     Statement::Ptr visit(const ast::ForStatement &node) { QORE_NOT_IMPLEMENTED(""); }
     Statement::Ptr visit(const ast::SwitchStatement &node) { QORE_NOT_IMPLEMENTED(""); }
+    ///\}
 
 private:
     StatementAnalyzerPass1(Core &core, Scope &scope) : core(core), scope(scope) {

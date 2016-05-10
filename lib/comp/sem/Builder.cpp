@@ -66,7 +66,7 @@ code::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator
     currentBlock = block;
 
     if (cleanupLValue) {
-        cleanupLValue->cleanup(*this);
+        cleanupLValue->unlock(*this);
     }
 
     for (auto it = cleanupTemps.rbegin(); it != cleanupTemps.rend(); ++it) {

@@ -1,0 +1,54 @@
+our string s;
+our int i;
+sub f() {
+    i = 1;
+    int j = i = 2;
+    s = "A";
+    string s2 = s = "B";
+}
+#$$$
+-root namespace
+  -our string s @1:12
+  -our int i @2:9
+  -sub nothing() f @3:5, 2 temps, 2 locals
+    [0] int j @5:9
+    [1] string s2 @7:12
+    Block #1:
+      ConstInt temp.0, 1
+      GlobalWriteLock our int ::i
+      GlobalSet our int ::i, temp.0
+      GlobalWriteUnlock our int ::i
+      ConstInt temp.0, 2
+      GlobalWriteLock our int ::i
+      GlobalSet our int ::i, temp.0
+      GlobalWriteUnlock our int ::i
+      LocalSet local.0, temp.0
+      ConstString temp.0, "A"
+      RefInc temp.0
+      GlobalWriteLock our string ::s
+      GlobalGet temp.1, our string ::s
+      GlobalSet our string ::s, temp.0
+      GlobalWriteUnlock our string ::s
+      RefDec temp.1
+      ConstString temp.0, "B"
+      RefInc temp.0
+      GlobalWriteLock our string ::s
+      GlobalGet temp.1, our string ::s
+      RefInc temp.0
+      GlobalSet our string ::s, temp.0
+      GlobalWriteUnlock our string ::s
+      RefDec temp.1 with landing pad:
+        RefDecNoexcept temp.0
+        ResumeUnwind
+      LocalSet local.1, temp.0
+      LocalGet temp.0, local.1
+      RefDec temp.0
+      RetVoid
+-sub nothing() <qinit> @0:0, 1 temps, 0 locals
+  Block #1:
+    ConstString temp.0, ""
+    RefInc temp.0
+    GlobalInit our string ::s, temp.0
+    ConstInt temp.0, 0
+    GlobalInit our int ::i, temp.0
+    RetVoid

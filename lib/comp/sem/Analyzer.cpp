@@ -73,8 +73,7 @@ Statement::Ptr Core::doPass1(Scope &scope, ast::Statement &stmt) {
 }
 
 void Core::doPass2(Builder &builder, Statement &stmt) {
-    StatementAnalyzerPass2 a(*this, builder);
-    stmt.accept(a);
+    StatementAnalyzerPass2::analyze(*this, builder, stmt);
 }
 
 } // namespace sem

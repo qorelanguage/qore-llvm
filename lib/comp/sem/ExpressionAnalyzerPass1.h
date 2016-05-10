@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Visitor for the first pass of expression analysis.
 ///
 //------------------------------------------------------------------------------
 #ifndef LIB_COMP_SEM_EXPRESSIONANALYZERPASS1_H_
@@ -51,21 +51,44 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Resolves the type of an expression and translates its AST representation to a temporary representation.
+ *
+ * Resolves names and operators, deals with local variable declarations and adds implicit conversions.
+ *
+ * Implements the visitor for ast::Expression.
+ */
 class ExpressionAnalyzerPass1 {
 
 public:
-    using ReturnType = Expression::Ptr;
-
-public:
+    /**
+     * \brief Analyzes an expression.
+     * \param core the shared state of the analyzer
+     * \param scope the current scope
+     * \param node the AST node to analyze
+     * \return analyzed node
+     */
     static Expression::Ptr eval(Core &core, Scope &scope, ast::Expression &node) {
         ExpressionAnalyzerPass1 a(core, scope);
         return node.accept(a);
     }
 
+    /**
+     * \brief Analyzes an expression ensuring certain type of the expression's value.
+     * \param core the shared state of the analyzer
+     * \param scope the current scope
+     * \param type the desired type of the expression's value
+     * \param node the AST node to analyze
+     * \return analyzed node
+     */
     static Expression::Ptr evalAndConvert(Core &core, Scope &scope, const Type &type, ast::Expression &node) {
         ExpressionAnalyzerPass1 a(core, scope, &type);
         return a.convert(node.accept(a), type);
     }
+
+    ///\name Implementation of ast::Expression visitor
+    ///\{
+    using ReturnType = Expression::Ptr;
 
     Expression::Ptr visit(const ast::VarDeclExpression &node) {
         const Type &type = scope.resolveType(node.type);
@@ -154,6 +177,7 @@ public:
     Expression::Ptr visit(const ast::ListOperationExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::RegexExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::ClosureExpression &node) { QORE_NOT_IMPLEMENTED(""); }
+    ///\}
 
 private:
     ExpressionAnalyzerPass1(Core &core, Scope &scope, const Type *typeHint = nullptr)
@@ -187,7 +211,7 @@ private:
 private:
     Core &core;
     Scope &scope;
-    const Type *typeHint;
+    const Type *typeHint;       //XXX this can be used for type inference, e.g. hash<float, softstring> = {1: 4}
 };
 
 } // namespace sem

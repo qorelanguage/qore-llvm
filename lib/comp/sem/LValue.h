@@ -38,9 +38,17 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Helper class for translating lvalues.
+ */
 class LValue {
 
 public:
+    /**
+     * \brief Generates code for locking the lvalue.
+     * \param builder the code builder
+     * \param expr the lvalue expression
+     */
     LValue(Builder &builder, const Expression &expr) : builder(builder), expr(expr) {
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
@@ -57,10 +65,14 @@ public:
 
     ~LValue() {
         builder.clearCleanupLValue(*this);
-        cleanup(builder);
+        unlock(builder);
     }
 
-    void cleanup(Builder &builder) {
+    /**
+     * \brief Generates code for unlocking the lvalue.
+     * \param builder the code builder
+     */
+    void unlock(Builder &builder) {
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
                 builder.createGlobalWriteUnlock(asGlobal().getGlobalVariable());
@@ -74,8 +86,11 @@ public:
         }
     }
 
+    /**
+     * \brief Generates code for getting the old value.
+     * \param dest the destination temporary for the old value
+     */
     void get(code::Temp dest) {
-        //reference? any?
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
                 builder.createGlobalGet(dest, asGlobal().getGlobalVariable());
@@ -89,6 +104,10 @@ public:
         }
     }
 
+    /**
+     * \brief Generates code for setting the new value.
+     * \param src the temporary with the new value
+     */
     void set(code::Temp src) {
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
@@ -103,11 +122,16 @@ public:
         }
     }
 
+    /**
+     * \brief Returns true iff \ref unlock() generates at least one instruction.
+     * \return true iff \ref unlock() generates at least one instruction
+     */
     bool hasLock() {
         switch (expr.getKind()) {
             case Expression::Kind::GlobalVariableRef:
                 return true;
             case Expression::Kind::LocalVariableRef:
+                //TODO true if shared
                 return false;
             default:
                 return false;

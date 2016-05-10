@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Visitor for the second pass of statement analysis.
 ///
 //------------------------------------------------------------------------------
 #ifndef LIB_COMP_SEM_STATEMENTANALYZERPASS2_H_
@@ -42,14 +42,28 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Translates a temporary representation of a statement to \ref qore::code.
+ *
+ * Mainly deals with proper reference counting of temporary values and control flow.
+ */
 class StatementAnalyzerPass2 {
 
 public:
-    using ReturnType = void;
-
-public:
-    StatementAnalyzerPass2(Core &core, Builder &builder) : core(core), builder(builder) {
+    /**
+     * \brief Translates a statement to code.
+     * \param core the shared state of the analyzer
+     * \param builder code builder
+     * \param stmt the statement to translate
+     */
+    static void analyze(Core &core, Builder &builder, const Statement &stmt) {
+        StatementAnalyzerPass2 a(core, builder);
+        stmt.accept(a);
     }
+
+    ///\name Implementation of Statement visitor
+    ///\{
+    using ReturnType = void;
 
     void visit(const CompoundStatement &stmt) {
         builder.pushCleanupScope(stmt);
@@ -60,14 +74,12 @@ public:
     }
 
     void visit(const ExpressionStatement &stmt) {
-        ExpressionAnalyzerPass2 a(core, builder);
-        stmt.getExpression().accept(a);
+        ExpressionAnalyzerPass2::eval(core, builder, stmt.getExpression());
     }
 
     void visit(const GlobalVariableInitializationStatement &stmt) {
         code::Temp temp = builder.getFreeTemp();
-        ExpressionAnalyzerPass2 a(core, builder, temp);
-        stmt.getExpression().accept(a);
+        ExpressionAnalyzerPass2::eval(core, builder, temp, stmt.getExpression());
         builder.createGlobalInit(stmt.getGlobalVariable(), temp);
         builder.setTempFree(temp);
     }
@@ -76,8 +88,7 @@ public:
         builder.pushCleanupScope(stmt);
 
         code::Temp temp = builder.getFreeTemp();
-        ExpressionAnalyzerPass2 a(core, builder, temp);
-        stmt.getCondition().accept(a);
+        ExpressionAnalyzerPass2::eval(core, builder, temp, stmt.getCondition());
 
         code::Block *cont = nullptr;
         code::Block *trueBlock = builder.createBlock();
@@ -121,10 +132,7 @@ public:
     void visit(const ReturnStatement &stmt) {
         if (stmt.getExpression()) {
             code::Temp temp = builder.getFreeTemp();
-            {
-                ExpressionAnalyzerPass2 a(core, builder, temp);
-                stmt.getExpression()->accept(a);
-            }
+            ExpressionAnalyzerPass2::eval(core, builder, temp, *stmt.getExpression());
             if (stmt.getExpression()->getType().isRefCounted()) {
                 builder.addCleanup(temp);
             }
@@ -168,6 +176,11 @@ public:
         // - check that it is inside a catch block
         // - restore 'current exception' from the use variable
         // - jump to the next block in builder's cleanupStack (or resume if there is no such block)
+    }
+    ///\}
+
+private:
+    StatementAnalyzerPass2(Core &core, Builder &builder) : core(core), builder(builder) {
     }
 
 private:

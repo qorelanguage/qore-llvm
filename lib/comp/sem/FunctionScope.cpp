@@ -102,8 +102,7 @@ void FunctionScope::analyze() {
         //both compiler and interpreter need to copy the function arguments into local slots (starting from 0)
     }
 
-    StatementAnalyzerPass2 a2(core, b);
-    body->accept(a2);
+    StatementAnalyzerPass2::analyze(core, b, *body);
 
     if (!b.isTerminated()) {
         if (getReturnType() == Type::Nothing) {

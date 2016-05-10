@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Visitor for the second pass of expression analysis.
 ///
 //------------------------------------------------------------------------------
 #ifndef LIB_COMP_SEM_EXPRESSIONANALYZERPASS2_H_
@@ -48,6 +48,7 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/// \cond NoDoxygen
 class TempHelper {
 
 public:
@@ -83,31 +84,54 @@ private:
     bool inCleanup;
     bool doRefDec;
 };
+/// \endcond NoDoxygen
 
+/**
+ * \brief Translates a temporary representation of an expression to \ref qore::code.
+ *
+ * Mainly deals with proper reference counting of temporary values, checks for expression statements
+ * with no side effect and checks for correct using of lvalues.
+ *
+ * **Implementation notes**
+ *
+ * - Each visitor methods must call either `withSideEffect()` or `noSideEffect()`. These make sure that
+ * the `dest` member is a valid temporary identifier regardless of whether the caller provided it in constructor
+ * or not. Also, `noSideEffect()` reports a 'statement has no effect' error if the called did not provide `dest`
+ * in the constructor.
+ * - Implementation relies on destructors of helper objects like LValue, TempHelper and ExpressionAnalyzerPass2 itself.
+ * Their order is critical.
+ * \todo Helper classes and methods lead to concise implementation of visitor methods, but their names are obscure
+ * and the logic is hard to follow.
+ */
 class ExpressionAnalyzerPass2 {
 
 public:
+    /**
+     * \brief Translates an expression to code that evaluates the expression into the given temporary.
+     * \param core the shared state of the analyzer
+     * \param builder code builder
+     * \param dest the temporary that should have the value of the expression
+     * \param node the expression to translate
+     */
+    static void eval(Core &core, Builder &builder, code::Temp dest, const Expression &node) {
+        ExpressionAnalyzerPass2 a(core, builder, dest);
+        node.accept(a);
+    }
+
+    /**
+     * \brief Translates an expression and discards the resulting value. (The expression must have side effects.)
+     * \param core the shared state of the analyzer
+     * \param builder code builder
+     * \param node the expression to translate
+     */
+    static void eval(Core &core, Builder &builder, const Expression &node) {
+        ExpressionAnalyzerPass2 a(core, builder);
+        node.accept(a);
+    }
+
+    ///\name Implementation of Expression visitor
+    ///\{
     using ReturnType = void;
-
-    static constexpr Index InvalidIndex = -1;
-
-public:
-    ExpressionAnalyzerPass2(Core &core, Builder &builder, code::Temp dest) : core(core), builder(builder),
-            dest(dest), freeDest(false), destInCleanup(false) {
-    }
-
-    ExpressionAnalyzerPass2(Core &core, Builder &builder) : core(core), builder(builder),
-            dest(InvalidIndex), freeDest(false), destInCleanup(false) {
-    }
-
-    ~ExpressionAnalyzerPass2() {
-        if (destInCleanup) {
-            builder.doneCleanup(dest);
-        }
-        if (freeDest) {
-            builder.setTempFree(dest);
-        }
-    }
 
     void visit(const AssignmentExpression &expr) {
         withSideEffect();
@@ -226,8 +250,34 @@ public:
         builder.createConstString(dest, expr.getString());
         builder.createRefInc(dest);
     }
+    ///\}
 
 private:
+    static constexpr Index InvalidIndex = -1;
+
+private:
+    ExpressionAnalyzerPass2(Core &core, Builder &builder, code::Temp dest) : core(core), builder(builder),
+            dest(dest), freeDest(false), destInCleanup(false) {
+    }
+
+    ExpressionAnalyzerPass2(Core &core, Builder &builder) : core(core), builder(builder),
+            dest(InvalidIndex), freeDest(false), destInCleanup(false) {
+    }
+
+    ~ExpressionAnalyzerPass2() {
+        if (destInCleanup) {
+            builder.doneCleanup(dest);
+        }
+        if (freeDest) {
+            builder.setTempFree(dest);
+        }
+    }
+
+    template<typename T>
+    static bool refCounted(T &t) {
+        return t.getType().isRefCounted();
+    }
+
     void noSideEffect() {
         if (dest.getIndex() == InvalidIndex) {
             dest = builder.getFreeTemp();
@@ -263,17 +313,11 @@ private:
     }
 
     void evaluate(code::Temp temp, const Expression &e) {
-        ExpressionAnalyzerPass2 a(core, builder, temp);
-        e.accept(a);
-    }
-
-    template<typename T>
-    static bool refCounted(T &t) {
-        return t.getType().isRefCounted();
+        eval(core, builder, temp, e);
     }
 
 private:
-    Core &core;     //XXX is this really needed?
+    Core &core;
     Builder &builder;
     code::Temp dest;
     bool freeDest;
