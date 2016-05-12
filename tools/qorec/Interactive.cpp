@@ -36,6 +36,7 @@
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/sem/Analyzer.h"
+#include "qore/comp/sem/BlockScope.h"
 #include "qore/in/FunctionInterpreter.h"
 #include "qore/core/Env.h"
 #include "DiagPrinter.h"
@@ -178,43 +179,44 @@ private:
 class Interactive {
 
 public:
-    explicit Interactive(Context &compCtx) : compCtx(compCtx) {
+    explicit Interactive(Context &ctx) : ctx(ctx) {
     }
 
     void doIt() {
-        StdinWrapper dp(compCtx);
-        Parser parser(compCtx, dp);
+        StdinWrapper dp(ctx);
+        Parser parser(ctx, dp);
         IBuilder mainBuilder;
-        Core analyzer(compCtx);
-        NamespaceScope root(analyzer, compCtx.getEnv().getRootNamespace());
-        InteractiveScope topScope(compCtx, root);
+        Analyzer analyzer(ctx);
+        InteractiveScope topScope(ctx, analyzer.getRootNamespaceScope());
         BlockScope blockScope(topScope);
         TopLevelCtx topLevelCtx;
-        while (true) {
-            comp::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
-            if (declOrStmt.isDeclaration()) {
-                root.processDeclaration(declOrStmt.getDeclaration());
-                analyzer.processPendingDeclarations();
-            } else if (declOrStmt.isStatement()) {
-                Statement::Ptr stmt = analyzer.doPass1(blockScope, declOrStmt.getStatement());
-                auto initializers = analyzer.takeInitializers();
-                for (auto &stmt : initializers) {
+        {
+            LocalsStackMarker marker(mainBuilder);
+            while (true) {
+                comp::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
+                if (declOrStmt.isDeclaration()) {
+                    analyzer.processDeclaration(declOrStmt.getDeclaration());
+                    analyzer.processPendingDeclarations();
+                } else if (declOrStmt.isStatement()) {
+                    Statement::Ptr stmt = analyzer.doPass1(blockScope, declOrStmt.getStatement());
+                    auto initializers = analyzer.takeInitializers();
+                    for (auto &stmt : initializers) {
+                        analyzer.doPass2(mainBuilder, *stmt);
+                    }
                     analyzer.doPass2(mainBuilder, *stmt);
+                    in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
+                    fi.run();
+                } else {
+                    break;
                 }
-                analyzer.doPass2(mainBuilder, *stmt);
-                in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
-                fi.run();
-            } else {
-                break;
             }
         }
-        mainBuilder.popCleanupScopes();
         in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
         fi.run();
     }
 
 private:
-    Context &compCtx;
+    Context &ctx;
 };
 
 } // namespace sem

@@ -48,7 +48,6 @@ namespace sem {
 //owns local variables
 //helps with return/throw statement
 
-class FunctionOverloadPack;
 class FunctionScope : public Scope {
 
 public:

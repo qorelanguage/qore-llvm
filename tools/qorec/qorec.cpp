@@ -69,7 +69,7 @@ void test(bool file, std::string str) {
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    std::pair<qore::Function::Ptr, qore::Function::Ptr> sss = qore::comp::sem::analyze(ctx, env, *script);
+    std::pair<qore::Function::Ptr, qore::Function::Ptr> sss = qore::comp::sem::Analyzer::analyze(ctx, *script);
     qore::dump(std::cout, env);
     LOG("-------------------------------------------------------------------------------");
     if (sss.first) {

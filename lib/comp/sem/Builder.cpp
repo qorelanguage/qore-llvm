@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Code builder implementation
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/Builder.h"
@@ -37,43 +37,34 @@ namespace comp {
 namespace sem {
 
 code::Block *Builder::getLandingPad() {
-    return getLandingPad2(cleanupScopes.rbegin());
+    return getLandingPad2(localsStack.rbegin());
 }
 
-code::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator iit) {
-    while (iit != cleanupScopes.rend()) {
+code::Block *Builder::getLandingPad2(std::vector<LocalsStackItem>::reverse_iterator iit) {
+    while (iit != localsStack.rend()) {
         if (iit->b) {
             break;
         }
         ++iit;
     }
 
-    if (cleanupTemps.empty() && (!cleanupLValue || !cleanupLValue->hasLock())) {
-
-        if (iit == cleanupScopes.rend()) {
-            return nullptr;
-        }
-
-        if (iit->lpad == nullptr) {
-            iit->lpad = createBlock();
-            iit->lpad->appendJump(*iit->b);
-        }
-        return iit->lpad;
+    if (derefTemps.empty() && (!unlockLValue || !unlockLValue->hasLock()) && iit == localsStack.rend()) {
+        return nullptr;
     }
 
     code::Block *savedCurrent = currentBlock;
     code::Block *block = createBlock();
     currentBlock = block;
 
-    if (cleanupLValue) {
-        cleanupLValue->unlock(*this);
+    if (unlockLValue) {
+        unlockLValue->unlock(*this);
     }
 
-    for (auto it = cleanupTemps.rbegin(); it != cleanupTemps.rend(); ++it) {
+    for (auto it = derefTemps.rbegin(); it != derefTemps.rend(); ++it) {
         currentBlock->appendRefDecNoexcept(code::Temp(*it));
     }
 
-    if (iit != cleanupScopes.rend()) {
+    if (iit != localsStack.rend()) {
         currentBlock->appendJump(*iit->b);
     } else {
         currentBlock->appendResumeUnwind();
@@ -83,15 +74,38 @@ code::Block *Builder::getLandingPad2(std::vector<CleanupScope>::reverse_iterator
     return block;
 }
 
-void Builder::buildCleanupForRet() {
-    for (auto it = cleanupScopes.rbegin(); it != cleanupScopes.rend(); ++it) {
+void Builder::buildLocalsDerefForRet() {
+    for (auto it = localsStack.rbegin(); it != localsStack.rend(); ++it) {
         if (it->lv && it->lv->getType().isRefCounted()) {
-            code::Temp temp = getFreeTemp();
+            TempHelper temp(*this);
             currentBlock->appendLocalGet(temp, *it->lv);
             currentBlock->appendRefDec(temp, getLandingPad2(it + 1));
-            setTempFree(temp);
         }
     }
+}
+
+void Builder::localsPush(const LocalVariableInfo &lv) {
+    code::Block *b = createBlock();
+    {
+        TempHelper temp(*this);
+        b->appendLocalGet(temp, lv.getRt());
+        b->appendRefDecNoexcept(temp);
+    }
+
+    code::Block *b2 = nullptr;
+    for (auto it = localsStack.rbegin(); it != localsStack.rend(); ++it) {
+        if (it->b) {
+            b2 = it->b;
+            break;
+        }
+    }
+
+    if (b2) {
+        b->appendJump(*b2);
+    } else {
+        b->appendResumeUnwind();
+    }
+    localsStack.emplace_back(lv.getRt(), b);
 }
 
 } // namespace sem

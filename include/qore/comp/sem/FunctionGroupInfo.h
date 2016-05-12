@@ -28,8 +28,8 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
-#define INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
+#ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONGROUPINFO_H_
+#define INCLUDE_QORE_COMP_SEM_FUNCTIONGROUPINFO_H_
 
 #include <utility>
 #include <vector>
@@ -40,13 +40,13 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-class FunctionOverloadPack {
+class FunctionGroupInfo {
 
 public:
-    using Ptr = std::unique_ptr<FunctionOverloadPack>;
+    using Ptr = std::unique_ptr<FunctionGroupInfo>;
 
 public:
-    FunctionOverloadPack(FunctionGroup &rt, Core &core, Scope &parent, SourceLocation location)
+    FunctionGroupInfo(FunctionGroup &rt, Core &core, Scope &parent, SourceLocation location)
             : rt(rt), core(core), parent(parent), location(location) {
     }
 
@@ -83,4 +83,4 @@ private:
 } // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_COMP_SEM_FUNCTIONOVERLOADPACK_H_
+#endif // INCLUDE_QORE_COMP_SEM_FUNCTIONGROUPINFO_H_

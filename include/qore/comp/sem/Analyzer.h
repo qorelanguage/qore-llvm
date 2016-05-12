@@ -48,40 +48,35 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-inline std::pair<Function::Ptr, Function::Ptr> analyze(Context &ctx, Env &rtEnv, ast::Script &node) {
-    Core analyzer(ctx);
-    NamespaceScope root(analyzer, rtEnv.getRootNamespace());
+class Analyzer {
 
-    for (auto &decl : node.members) {
-        root.processDeclaration(*decl);
-    }
-    analyzer.processPendingDeclarations();
-
-    Function::Ptr qMain;
-    if (!node.statements.empty()) {
-        ast::Routine::Ptr r = ast::Routine::create();
-        r->body = ast::CompoundStatement::create();
-        r->body->statements = std::move(node.statements);
-        r->type = ast::Type::createImplicit(SourceLocation());
-
-        qMain = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
-        FunctionScope mainFs(*qMain, analyzer, root, *r);
-        mainFs.analyze();
+public:
+    explicit Analyzer(Context &ctx) : core(ctx), root(core, ctx.getEnv().getRootNamespace()) {
     }
 
-    Function::Ptr qInit;
-    auto initializers = analyzer.takeInitializers();
-    if (!initializers.empty()) {
-        qInit = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
-        FBuilder initBuilder(*qInit);
-        for (auto &stmt : initializers) {
-            analyzer.doPass2(initBuilder, *stmt);
-        }
-        initBuilder.createRetVoid();
+    void processDeclaration(ast::Declaration &decl) {
+        root.processDeclaration(decl);
     }
 
-    return std::make_pair(std::move(qInit), std::move(qMain));
-}
+    NamespaceScope &getRootNamespaceScope() {
+        return root;
+    }
+
+    Statement::Ptr doPass1(Scope &scope, ast::Statement &stmt);
+    void doPass2(Builder &builder, Statement &stmt);
+
+    std::vector<Statement::Ptr> takeInitializers() {
+        return core.takeInitializers();
+    }
+
+    void processPendingDeclarations();
+
+    static std::pair<Function::Ptr, Function::Ptr> analyze(Context &ctx, ast::Script &node);
+
+private:
+    Core core;
+    NamespaceScope root;
+};
 
 } // namespace sem
 } // namespace comp

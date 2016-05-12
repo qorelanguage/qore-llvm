@@ -28,30 +28,43 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_
-#define INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_
+#include "qore/comp/sem/FunctionGroupInfo.h"
+#include <string>
+#include "qore/core/util/Debug.h"
+#include "ReportedError.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-class CleanupScope {
+void FunctionGroupInfo::pass2() {
+    for (auto q : queue) {
+        ast::Routine *node = q.first;
+        try {
+            FunctionType type(parent.resolveType(node->type));
+            for (auto &p : node->params) {
+                type.addParameter(parent.resolveType(std::get<0>(p)));
+            }
+            checkOverload(type);
 
-public:
-    explicit CleanupScope(const LocalVariable &lv, code::Block *b) : lv(&lv), stmt(nullptr), b(b), lpad(nullptr) {
+            Function &f = rt.addFunction(std::move(type), q.second);
+            FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(f, core, parent, *node);
+            core.addToQueue(*ptr);
+            functions.push_back(std::move(ptr));
+        } catch (ReportedError &) {
+            // ignored, diagnostic has been reported already
+        }
     }
+    queue.clear();
+}
 
-    explicit CleanupScope(const Statement &stmt, code::Block *b) : lv(nullptr), stmt(&stmt), b(b), lpad(nullptr) {
+void FunctionGroupInfo::checkOverload(FunctionType &type) {
+    for (auto &f : functions) {
+        //if the type (in terms of overloading) of f is the same as type, then report error and throw ReportedError
+        QORE_NOT_IMPLEMENTED("overloads not supported "<< f.get());
     }
-
-    const LocalVariable *lv;
-    const Statement *stmt;
-    code::Block *b;
-    code::Block *lpad;
-};
+}
 
 } // namespace sem
 } // namespace comp
 } // namespace qore
-
-#endif // INCLUDE_QORE_COMP_SEM_CLEANUPSCOPE_H_

@@ -40,8 +40,8 @@
 #include "qore/comp/ast/Namespace.h"
 #include "qore/comp/sem/ClassScope.h"
 #include "qore/comp/sem/Core.h"
+#include "qore/comp/sem/FunctionGroupInfo.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
-#include "qore/comp/sem/FunctionOverloadPack.h"
 #include "qore/core/Namespace.h"
 
 namespace qore {
@@ -102,10 +102,6 @@ public:
     }
 
 private:
-    DiagBuilder report(DiagId id, SourceLocation location) const {
-        return core.ctx.report(id, location);
-    }
-
     NamespaceScope &findParentFor(const ast::Name &name);
 
     /**
@@ -161,7 +157,7 @@ private:
         return it == globalVariables.end() ? nullptr : it->second.get();
     }
 
-    FunctionOverloadPack *findFunctionOverloadPack(String::Ref name) const {
+    FunctionGroupInfo *findFunctionGroup(String::Ref name) const {
         auto it = functions.find(name);
         return it == functions.end() ? nullptr : it->second.get();
     }
@@ -188,7 +184,7 @@ private:
     std::map<String::Ref, Ptr> namespaces;
     std::map<String::Ref, ClassScope::Ptr> classes;
     std::map<String::Ref, GlobalVariableInfo::Ptr> globalVariables;
-    std::map<String::Ref, FunctionOverloadPack::Ptr> functions;
+    std::map<String::Ref, FunctionGroupInfo::Ptr> functions;
 };
 
 } // namespace sem

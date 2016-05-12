@@ -31,6 +31,7 @@
 #ifndef LIB_COMP_SEM_STATEMENTANALYZERPASS2_H_
 #define LIB_COMP_SEM_STATEMENTANALYZERPASS2_H_
 
+#include "qore/comp/sem/Builder.h"
 #include "qore/comp/sem/stmt/Statement.h"
 #include "qore/comp/sem/stmt/CompoundStatement.h"
 #include "qore/comp/sem/stmt/ExpressionStatement.h"
@@ -66,11 +67,10 @@ public:
     using ReturnType = void;
 
     void visit(const CompoundStatement &stmt) {
-        builder.pushCleanupScope(stmt);
+        LocalsStackMarker marker(builder);
         for (const Statement &s : stmt.getStatements()) {
             s.accept(*this);
         }
-        builder.popCleanupScope(stmt);
     }
 
     void visit(const ExpressionStatement &stmt) {
@@ -78,14 +78,13 @@ public:
     }
 
     void visit(const GlobalVariableInitializationStatement &stmt) {
-        code::Temp temp = builder.getFreeTemp();
+        TempHelper temp(builder);
         ExpressionAnalyzerPass2::eval(core, builder, temp, stmt.getExpression());
         builder.createGlobalInit(stmt.getGlobalVariable(), temp);
-        builder.setTempFree(temp);
     }
 
     void visit(const IfStatement &stmt) {
-        builder.pushCleanupScope(stmt);
+        LocalsStackMarker marker(builder);
 
         code::Temp temp = builder.getFreeTemp();
         ExpressionAnalyzerPass2::eval(core, builder, temp, stmt.getCondition());
@@ -102,9 +101,10 @@ public:
             builder.createBranch(temp, *trueBlock, *falseBlock);
             builder.setTempFree(temp);
             builder.setCurrentBlock(falseBlock);
-            builder.pushCleanupScope(*stmt.getFalseBranch());
-            stmt.getFalseBranch()->accept(*this);
-            builder.popCleanupScope(*stmt.getFalseBranch());
+            {
+                LocalsStackMarker marker(builder);
+                stmt.getFalseBranch()->accept(*this);
+            }
             if (!builder.isTerminated()) {
                 cont = builder.createBlock();
                 builder.createJump(*cont);
@@ -112,9 +112,10 @@ public:
         }
 
         builder.setCurrentBlock(trueBlock);
-        builder.pushCleanupScope(stmt.getTrueBranch());
-        stmt.getTrueBranch().accept(*this);
-        builder.popCleanupScope(stmt.getTrueBranch());
+        {
+            LocalsStackMarker marker(builder);
+            stmt.getTrueBranch().accept(*this);
+        }
         if (!builder.isTerminated()) {
             if (!cont) {
                 cont = builder.createBlock();
@@ -126,21 +127,15 @@ public:
             builder.setCurrentBlock(cont);
         }
 
-        builder.popCleanupScope(stmt);
     }
 
     void visit(const ReturnStatement &stmt) {
         if (stmt.getExpression()) {
-            code::Temp temp = builder.getFreeTemp();
+            TempHelper temp(builder);
             ExpressionAnalyzerPass2::eval(core, builder, temp, *stmt.getExpression());
-            if (stmt.getExpression()->getType().isRefCounted()) {
-                builder.addCleanup(temp);
-            }
+            temp.derefNeeded(stmt.getExpression()->getType().isRefCounted());
             builder.createRet(temp);
-            if (stmt.getExpression()->getType().isRefCounted()) {
-                builder.doneCleanup(temp);
-            }
-            builder.setTempFree(temp);
+            temp.derefDone();
         } else {
             builder.createRetVoid();
         }
@@ -149,33 +144,31 @@ public:
     void visit(const TryStatement &stmt) {
         code::Block *cont = nullptr;
         code::Block *catchBlock = builder.createBlock();
-        builder.pushCleanupScope(stmt.getTryBody(), catchBlock);
-        stmt.getTryBody().accept(*this);
-        if (!builder.isTerminated()) {
-            cont = builder.createBlock();
-            builder.createJump(*cont);
+        {
+            LocalsStackMarker marker(builder, catchBlock);
+            stmt.getTryBody().accept(*this);
+            if (!builder.isTerminated()) {
+                cont = builder.createBlock();
+                builder.createJump(*cont);
+            }
         }
-        builder.popCleanupScope(stmt.getTryBody());
 
         builder.setCurrentBlock(catchBlock);
-        builder.pushCleanupScope(stmt.getCatchBody());
-        //store 'current exception' to the user variable
-        stmt.getCatchBody().accept(*this);
-        if (!builder.isTerminated()) {
-            if (!cont) {
-                cont = builder.createBlock();
+        {
+            LocalsStackMarker marker(builder);
+            //store 'current exception' to the user variable
+            stmt.getCatchBody().accept(*this);
+            if (!builder.isTerminated()) {
+                if (!cont) {
+                    cont = builder.createBlock();
+                }
+                builder.createJump(*cont);
             }
-            builder.createJump(*cont);
         }
-        builder.popCleanupScope(stmt.getCatchBody());
 
         if (cont) {
             builder.setCurrentBlock(cont);
         }
-        //rethrow statement will:
-        // - check that it is inside a catch block
-        // - restore 'current exception' from the use variable
-        // - jump to the next block in builder's cleanupStack (or resume if there is no such block)
     }
     ///\}
 

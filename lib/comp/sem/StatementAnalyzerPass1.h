@@ -37,6 +37,7 @@
 #include "qore/comp/sem/stmt/IfStatement.h"
 #include "qore/comp/sem/stmt/ReturnStatement.h"
 #include "qore/comp/sem/stmt/TryStatement.h"
+#include "qore/comp/sem/BlockScope.h"
 #include "ExpressionAnalyzerPass1.h"
 
 namespace qore {

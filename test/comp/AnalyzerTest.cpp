@@ -42,9 +42,7 @@ TEST_P(AnalyzerTest, Run) {
     DirectiveProcessor dp(ctx, getSrc());
     Parser parser(ctx, dp);
     ast::Script::Ptr scriptNode = parser.parseScript();
-    Core analyzer(ctx);
-    Env env;
-    auto r = analyze(ctx, env, *scriptNode);
+    auto r = Analyzer::analyze(ctx, *scriptNode);
     dump(output, env);
     if (r.first) {
         dump(output, "<qinit>", *r.first);

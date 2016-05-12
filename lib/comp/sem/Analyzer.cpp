@@ -29,10 +29,7 @@
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/Analyzer.h"
-#include <string>
-#include "qore/comp/sem/ClassScope.h"
-#include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
-#include "ReportedError.h"
+#include <utility>
 #include "StatementAnalyzerPass1.h"
 #include "StatementAnalyzerPass2.h"
 
@@ -40,40 +37,71 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-void Core::processPendingDeclarations() {
+void Analyzer::processPendingDeclarations() {
     /*
      * for each class in class queue:
      *  - resolve and process superclasses
      */
-    classQueue.clear();
+    core.takeClassQueue();
 
-    for (auto it : globalVariableQueue) {
+    for (auto it : core.takeGlobalVariableQueue()) {
         it->pass2();
     }
-    globalVariableQueue.clear();
 
-    for (auto it : functionOverloadPackQueue) {
+    for (auto it : core.takeFunctionGroupQueue()) {
         it->pass2();
     }
-    functionOverloadPackQueue.clear();
 
     /*
      * process const-queue (we need their types which means that the initializer expressions need to be compiled
      *      but there may be cycles which need to be detected)
      */
 
-    for (auto f : functionQueue) {
+    for (auto f : core.takeFunctionQueue()) {
         f->analyze();
     }
-    functionQueue.clear();
 }
 
-Statement::Ptr Core::doPass1(Scope &scope, ast::Statement &stmt) {
-    return StatementAnalyzerPass1::analyze(*this, scope, stmt);
+Statement::Ptr Analyzer::doPass1(Scope &scope, ast::Statement &stmt) {
+    return StatementAnalyzerPass1::analyze(core, scope, stmt);
 }
 
-void Core::doPass2(Builder &builder, Statement &stmt) {
-    StatementAnalyzerPass2::analyze(*this, builder, stmt);
+void Analyzer::doPass2(Builder &builder, Statement &stmt) {
+    StatementAnalyzerPass2::analyze(core, builder, stmt);
+}
+
+std::pair<Function::Ptr, Function::Ptr> Analyzer::analyze(Context &ctx, ast::Script &node) {
+    Analyzer analyzer(ctx);
+
+    for (auto &decl : node.members) {
+        analyzer.processDeclaration(*decl);
+    }
+    analyzer.processPendingDeclarations();
+
+    Function::Ptr qMain;
+    if (!node.statements.empty()) {
+        ast::Routine::Ptr r = ast::Routine::create();
+        r->body = ast::CompoundStatement::create();
+        r->body->statements = std::move(node.statements);
+        r->type = ast::Type::createImplicit(SourceLocation());
+
+        qMain = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
+        FunctionScope mainFs(*qMain, analyzer.core, analyzer.root, *r);
+        mainFs.analyze();
+    }
+
+    Function::Ptr qInit;
+    auto initializers = analyzer.takeInitializers();
+    if (!initializers.empty()) {
+        qInit = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
+        FBuilder initBuilder(*qInit);
+        for (auto &stmt : initializers) {
+            analyzer.doPass2(initBuilder, *stmt);
+        }
+        initBuilder.createRetVoid();
+    }
+
+    return std::make_pair(std::move(qInit), std::move(qMain));
 }
 
 } // namespace sem

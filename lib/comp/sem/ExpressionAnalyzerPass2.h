@@ -48,44 +48,6 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-/// \cond NoDoxygen
-class TempHelper {
-
-public:
-    explicit TempHelper(Builder &builder) : builder(builder), temp(builder.getFreeTemp()),
-            inCleanup(false), doRefDec(false) {
-    }
-
-    ~TempHelper() {
-        if (inCleanup) {
-            builder.doneCleanup(temp);
-        }
-        if (doRefDec) {
-            builder.createRefDec(temp);
-        }
-        builder.setTempFree(temp);
-    }
-
-    operator code::Temp() const {
-        return temp;
-    }
-
-    void needsCleanup(bool isRef, bool doRefDec) {
-        if (isRef) {
-            inCleanup = true;
-            this->doRefDec = doRefDec;
-            builder.addCleanup(temp);
-        }
-    }
-
-private:
-    Builder &builder;
-    code::Temp temp;
-    bool inCleanup;
-    bool doRefDec;
-};
-/// \endcond NoDoxygen
-
 /**
  * \brief Translates a temporary representation of an expression to \ref qore::code.
  *
@@ -141,7 +103,7 @@ public:
             TempHelper old(builder);
             LValue left(builder, expr.getLeft());
             left.get(old);
-            old.needsCleanup(true, true);
+            old.derefNeeded(true);
             refIncDestIfNeeded();
             left.set(dest);
         } else {
@@ -155,7 +117,7 @@ public:
 
         TempHelper right(builder);
         evaluate(right, expr.getRight());
-        right.needsCleanup(refCounted(expr.getRight()), true);
+        right.derefNeeded(refCounted(expr.getRight()));
 
         TempHelper old(builder);
         LValue left(builder, expr.getLeft());
@@ -165,7 +127,7 @@ public:
         if (refCounted(expr.getLeft())) {
             cleanupDest(true);
             refIncDestIfNeeded();
-            old.needsCleanup(true, true);
+            old.derefNeeded(true);
         }
         left.set(dest);
     }
@@ -191,11 +153,11 @@ public:
 
         TempHelper left(builder);
         evaluate(left, expr.getLeft());
-        left.needsCleanup(refCounted(expr.getLeft()), true);
+        left.derefNeeded(refCounted(expr.getLeft()));
 
         TempHelper right(builder);
         evaluate(right, expr.getRight());
-        right.needsCleanup(refCounted(expr.getRight()), true);
+        right.derefNeeded(refCounted(expr.getRight()));
 
         builder.createInvokeBinaryOperator(dest, expr.getOperator(), left, right);
         cleanupDest(refCounted(expr));
@@ -206,7 +168,7 @@ public:
 
         TempHelper arg(builder);
         evaluate(arg, expr.getArg());
-        arg.needsCleanup(refCounted(expr.getArg()), true);
+        arg.derefNeeded(refCounted(expr.getArg()));
 
         builder.createInvokeConversion(dest, expr.getConversion(), arg);
         cleanupDest(refCounted(expr));
@@ -222,14 +184,14 @@ public:
         //if not shared:
         builder.createLocalSet(expr.getLocalVariable(), dest);
         if (refCounted(expr.getLocalVariable())) {
-            builder.pushCleanup(expr.getLocalVariable());
+            builder.localsPush(expr.getLocalVariable());
         }
 
         //if shared:
         // - emit instruction for allocating the wrapper with 'value' as the initial value (its refcount is
         //          already increased)
         // - emit instruction for storing the wrapper ptr to local slot aslv
-        // - push cleanup scope that dereferences the wrapper
+        // - builder.localPush() that dereferences the wrapper
     }
 
     void visit(const LocalVariableRefExpression &expr) {
@@ -266,7 +228,7 @@ private:
 
     ~ExpressionAnalyzerPass2() {
         if (destInCleanup) {
-            builder.doneCleanup(dest);
+            builder.derefDone(dest);
         }
         if (freeDest) {
             builder.setTempFree(dest);
@@ -299,7 +261,7 @@ private:
             builder.createRefInc(dest);
         } else {
             if (destInCleanup) {
-                builder.doneCleanup(dest);
+                builder.derefDone(dest);
             }
             destInCleanup = false;
         }
@@ -307,7 +269,7 @@ private:
 
     void cleanupDest(bool isRef) {
         if (isRef) {
-            builder.addCleanup(dest);
+            builder.derefNeeded(dest);
             destInCleanup = true;
         }
     }

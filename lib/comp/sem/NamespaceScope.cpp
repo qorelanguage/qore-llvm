@@ -85,12 +85,12 @@ void NamespaceScope::processNamespaceDeclaration(ast::Namespace &node) {
     NamespaceScope *ns = findNamespace(name);
     if (!ns) {
         if (ClassScope *c = findClass(name)) {
-            report(DiagId::SemaDuplicateNamespaceName, location) << name << getNameForDiag();
-            report(DiagId::SemaPreviousDeclaration, c->getRt().getLocation());
+            core.report(DiagId::SemaDuplicateNamespaceName, location) << name << getNameForDiag();
+            core.report(DiagId::SemaPreviousDeclaration, c->getRt().getLocation());
             throw ReportedError();
         }
 
-        Namespace &rtNs = rt.addNamespace(core.ctx.getString(name), location);
+        Namespace &rtNs = rt.addNamespace(core.getString(name), location);
         Ptr ptr = util::make_unique<NamespaceScope>(rtNs, *this);
         ns = ptr.get();
         namespaces[name] = std::move(ptr);
@@ -111,12 +111,12 @@ void NamespaceScope::processClassDeclaration(ast::Class &node) {
     ClassScope *old = findClass(name);
     NamespaceScope *ns = findNamespace(name);
     if (old || ns) {
-        report(DiagId::SemaDuplicateClassName, location) << name << getNameForDiag();
-        report(DiagId::SemaPreviousDeclaration, old ? old->getRt().getLocation() : ns->rt.getLocation());
+        core.report(DiagId::SemaDuplicateClassName, location) << name << getNameForDiag();
+        core.report(DiagId::SemaPreviousDeclaration, old ? old->getRt().getLocation() : ns->rt.getLocation());
         throw ReportedError();
     }
 
-    Class &c = rt.addClass(core.ctx.getString(name), location); //XXX when should this be created?
+    Class &c = rt.addClass(core.getString(name), location); //XXX when should this be created?
     ClassScope::Ptr ptr = util::make_unique<ClassScope>(c, core, *this, node);
     core.addToQueue(*ptr);
     classes[name] = std::move(ptr);
@@ -128,11 +128,11 @@ void NamespaceScope::processGlobalVariableDeclaration(ast::GlobalVariable &node)
 
     //TODO check modifiers, reserved words
     GlobalVariableInfo *old = findGlobalVariable(name);
-    FunctionOverloadPack *fp = findFunctionOverloadPack(name);
-    //FIXME function
-    if (old || fp) {
-        report(DiagId::SemaDuplicateGlobalVariableName, location) << name << getNameForDiag();
-        report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : fp->getLocation());
+    FunctionGroupInfo *fg = findFunctionGroup(name);
+    //FIXME constant
+    if (old || fg) {
+        core.report(DiagId::SemaDuplicateGlobalVariableName, location) << name << getNameForDiag();
+        core.report(DiagId::SemaPreviousDeclaration, old ? old->getLocation() : fg->getLocation());
         throw ReportedError();
     }
 
@@ -145,26 +145,24 @@ void NamespaceScope::processFunctionDeclaration(ast::Function &node) {
     String::Ref name = node.name.last().str;
     SourceLocation location = node.name.last().location;
 
-    FunctionOverloadPack *fp = findFunctionOverloadPack(name);
-    if (!fp) {
+    FunctionGroupInfo *fg = findFunctionGroup(name);
+    if (!fg) {
         GlobalVariableInfo *gv = findGlobalVariable(name);
         //FIXME constant
         if (gv) {
-            report(DiagId::SemaDuplicateFunctionName, location) << name << getNameForDiag();
-            report(DiagId::SemaPreviousDeclaration, gv->getLocation());
+            core.report(DiagId::SemaDuplicateFunctionName, location) << name << getNameForDiag();
+            core.report(DiagId::SemaPreviousDeclaration, gv->getLocation());
             throw ReportedError();
         }
 
-        FunctionOverloadPack::Ptr ptr = util::make_unique<FunctionOverloadPack>(
-                rt.addFunctionGroup(core.ctx.getString(name)), core, *this, location);
-        fp = ptr.get();
+        FunctionGroupInfo::Ptr ptr = util::make_unique<FunctionGroupInfo>(
+                rt.addFunctionGroup(core.getString(name)), core, *this, location);
+        fg = ptr.get();
         functions[name] = std::move(ptr);
     }
 
-    fp->addOverload(*node.routine, location);
+    fg->addOverload(*node.routine, location);
 }
-
-
 
 ClassScope &NamespaceScope::resolveClass(const ast::Name &name) const {
     assert(name.isValid());
@@ -172,7 +170,7 @@ ClassScope &NamespaceScope::resolveClass(const ast::Name &name) const {
         if (ClassScope *c = getRoot().lookupClass(name.begin(), name.end())) {
             return *c;
         }
-        report(DiagId::SemaUnresolvedClass, name.getStart()) << name;
+        core.report(DiagId::SemaUnresolvedClass, name.getStart()) << name;
         throw ReportedError();
     }
     if (parentNamespace) {
@@ -186,7 +184,7 @@ ClassScope &NamespaceScope::resolveClass(const ast::Name &name) const {
     if (classes.size() == 1) {
         return *classes[0];
     }
-    report(classes.empty() ? DiagId::SemaUnresolvedClass : DiagId::SemaAmbiguousClass, name.getStart()) << name;
+    core.report(classes.empty() ? DiagId::SemaUnresolvedClass : DiagId::SemaAmbiguousClass, name.getStart()) << name;
     throw ReportedError();
 }
 
@@ -225,7 +223,7 @@ NamespaceScope &NamespaceScope::findParentFor(const ast::Name &name) {
         throw ReportedError();
     }
     if (name.isRoot()) {
-        core.ctx.report(DiagId::SemaInvalidNamespaceMemberName, name.getStart());
+        core.report(DiagId::SemaInvalidNamespaceMemberName, name.getStart());
         throw ReportedError();
     }
     NamespaceScope *parent = this;
@@ -233,7 +231,7 @@ NamespaceScope &NamespaceScope::findParentFor(const ast::Name &name) {
         if (NamespaceScope *ns = parent->findNamespace(it->str)) {
             parent = ns;
         } else {
-            core.ctx.report(DiagId::SemaNamespaceNotFound, it->location) << it->str << parent->getNameForDiag();
+            core.report(DiagId::SemaNamespaceNotFound, it->location) << it->str << parent->getNameForDiag();
             throw ReportedError();
         }
     }

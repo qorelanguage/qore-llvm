@@ -28,41 +28,58 @@
 /// \brief TODO file description
 ///
 //------------------------------------------------------------------------------
-#include "qore/comp/sem/FunctionOverloadPack.h"
+#include "qore/comp/sem/Core.h"
 #include <string>
-#include "qore/core/util/Debug.h"
-#include "ReportedError.h"
+#include "qore/comp/sem/FunctionGroupInfo.h"
+#include "qore/comp/sem/expr/IntLiteralExpression.h"
+#include "qore/comp/sem/expr/NothingLiteralExpression.h"
+#include "qore/comp/sem/expr/StringLiteralRefExpression.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
-void FunctionOverloadPack::pass2() {
-    for (auto q : queue) {
-        ast::Routine *node = q.first;
-        try {
-            FunctionType type(parent.resolveType(node->type));
-            for (auto &p : node->params) {
-                type.addParameter(parent.resolveType(std::get<0>(p)));
-            }
-            checkOverload(type);
-
-            Function &f = rt.addFunction(std::move(type), q.second);
-            FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(f, core, parent, *node);
-            core.addToQueue(*ptr);
-            functions.push_back(std::move(ptr));
-        } catch (ReportedError &) {
-            // ignored, diagnostic has been reported already
-        }
-    }
-    queue.clear();
+Core::Core(Context &ctx) : ctx(ctx) {
+    builtinTypes[ctx.getStringTable().put("int")] = std::make_pair(&Type::Int, &Type::IntOpt);
+    builtinTypes[ctx.getStringTable().put("string")] = std::make_pair(&Type::String, &Type::StringOpt);
+    builtinTypes[ctx.getStringTable().put("any")] = std::make_pair(&Type::Any, nullptr);
 }
 
-void FunctionOverloadPack::checkOverload(FunctionType &type) {
-    for (auto &f : functions) {
-        //if the type (in terms of overloading) of f is the same as type, then report error and throw ReportedError
-        QORE_NOT_IMPLEMENTED("overloads not supported "<< f.get());
+Expression::Ptr Core::defaultFor(const Type &type) {
+    if (type == Type::String) {
+        return StringLiteralRefExpression::create(createStringLiteral(""));
     }
+    if (type == Type::Int) {
+        return IntLiteralExpression::create(0);
+    }
+    if (type.acceptsNothing()) {
+        return NothingLiteralExpression::create();
+    }
+    QORE_NOT_IMPLEMENTED("Default value");
+}
+
+qore::String &Core::createStringLiteral(const std::string &value) {
+    qore::String *&ref = strings[value];
+    if (!ref) {
+        ref = &ctx.getEnv().addString(std::move(value));
+    }
+    return *ref;
+}
+
+const Type *Core::getBuiltinType(const ast::Name::Id &name, bool asterisk) const {
+    auto it = builtinTypes.find(name.str);
+    if (it == builtinTypes.end()) {
+        return nullptr;
+    }
+
+    if (asterisk) {
+        if (!it->second.second) {
+            //FIXME report error (any with asterisk)
+            return &Type::Error;
+        }
+        return it->second.second;
+    }
+    return it->second.first;
 }
 
 } // namespace sem

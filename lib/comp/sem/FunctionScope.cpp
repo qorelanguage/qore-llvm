@@ -30,7 +30,6 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/FunctionScope.h"
 #include <string>
-#include "qore/comp/sem/FunctionOverloadPack.h"
 #include "qore/comp/sem/Builder.h"
 #include "StatementAnalyzerPass1.h"
 #include "StatementAnalyzerPass2.h"
@@ -71,13 +70,13 @@ void FunctionScope::analyze() {
         args[std::get<1>(a).str] = &createLocalVariable(std::get<1>(a).str, std::get<1>(a).location, type);
     }
 
-    Statement::Ptr body = core.doPass1(*this, *node.body);
+    Statement::Ptr body = StatementAnalyzerPass1::analyze(core, *this, *node.body);
 
     FBuilder b(rt);
 
     for (auto &lv : locals) {
         //change type if lv is shared
-        lv->setRt(rt.addLocalVariable(core.ctx.getString(lv->getName()), lv->getType(), lv->getLocation()));
+        lv->setRt(rt.addLocalVariable(core.getString(lv->getName()), lv->getType(), lv->getLocation()));
     }
 
     for (auto &p : args) {
@@ -85,11 +84,10 @@ void FunctionScope::analyze() {
 
         //if not shared:
         if (lv.getType().isRefCounted()) {
-            code::Temp temp = b.getFreeTemp();
+            TempHelper temp(b);
             b.createLocalGet(temp, lv);
             b.createRefInc(temp);
-            b.setTempFree(temp);
-            b.pushCleanup(lv);
+            b.localsPush(lv);
         }
 
         //if shared:
@@ -97,7 +95,7 @@ void FunctionScope::analyze() {
         // - if not primitive, emit refInc
         // - emit instruction for allocating the wrapper with 'temp' as the initial value
         // - emit instruction for storing the wrapper ptr to local slot aslv
-        // - push cleanup scope that dereferences the wrapper
+        // - builder.localPush() that dereferences the wrapper
 
         //both compiler and interpreter need to copy the function arguments into local slots (starting from 0)
     }

@@ -60,11 +60,11 @@ public:
             default:
                 QORE_NOT_IMPLEMENTED("LValue: Expression::Kind " << static_cast<int>(expr.getKind()));
         }
-        builder.setCleanupLValue(*this);
+        builder.unlockNeeded(*this);
     }
 
     ~LValue() {
-        builder.clearCleanupLValue(*this);
+        builder.unlockDone(*this);
         unlock(builder);
     }
 

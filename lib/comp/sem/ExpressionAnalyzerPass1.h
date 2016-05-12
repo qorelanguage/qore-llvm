@@ -129,12 +129,12 @@ public:
     Expression::Ptr visit(const ast::LiteralExpression &node) {
         if (node.token.type == qore::comp::TokenType::String) {
             //FIXME proper string literal parsing - no quotes, escapes etc.
-            std::string s = core.ctx.getLexeme(node.token);
+            std::string s = core.getContext().getLexeme(node.token);
             s = s.substr(1, s.length() - 2);
             return StringLiteralRefExpression::create(core.createStringLiteral(s));
         } else if (node.token.type == qore::comp::TokenType::Integer) {
             //FIXME proper integer literal parsing
-            std::string s = core.ctx.getLexeme(node.token);
+            std::string s = core.getContext().getLexeme(node.token);
             std::stringstream str(s);
             qint v;
             str >> v;

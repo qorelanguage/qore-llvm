@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Code builder definition
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_BUILDER_H_
@@ -39,7 +39,6 @@
 #include "qore/core/util/Util.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/LocalVariableInfo.h"
-#include "qore/comp/sem/CleanupScope.h"
 
 namespace qore {
 namespace comp {
@@ -47,101 +46,48 @@ namespace sem {
 
 class LValue;
 
+/**
+ * \brief Helper class for building code.
+ *
+ * Maintains the information about values (temps or local variables) that need their reference count decreased,
+ * keeps track of the lvalue that needs unlocking and provides functions for building appropriate landing pad.
+ */
 class Builder {
-
-protected:
-    //derived class must set currentBlock!
-    Builder() : currentBlock(nullptr), cleanupLValue(nullptr) {
-    }
-
-    virtual code::Temp createTemp() = 0;
 
 public:
     virtual ~Builder() = default;
 
+    ///\name Block management methods
+    ///\{
+    /**
+     * \brief Creates a new \ref code::Block, but does not affect the 'current block'.
+     * \return the new block
+     */
     virtual code::Block *createBlock() = 0;
 
+    /**
+     * \brief Sets the 'current block' where new instructions will be appended.
+     * \param block the block to append instructions to
+     */
+    void setCurrentBlock(code::Block *block) {
+        currentBlock = block;
+    }
+
+    /**
+     * \brief Returns true if the 'current block' is terminated.
+     * \return true if the 'current block' is terminated
+     */
     bool isTerminated() const {
         return currentBlock->isTerminated();
     }
+    ///\}
 
-    void pushCleanup(const LocalVariableInfo &lv) {
-        code::Block *b = createBlock();
-        code::Temp temp = getFreeTemp();      //all temps are free at this point
-        b->appendLocalGet(temp, lv.getRt());
-        b->appendRefDecNoexcept(temp);
-        setTempFree(temp);
-        code::Block *b2 = findPrevCleanupBlock(cleanupScopes.rbegin());
-        if (b2) {
-            b->appendJump(*b2);
-        } else {
-            b->appendResumeUnwind();
-        }
-        cleanupScopes.emplace_back(lv.getRt(), b);
-    }
-
-public:
-    void pushCleanupScope(const Statement &stmt, code::Block *catchBlock = nullptr) {
-        cleanupScopes.emplace_back(stmt, catchBlock);
-    }
-
-    void popCleanupScope(const Statement &stmt) {
-        while (true) {
-            CleanupScope cs = cleanupScopes.back();
-            cleanupScopes.pop_back();
-
-            if (cs.lv) {
-                if (!currentBlock->isTerminated() && cs.lv->getType().isRefCounted()) {
-                    code::Temp temp = getFreeTemp();
-                    currentBlock->appendLocalGet(temp, *cs.lv);
-                    createRefDec(temp);
-                    setTempFree(temp);
-                }
-            }
-
-            if (cs.stmt == &stmt) {
-                break;
-            }
-        }
-    }
-
-    void popCleanupScopes() {
-        while (!cleanupScopes.empty()) {
-            CleanupScope cs = cleanupScopes.back();
-            cleanupScopes.pop_back();
-
-            if (cs.lv) {
-                if (!currentBlock->isTerminated() && cs.lv->getType().isRefCounted()) {
-                    code::Temp temp = getFreeTemp();
-                    currentBlock->appendLocalGet(temp, *cs.lv);
-                    createRefDec(temp);
-                    setTempFree(temp);
-                }
-            }
-        }
-    }
-
-    void addCleanup(code::Temp temp) {
-        assert(std::find(cleanupTemps.begin(), cleanupTemps.end(), temp) == cleanupTemps.end());
-        cleanupTemps.push_back(temp);
-    }
-
-    void doneCleanup(code::Temp temp) {
-        auto it = std::find(cleanupTemps.begin(), cleanupTemps.end(), temp);
-        assert(it != cleanupTemps.end());
-        cleanupTemps.erase(it);
-    }
-
-    void setCleanupLValue(LValue &lValue) {
-        assert(cleanupLValue == nullptr);
-        cleanupLValue = &lValue;
-    }
-
-    void clearCleanupLValue(LValue &lValue) {
-        assert(cleanupLValue == &lValue);
-        cleanupLValue = nullptr;
-    }
-
+    ///\name Temporary value management methods
+    ///\{
+    /**
+     * \brief Allocates a temporary value. If possible, use \ref TempHelper instead.
+     * \return the allocated temporary, must be deallocated by calling \ref setTempFree()
+     */
     code::Temp getFreeTemp() {
         if (!freeTemps.empty()) {
             code::Temp t = freeTemps.back();
@@ -151,10 +97,65 @@ public:
         return createTemp();
     }
 
+    /**
+     * \brief Deallocates a temporary value. If possible, use \ref TempHelper instead.
+     * \param temp a temporary allocated using \ref getFreeTemp()
+     */
     void setTempFree(code::Temp temp) {
         freeTemps.push_back(temp);
     }
 
+    /**
+     * \brief Adds a temporary value to the list of values that need their reference count decreased.
+     *
+     * This list is used when building a landing pad.
+     * \param temp the temporary to add
+     */
+    void derefNeeded(code::Temp temp) {
+        assert(std::find(derefTemps.begin(), derefTemps.end(), temp) == derefTemps.end());
+        derefTemps.push_back(temp);
+    }
+
+    /**
+     * \brief Removes a temporary value from the list of values that need their reference count decreased.
+     * \param temp the temporary to add
+     */
+    void derefDone(code::Temp temp) {
+        auto it = std::find(derefTemps.begin(), derefTemps.end(), temp);
+        assert(it != derefTemps.end());
+        derefTemps.erase(it);
+    }
+    ///\}
+
+    ///\name Lvalue lock tracking methods
+    ///\{
+    /**
+     * \brief Sets the lvalue that needs unlocking.
+     * \param lValue the lvalue
+     */
+    void unlockNeeded(LValue &lValue) {
+        assert(unlockLValue == nullptr);
+        unlockLValue = &lValue;
+    }
+
+    /**
+     * \brief Clears the lvalue that needed unlocking.
+     * \param lValue the lvalue
+     */
+    void unlockDone(LValue &lValue) {
+        assert(unlockLValue == &lValue);
+        unlockLValue = nullptr;
+    }
+    ///\}
+
+    /**
+     * \brief Pushes a local variable to the stack of locals that are in scope.
+     * \param lv the local variable
+     */
+    void localsPush(const LocalVariableInfo &lv);
+
+    ///\name Instruction creation methods
+    ///\{
     void createBranch(code::Temp condition, const code::Block &trueDest, const code::Block &falseDest) {
         checkNotTerminated();
         currentBlock->appendBranch(condition, trueDest, falseDest);
@@ -238,7 +239,6 @@ public:
     }
 
     void createRefDec(code::Temp temp) {    //XXX no need to create landing pad for simple types (e.g. string)
-        assert(!cleanupLValue);
         checkNotTerminated();
         currentBlock->appendRefDec(temp, getLandingPad());
     }
@@ -250,14 +250,14 @@ public:
 
     void createRet(code::Temp temp) {
         checkNotTerminated();
-        buildCleanupForRet();
+        buildLocalsDerefForRet();
         currentBlock->appendRet(temp);
         assert(isTerminated());
     }
 
     void createRetVoid() {
         checkNotTerminated();
-        buildCleanupForRet();
+        buildLocalsDerefForRet();
         currentBlock->appendRetVoid();
         assert(isTerminated());
     }
@@ -267,10 +267,33 @@ public:
         currentBlock->appendRetVoid();
         assert(isTerminated());
     }
+    ///\}
 
-    void setCurrentBlock(code::Block *b) {
-        currentBlock = b;
+protected:
+    /**
+     * \brief Creates the builder. Derived classes must set currentBlock!
+     */
+    Builder() : currentBlock(nullptr), unlockLValue(nullptr) {
     }
+
+    /**
+     * \brief Creates a new temporary.
+     * \return a new temporary
+     */
+    virtual code::Temp createTemp() = 0;
+
+private:
+    struct LocalsStackItem {
+        explicit LocalsStackItem(const LocalVariable &lv, code::Block *b) : lv(&lv), mark(nullptr), b(b) {
+        }
+
+        explicit LocalsStackItem(const void *mark, code::Block *b) : lv(nullptr), mark(mark), b(b) {
+        }
+
+        const LocalVariable *lv;
+        const void *mark;
+        code::Block *b;
+    };
 
 private:
     void checkNotTerminated() {
@@ -279,29 +302,20 @@ private:
         }
     }
 
-    code::Block *findPrevCleanupBlock(std::vector<CleanupScope>::reverse_iterator iit) {
-        while (iit != cleanupScopes.rend()) {
-            if (iit->b) {
-                return iit->b;
-            }
-            ++iit;
-        }
-        return nullptr;
-    }
-
     code::Block *getLandingPad();
-    code::Block *getLandingPad2(std::vector<CleanupScope>::reverse_iterator it);
-    void buildCleanupForRet();
+    code::Block *getLandingPad2(std::vector<LocalsStackItem>::reverse_iterator it);
+    void buildLocalsDerefForRet();
 
 private:
     code::Block *currentBlock;
     std::vector<code::Temp> freeTemps;
-    std::vector<code::Temp> cleanupTemps;
-    std::vector<CleanupScope> cleanupScopes;
-    LValue *cleanupLValue;
+    std::vector<code::Temp> derefTemps;
+    std::vector<LocalsStackItem> localsStack;
+    LValue *unlockLValue;
+
+    friend class LocalsStackMarker;
 };
 
-//If Builder were a template, we could use Function directly and this class would not be needed at all
 class FBuilder : public Builder {
 
 public:
@@ -319,6 +333,72 @@ public:
 
 private:
     Function &f;
+};
+
+class TempHelper {
+
+public:
+    explicit TempHelper(Builder &builder) : builder(builder), temp(builder.getFreeTemp()), needsDeref(false) {
+    }
+
+    ~TempHelper() {
+        if (needsDeref) {
+            builder.derefDone(temp);
+            builder.createRefDec(temp);
+        }
+        builder.setTempFree(temp);
+    }
+
+    operator code::Temp() const {
+        return temp;
+    }
+
+    void derefNeeded(bool isRef) {
+        if (isRef) {
+            needsDeref = true;
+            builder.derefNeeded(temp);
+        }
+    }
+
+    void derefDone() {
+        if (needsDeref) {
+            builder.derefDone(temp);
+            needsDeref = false;
+        }
+    }
+
+private:
+    Builder &builder;
+    code::Temp temp;
+    bool needsDeref;
+};
+
+class LocalsStackMarker {
+
+public:
+    explicit LocalsStackMarker(Builder &builder, code::Block *catchBlock = nullptr) : builder(builder) {
+        builder.localsStack.emplace_back(this, catchBlock);
+    }
+
+    ~LocalsStackMarker() {
+        while (true) {
+            Builder::LocalsStackItem item = builder.localsStack.back();
+            builder.localsStack.pop_back();
+
+            if (item.lv && item.lv->getType().isRefCounted() && !builder.isTerminated()) {
+                TempHelper temp(builder);
+                builder.currentBlock->appendLocalGet(temp, *item.lv);
+                builder.currentBlock->appendRefDec(temp, builder.getLandingPad());
+            }
+
+            if (item.mark == this) {
+                break;
+            }
+        }
+    }
+
+private:
+    Builder &builder;
 };
 
 } // namespace sem
