@@ -51,6 +51,9 @@ class LValue;
  *
  * Maintains the information about values (temps or local variables) that need their reference count decreased,
  * keeps track of the lvalue that needs unlocking and provides functions for building appropriate landing pad.
+ *
+ * The actual creation of code blocks and temporaries are delegated to derived classes. This allows a special
+ * implementation in the interactive mode where there is no \ref Function instance for the top level code.
  */
 class Builder {
 
@@ -79,51 +82,6 @@ public:
      */
     bool isTerminated() const {
         return currentBlock->isTerminated();
-    }
-    ///\}
-
-    ///\name Temporary value management methods
-    ///\{
-    /**
-     * \brief Allocates a temporary value. If possible, use \ref TempHelper instead.
-     * \return the allocated temporary, must be deallocated by calling \ref setTempFree()
-     */
-    code::Temp getFreeTemp() {
-        if (!freeTemps.empty()) {
-            code::Temp t = freeTemps.back();
-            freeTemps.pop_back();
-            return t;
-        }
-        return createTemp();
-    }
-
-    /**
-     * \brief Deallocates a temporary value. If possible, use \ref TempHelper instead.
-     * \param temp a temporary allocated using \ref getFreeTemp()
-     */
-    void setTempFree(code::Temp temp) {
-        freeTemps.push_back(temp);
-    }
-
-    /**
-     * \brief Adds a temporary value to the list of values that need their reference count decreased.
-     *
-     * This list is used when building a landing pad.
-     * \param temp the temporary to add
-     */
-    void derefNeeded(code::Temp temp) {
-        assert(std::find(derefTemps.begin(), derefTemps.end(), temp) == derefTemps.end());
-        derefTemps.push_back(temp);
-    }
-
-    /**
-     * \brief Removes a temporary value from the list of values that need their reference count decreased.
-     * \param temp the temporary to add
-     */
-    void derefDone(code::Temp temp) {
-        auto it = std::find(derefTemps.begin(), derefTemps.end(), temp);
-        assert(it != derefTemps.end());
-        derefTemps.erase(it);
     }
     ///\}
 
@@ -296,6 +254,51 @@ private:
     };
 
 private:
+    ///\name Temporary value management methods
+    ///\{
+    /**
+     * \brief Allocates a temporary value. If possible, use \ref TempHelper instead.
+     * \return the allocated temporary, must be deallocated by calling \ref setTempFree()
+     */
+    code::Temp getFreeTemp() {
+        if (!freeTemps.empty()) {
+            code::Temp t = freeTemps.back();
+            freeTemps.pop_back();
+            return t;
+        }
+        return createTemp();
+    }
+
+    /**
+     * \brief Deallocates a temporary value. If possible, use \ref TempHelper instead.
+     * \param temp a temporary allocated using \ref getFreeTemp()
+     */
+    void setTempFree(code::Temp temp) {
+        freeTemps.push_back(temp);
+    }
+
+    /**
+     * \brief Adds a temporary value to the list of values that need their reference count decreased.
+     *
+     * This list is used when building a landing pad.
+     * \param temp the temporary to add
+     */
+    void derefNeeded(code::Temp temp) {
+        assert(std::find(derefTemps.begin(), derefTemps.end(), temp) == derefTemps.end());
+        derefTemps.push_back(temp);
+    }
+
+    /**
+     * \brief Removes a temporary value from the list of values that need their reference count decreased.
+     * \param temp the temporary to add
+     */
+    void derefDone(code::Temp temp) {
+        auto it = std::find(derefTemps.begin(), derefTemps.end(), temp);
+        assert(it != derefTemps.end());
+        derefTemps.erase(it);
+    }
+    ///\}
+
     void checkNotTerminated() {
         if (currentBlock->isTerminated()) {
             QORE_NOT_IMPLEMENTED("");   //report unreachable?
@@ -314,12 +317,20 @@ private:
     LValue *unlockLValue;
 
     friend class LocalsStackMarker;
+    friend class TempHelper;
 };
 
-class FBuilder : public Builder {
+/**
+ * \brief Builder implementation that delegates code block and temporary creation to a \ref Function object.
+ */
+class FunctionBuilder : public Builder {
 
 public:
-    explicit FBuilder(Function &f) : f(f) {
+    /**
+     * \brief Creates the builder.
+     * \param f the function to build
+     */
+    explicit FunctionBuilder(Function &f) : f(f) {
         setCurrentBlock(createBlock());
     }
 
@@ -335,24 +346,69 @@ private:
     Function &f;
 };
 
+/**
+ * \brief Helper class for handling temporary values.
+ *
+ * Basic usage is:
+ * \code
+ *     {
+ *         TempHelper t1(builder);                              //allocates a temporary for t1
+ *         //generate code that stores a value to t1
+ *         t1.derefNeeded(type_of_t1_value.isRefCounted());     //makes sure that t1 is dereferenced
+ *         //generate code that uses the value of t1
+ *         //optionally call t1.derefDone() to take over the responsibility of dereferencing t1
+ *     }                                                        //destructor dereferences and deallocates t1
+ * \endcode
+ *
+ * The temporary can also be optionally provided externally (in the constructor) in which case the destructor
+ * does not deallocate it.
+ */
 class TempHelper {
 
 public:
-    explicit TempHelper(Builder &builder) : builder(builder), temp(builder.getFreeTemp()), needsDeref(false) {
+    /**
+     * \brief Creates an instance that allocates and deallocated the temporary automatically.
+     * \param builder the code builder
+     */
+    explicit TempHelper(Builder &builder) : builder(builder), temp(builder.getFreeTemp()),
+            external(false), needsDeref(false) {
     }
 
+    /**
+     * \brief Creates an instance that wraps an externally provided temporary.
+     * \param builder the code builder
+     * \param temp the temporary
+     */
+    TempHelper(Builder &builder, code::Temp temp) : builder(builder), temp(temp), external(true), needsDeref(false) {
+    }
+
+    /**
+     * \brief Destructor.
+     *
+     * Dereferences the value if \ref derefNeeded() has been called with `true` but no \ref derefDone() has been called.
+     * Deallocates the temporary unless it has been provided externally in the constructor.
+     */
     ~TempHelper() {
         if (needsDeref) {
             builder.derefDone(temp);
             builder.createRefDec(temp);
         }
-        builder.setTempFree(temp);
+        if (!external) {
+            builder.setTempFree(temp);
+        }
     }
 
+    /**
+     * \brief Implicit conversion to \ref code::Temp.
+     */
     operator code::Temp() const {
         return temp;
     }
 
+    /**
+     * \brief Adds the temporary value to the list of values that need their reference count decreased.
+     * \param isRef true if the type of the value is reference-counted
+     */
     void derefNeeded(bool isRef) {
         if (isRef) {
             needsDeref = true;
@@ -360,6 +416,9 @@ public:
         }
     }
 
+    /**
+     * \brief Relinquishes the responsibility of dereferencing the temporary.
+     */
     void derefDone() {
         if (needsDeref) {
             builder.derefDone(temp);
@@ -367,15 +426,32 @@ public:
         }
     }
 
+    /**
+     * \brief Returns true if the temporary has been provided externally in the constructor.
+     * \return true if the temporary has been provided externally in the constructor
+     */
+    bool isExternallyProvided() const {
+        return external;
+    }
+
 private:
     Builder &builder;
     code::Temp temp;
+    bool external;
     bool needsDeref;
 };
 
+/**
+ * \brief A special entry in the stack of locals in the builder that marks the beginning of a new scope.
+ */
 class LocalsStackMarker {
 
 public:
+    /**
+     * \brief Constructor.
+     * \param builder the builder
+     * \param catchBlock an optional catch block for this scope
+     */
     explicit LocalsStackMarker(Builder &builder, code::Block *catchBlock = nullptr) : builder(builder) {
         builder.localsStack.emplace_back(this, catchBlock);
     }

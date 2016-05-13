@@ -84,49 +84,38 @@ public:
     }
 
     void visit(const IfStatement &stmt) {
-        LocalsStackMarker marker(builder);
-
-        code::Temp temp = builder.getFreeTemp();
-        ExpressionAnalyzerPass2::eval(core, builder, temp, stmt.getCondition());
-
-        code::Block *cont = nullptr;
         code::Block *trueBlock = builder.createBlock();
-
-        if (!stmt.getFalseBranch()) {
-            cont = builder.createBlock();
-            builder.createBranch(temp, *trueBlock, *cont);
-            builder.setTempFree(temp);
-        } else {
-            code::Block *falseBlock = builder.createBlock();
+        code::Block *falseBlock = builder.createBlock();
+        {
+            TempHelper temp(builder);
+            ExpressionAnalyzerPass2::eval(core, builder, temp, stmt.getCondition());
             builder.createBranch(temp, *trueBlock, *falseBlock);
-            builder.setTempFree(temp);
+        }
+
+        code::Block *contBlock = nullptr;
+        if (!stmt.getFalseBranch()) {
+            contBlock = falseBlock;
+        } else {
             builder.setCurrentBlock(falseBlock);
-            {
-                LocalsStackMarker marker(builder);
-                stmt.getFalseBranch()->accept(*this);
-            }
+            stmt.getFalseBranch()->accept(*this);
             if (!builder.isTerminated()) {
-                cont = builder.createBlock();
-                builder.createJump(*cont);
+                contBlock = builder.createBlock();
+                builder.createJump(*contBlock);
             }
         }
 
         builder.setCurrentBlock(trueBlock);
-        {
-            LocalsStackMarker marker(builder);
-            stmt.getTrueBranch().accept(*this);
-        }
+        stmt.getTrueBranch().accept(*this);
         if (!builder.isTerminated()) {
-            if (!cont) {
-                cont = builder.createBlock();
+            if (!contBlock) {
+                contBlock = builder.createBlock();
             }
-            builder.createJump(*cont);
+            builder.createJump(*contBlock);
         }
 
-        if (cont) {
-            builder.setCurrentBlock(cont);
+        if (contBlock) {
+            builder.setCurrentBlock(contBlock);
         }
-
     }
 
     void visit(const ReturnStatement &stmt) {
@@ -142,32 +131,26 @@ public:
     }
 
     void visit(const TryStatement &stmt) {
-        code::Block *cont = nullptr;
+        code::Block *contBlock = nullptr;
         code::Block *catchBlock = builder.createBlock();
-        {
-            LocalsStackMarker marker(builder, catchBlock);
-            stmt.getTryBody().accept(*this);
-            if (!builder.isTerminated()) {
-                cont = builder.createBlock();
-                builder.createJump(*cont);
-            }
+        stmt.getTryBody().accept(*this);
+        if (!builder.isTerminated()) {
+            contBlock = builder.createBlock();
+            builder.createJump(*contBlock);
         }
 
         builder.setCurrentBlock(catchBlock);
-        {
-            LocalsStackMarker marker(builder);
-            //store 'current exception' to the user variable
-            stmt.getCatchBody().accept(*this);
-            if (!builder.isTerminated()) {
-                if (!cont) {
-                    cont = builder.createBlock();
-                }
-                builder.createJump(*cont);
+        //store 'current exception' to the user variable
+        stmt.getCatchBody().accept(*this);
+        if (!builder.isTerminated()) {
+            if (!contBlock) {
+                contBlock = builder.createBlock();
             }
+            builder.createJump(*contBlock);
         }
 
-        if (cont) {
-            builder.setCurrentBlock(cont);
+        if (contBlock) {
+            builder.setCurrentBlock(contBlock);
         }
     }
     ///\}

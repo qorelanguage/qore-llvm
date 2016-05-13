@@ -94,7 +94,7 @@ std::pair<Function::Ptr, Function::Ptr> Analyzer::analyze(Context &ctx, ast::Scr
     auto initializers = analyzer.takeInitializers();
     if (!initializers.empty()) {
         qInit = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
-        FBuilder initBuilder(*qInit);
+        FunctionBuilder initBuilder(*qInit);
         for (auto &stmt : initializers) {
             analyzer.doPass2(initBuilder, *stmt);
         }

@@ -72,7 +72,7 @@ void FunctionScope::analyze() {
 
     Statement::Ptr body = StatementAnalyzerPass1::analyze(core, *this, *node.body);
 
-    FBuilder b(rt);
+    FunctionBuilder b(rt);
 
     for (auto &lv : locals) {
         //change type if lv is shared

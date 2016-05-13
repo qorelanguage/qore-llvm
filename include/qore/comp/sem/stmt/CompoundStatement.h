@@ -58,6 +58,17 @@ public:
         return Ptr(new CompoundStatement(std::move(statements)));
     }
 
+    /**
+     * \brief Creates a new instance wrapping a single statement.
+     * \param statement the statement to wrap in a compound statement
+     * \return the new instance
+     */
+    static Ptr create(Statement::Ptr statement) {
+        std::vector<Statement::Ptr> v;
+        v.push_back(std::move(statement));
+        return Ptr(new CompoundStatement(std::move(v)));
+    }
+
     Kind getKind() const override {
         return Kind::Compound;
     }

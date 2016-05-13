@@ -76,7 +76,7 @@ public:
     static Statement::Ptr analyzeWithNewBlock(Core &core, Scope &scope, ast::Statement &stmt) {
         BlockScope inner(scope);
         StatementAnalyzerPass1 a(core, inner);
-        return stmt.accept(a);
+        return CompoundStatement::create(stmt.accept(a));
     }
 
     ///\name Implementation of ast::Statement visitor
@@ -116,7 +116,7 @@ public:
                 *node.condition);
         Statement::Ptr b1 = analyzeWithNewBlock(core, inner, *node.stmtTrue);
         Statement::Ptr b2 = node.stmtFalse ? analyzeWithNewBlock(core, inner, *node.stmtFalse) : nullptr;
-        return IfStatement::create(std::move(cond), std::move(b1), std::move(b2));
+        return CompoundStatement::create(IfStatement::create(std::move(cond), std::move(b1), std::move(b2)));
     }
 
     Statement::Ptr visit(const ast::TryStatement &node) {

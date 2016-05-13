@@ -96,15 +96,14 @@ public:
     using ReturnType = void;
 
     void visit(const AssignmentExpression &expr) {
-        withSideEffect();
         evaluate(dest, expr.getRight());
         if (refCounted(expr.getLeft())) {
-            cleanupDest(true);
+            dest.derefNeeded(true);
             TempHelper old(builder);
             LValue left(builder, expr.getLeft());
             left.get(old);
             old.derefNeeded(true);
-            refIncDestIfNeeded();
+            consumeDest();
             left.set(dest);
         } else {
             LValue left(builder, expr.getLeft());
@@ -113,8 +112,6 @@ public:
     }
 
     void visit(const CompoundAssignmentExpression &expr) {
-        withSideEffect();
-
         TempHelper right(builder);
         evaluate(right, expr.getRight());
         right.derefNeeded(refCounted(expr.getRight()));
@@ -125,9 +122,9 @@ public:
 
         builder.createInvokeBinaryOperator(dest, expr.getOperator(), old, right);
         if (refCounted(expr.getLeft())) {
-            cleanupDest(true);
-            refIncDestIfNeeded();
+            dest.derefNeeded(true);
             old.derefNeeded(true);
+            consumeDest();
         }
         left.set(dest);
     }
@@ -138,7 +135,7 @@ public:
         builder.createGlobalReadLock(gv);
         builder.createGlobalGet(dest, gv);
         if (refCounted(expr.getGlobalVariable())) {
-            refIncDestIfNeeded();
+            builder.createRefInc(dest);
         }
         builder.createGlobalReadUnlock(gv);
     }
@@ -160,7 +157,7 @@ public:
         right.derefNeeded(refCounted(expr.getRight()));
 
         builder.createInvokeBinaryOperator(dest, expr.getOperator(), left, right);
-        cleanupDest(refCounted(expr));
+        dest.derefNeeded(refCounted(expr));
     }
 
     void visit(const InvokeConversionExpression &expr) {
@@ -171,14 +168,13 @@ public:
         arg.derefNeeded(refCounted(expr.getArg()));
 
         builder.createInvokeConversion(dest, expr.getConversion(), arg);
-        cleanupDest(refCounted(expr));
+        dest.derefNeeded(refCounted(expr));
     }
 
     void visit(const LocalVariableInitExpression &expr) {
-        withSideEffect();
         evaluate(dest, expr.getInitExpression());
         if (refCounted(expr.getLocalVariable())) {
-            refIncDestIfNeeded();
+            consumeDest();
         }
 
         //if not shared:
@@ -198,7 +194,7 @@ public:
         noSideEffect();
         builder.createLocalGet(dest, expr.getLocalVariable());
         if (refCounted(expr.getLocalVariable())) {
-            refIncDestIfNeeded();
+            builder.createRefInc(dest);
         }
     }
 
@@ -215,24 +211,16 @@ public:
     ///\}
 
 private:
-    static constexpr Index InvalidIndex = -1;
-
-private:
     ExpressionAnalyzerPass2(Core &core, Builder &builder, code::Temp dest) : core(core), builder(builder),
-            dest(dest), freeDest(false), destInCleanup(false) {
+            dest(builder, dest) {
     }
 
     ExpressionAnalyzerPass2(Core &core, Builder &builder) : core(core), builder(builder),
-            dest(InvalidIndex), freeDest(false), destInCleanup(false) {
+            dest(builder) {
     }
 
     ~ExpressionAnalyzerPass2() {
-        if (destInCleanup) {
-            builder.derefDone(dest);
-        }
-        if (freeDest) {
-            builder.setTempFree(dest);
-        }
+        dest.derefDone();
     }
 
     template<typename T>
@@ -241,36 +229,17 @@ private:
     }
 
     void noSideEffect() {
-        if (dest.getIndex() == InvalidIndex) {
-            dest = builder.getFreeTemp();
-            freeDest = true;
+        if (!dest.isExternallyProvided()) {
             QORE_NOT_IMPLEMENTED("report error");
             //core.ctx.report(DiagId::SemaStatementHasNoEffect, location);
         }
     }
 
-    void withSideEffect() {
-        if (dest.getIndex() == InvalidIndex) {
-            dest = builder.getFreeTemp();
-            freeDest = true;
-        }
-    }
-
-    void refIncDestIfNeeded() {
-        if (!freeDest) {
+    void consumeDest() {
+        if (dest.isExternallyProvided()) {
             builder.createRefInc(dest);
         } else {
-            if (destInCleanup) {
-                builder.derefDone(dest);
-            }
-            destInCleanup = false;
-        }
-    }
-
-    void cleanupDest(bool isRef) {
-        if (isRef) {
-            builder.derefNeeded(dest);
-            destInCleanup = true;
+            dest.derefDone();
         }
     }
 
@@ -281,9 +250,7 @@ private:
 private:
     Core &core;
     Builder &builder;
-    code::Temp dest;
-    bool freeDest;
-    bool destInCleanup;
+    TempHelper dest;
 };
 
 } // namespace sem
