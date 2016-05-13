@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the FunctionGroupInfo class.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONGROUPINFO_H_
@@ -40,20 +40,39 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Describes a group of function overloads during semantic analysis.
+ */
 class FunctionGroupInfo {
 
 public:
-    using Ptr = std::unique_ptr<FunctionGroupInfo>;
+    using Ptr = std::unique_ptr<FunctionGroupInfo>;     //!< Pointer type.
 
 public:
+    /**
+     * \brief Constructor.
+     * \param rt the runtime object representing the group of function overloads
+     * \param core the shared state of the analyzer
+     * \param parent the parent namespace scope
+     * \param location the location of the (first) declaration
+     */
     FunctionGroupInfo(FunctionGroup &rt, Core &core, Scope &parent, SourceLocation location)
             : rt(rt), core(core), parent(parent), location(location) {
     }
 
+    /**
+     * \brief Returns the location of the first declaration.
+     * \return the location of the first declaration
+     */
     SourceLocation getLocation() const {
         return location;
     }
 
+    /**
+     * \brief Adds an overload to the group.
+     * \param node the AST node of the function
+     * \param location the location of the overload
+     */
     void addOverload(ast::Routine &node, SourceLocation location) {
         if (queue.empty()) {
             core.addToQueue(*this);
@@ -61,11 +80,10 @@ public:
         queue.emplace_back(&node, location);
     }
 
+    /**
+     * \brief Resolves the types of the overloads and check for uniqueness.
+     */
     void pass2();
-
-    Scope &getParent() {
-        return parent;
-    }
 
 private:
     void checkOverload(FunctionType &type);

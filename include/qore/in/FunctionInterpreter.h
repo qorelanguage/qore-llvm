@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Function interpreter visitor.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_IN_FUNCTIONINTERPRETER_H_
@@ -41,16 +41,40 @@
 namespace qore {
 namespace in {
 
-template<typename F>
+/**
+ * \brief Context for functions interpreter - holds the values of locals and temporaries.
+ */
+struct FunctionContext {
+    /**
+     * \brief Constructor.
+     * \param tempsCount the (initial) number of temporaries
+     * \param localsCount the (initial) number of local variables
+     */
+    FunctionContext(Size tempsCount, Size localsCount) : temps(tempsCount), locals(localsCount) {
+    }
+
+    std::vector<qvalue> temps;      //!< The values of temporaries.
+    std::vector<qvalue> locals;     //!< The values of local variables.
+};
+
+/**
+ * \brief Implements the 'ref code::Instruction visitor that executes a function.
+ */
 class FunctionInterpreter {
 
 public:
-    using ReturnType = void;
-
-public:
-    FunctionInterpreter(F &f, code::Block &entryBlock) : f(f), done(false), it(entryBlock.begin()) {
+    /**
+     * \brief Constructor.
+     * \param functionContext the function context with locals and temporaries
+     * \param entryBlock the entry block of the function
+     */
+    FunctionInterpreter(FunctionContext &functionContext, code::Block &entryBlock)
+            : functionContext(functionContext), done(false), it(entryBlock.begin()) {
     }
 
+    /**
+     * \brief Executes the interpreter.
+     */
     void run() {
         while (!done) {
             const code::Instruction &ins = *it;
@@ -70,8 +94,12 @@ public:
         }
     }
 
+    ///\name Visitor implementation
+    ///\{
+    using ReturnType = void;
+
     void visit(const code::Branch &ins) {
-        if (f.getTemp(ins.getCondition()).b) {
+        if (getTemp(ins.getCondition()).b) {
             it = ins.getTrueDest().begin();
         } else {
             it = ins.getFalseDest().begin();
@@ -81,21 +109,21 @@ public:
     void visit(const code::ConstInt &ins) {
         qvalue v;
         v.i = ins.getValue();
-        f.setTemp(ins.getDest(), v);
+        setTemp(ins.getDest(), v);
     }
 
     void visit(const code::ConstString &ins) {
         qvalue v;
         v.p = &ins.getString();
-        f.setTemp(ins.getDest(), v);
+        setTemp(ins.getDest(), v);
     }
 
     void visit(const code::GlobalGet &ins) {
-        f.setTemp(ins.getDest(), ins.getGlobalVariable().getValue());
+        setTemp(ins.getDest(), ins.getGlobalVariable().getValue());
     }
 
     void visit(const code::GlobalInit &ins) {
-        ins.getGlobalVariable().initValue(f.getTemp(ins.getInitValue()));
+        ins.getGlobalVariable().initValue(getTemp(ins.getInitValue()));
     }
 
     void visit(const code::GlobalReadLock &ins) {
@@ -107,7 +135,7 @@ public:
     }
 
     void visit(const code::GlobalSet &ins) {
-        ins.getGlobalVariable().setValue(f.getTemp(ins.getSrc()));
+        ins.getGlobalVariable().setValue(getTemp(ins.getSrc()));
     }
 
     void visit(const code::GlobalWriteLock &ins) {
@@ -119,11 +147,11 @@ public:
     }
 
     void visit(const code::InvokeBinaryOperator &ins) {
-        f.setTemp(ins.getDest(), ins.getOperator().getFunction()(f.getTemp(ins.getLeft()), f.getTemp(ins.getRight())));
+        setTemp(ins.getDest(), ins.getOperator().getFunction()(getTemp(ins.getLeft()), getTemp(ins.getRight())));
     }
 
     void visit(const code::InvokeConversion &ins) {
-        f.setTemp(ins.getDest(), ins.getConversion().getFunction()(f.getTemp(ins.getArg())));
+        setTemp(ins.getDest(), ins.getConversion().getFunction()(getTemp(ins.getArg())));
     }
 
     void visit(const code::Jump &ins) {
@@ -131,15 +159,15 @@ public:
     }
 
     void visit(const code::LocalGet &ins) {
-        f.setTemp(ins.getDest(), f.getLocal(ins.getLocalVariable()));
+        setTemp(ins.getDest(), getLocal(ins.getLocalVariable()));
     }
 
     void visit(const code::LocalSet &ins) {
-        f.setLocal(ins.getLocalVariable(), f.getTemp(ins.getSrc()));
+        setLocal(ins.getLocalVariable(), getTemp(ins.getSrc()));
     }
 
     void visit(const code::RefDec &ins) {
-        qvalue v = f.getTemp(ins.getTemp());
+        qvalue v = getTemp(ins.getTemp());
         if (v.p) {
             v.p->decRefCount();
             //FIXME if an exception was created, throw it
@@ -147,7 +175,7 @@ public:
     }
 
     void visit(const code::RefInc &ins) {
-        qvalue v = f.getTemp(ins.getTemp());
+        qvalue v = getTemp(ins.getTemp());
         if (v.p) {
             v.p->incRefCount();
         }
@@ -160,9 +188,27 @@ public:
     void visit(const code::Instruction &ins) {
         QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins.getKind()));
     }
+    ///\}
 
 private:
-    F &f;
+    void setLocal(const LocalVariable &lv, qvalue value) {
+        functionContext.locals[lv.getIndex()] = value;
+    }
+
+    qvalue getLocal(const LocalVariable &lv) {
+        return functionContext.locals[lv.getIndex()];
+    }
+
+    void setTemp(code::Temp temp, qvalue value) {
+        functionContext.temps[temp.getIndex()] = value;
+    }
+
+    qvalue getTemp(code::Temp temp) {
+        return functionContext.temps[temp.getIndex()];
+    }
+
+private:
+    FunctionContext &functionContext;
     bool done;
     code::Block::Iterator it;
 };

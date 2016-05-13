@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implements the GlobalVariableInfo class.
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/GlobalVariableInfo.h"

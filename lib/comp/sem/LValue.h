@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines a helper class for handling lvalues.
 ///
 //------------------------------------------------------------------------------
 #ifndef LIB_COMP_SEM_LVALUE_H_

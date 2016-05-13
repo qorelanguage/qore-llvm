@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implements the code generator.
 ///
 //------------------------------------------------------------------------------
 #include "qore/cg/CodeGen.h"
@@ -42,6 +42,7 @@
 namespace qore {
 namespace cg {
 
+///\cond
 class Compiler {
 
 public:
@@ -49,7 +50,7 @@ public:
         builder.SetInsertPoint(llvm::BasicBlock::Create(helper.ctx, "entry", qstart));
     }
 
-    std::unique_ptr<llvm::Module> compile(Env &env, Function *qInit, Function *qMain) {
+    std::unique_ptr<llvm::Module> compile(Env &env, Function *qMain) {
         llvm::Value *rtEnv = &*qstart->arg_begin();
         llvm::Value *rtNs = builder.CreateCall(helper.lf_env_getRootNamespace, rtEnv);
 
@@ -72,9 +73,6 @@ public:
         compile(rtNs, env.getRootNamespace());
         builder.CreateRetVoid();
 
-        if (qInit) {
-            declare("qinit", *qInit);
-        }
         if (qMain) {
             declare("qmain", *qMain);
         }
@@ -168,9 +166,9 @@ private:
     std::unordered_map<const Function *, llvm::Function *> functions;
 };
 
-void CodeGen::process(Env &env, Function *qInit, Function *qMain) {
+void CodeGen::process(Env &env, Function *qMain) {
     Compiler compiler;
-    std::unique_ptr<llvm::Module> module = compiler.compile(env, qInit, qMain);
+    std::unique_ptr<llvm::Module> module = compiler.compile(env, qMain);
 
     module->dump();
 
@@ -187,6 +185,7 @@ void CodeGen::process(Env &env, Function *qInit, Function *qMain) {
     assert(!ec);
     module->print(os2, Annotator.get());
 }
+///\endcond
 
 } // namespace cg
 } // namespace qore

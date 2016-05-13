@@ -25,11 +25,12 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implements the FunctionScope class.
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/FunctionScope.h"
 #include <string>
+#include <vector>
 #include "qore/comp/sem/Builder.h"
 #include "StatementAnalyzerPass1.h"
 #include "StatementAnalyzerPass2.h"
@@ -47,7 +48,7 @@ const Type &FunctionScope::resolveType(const ast::Type &node) const {
 }
 
 LocalVariableInfo &FunctionScope::createLocalVariable(String::Ref name, SourceLocation location, const Type &type) {
-    std::unique_ptr<LocalVariableInfo> ptr = util::make_unique<LocalVariableInfo>(name, location, type);
+    LocalVariableInfo::Ptr ptr = LocalVariableInfo::Ptr(new LocalVariableInfo(name, location, type));
     LocalVariableInfo &lv = *ptr;
     locals.push_back(std::move(ptr));
     return lv;
@@ -63,11 +64,13 @@ Symbol FunctionScope::resolveSymbol(const ast::Name &name) const {
     return parent.resolveSymbol(name);
 }
 
-void FunctionScope::analyze() {
-
+void FunctionScope::analyze(std::vector<Statement::Ptr> *initializers) {
+    Index index = 0;
     for (auto &a : node.params) {
-        const Type &type = resolveType(std::get<0>(a)); //XXX parameter types have already been resolved
-        args[std::get<1>(a).str] = &createLocalVariable(std::get<1>(a).str, std::get<1>(a).location, type);
+        String::Ref name = std::get<1>(a).str;
+        SourceLocation location = std::get<1>(a).location;
+        const Type &type = rt.getType().getParameterType(index++);
+        args[name] = &createLocalVariable(name, location, type);
     }
 
     Statement::Ptr body = StatementAnalyzerPass1::analyze(core, *this, *node.body);
@@ -98,6 +101,12 @@ void FunctionScope::analyze() {
         // - builder.localPush() that dereferences the wrapper
 
         //both compiler and interpreter need to copy the function arguments into local slots (starting from 0)
+    }
+
+    if (initializers) {
+        for (auto &stmt : *initializers) {
+            StatementAnalyzerPass2::analyze(core, b, *stmt);
+        }
     }
 
     StatementAnalyzerPass2::analyze(core, b, *body);

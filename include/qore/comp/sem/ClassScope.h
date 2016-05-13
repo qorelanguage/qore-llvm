@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the ClassScope class.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_CLASSSCOPE_H_
@@ -43,12 +43,23 @@ namespace comp {
 namespace sem {
 
 class NamespaceScope;
+
+/**
+ * \brief Describes a class during semantic analysis and implements its scope.
+ */
 class ClassScope {
 
 public:
-    using Ptr = std::unique_ptr<ClassScope>;
+    using Ptr = std::unique_ptr<ClassScope>;    //!< Pointer type.
 
 public:
+    /**
+     * \brief Constructor.
+     * \param rt the runtime object representing the class
+     * \param core the shared state of the analyzer
+     * \param parent the parent namespace
+     * \param node the AST node
+     */
     ClassScope(Class &rt, Core &core, NamespaceScope &parent, ast::Class &node) : rt(rt), core(core),
             parent(parent), node(node) {
 //        for (auto &decl : node.members) {
@@ -56,6 +67,10 @@ public:
 //        }
     }
 
+    /**
+     * \brief Returns the runtime object representing the class.
+     * \return the runtime object representing the class
+     */
     Class &getRt() {
         return rt;
     }

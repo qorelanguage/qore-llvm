@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Interactive mode implementation.
 ///
 //------------------------------------------------------------------------------
 #include "Interactive.h"
@@ -43,6 +43,7 @@
 
 namespace qore {
 
+///\cond
 class StdinWrapper : public comp::ITokenStream {
 
 public:
@@ -71,35 +72,39 @@ private:
     comp::DirectiveProcessor dp;
 };
 
-namespace comp {
-namespace sem {
+class InteractiveScope : public comp::sem::Scope {
 
-class InteractiveScope : public Scope {
+private:
+    using LocalVariableInfo = comp::sem::LocalVariableInfo;
 
 public:
-    InteractiveScope(Context &ctx, const Scope &rootScope) : ctx(ctx), rootScope(rootScope) {
+    InteractiveScope(comp::Context &ctx, const Scope &rootScope, in::FunctionContext &topLevelCtx)
+            : ctx(ctx), rootScope(rootScope), topLevelCtx(topLevelCtx) {
     }
 
-    const Type &resolveType(const ast::Type &node) const override {
+    const Type &resolveType(const comp::ast::Type &node) const override {
         return rootScope.resolveType(node);
     }
 
-    LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
-        std::unique_ptr<LocalVariableInfo> ptr = util::make_unique<LocalVariableInfo>(name, location, type);
+    LocalVariableInfo &createLocalVariable(comp::String::Ref name, SourceLocation location, const Type &type) override {
+        LocalVariableInfo::Ptr ptr = LocalVariableInfo::Ptr(new LocalVariableInfo(name, location, type));
         LocalVariableInfo &lv = *ptr;
-        locals.push_back(std::move(ptr));
+        localInfos.push_back(std::move(ptr));
         //lv.setShared();
-        LocalVariable::Ptr ptr2 = util::make_unique<LocalVariable>(locals2.size(), ctx.getString(name), type, location);
+        LocalVariable::Ptr ptr2 = LocalVariable::Ptr(new LocalVariable(locals.size(),
+                ctx.getString(name), type, location));
         lv.setRt(*ptr2);
-        locals2.push_back(std::move(ptr2));
+        locals.push_back(std::move(ptr2));
+        topLevelCtx.locals.resize(locals.size());
         return lv;
     }
 
-    Symbol resolveSymbol(const ast::Name &name) const override {
+    comp::sem::Symbol resolveSymbol(const comp::ast::Name &name) const override {
         return rootScope.resolveSymbol(name);
     }
 
-    LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+    LocalVariableInfo &declareLocalVariable(comp::String::Ref name,
+            SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }
 
@@ -108,51 +113,25 @@ public:
     }
 
 private:
-    Context &ctx;
+    comp::Context &ctx;
     const Scope &rootScope;
-    std::vector<std::unique_ptr<LocalVariableInfo>> locals;
-    std::vector<std::unique_ptr<LocalVariable>> locals2;
+    in::FunctionContext &topLevelCtx;
+    std::vector<LocalVariableInfo::Ptr> localInfos;
+    std::vector<LocalVariable::Ptr> locals;
 };
 
-class TopLevelCtx {
+class IBuilder : public comp::sem::Builder {
 
 public:
-    void setLocal(const LocalVariable &lv, qvalue value) {
-        locals[lv.getIndex()] = value;
-    }
-
-    qvalue getLocal(const LocalVariable &lv) {
-        auto it = locals.find(lv.getIndex());
-        assert(it != locals.end());
-        return it->second;
-    }
-
-    void setTemp(code::Temp temp, qvalue value) {
-        temps[temp.getIndex()] = value;
-    }
-
-    qvalue getTemp(code::Temp temp) {
-        auto it = temps.find(temp.getIndex());
-        assert(it != temps.end());
-        return it->second;
-    }
-
-private:
-    std::map<Index, qvalue> temps;
-    std::map<Index, qvalue> locals;
-};
-
-//XXX: this class can work with TopLevelCtx::temps and locals -> no need for map
-class IBuilder : public Builder {
-
-public:
-    IBuilder() : tempCount(0) {
+    explicit IBuilder(in::FunctionContext &topLevelCtx) : topLevelCtx(topLevelCtx) {
         entry = createBlock();
         setCurrentBlock(entry);
     }
 
     code::Temp createTemp() override {
-        return code::Temp(tempCount++);
+        Index i = topLevelCtx.temps.size();
+        topLevelCtx.temps.resize(i + 1);
+        return code::Temp(i);
     }
 
     code::Block *createBlock() override {
@@ -171,56 +150,11 @@ public:
     }
 
 private:
-    Size tempCount;
+    in::FunctionContext &topLevelCtx;
     std::vector<code::Block::Ptr> blocks;
     code::Block *entry;
 };
-
-class Interactive {
-
-public:
-    explicit Interactive(Context &ctx) : ctx(ctx) {
-    }
-
-    void doIt() {
-        StdinWrapper dp(ctx);
-        Parser parser(ctx, dp);
-        IBuilder mainBuilder;
-        Analyzer analyzer(ctx);
-        InteractiveScope topScope(ctx, analyzer.getRootNamespaceScope());
-        BlockScope blockScope(topScope);
-        TopLevelCtx topLevelCtx;
-        {
-            LocalsStackMarker marker(mainBuilder);
-            while (true) {
-                comp::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
-                if (declOrStmt.isDeclaration()) {
-                    analyzer.processDeclaration(declOrStmt.getDeclaration());
-                    analyzer.processPendingDeclarations();
-                } else if (declOrStmt.isStatement()) {
-                    Statement::Ptr stmt = analyzer.doPass1(blockScope, declOrStmt.getStatement());
-                    auto initializers = analyzer.takeInitializers();
-                    for (auto &stmt : initializers) {
-                        analyzer.doPass2(mainBuilder, *stmt);
-                    }
-                    analyzer.doPass2(mainBuilder, *stmt);
-                    in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
-                    fi.run();
-                } else {
-                    break;
-                }
-            }
-        }
-        in::FunctionInterpreter<TopLevelCtx> fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
-        fi.run();
-    }
-
-private:
-    Context &ctx;
-};
-
-} // namespace sem
-} // namespace comp
+///\endcond
 
 void interactive() {
     LOG_FUNCTION();
@@ -232,8 +166,37 @@ void interactive() {
     diagMgr.addProcessor(&diagPrinter);
     Env env;
     comp::Context ctx(env, stringTable, diagMgr, srcMgr);
-    comp::sem::Interactive i(ctx);
-    i.doIt();
+
+    StdinWrapper dp(ctx);
+    comp::Parser parser(ctx, dp);
+    in::FunctionContext topLevelCtx(0, 0);
+    IBuilder mainBuilder(topLevelCtx);
+    comp::sem::Analyzer analyzer(ctx);
+    InteractiveScope topScope(ctx, analyzer.getRootNamespaceScope(), topLevelCtx);
+    comp::sem::BlockScope blockScope(topScope);
+    {
+        comp::sem::LocalsStackMarker marker(mainBuilder);
+        while (true) {
+            comp::DeclOrStmt declOrStmt = parser.parseDeclOrStmt();
+            if (declOrStmt.isDeclaration()) {
+                analyzer.processDeclaration(declOrStmt.getDeclaration());
+                analyzer.processPendingDeclarations();
+            } else if (declOrStmt.isStatement()) {
+                comp::sem::Statement::Ptr stmt = analyzer.doPass1(blockScope, declOrStmt.getStatement());
+                auto initializers = analyzer.takeInitializers();
+                for (auto &stmt : initializers) {
+                    analyzer.doPass2(mainBuilder, *stmt);
+                }
+                analyzer.doPass2(mainBuilder, *stmt);
+                in::FunctionInterpreter fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
+                fi.run();
+            } else {
+                break;
+            }
+        }
+    }
+    in::FunctionInterpreter fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
+    fi.run();
 }
 
 } // namespace qore

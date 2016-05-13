@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implements the FunctionGroupInfo class.
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/FunctionGroupInfo.h"
@@ -48,7 +48,7 @@ void FunctionGroupInfo::pass2() {
             checkOverload(type);
 
             Function &f = rt.addFunction(std::move(type), q.second);
-            FunctionScope::Ptr ptr = util::make_unique<FunctionScope>(f, core, parent, *node);
+            FunctionScope::Ptr ptr = FunctionScope::Ptr(new FunctionScope(f, core, parent, *node));
             core.addToQueue(*ptr);
             functions.push_back(std::move(ptr));
         } catch (ReportedError &) {

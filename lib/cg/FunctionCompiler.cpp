@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implements the function compiler.
 ///
 //------------------------------------------------------------------------------
 #include "FunctionCompiler.h"
@@ -34,9 +34,8 @@
 namespace qore {
 namespace cg {
 
+///\cond
 class Visitor {
-public:
-    using ReturnType = void;
 
 public:
     Visitor(llvm::BasicBlock *b, FunctionContext &ctx) : builder(b), ctx(ctx) {
@@ -47,6 +46,10 @@ public:
             ins.accept(*this);
         }
     }
+
+    ///\name Visitor implementation
+    ///\{
+    using ReturnType = void;
 
     void visit(const code::Branch &ins) {
         builder.CreateCondBr(
@@ -156,6 +159,7 @@ public:
     void visit(const code::Instruction &ins) {
         QORE_NOT_IMPLEMENTED("Instruction " << static_cast<int>(ins.getKind()));
     }
+    ///\}
 
 private:
     llvm::Value *makeCallOrInvoke(const code::Instruction &ins, llvm::Function *f, llvm::ArrayRef<llvm::Value *> args) {
@@ -196,11 +200,11 @@ private:
     FunctionContext &ctx;
 };
 
-
 void FunctionCompiler::doBlock(const code::Block &block) {
     Visitor v(ctx.blockMap[&block], ctx);
     v.compile(block);
 }
+///\endcond
 
 } // namespace cg
 } // namespace qore

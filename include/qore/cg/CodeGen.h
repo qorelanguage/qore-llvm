@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the code generator.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_CG_CODEGEN_H_
@@ -39,10 +39,18 @@
 namespace qore {
 namespace cg {
 
+/**
+ * \brief LLVM IR code generator.
+ */
 class CodeGen {
 
 public:
-    static void process(Env &env, Function *qInit, Function *qMain);
+    /**
+     * \brief Generates LLVM IR code.
+     * \param env the runtime environment
+     * \param qMain the main function
+     */
+    static void process(Env &env, Function *qMain);
 };
 
 } // namespace cg

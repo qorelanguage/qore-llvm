@@ -25,43 +25,82 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the LocalVariableInfo class.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_LOCALVARIABLEINFO_H_
 #define INCLUDE_QORE_COMP_SEM_LOCALVARIABLEINFO_H_
 
+#include <memory>
 #include "qore/core/LocalVariable.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Describes a local variable during semantic analysis.
+ */
 class LocalVariableInfo {
 
 public:
+    using Ptr = std::unique_ptr<LocalVariableInfo>;     //!< Pointer type.
+
+public:
+    /**
+     * \brief Constructor.
+     * \param name the name of the local variable
+     * \param location the location of the local variable
+     * \param type the type of the local variable
+     */
     LocalVariableInfo(String::Ref name, SourceLocation location, const Type &type) : name(name),
             location(location), type(type), rt(nullptr) {
     }
 
+    /**
+     * \brief Returns the name of the local variable.
+     * \return the name of the local variable
+     */
     String::Ref getName() const {
         return name;
     }
 
+    /**
+     * \brief Returns the location of the local variable.
+     * \return the location of the local variable
+     */
     SourceLocation getLocation() const {
         return location;
     }
 
+    /**
+     * \brief Returns the type of the local variable.
+     * \return the type of the local variable
+     */
     const Type &getType() const {
         return type;
     }
 
+    /**
+     * \brief Returns the runtime object representing the local variable.
+     *
+     * This method can be called only if \ref setRt() has been called.
+     * \return the runtime object representing the local variable
+     */
     LocalVariable &getRt() const {
         assert(rt);
         return *rt;
     }
 
+    /**
+     * \brief Sets the runtime object representing the local variable.
+     *
+     * This is usually called after the first pass, when it is known which local variables are shared (from closures
+     * or via references).
+     * \param rt the runtime object representing the local variable
+     */
     void setRt(LocalVariable &rt) {
+        assert(!this->rt);
         this->rt = &rt;
     }
 

@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the base class for AST nodes representing declarations.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_AST_DECLARATION_H_

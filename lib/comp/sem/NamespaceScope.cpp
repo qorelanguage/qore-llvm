@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implements the NamespaceScope class.
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/NamespaceScope.h"
@@ -89,7 +89,7 @@ void NamespaceScope::processNamespaceDeclaration(ast::Namespace &node) {
         }
 
         Namespace &rtNs = rt.addNamespace(core.getString(name), location);
-        Ptr ptr = util::make_unique<NamespaceScope>(rtNs, *this);
+        Ptr ptr = Ptr(new NamespaceScope(rtNs, *this));
         ns = ptr.get();
         namespaces[name] = std::move(ptr);
     } else {
@@ -115,7 +115,7 @@ void NamespaceScope::processClassDeclaration(ast::Class &node) {
     }
 
     Class &c = rt.addClass(core.getString(name), location); //XXX when should this be created?
-    ClassScope::Ptr ptr = util::make_unique<ClassScope>(c, core, *this, node);
+    ClassScope::Ptr ptr = ClassScope::Ptr(new ClassScope(c, core, *this, node));
     core.addToQueue(*ptr);
     classes[name] = std::move(ptr);
 }
@@ -134,7 +134,7 @@ void NamespaceScope::processGlobalVariableDeclaration(ast::GlobalVariable &node)
         throw ReportedError();
     }
 
-    GlobalVariableInfo::Ptr ptr = util::make_unique<GlobalVariableInfo>(core, *this, node);
+    GlobalVariableInfo::Ptr ptr = GlobalVariableInfo::Ptr(new GlobalVariableInfo(core, *this, node));
     core.addToQueue(*ptr);
     globalVariables[name] = std::move(ptr);
 }
@@ -153,8 +153,8 @@ void NamespaceScope::processFunctionDeclaration(ast::Function &node) {
             throw ReportedError();
         }
 
-        FunctionGroupInfo::Ptr ptr = util::make_unique<FunctionGroupInfo>(
-                rt.addFunctionGroup(core.getString(name)), core, *this, location);
+        FunctionGroupInfo::Ptr ptr = FunctionGroupInfo::Ptr(
+                new FunctionGroupInfo(rt.addFunctionGroup(core.getString(name)), core, *this, location));
         fg = ptr.get();
         functions[name] = std::move(ptr);
     }

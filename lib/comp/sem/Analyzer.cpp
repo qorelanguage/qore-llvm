@@ -25,11 +25,10 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implementation of the semantic analyzer.
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/Analyzer.h"
-#include <utility>
 #include "StatementAnalyzerPass1.h"
 #include "StatementAnalyzerPass2.h"
 
@@ -70,7 +69,7 @@ void Analyzer::doPass2(Builder &builder, Statement &stmt) {
     StatementAnalyzerPass2::analyze(core, builder, stmt);
 }
 
-std::pair<Function::Ptr, Function::Ptr> Analyzer::analyze(Context &ctx, ast::Script &node) {
+Function::Ptr Analyzer::analyze(Context &ctx, ast::Script &node) {
     Analyzer analyzer(ctx);
 
     for (auto &decl : node.members) {
@@ -79,7 +78,8 @@ std::pair<Function::Ptr, Function::Ptr> Analyzer::analyze(Context &ctx, ast::Scr
     analyzer.processPendingDeclarations();
 
     Function::Ptr qMain;
-    if (!node.statements.empty()) {
+    auto initializers = analyzer.takeInitializers();
+    if (!node.statements.empty() || !initializers.empty()) {
         ast::Routine::Ptr r = ast::Routine::create();
         r->body = ast::CompoundStatement::create();
         r->body->statements = std::move(node.statements);
@@ -87,21 +87,10 @@ std::pair<Function::Ptr, Function::Ptr> Analyzer::analyze(Context &ctx, ast::Scr
 
         qMain = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
         FunctionScope mainFs(*qMain, analyzer.core, analyzer.root, *r);
-        mainFs.analyze();
+        mainFs.analyze(&initializers);
     }
 
-    Function::Ptr qInit;
-    auto initializers = analyzer.takeInitializers();
-    if (!initializers.empty()) {
-        qInit = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
-        FunctionBuilder initBuilder(*qInit);
-        for (auto &stmt : initializers) {
-            analyzer.doPass2(initBuilder, *stmt);
-        }
-        initBuilder.createRetVoid();
-    }
-
-    return std::make_pair(std::move(qInit), std::move(qMain));
+    return std::move(qMain);
 }
 
 } // namespace sem

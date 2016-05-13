@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the BlockScope class.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_BLOCKSCOPE_H_
@@ -41,9 +41,19 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Implementation of the \ref Scope interface for blocks (a.k.a. compound statements).
+ *
+ * The \ref BlockScope handles declarations and resolutions of local variables, delegating their creation to the
+ * nearest enclosing \ref FunctionScope.
+ */
 class BlockScope : public Scope {
 
 public:
+    /**
+     * \brief Creates the block scope.
+     * \param parent the parent scope
+     */
     explicit BlockScope(Scope &parent) : parent(parent) {
     }
 

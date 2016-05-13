@@ -92,7 +92,7 @@ public:
      * \param index the index of the parameter
      * \return the type of the parameter with given index
      */
-    const Type &getParameterType(Size index) const {
+    const Type &getParameterType(Index index) const {
         assert(index >= 0 && index < paramTypes.size());
         return *paramTypes[index];
     }

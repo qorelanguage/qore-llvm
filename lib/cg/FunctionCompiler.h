@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the function compiler.
 ///
 //------------------------------------------------------------------------------
 #ifndef LIB_CG_FUNCTIONCOMPILER_H_
@@ -41,6 +41,7 @@
 namespace qore {
 namespace cg {
 
+///\cond
 class FunctionContext {
 
 public:
@@ -106,6 +107,7 @@ private:
     llvm::Function *func;
     FunctionContext ctx;
 };
+///\endcond
 
 } // namespace cg
 } // namespace qore

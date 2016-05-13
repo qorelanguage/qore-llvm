@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Interactive mode.
 ///
 //------------------------------------------------------------------------------
 #ifndef TOOLS_QOREC_INTERACTIVE_H_
@@ -33,6 +33,9 @@
 
 namespace qore {
 
+/**
+ * \brief Runs the interactive mode.
+ */
 void interactive();
 
 } // namespace qore

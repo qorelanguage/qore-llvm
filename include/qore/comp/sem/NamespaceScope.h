@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the NamespaceScope class.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_NAMESPACESCOPE_H_
@@ -47,40 +47,48 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Describes a namespace during semantic analysis and implements its scope.
+ */
 class NamespaceScope : public Scope {
 
 public:
-    using Ptr = std::unique_ptr<NamespaceScope>;
+    using Ptr = std::unique_ptr<NamespaceScope>;        //!< Pointer type.
 
 public:
+    /**
+     * \brief Creates a root namespace scope.
+     * \param core the shared state of the analyzer
+     * \param rt the runtime object representing the root namespace
+     */
     NamespaceScope(Core &core, Namespace &rt) : core(core), rt(rt), parentNamespace(nullptr) {
     }
 
+    /**
+     * \brief Creates a namespace scope.
+     * \param rt the runtime object representing the namespace
+     * \param parentNamespace the parent namespace scope
+     */
     NamespaceScope(Namespace &rt, NamespaceScope &parentNamespace)
             : core(parentNamespace.core), rt(rt), parentNamespace(&parentNamespace) {
     }
 
+    /**
+     * \brief Returns the runtime object representing the namespace.
+     * \return the runtime object representing the namespace
+     */
     Namespace &getRt() {
         return rt;
     }
 
-    bool isRoot() const {
-        return parentNamespace == nullptr;
-    }
-
     /**
-     * \brief Finds a namespace with given name.
-     * \param name the name to find
-     * \return the namespace or `nullptr` if not found
+     * \brief Processes a declaration lexically nested in this namespace.
+     *
+     * Finds the semantic parent for the declaration according to the name in the AST node and calls its
+     * processXxxDeclaration of appropriate type.
+     * \param decl the AST node of the declaration
      */
-    NamespaceScope *findNamespace(String::Ref name) const {
-        auto it = namespaces.find(name);
-        return it == namespaces.end() ? nullptr : it->second.get();
-    }
-
     void processDeclaration(ast::Declaration &decl);
-
-    ClassScope &resolveClass(const ast::Name &name) const;
 
     const Type &resolveType(const ast::Type &node) const override;
 
@@ -129,12 +137,29 @@ private:
      * If another constant, function or global variable with the same name exists, reports an error and
      * throws ReportedError.
      * \param node the global variable declaration AST node
-     * \return global variable object
      * \throws ReportedError if a constant, function or global variable with given name already exists
      */
     void processGlobalVariableDeclaration(ast::GlobalVariable &node);
 
+    /**
+     * \brief Adds a function to this namespace.
+     *
+     * If another constant, or global variable with the same name exists, reports an error and
+     * throws ReportedError.
+     * \param node the function declaration AST node
+     * \throws ReportedError if a constant, function or global variable with given name already exists
+     */
     void processFunctionDeclaration(ast::Function &node);
+
+    /**
+     * \brief Finds a namespace with given name directly contained in this namespace.
+     * \param name the name to find
+     * \return the namespace or `nullptr` if not found
+     */
+    NamespaceScope *findNamespace(String::Ref name) const {
+        auto it = namespaces.find(name);
+        return it == namespaces.end() ? nullptr : it->second.get();
+    }
 
     /**
      * \brief Finds a class with given name.
@@ -156,11 +181,17 @@ private:
         return it == globalVariables.end() ? nullptr : it->second.get();
     }
 
+    /**
+     * \brief Finds a function group with given name.
+     * \param name the name to find
+     * \return the function group or `nullptr` if not found
+     */
     FunctionGroupInfo *findFunctionGroup(String::Ref name) const {
         auto it = functions.find(name);
         return it == functions.end() ? nullptr : it->second.get();
     }
 
+    ClassScope &resolveClass(const ast::Name &name) const;
     ClassScope *lookupClass(ast::Name::Iterator begin, ast::Name::Iterator end) const;
     void collectClasses(std::vector<ClassScope *> &classes, ast::Name::Iterator begin, ast::Name::Iterator end) const;
 
@@ -173,7 +204,7 @@ private:
     }
 
     std::string getNameForDiag() const {
-        return isRoot() ? "the root namespace" : ("namespace " + rt.getFullName());
+        return parentNamespace == nullptr ? "the root namespace" : ("namespace " + rt.getFullName());
     }
 
 private:

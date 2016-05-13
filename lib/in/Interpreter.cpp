@@ -30,8 +30,17 @@
 //------------------------------------------------------------------------------
 #include "qore/in/Interpreter.h"
 
+#include <vector>
+#include "qore/in/FunctionInterpreter.h"
+
 namespace qore {
 namespace in {
+
+void interpret(Function &f) {
+    FunctionContext functionContext(f.getTempCount(), f.getLocalVariables().size());
+    FunctionInterpreter fi(functionContext, f.getEntryBlock());
+    fi.run();
+}
 
 } // namespace in
 } // namespace qore

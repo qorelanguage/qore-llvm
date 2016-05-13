@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the FunctionScope class.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_
@@ -42,23 +42,30 @@ namespace qore {
 namespace comp {
 namespace sem {
 
-//resolves parameters
-//knows the type of the return value
-//owns local variables
-//helps with return/throw statement
-
+/**
+ * \brief Describes a function during semantic analysis and implements its scope.
+ */
 class FunctionScope : public Scope {
 
 public:
-    using Ptr = std::unique_ptr<FunctionScope>;
+    using Ptr = std::unique_ptr<FunctionScope>;     //!< Pointer type.
 
 public:
+    /**
+     * \brief Constructor.
+     * \param rt the runtime object representing the function
+     * \param core the shared state of the analyzer
+     * \param parent the parent namespace scope
+     * \param node the AST node
+     */
     FunctionScope(Function &rt, Core &core, Scope &parent, ast::Routine &node);
 
-
     const Type &resolveType(const ast::Type &node) const override;
+
     LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override;
+
     Symbol resolveSymbol(const ast::Name &name) const override;
+
     LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
         QORE_UNREACHABLE("");
     }
@@ -67,18 +74,18 @@ public:
         return rt.getType().getReturnType();
     }
 
-    void analyze();
-
-    Function &getRt() const {
-        return rt;
-    }
+    /**
+     * \brief Performs the analysis of the function's body, i.e. translation to the \ref qore::code representation.
+     * \param initializers optional initializer statements to prepend before the function's body
+     */
+    void analyze(std::vector<Statement::Ptr> *initializers = nullptr);
 
 private:
     Function &rt;
     Core &core;
     Scope &parent;
     ast::Routine &node;
-    std::vector<std::unique_ptr<LocalVariableInfo>> locals;
+    std::vector<LocalVariableInfo::Ptr> locals;
     std::map<String::Ref, LocalVariableInfo *> args;
 };
 

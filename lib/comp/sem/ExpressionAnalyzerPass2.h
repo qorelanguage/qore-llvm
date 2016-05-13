@@ -62,8 +62,6 @@ namespace sem {
  * in the constructor.
  * - Implementation relies on destructors of helper objects like LValue, TempHelper and ExpressionAnalyzerPass2 itself.
  * Their order is critical.
- * \todo Helper classes and methods lead to concise implementation of visitor methods, but their names are obscure
- * and the logic is hard to follow.
  */
 class ExpressionAnalyzerPass2 {
 

@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines the Scope interface.
 ///
 //------------------------------------------------------------------------------
 #ifndef INCLUDE_QORE_COMP_SEM_SCOPE_H_
@@ -40,33 +40,63 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Represents the result of symbol resolution.
+ */
 class Symbol {
 
 public:
+    /**
+     * \brief Identifies the type of the resolved symbol.
+     */
     enum class Kind {
-        Global,
-        Local,
+        Global,     //!< Identifies a resolved global variable.
+        Local,      //!< Identifies a resolved local variable.
     };
 
 public:
-    explicit Symbol(const LocalVariableInfo &v) : kind(Kind::Local), ptr(&v) {
+    /**
+     * \brief Creates an instance representing a global variable.
+     * \param gv the resolved global variable
+     */
+    explicit Symbol(const GlobalVariableInfo &gv) : kind(Kind::Global), ptr(&gv) {
     }
 
-    explicit Symbol(const GlobalVariableInfo &v) : kind(Kind::Global), ptr(&v) {
+    /**
+     * \brief Creates an instance representing a local variable.
+     * \param lv the resolved local variable
+     */
+    explicit Symbol(const LocalVariableInfo &lv) : kind(Kind::Local), ptr(&lv) {
     }
 
+    /**
+     * \brief Returns the type of the resolved symbol.
+     * \return the type of the resolved symbol
+     */
     Kind getKind() const {
         return kind;
     }
 
-    const LocalVariableInfo &asLocal() const {
-        assert(kind == Kind::Local);
-        return *static_cast<const LocalVariableInfo *>(ptr);
-    }
-
+    /**
+     * \brief Returns the resolved symbol as a global variable.
+     *
+     * This method can be used only if \ref getKind() returns \ref Kind::Global.
+     * \return the resolved symbol as a global variable
+     */
     const GlobalVariableInfo &asGlobal() const {
         assert(kind == Kind::Global);
         return *static_cast<const GlobalVariableInfo *>(ptr);
+    }
+
+    /**
+     * \brief Returns the resolved symbol as a local variable.
+     *
+     * This method can be used only if \ref getKind() returns \ref Kind::Local.
+     * \return the resolved symbol as a local variable
+     */
+    const LocalVariableInfo &asLocal() const {
+        assert(kind == Kind::Local);
+        return *static_cast<const LocalVariableInfo *>(ptr);
     }
 
 private:
@@ -74,15 +104,60 @@ private:
     const void *ptr;
 };
 
+/**
+ * \brief Interface for entities providing scope functions such as symbol resolution.
+ */
 class Scope {
 
 public:
     virtual ~Scope() = default;
 
+    /**
+     * \brief Resolves a type.
+     *
+     * If the type cannot be resolved, reports an error and returns the \ref Type::Error type.
+     * \param node the AST node representing the type
+     * \return resolved type
+     */
     virtual const Type &resolveType(const ast::Type &node) const = 0;
-    virtual LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
+
+    /**
+     * \brief Resolves a symbol.
+     * \param name the AST node representing the name to resolve
+     * \return resolved symbol
+     * \todo define what should happen if the name cannot be resolved
+     */
     virtual Symbol resolveSymbol(const ast::Name &name) const = 0;
+
+    /**
+     * \brief Creates a local variable.
+     *
+     * The class that implements this method is the owner of the LocalVariableInfo instance.
+     * \param name the name of the local variable
+     * \param location the location of the local variable
+     * \param type the type of the local variable
+     * \return the new local variable
+     * \todo define what should happen if there is no function scope, e.g. `our string s = string x;` or
+     * `class C { constructor() : base(5 + int i) {} }` etc.
+     */
+    virtual LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
+
+    /**
+     * \brief Declares a local variable.
+     *
+     * The class that implements this method (BlockScope) calls \ref createLocalVariable to delegate the ownership
+     * of the local variable to the nearest FunctionScope.
+     * \param name the name of the local variable
+     * \param location the location of the local variable
+     * \param type the type of the local variable
+     * \return the local variable
+     */
     virtual LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) = 0;
+
+    /**
+     * \brief Returns the type for the return value of the nearest function scope.
+     * \return the type of the return value of the nearest function scope
+     */
     virtual const Type &getReturnType() const = 0;
 
 protected:

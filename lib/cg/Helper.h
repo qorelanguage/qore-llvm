@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Defines a helper class for creating LLVM objects.
 ///
 //------------------------------------------------------------------------------
 #ifndef LIB_CG_HELPER_H_
@@ -43,6 +43,7 @@
 namespace qore {
 namespace cg {
 
+///\cond
 class Helper {
 
 public:
@@ -173,6 +174,8 @@ public:
     llvm::LLVMContext &ctx;
     std::unique_ptr<llvm::Module> module;
 
+    ///\name Types
+    ///\{
     llvm::Type *lt_void;
     llvm::Type *lt_void_ptr;
     llvm::Type *lt_bool;
@@ -189,7 +192,10 @@ public:
     llvm::Type *lt_Namespace_ptr;
     llvm::Type *lt_SourceInfo_ptr;
     llvm::Type *lt_Type_ptr;
+    ///\}
 
+    ///\name Functions
+    ///\{
     llvm::Function *lf_personality;
 
     llvm::Function *lf_qint_to_qvalue;
@@ -215,11 +221,13 @@ public:
     llvm::Function *lf_ref_dec;
     llvm::Function *lf_ref_dec_noexcept;
     llvm::Function *lf_ref_inc;
+    ///\}
 
 private:
     std::unordered_map<const Conversion *, llvm::Function *> convFunctions;
     std::unordered_map<const BinaryOperator *, llvm::Function *> binOpFunctions;
 };
+///\endcond
 
 } // namespace cg
 } // namespace qore

@@ -33,7 +33,6 @@
 
 #include <map>
 #include <string>
-#include <utility>
 #include <vector>
 #include "qore/core/Env.h"
 #include "qore/comp/Context.h"
@@ -47,30 +46,74 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+/**
+ * \brief Semantic analyzer.
+ *
+ * Contains the shared state of the analyzer (\ref Core), the root \ref NamespaceScope and provides useful functions.
+ */
 class Analyzer {
 
 public:
+    /**
+     * \brief Constructor.
+     * \param ctx the compiler context
+     */
     explicit Analyzer(Context &ctx) : core(ctx), root(core, ctx.getEnv().getRootNamespace()) {
     }
 
+    /**
+     * \brief Processes a declaration that is lexically in the root namespace.
+     * \param decl the AST node
+     */
     void processDeclaration(ast::Declaration &decl) {
         root.processDeclaration(decl);
     }
 
+    /**
+     * \brief Returns the root namespace scope.
+     * \return the root namespace scope
+     */
     NamespaceScope &getRootNamespaceScope() {
         return root;
     }
 
+    /**
+     * \brief Performs the first pass of a statement analysis.
+     * \param scope the scope of the statement
+     * \param stmt the AST node of the statement
+     * \return the temporary representation of the statement
+     */
     Statement::Ptr doPass1(Scope &scope, ast::Statement &stmt);
+
+    /**
+     * \brief Performs the second pass of a statement analysis.
+     * \param builder the code builder
+     * \param stmt the temporary representation of the statement
+     */
     void doPass2(Builder &builder, Statement &stmt);
 
+    /**
+     * \brief Returns the array of global variable and constant initializers collected during the analysis.
+     * \return the array of the initializers
+     */
     std::vector<Statement::Ptr> takeInitializers() {
         return core.takeInitializers();
     }
 
+    /**
+     * \brief Processes all pending declarations, emptying the internal queues.
+     */
     void processPendingDeclarations();
 
-    static std::pair<Function::Ptr, Function::Ptr> analyze(Context &ctx, ast::Script &node);
+    /**
+     * \brief Analyzes a whole script, synthesizing a function from the global variable and constant initializers and
+     * the top level statements.
+     * \param ctx the compiler context
+     * \param node the AST node representing the script
+     * \return the synthesized function
+     * \todo the function should be probably added to the root namespace under some name
+     */
+    static Function::Ptr analyze(Context &ctx, ast::Script &node);
 
 private:
     Core core;

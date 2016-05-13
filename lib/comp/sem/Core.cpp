@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief TODO file description
+/// \brief Implements the Core class which holds the state shared by the analyzer classes.
 ///
 //------------------------------------------------------------------------------
 #include "qore/comp/sem/Core.h"

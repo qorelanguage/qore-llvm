@@ -113,7 +113,7 @@ public:
      * \param falseDest the block to jump to in case the condition is false
      */
     void appendBranch(Temp condition, const Block &trueDest, const Block &falseDest) {
-        append(util::make_unique<Branch>(condition, trueDest, falseDest));
+        append<Branch>(condition, trueDest, falseDest);
     }
 
     /**
@@ -122,7 +122,7 @@ public:
      * \param value the constant value
      */
     void appendConstInt(Temp dest, qint value) {
-        append(util::make_unique<ConstInt>(dest, value));
+        append<ConstInt>(dest, value);
     }
 
     /**
@@ -130,7 +130,7 @@ public:
      * \param dest the temporary to load the constant into
      */
     void appendConstNothing(Temp dest) {
-        append(util::make_unique<ConstNothing>(dest));
+        append<ConstNothing>(dest);
     }
 
     /**
@@ -139,7 +139,7 @@ public:
      * \param value the constant value
      */
     void appendConstString(Temp dest, String &value) {
-        append(util::make_unique<ConstString>(dest, value));
+        append<ConstString>(dest, value);
     }
 
     /**
@@ -148,7 +148,7 @@ public:
      * \param globalVariable the global variable
      */
     void appendGlobalGet(Temp dest, GlobalVariable &globalVariable) {
-        append(util::make_unique<GlobalGet>(dest, globalVariable));
+        append<GlobalGet>(dest, globalVariable);
     }
 
     /**
@@ -157,7 +157,7 @@ public:
      * \param initValue the temporary with the initial value
      */
     void appendGlobalInit(GlobalVariable &globalVariable, Temp initValue) {
-        append(util::make_unique<GlobalInit>(globalVariable, initValue));
+        append<GlobalInit>(globalVariable, initValue);
     }
 
     /**
@@ -165,7 +165,7 @@ public:
      * \param globalVariable the global variable
      */
     void appendGlobalReadLock(GlobalVariable &globalVariable) {
-        append(util::make_unique<GlobalReadLock>(globalVariable));
+        append<GlobalReadLock>(globalVariable);
     }
 
     /**
@@ -173,7 +173,7 @@ public:
      * \param globalVariable the global variable
      */
     void appendGlobalReadUnlock(GlobalVariable &globalVariable) {
-        append(util::make_unique<GlobalReadUnlock>(globalVariable));
+        append<GlobalReadUnlock>(globalVariable);
     }
 
     /**
@@ -182,7 +182,7 @@ public:
      * \param src the temporary to store into the global variable
      */
     void appendGlobalSet(GlobalVariable &globalVariable, Temp src) {
-        append(util::make_unique<GlobalSet>(globalVariable, src));
+        append<GlobalSet>(globalVariable, src);
     }
 
     /**
@@ -190,7 +190,7 @@ public:
      * \param globalVariable the global variable
      */
     void appendGlobalWriteLock(GlobalVariable &globalVariable) {
-        append(util::make_unique<GlobalWriteLock>(globalVariable));
+        append<GlobalWriteLock>(globalVariable);
     }
 
     /**
@@ -198,7 +198,7 @@ public:
      * \param globalVariable the global variable
      */
     void appendGlobalWriteUnlock(GlobalVariable &globalVariable) {
-        append(util::make_unique<GlobalWriteUnlock>(globalVariable));
+        append<GlobalWriteUnlock>(globalVariable);
     }
 
     /**
@@ -210,7 +210,7 @@ public:
      * \param lpad optional landing pad in case an exception occurs
      */
     void appendInvokeBinaryOperator(Temp dest, const BinaryOperator &op, Temp left, Temp right, const Block *lpad) {
-        append(util::make_unique<InvokeBinaryOperator>(dest, op, left, right, lpad));
+        append<InvokeBinaryOperator>(dest, op, left, right, lpad);
     }
 
     /**
@@ -221,7 +221,7 @@ public:
      * \param lpad optional landing pad in case an exception occurs
      */
     void appendInvokeConversion(Temp dest, const Conversion &conversion, Temp arg, const Block *lpad) {
-        append(util::make_unique<InvokeConversion>(dest, conversion, arg, lpad));
+        append<InvokeConversion>(dest, conversion, arg, lpad);
     }
 
     /**
@@ -229,7 +229,7 @@ public:
      * \param dest the block to jump to
      */
     void appendJump(const Block &dest) {
-        append(util::make_unique<Jump>(dest));
+        append<Jump>(dest);
     }
 
     /**
@@ -238,7 +238,7 @@ public:
      * \param localVariable the local variable
      */
     void appendLocalGet(Temp dest, const LocalVariable &localVariable) {
-        append(util::make_unique<LocalGet>(dest, localVariable));
+        append<LocalGet>(dest, localVariable);
     }
 
     /**
@@ -247,7 +247,7 @@ public:
      * \param src the temporary to store into the local variable
      */
     void appendLocalSet(const LocalVariable &localVariable, Temp src) {
-        append(util::make_unique<LocalSet>(localVariable, src));
+        append<LocalSet>(localVariable, src);
     }
 
     /**
@@ -256,7 +256,7 @@ public:
      * \param lpad optional landing pad in case an exception occurs
      */
     void appendRefDec(Temp temp, const Block *lpad) {
-        append(util::make_unique<RefDec>(temp, lpad));
+        append<RefDec>(temp, lpad);
     }
 
     /**
@@ -264,7 +264,7 @@ public:
      * \param temp the temporary value whose reference count should be decreased
      */
     void appendRefDecNoexcept(Temp temp) {
-        append(util::make_unique<RefDecNoexcept>(temp));
+        append<RefDecNoexcept>(temp);
     }
 
     /**
@@ -272,21 +272,21 @@ public:
      * \param temp the temporary value whose reference count should be increased
      */
     void appendRefInc(Temp temp) {
-        append(util::make_unique<RefInc>(temp));
+        append<RefInc>(temp);
     }
 
     /**
      * \brief Appends a ResumeUnwind instruction to the end of the block.
      */
     void appendResumeUnwind() {
-        append(util::make_unique<ResumeUnwind>());
+        append<ResumeUnwind>();
     }
 
     /**
      * \brief Appends a RetVoid instruction to the end of the block.
      */
     void appendRetVoid() {
-        append(util::make_unique<RetVoid>());
+        append<RetVoid>();
     }
 
     /**
@@ -294,13 +294,14 @@ public:
      * \param value the temporary holding the return value
      */
     void appendRet(Temp value) {
-        append(util::make_unique<Ret>(value));
+        append<Ret>(value);
     }
 
 private:
-    void append(Instruction::Ptr instruction) {
+    template<typename T, typename... Args>
+    void append(Args&&... args) {
         assert(!isTerminated());
-        instructions.push_back(std::move(instruction));
+        instructions.push_back(Instruction::Ptr(new T(std::forward<Args>(args)...)));
     }
 
 private:

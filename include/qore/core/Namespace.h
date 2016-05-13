@@ -179,10 +179,10 @@ private:
 private:
     std::string fullName;
     SourceLocation location;
-    std::vector<std::unique_ptr<Namespace>> namespaces;
-    std::vector<std::unique_ptr<Class>> classes;
-    std::vector<std::unique_ptr<GlobalVariable>> globalVariables;
-    std::vector<std::unique_ptr<FunctionGroup>> functionGroups;
+    std::vector<Namespace::Ptr> namespaces;
+    std::vector<Class::Ptr> classes;
+    std::vector<GlobalVariable::Ptr> globalVariables;
+    std::vector<FunctionGroup::Ptr> functionGroups;
 };
 
 } // namespace qore
