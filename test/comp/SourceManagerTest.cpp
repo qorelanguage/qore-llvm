@@ -37,6 +37,7 @@ namespace comp {
 
 struct SourceManagerTest : ::testing::Test, DiagManagerHelper {
     SourceManager mgr{diagMgr, std::string(TEST_INPUT_DIR) + "/"};
+    SourceInfo info{"test"};
 
     std::string readAll(Source &src) {
         std::string s;
@@ -51,32 +52,26 @@ struct SourceManagerTest : ::testing::Test, DiagManagerHelper {
 };
 
 TEST_F(SourceManagerTest, FromString) {
-    Source &src = mgr.createFromString("test", "xyz");
+    Source &src = mgr.createFromString(info, "xyz");
     EXPECT_EQ("xyz", readAll(src));
-    EXPECT_EQ("test", src.getName());
-}
-
-TEST_F(SourceManagerTest, Get) {
-    Source &src = mgr.createFromString("test", "xyz");
-    EXPECT_EQ(&src, &mgr.get(src.getId()));
-    EXPECT_THROW(mgr.get(src.getId() + 1), std::out_of_range);
+    EXPECT_EQ(info, src.getInfo());
 }
 
 TEST_F(SourceManagerTest, FromFile) {
-    Source &src = mgr.createFromFile("SourceManagerTest_FromFile");
+    Source &src = mgr.createFromFile(info, "SourceManagerTest_FromFile");
     EXPECT_EQ("abc", readAll(src));
-    EXPECT_EQ(std::string(TEST_INPUT_DIR) + "/SourceManagerTest_FromFile", src.getName());
+    EXPECT_EQ(std::string(TEST_INPUT_DIR) + "/SourceManagerTest_FromFile", src.getInfo().getFullName());
 }
 
 TEST_F(SourceManagerTest, FromFileErr) {
     EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompScriptFileIoError))).Times(1);
-    Source &src = mgr.createFromFile("SourceManagerTest_Nonexistent");
+    Source &src = mgr.createFromFile(info, "SourceManagerTest_Nonexistent");
     EXPECT_EQ(0, src.read());
 }
 
 TEST_F(SourceManagerTest, NullCharWarnings) {
-    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompNulCharactersIgnored))).Times(2);
-    mgr.createFromString("test", std::string("x\0y\0z", 5));
+    EXPECT_CALL(mockDiagProcessor, process(MatchDiagRecordId(DiagId::CompNulCharactersIgnored))).Times(1);
+    mgr.createFromString(info, std::string("x\0y\0z", 5));
 }
 
 } // namespace comp

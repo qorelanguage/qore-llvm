@@ -32,7 +32,7 @@
 #define INCLUDE_QORE_COMP_AST_NODE_H_
 
 #include <memory>
-#include "qore/comp/SourceLocation.h"
+#include "qore/core/SourceLocation.h"
 
 namespace qore {
 namespace comp {
@@ -69,35 +69,6 @@ private:
     Node(Node &&) = delete;
     Node &operator=(const Node &) = delete;
     Node &operator=(Node &&) = delete;
-};
-
-/**
- * \brief Base class for all nodes representing declarations.
- */
-class Declaration : public Node {
-
-public:
-    using Ptr = std::unique_ptr<Declaration>;               //!< Pointer type.
-
-    /**
-     * \brief Identifies the type of the declaration.
-     */
-    enum class Kind {
-        Namespace,          //!< Identifies instances of \ref Namespace.
-        Class,              //!< Identifies instances of \ref Class.
-        Function,           //!< Identifies instances of \ref Function.
-        Constant,           //!< Identifies instances of \ref Constant.
-        GlobalVariable,     //!< Identifies instances of \ref GlobalVariable.
-        Method,             //!< Identifies instances of \ref Method.
-        Field,              //!< Identifies instances of \ref Field.
-        MemberGroup,        //!< Identifies instances of \ref MemberGroup.
-    };
-
-    /**
-     * \brief Returns the type of the declaration.
-     * \return the type of the declaration
-     */
-    virtual Kind getKind() const = 0;
 };
 
 } // namespace ast

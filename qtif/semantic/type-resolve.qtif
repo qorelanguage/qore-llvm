@@ -5,7 +5,7 @@ namespace N {
 }
 our int g1;
 our *string g2;
-our C N::g3;
+our *C N::g3;
 our *N::D g4;
 #$$$
 #$!SemaUnresolvedClass@9:6
@@ -13,7 +13,20 @@ our *N::D g4;
   -namespace N @1:11
     -class C @2:11
     -our *::N::C g @4:12
-    -our ::N::C g3 @8:10
+    -our *::N::C g3 @8:11
   -our int g1 @6:9
   -our *string g2 @7:13
   -our <error> g4 @9:11
+-sub nothing() <qinit> @0:0, 1 temps, 0 locals
+  Block #1:
+    ConstNothing temp.0
+    GlobalInit our *::N::C ::N::g, temp.0
+    ConstInt temp.0, 0
+    GlobalInit our int ::g1, temp.0
+    ConstNothing temp.0
+    GlobalInit our *string ::g2, temp.0
+    ConstNothing temp.0
+    GlobalInit our *::N::C ::N::g3, temp.0
+    ConstNothing temp.0
+    GlobalInit our <error> ::g4, temp.0
+    RetVoid

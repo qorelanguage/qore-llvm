@@ -33,7 +33,7 @@
 
 #include <ostream>
 #include <string>
-#include "qore/comp/SourceLocation.h"
+#include "qore/core/SourceLocation.h"
 
 namespace qore {
 namespace comp {

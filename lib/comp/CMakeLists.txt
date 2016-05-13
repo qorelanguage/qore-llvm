@@ -9,14 +9,17 @@ add_library(comp STATIC
     Parser-routine.cpp
     Parser-statement.cpp
     Scanner.cpp
-    Source.cpp
     SourceManager.cpp
     Token.cpp
-    semantic/Analyzer.cpp
-    semantic/Namespace.cpp
-    semantic/TypeRegistry.cpp
+    sem/Analyzer.cpp
+    sem/Builder.cpp
+    sem/Core.cpp
+    sem/FunctionGroupInfo.cpp
+    sem/FunctionScope.cpp
+    sem/GlobalVariableInfo.cpp
+    sem/NamespaceScope.cpp
 )
 
 target_link_libraries(comp
-    common
+    core
 )

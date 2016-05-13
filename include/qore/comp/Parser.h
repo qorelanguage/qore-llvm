@@ -33,7 +33,7 @@
 
 #include <string>
 #include <vector>
-#include "qore/common/Util.h"
+#include "qore/core/util/Util.h"
 #include "qore/comp/ast/Script.h"
 #include "qore/comp/ast/Class.h"
 #include "qore/comp/ast/Closure.h"
@@ -63,6 +63,12 @@ public:
      * \return parsed script
      */
     ast::Script::Ptr parseScript();
+
+    /**
+     * \brief Parses a top-level statement or declaration.
+     * \return parsed statement, declaration, or eof
+     */
+    class DeclOrStmt parseDeclOrStmt();
 
 private:
     Parser(const Parser &) = delete;
@@ -120,7 +126,7 @@ private:
 
     std::string lexeme() {
         ensureToken();
-        return ctx.getSrcMgr().get(token.location.sourceId).getRange(token.location.offset, token.length);
+        return ctx.getLexeme(token);
     }
 
     void recoverDoNothing() {}
@@ -202,6 +208,7 @@ private:
     ast::Routine::Ptr routine(ast::Modifiers mods, ast::Type type, bool method = false);
     ast::ArgList::Ptr argList();
     ast::Constant::Ptr constant(ast::Modifiers mods);
+    ast::VarDeclExpression::Ptr varDecl(ast::Type type);
 
 private:
     Context &ctx;
@@ -209,6 +216,71 @@ private:
     Token token;
     bool hasToken;
     Recorder *recorder;
+};
+
+/**
+ * \brief Helper class for returning either a declaration or a statement from the parser.
+ */
+class DeclOrStmt {
+
+public:
+    /**
+     * \brief Constructs an instance that represents eof.
+     */
+    DeclOrStmt() : decl(false) {
+    }
+
+    /**
+     * \brief Constructs an instance that represents a declaration.
+     * \param decl the declaration
+     */
+    explicit DeclOrStmt(ast::Declaration::Ptr decl) : node(std::move(decl)), decl(true) {
+    }
+
+    /**
+     * \brief Constructs an instance that represents a statement.
+     * \param stmt the statement
+     */
+    explicit DeclOrStmt(ast::Statement::Ptr stmt) : node(std::move(stmt)), decl(false) {
+    }
+
+    /**
+     * \brief Returns true if this instance represents a declaration.
+     * \return true if this instance represents a declaration
+     */
+    bool isDeclaration() const {
+        return node && decl;
+    }
+
+    /**
+     * \brief Returns true if this instance represents a statement.
+     * \return true if this instance represents a statement
+     */
+    bool isStatement() const {
+        return node && !decl;
+    }
+
+    /**
+     * \brief Returns the declaration represented by this instance.
+     * \return the declaration represented by this instance
+     */
+    ast::Declaration &getDeclaration() {
+        assert(isDeclaration());
+        return static_cast<ast::Declaration &>(*node);
+    }
+
+    /**
+     * \brief Returns the statement represented by this instance.
+     * \return the statement represented by this instance
+     */
+    ast::Statement &getStatement() {
+        assert(isStatement());
+        return static_cast<ast::Statement &>(*node);
+    }
+
+private:
+    ast::Node::Ptr node;
+    bool decl;
 };
 
 } // namespace comp

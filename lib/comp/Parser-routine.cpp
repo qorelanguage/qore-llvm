@@ -78,7 +78,8 @@ std::vector<ast::Routine::Param> Parser::paramList() {
     if (tokenType() != TokenType::ParenRight && tokenType() != TokenType::EndOfFile) {
         while (true) {
             ast::Type t = type();
-            Token id = match(TokenType::Identifier);
+            ast::Name::Id id(strVal(), location());
+            match(TokenType::Identifier);
             ast::Expression::Ptr expr;
             if (tokenType() == TokenType::Equals) {
                 consume();

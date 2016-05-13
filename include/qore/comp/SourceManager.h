@@ -31,6 +31,7 @@
 #ifndef INCLUDE_QORE_COMP_SOURCEMANAGER_H_
 #define INCLUDE_QORE_COMP_SOURCEMANAGER_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -57,37 +58,42 @@ public:
 
     /**
      * \brief Creates a Source from a string.
-     * \param name the name of the script
+     * \param info the source info
      * \param string the source of the script with no '\0' characters
      * \return a Source representing given script, remains valid until the SourceManager is destroyed
      */
-    Source &createFromString(std::string name, std::string string) {
-        return create(std::move(name), std::vector<char>(string.begin(), string.end()));
+    Source &createFromString(const SourceInfo &info, std::string string) {
+        return create(info, std::vector<char>(string.begin(), string.end()));
     }
 
     /**
      * \brief Creates a Source by reading the contents of a file.
+     * \param info the source info
      * \param fileName the name of the file
      * \param location the location to use for diagnostic in case the file cannot be read
      * \return a Source representing the script read from the file, remains valid until the SourceManager is destroyed
      */
-    Source &createFromFile(std::string fileName, SourceLocation location = SourceLocation());
+    Source &createFromFile(SourceInfo &info, std::string fileName, SourceLocation location = SourceLocation());
 
     /**
-     * \brief Returns the source with the given id.
-     * \param id the id of the source
-     * \return the source identified by `id`
+     * \brief Returns the substring of given length starting at given location.
+     * \param sourceInfo the source info
+     * \param offset the offset of the first character of the substring in the source
+     * \param length the length of the substring
+     * \return the substring of `length` starting at `location`
      */
-    Source &get(int id) const {
-        return *sources.at(id);
+    std::string getRange(const SourceInfo &sourceInfo, int offset, int length) const {
+        auto it = sources.find(&sourceInfo);
+        assert(it != sources.end());
+        return it->second->getRange(offset, length);
     }
 
 private:
-    Source &create(std::string name, std::vector<char> data);
+    Source &create(const SourceInfo &info, std::vector<char> data);
 
     DiagManager &diagMgr;
     std::string includePath;
-    std::vector<std::unique_ptr<Source>> sources;
+    std::map<const SourceInfo *, std::unique_ptr<Source>> sources;
 };
 
 } // namespace comp

@@ -33,7 +33,6 @@
 
 #include <vector>
 #include "qore/comp/ast/Const.h"
-#include "qore/comp/ast/Node.h"
 #include "qore/comp/ast/Routine.h"
 
 namespace qore {

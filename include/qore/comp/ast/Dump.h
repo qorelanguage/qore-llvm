@@ -34,7 +34,6 @@
 #include <string>
 #include <utility>
 #include "qore/comp/Context.h"
-#include "qore/comp/ast/Visitor.h"
 #include "qore/comp/ast/Script.h"
 
 namespace qore {
@@ -42,10 +41,10 @@ namespace comp {
 namespace ast {
 
 /// \cond IGNORED_BY_DOXYGEN
-#define NODE_HEADER(name)   os << indent++ << "-" << #name << "@" << decode(node.getStart())  \
-                               << "-" << decode(node.getEnd()) << "\n"
+#define NODE_HEADER(name)   os << indent++ << "-" << #name << "@" << node.getStart() \
+                               << "-" << node.getEnd() << "\n"
 #define NODE_FOOTER()       --indent
-#define NODE(name, body)    void visit(name &node) { \
+#define NODE(name, body)    void visit(const name &node) { \
                                 NODE_HEADER(name); \
                                 body \
                                 NODE_FOOTER(); \
@@ -63,7 +62,10 @@ namespace ast {
 #define BOOL(name)          FIELD(#name, " ") << (node.name ? "true" : "false") << "\n"
 
 template<typename OS>
-class DumpVisitor : public StatementVisitor, public ExpressionVisitor {
+class DumpVisitor {
+
+public:
+    using ReturnType = void;
 
 public:
     DumpVisitor(Context &ctx, OS &os) : ctx(ctx), os(os) {
@@ -229,9 +231,9 @@ public:
     NODE(SwitchStatement, {
             VISIT(expr);
             ARRAY(body, {
-                    os << indent++ << "-" << lexeme(i->keyword);
+                    os << indent++ << "-" << ctx.getLexeme(i->keyword);
                     if (i->op.type != TokenType::None) {
-                        os << " " << lexeme(i->op);
+                        os << " " << ctx.getLexeme(i->op);
                     }
                     os << ":\n";
                     if (i->expr) {
@@ -275,6 +277,9 @@ public:
     NODE(VarDeclExpression, {
             TYPE(type);
             STR(name);
+            if (node.initializer) {
+                VISIT(initializer);
+            }
     })
 
     NODE(CastExpression, {
@@ -353,7 +358,7 @@ public:
         VISIT(initializer);
     })
 
-    void visit(Type &node) {
+    void visit(const Type &node) {
         if (node.getKind() == Type::Kind::Implicit) {
             NODE_HEADER(ImplicitType);
         } else {
@@ -367,12 +372,12 @@ public:
         NODE_FOOTER();
     }
 
-    void visit(Routine &node) {
+    void visit(const Routine &node) {
         MODIFIERS(modifiers);
         TYPE(type);
         ARRAY(params, {
                 visit(std::get<0>(i));
-                os << indent << "-"; doToken(std::get<1>(i));
+                os << indent << "-Identifier " << str(std::get<1>(i).str) << "\n";      //FIXME
                 if (std::get<2>(i)) { std::get<2>(i)->accept(*this); } else { os << indent << "-no default-\n"; }
         });
         if (!node.baseCtors.empty()) {
@@ -383,21 +388,13 @@ public:
         }
     }
 
-    void visit(ArgList &node) {
+    void visit(const ArgList &node) {
         for (auto &i : node.data) {
             i->accept(*this);
         }
     }
 
 private:
-    std::string decode(const SourceLocation &location) {
-        assert(location.sourceId >= 0);
-        std::pair<int, int> l = ctx.getSrcMgr().get(location.sourceId).decodeLocation(location.offset);
-        std::ostringstream str;
-        str << l.first << ":" << l.second;
-        return str.str();
-    }
-
     void doModifiers(const Modifiers &mods, bool printEmpty = true) {
         if (mods.isEmpty() && printEmpty) os << " -none-";
         if (mods.contains(Modifier::Abstract)) os << " abstract";
@@ -412,7 +409,7 @@ private:
     void doToken(const Token &token) {
         os << token.type;
         if (token.type != TokenType::None) {
-            os << " " << lexeme(token);
+            os << " " << ctx.getLexeme(token);
         }
         os << "\n";
     }
@@ -431,10 +428,6 @@ private:
         }
     }
 
-    std::string lexeme(const Token &token) {
-        return ctx.getSrcMgr().get(token.location.sourceId).getRange(token.location.offset, token.length);
-    }
-
     const std::string &str(String::Ref s) {
         return ctx.getStringTable().get(s);
     }
@@ -442,7 +435,7 @@ private:
 private:
     Context &ctx;
     OS &os;
-    qore::log::Indent indent;
+    qore::util::Indent indent;
 };
 
 #undef NODE_HEADER

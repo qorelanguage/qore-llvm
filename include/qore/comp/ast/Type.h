@@ -34,7 +34,6 @@
 #include "qore/comp/Token.h"
 #include "qore/comp/ast/Name.h"
 #include "qore/comp/ast/Node.h"
-#include "qore/comp/ast/Visitor.h"
 
 namespace qore {
 namespace comp {

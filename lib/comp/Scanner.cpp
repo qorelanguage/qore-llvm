@@ -30,7 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/Scanner.h"
 #include <string>
-#include "qore/common/Logging.h"
+#include "qore/core/util/Debug.h"
 
 /// \cond IGNORED_BY_DOXYGEN
 #define REPORT(diagId)  ctx.report(DiagId::diagId, src.getMarkLocation())
@@ -123,7 +123,7 @@ Token Scanner::read(Source &src, ITokenStream::Mode mode) {
 
         if (type != TokenType::None) {
             LOG("Returning token " << type);
-            return Token(type, src.getMarkLocation(), src.getMarkedLength());
+            return Token(type, src.getMarkLocation(), src.getMarkOffset(), src.getMarkedLength());
         }
     }
 }

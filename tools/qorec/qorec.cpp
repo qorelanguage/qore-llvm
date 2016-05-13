@@ -25,111 +25,24 @@
 //------------------------------------------------------------------------------
 #include <iostream>
 #include <string>
-#include <utility>
-#include "qore/common/Logging.h"
+#include "qore/core/util/Debug.h"
+#include "qore/core/Dump.h"
 #include "qore/comp/DirectiveProcessor.h"
 #include "qore/comp/Parser.h"
 #include "qore/comp/ast/Dump.h"
-#include "qore/comp/semantic/Analyzer.h"
-#include "qore/comp/semantic/Dump.h"
-#if QORE_USE_LLVM
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#endif
-
-namespace qore {
-namespace comp {
-
-/**
- * \brief Basic DiagProcessor that writes messages to the standard error stream.
- */
-class DiagPrinter : public IDiagProcessor {
-
-public:
-    /**
-     * \brief Constructs the instance.
-     * \param srcMgr used for decoding source locations
-     */
-    explicit DiagPrinter(const SourceManager &srcMgr) : srcMgr(srcMgr) {
-    }
-
-    void process(DiagRecord &record) override {
-        Source &src = srcMgr.get(record.location.sourceId);
-        std::pair<int, int> l = src.decodeLocation(record.location.offset);
-        std::cerr << src.getName() << ':' << l.first << ':' << l.second
-                << ": " << record.level << ": " << record.code << ": " << record.message << '\n';
-    }
-
-private:
-    const SourceManager &srcMgr;
-};
+#include "qore/comp/sem/Analyzer.h"
+#include "qore/in/Interpreter.h"
+#include "qore/cg/CodeGen.h"
+#include "DiagPrinter.h"
+#include "Interactive.h"
 
 /// \cond NoDoxygen
-class StdinWrapper : public ITokenStream {
-
-public:
-    explicit StdinWrapper(Context &ctx) : src(ctx.getSrcMgr().createFromString("<stdin>", "")), dp(ctx, src) {
-    }
-
-    Token read(Mode mode) override {
-        while (true) {
-            Token t = dp.read(mode);
-            if (t.type != TokenType::EndOfFile) {
-                return t;
-            }
-            std::string line;
-            std::getline(std::cin, line);
-            if (!std::cin.good()) {
-                return t;
-            }
-            line.push_back('\n');
-            src.append(line);
-        }
-    }
-
-private:
-    Source &src;
-    DirectiveProcessor dp;
-};
-
-void test() {
-    StringTable stringTable;
-    DiagManager diagMgr(stringTable);
-    SourceManager srcMgr(diagMgr);
-    DiagPrinter diagPrinter(srcMgr);
-    diagMgr.addProcessor(&diagPrinter);
-    Context ctx(stringTable, diagMgr, srcMgr);
-//    DirectiveProcessor dp(ctx, srcMgr.createFromFile(argv[1]));
-    DirectiveProcessor dp(ctx, srcMgr.createFromString("<noname>", R"(
-namespace a;
-namespace a::x::b;
-our int i;
-
-string s = "A";
-s = s + i;
-i = i + 1;
-
-)"));
-//    StdinWrapper dp(dctx);
-
-    Parser parser(ctx, dp);
-    ast::Script::Ptr script = parser.parseScript();
-    ast::dump(ctx, std::cout, *script);
-
-    semantic::Analyzer analyzer(ctx);
-    std::unique_ptr<semantic::Namespace> root = analyzer.analyze(script);
-    semantic::dump(ctx, std::cout, *root);
-}
-
-} // namespace comp
-} // namespace qore
-/// \endcond NoDoxygen
 
 #ifdef QORE_LOGGING
 /**
  * \brief Logging filter
  */
-class LogFilter : public qore::log::Logger {
+class LogFilter : public qore::util::Logger {
 
 public:
     bool filter(const std::string &component) override {
@@ -139,20 +52,78 @@ public:
 };
 #endif
 
+void test(bool file, std::string str) {
+    qore::comp::StringTable stringTable;
+    qore::comp::DiagManager diagMgr(stringTable);
+    qore::comp::SourceManager srcMgr(diagMgr);
+    qore::DiagPrinter diagPrinter;
+    diagMgr.addProcessor(&diagPrinter);
+    qore::Env env;
+    qore::comp::Context ctx(env, stringTable, diagMgr, srcMgr);
+    qore::SourceInfo &info = env.addSourceInfo(file ? str : "<noname>");
+    qore::comp::Source &src = file ? srcMgr.createFromFile(info, str) : srcMgr.createFromString(info, str);
+    qore::comp::DirectiveProcessor dp(ctx, src);
+    qore::comp::Parser parser(ctx, dp);
+
+    qore::comp::ast::Script::Ptr script = parser.parseScript();
+    qore::comp::ast::dump(ctx, std::cout, *script);
+    LOG("-------------------------------------------------------------------------------");
+    qore::Function::Ptr qinit = qore::comp::sem::Analyzer::analyze(ctx, *script);
+    qore::dump(std::cout, env);
+    LOG("-------------------------------------------------------------------------------");
+    if (qinit) {
+        qore::in::interpret(*qinit);
+    }
+    LOG("-------------------------------------------------------------------------------");
+    qore::cg::CodeGen::process(env, qinit.get());
+}
+
+/// \endcond NoDoxygen
+
 int main(int argc, char *argv[]) {
 #ifdef QORE_LOGGING
     LogFilter logFilter;
-    qore::log::LoggerManager::set(&logFilter);
+    qore::util::LoggerManager::set(&logFilter);
 #endif
     LOG_FUNCTION();
 
-#if QORE_USE_LLVM
-    llvm::LLVMContext &ctx{llvm::getGlobalContext()};
-    llvm::Module *module{new llvm::Module("Q", ctx)};
-    module->dump();
-#endif
+    std::string src = R"(
+any sub f(int i) {
+    if (i += string x) {string s1 = "aaa"; return 21;}
+    return 42;
+}
 
-    qore::comp::test();
+int i;
+our string s;
+s = string s1 = "A";
+i = i + 1;
+s = s + i;
+i += "2";
+s += i;
+
+any a = 1;
+a = a + 2;
+a += "8";
+if (i) a = 1; else a = 2;
+
+sub f2() {
+    string s = "A";
+    try {
+        string s2 = "B";
+        s = "1";
+    } catch (hash e) {
+        string s3 = "C";
+    }
+}
+)";
+
+//    std::istringstream stream(src);
+//    std::streambuf* cin_backup = std::cin.rdbuf(stream.rdbuf());
+//    qore::interactive();
+//    std::cin.rdbuf(cin_backup);
+
+//    test(true, argv[1]);
+    test(false, src);
 
     return 0;
 }

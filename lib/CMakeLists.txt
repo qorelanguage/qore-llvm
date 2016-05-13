@@ -1,2 +1,5 @@
-add_subdirectory(common)
+add_subdirectory(cg)
 add_subdirectory(comp)
+add_subdirectory(core)
+add_subdirectory(in)
+add_subdirectory(nrt)

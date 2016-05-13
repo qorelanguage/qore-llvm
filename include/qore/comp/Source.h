@@ -34,9 +34,8 @@
 #include <algorithm>
 #include <cassert>
 #include <string>
-#include <utility>
 #include <vector>
-#include "qore/comp/SourceLocation.h"
+#include "qore/core/SourceLocation.h"
 
 namespace qore {
 namespace comp {
@@ -57,31 +56,23 @@ class Source {
 public:
     /**
      * \brief Creates a new source.
-     * \param name the name of the source
-     * \param id the id of the source
+     * \param info the source info
      * \param buf the source buffer with no '\0' characters
      */
-    Source(std::string name, int id, std::vector<char> buf) : name(std::move(name)), id(id), data(std::move(buf)) {
+    Source(const SourceInfo &info, std::vector<char> buf) : info(info), data(std::move(buf)), line(1), column(1) {
         assert(std::find(data.begin(), data.end(), '\0') == data.end());
         data.push_back('\0');
         ptr = data.begin();
         mark = data.begin();
+        markLocation = SourceLocation(info, line, column);
     }
 
     /**
-     * \brief Returns the name of the source.
-     * \return the name of the source
+     * \brief Returns the source info.
+     * \return the source info
      */
-    const std::string &getName() const {
-        return name;
-    }
-
-    /**
-     * \brief Returns the id of the source.
-     * \return the id of the source
-     */
-    int getId() const {
-        return id;
+    const SourceInfo &getInfo() const {
+        return info;
     }
 
     /**
@@ -89,7 +80,30 @@ public:
      * \return the next character in the source or '\0' if the end of the source has been reached.
      */
     char read() {
-        return *ptr ? *ptr++ : *ptr;
+        constexpr int tabSize = 4;
+        switch (*ptr) {
+            case 0:
+                return 0;
+            case '\n':
+                ++line;
+                column = 1;
+                break;
+            case '\r':
+                if (*(ptr + 1) == '\n') {
+                    ++column;
+                } else {
+                    ++line;
+                    column = 1;
+                }
+                break;
+            case '\t':
+                column += tabSize - (column - 1) % tabSize;
+                break;
+            default:
+                ++column;
+                break;
+        }
+        return *ptr++;
     }
 
     /**
@@ -108,6 +122,8 @@ public:
     void unread() {
         assert(ptr != data.begin());
         --ptr;
+        assert(*ptr > 32);
+        --column;
     }
 
     /**
@@ -117,7 +133,7 @@ public:
     void append(const std::string &string) {
         assert(find(string.begin(), string.end(), '\0') == string.end());
         auto offset = ptr - data.begin();
-        auto markOffset = ptr - data.begin();
+        auto markOffset = mark - data.begin();
         data.insert(data.end() - 1, string.begin(), string.end());
         ptr = data.begin() + offset;
         mark = data.begin() + markOffset;
@@ -144,6 +160,15 @@ public:
      */
     void setMark() {
         mark = ptr;
+        markLocation = SourceLocation(info, line, column);
+    }
+
+    /**
+     * \brief Returns the marked offset.
+     * \return the marked offset
+     */
+    int getMarkOffset() const {
+        return static_cast<int>(mark - data.begin());
     }
 
     /**
@@ -151,7 +176,7 @@ public:
      * \return the marked location
      */
     SourceLocation getMarkLocation() const {
-        return SourceLocation(getId(), static_cast<int>(mark - data.begin()));
+        return markLocation;
     }
 
     /**
@@ -171,14 +196,6 @@ public:
     }
 
     /**
-     * \brief Converts an offset in the source into a (line, column) pair.
-     * \param offset in the source
-     * \param tabSize size of horizontal tab
-     * \return a (line, column) pair corresponding to the offset or (0, 0) if `offset` is out of bounds
-     */
-    std::pair<int, int> decodeLocation(int offset, int tabSize = 4);
-
-    /**
      * \brief Returns the substring of given length starting at given offset.
      * \param offset the offset of the first character of the substring
      * \param length the length of the substring
@@ -196,11 +213,13 @@ private:
     Source &operator=(Source &&) = delete;
 
 private:
-    std::string name;
-    int id;
+    const SourceInfo &info;
     std::vector<char> data;
     std::vector<char>::iterator ptr;
     std::vector<char>::iterator mark;
+    SourceLocation markLocation;
+    int line;
+    int column;
 };
 
 } // namespace comp

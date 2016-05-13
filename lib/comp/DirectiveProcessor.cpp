@@ -30,8 +30,8 @@
 //------------------------------------------------------------------------------
 #include "qore/comp/DirectiveProcessor.h"
 #include <string>
-#include "qore/common/Logging.h"
-#include "qore/common/Util.h"
+#include "qore/core/util/Debug.h"
+#include "qore/core/util/Util.h"
 
 namespace qore {
 namespace comp {
@@ -113,7 +113,7 @@ void DirectiveProcessor::processDirective(Source &src, SourceLocation location, 
             if ((arg[0] == '"' && arg[arg.length() - 1] == '"') || (arg[0] == '\'' && arg[arg.length() - 1] == '\'')) {
                 arg = arg.substr(1, arg.length() - 2);
             }
-            srcStack.push(ctx.getSrcMgr().createFromFile(arg, location));
+            srcStack.push(ctx.getSrcMgr().createFromFile(ctx.getEnv().addSourceInfo(arg), arg, location));
             break;
     }
 }

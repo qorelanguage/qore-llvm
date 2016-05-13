@@ -92,6 +92,9 @@ DIAG(SemaUnresolvedClass,                       "PARSE-EXCEPTION", Error,
         "unresolved class %s")
 DIAG(SemaAmbiguousClass,                        "PARSE-EXCEPTION", Error,
         "ambiguous class %s")
+DIAG(SemaStatementHasNoEffect,                  "PARSE-EXCEPTION", Error,
+        "statement has no effect")
 
 DIAG(SemaPreviousDeclaration,                   "PARSE-EXCEPTION", Info,
         "previous declaration here")
+

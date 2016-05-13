@@ -14,5 +14,5 @@ class x::y::z;
 #$!SemaPreviousDeclaration@3:7
 #$!SemaNamespaceNotFound@7:10-namespace y not found in namespace ::x
 -root namespace
-  -class a @3:7
   -namespace x @4:11
+  -class a @3:7

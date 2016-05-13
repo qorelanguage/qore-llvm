@@ -43,7 +43,6 @@ public:
     LineTestOutput &operator<<(char c);
     LineTestOutput &operator<<(const std::string &str);
     LineTestOutput &operator<<(int i);
-    LineTestOutput &operator<<(const qore::comp::SourceLocation &loc);
 
     template<typename T>
     LineTestOutput &operator<<(const T &t) {
@@ -95,10 +94,12 @@ public:
     void processOutput(const std::string &str);
     void processDiag(qore::comp::DiagRecord &record);
     qore::comp::Source &getSrc() {
-        return srcMgr.get(sourceId);
+        assert(source);
+        return *source;
     }
 
 protected:
+    qore::Env env;
     qore::comp::StringTable stringTable;
     qore::comp::DiagManager diagMgr;
     qore::comp::SourceManager srcMgr;
@@ -109,7 +110,7 @@ protected:
 private:
     std::vector<std::unique_ptr<class Expectation>> expected;
     std::vector<std::unique_ptr<class Expectation>>::iterator current;
-    int sourceId;
+    qore::comp::Source *source;
 };
 
 } // namespace qtif

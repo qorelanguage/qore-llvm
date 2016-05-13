@@ -33,7 +33,7 @@
 
 #include <deque>
 #include <ostream>
-#include "qore/comp/SourceLocation.h"
+#include "qore/core/SourceLocation.h"
 
 namespace qore {
 namespace comp {
@@ -66,21 +66,24 @@ std::ostream &operator<<(std::ostream &o, TokenType tokenType);
 struct Token {
     TokenType type;                     //!< The type of the token.
     SourceLocation location;            //!< Location of the token in the source code.
+    int offset;                         //!< Offset of the token in the source.
     int length;                         //!< Length of the token in characters.
 
     /**
      * \brief Default constructor.
      */
-    Token() : type(TokenType::None), length(0) {
+    Token() : type(TokenType::None), offset(-1), length(0) {
     }
 
     /**
      * \brief Constructs a token.
      * \param type the type of the token
      * \param location the location of the token
+     * \param offset the offset of the token in the source
      * \param length the length of the token.
      */
-    Token(TokenType type, SourceLocation location, int length) : type(type), location(location), length(length) {
+    Token(TokenType type, SourceLocation location, int offset, int length)
+            : type(type), location(location), offset(offset), length(length) {
     }
 };
 

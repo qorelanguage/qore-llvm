@@ -78,7 +78,7 @@ TEST_F(ModifiersTest, toStream) {
 #ifdef QORE_COVERAGE
 TEST_F(ModifiersTest, toStreamErr) {
     std::ostringstream ss;
-    EXPECT_THROW(ss << static_cast<Modifier>(999), class Unreachable);
+    EXPECT_THROW(ss << static_cast<Modifier>(999), class util::Unreachable);
 }
 #endif
 
