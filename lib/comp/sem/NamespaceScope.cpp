@@ -31,8 +31,6 @@
 #include "qore/comp/sem/NamespaceScope.h"
 #include <vector>
 #include "qore/core/util/Util.h"
-#include "qore/comp/sem/ClassScope.h"
-#include "qore/comp/sem/GlobalVariableInfo.h"
 #include "ReportedError.h"
 
 namespace qore {

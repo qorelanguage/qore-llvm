@@ -37,7 +37,6 @@
 #include <vector>
 #include "qore/comp/Context.h"
 #include "qore/comp/ast/Statement.h"
-#include "qore/comp/sem/Scope.h"
 #include "qore/comp/sem/expr/Expression.h"
 #include "qore/comp/sem/stmt/Statement.h"
 

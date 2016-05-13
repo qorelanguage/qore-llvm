@@ -34,9 +34,9 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include "qore/comp/sem/Core.h"
-#include "qore/comp/ast/Class.h"
 #include "qore/core/Class.h"
+#include "qore/comp/ast/Class.h"
+#include "qore/comp/sem/Scope.h"
 
 namespace qore {
 namespace comp {

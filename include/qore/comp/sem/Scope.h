@@ -33,13 +33,12 @@
 
 #include "qore/core/Type.h"
 #include "qore/comp/ast/Type.h"
+#include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/LocalVariableInfo.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
-
-class GlobalVariableInfo;
 
 class Symbol {
 

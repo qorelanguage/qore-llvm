@@ -35,14 +35,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "qore/core/Env.h"
 #include "qore/comp/Context.h"
-#include "qore/comp/sem/Core.h"
 #include "qore/comp/ast/Declaration.h"
+#include "qore/comp/ast/Script.h"
+#include "qore/comp/sem/Builder.h"
 #include "qore/comp/sem/NamespaceScope.h"
 #include "qore/comp/sem/stmt/Statement.h"
-#include "qore/comp/sem/Builder.h"
-#include "qore/comp/ast/Script.h"
-#include "qore/core/Env.h"
 
 namespace qore {
 namespace comp {

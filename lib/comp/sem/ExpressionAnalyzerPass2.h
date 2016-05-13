@@ -31,6 +31,7 @@
 #ifndef LIB_COMP_SEM_EXPRESSIONANALYZERPASS2_H_
 #define LIB_COMP_SEM_EXPRESSIONANALYZERPASS2_H_
 
+#include "qore/comp/sem/Builder.h"
 #include "qore/comp/sem/expr/AssignmentExpression.h"
 #include "qore/comp/sem/expr/CompoundAssignmentExpression.h"
 #include "qore/comp/sem/expr/GlobalVariableRefExpression.h"
@@ -41,7 +42,6 @@
 #include "qore/comp/sem/expr/LocalVariableRefExpression.h"
 #include "qore/comp/sem/expr/NothingLiteralExpression.h"
 #include "qore/comp/sem/expr/StringLiteralRefExpression.h"
-
 #include "LValue.h"
 
 namespace qore {

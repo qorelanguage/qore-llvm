@@ -31,7 +31,6 @@
 #ifndef LIB_COMP_SEM_STATEMENTANALYZERPASS2_H_
 #define LIB_COMP_SEM_STATEMENTANALYZERPASS2_H_
 
-#include "qore/comp/sem/Builder.h"
 #include "qore/comp/sem/stmt/Statement.h"
 #include "qore/comp/sem/stmt/CompoundStatement.h"
 #include "qore/comp/sem/stmt/ExpressionStatement.h"

@@ -33,8 +33,8 @@
 
 #include <utility>
 #include <vector>
-#include "qore/comp/sem/FunctionScope.h"
 #include "qore/core/FunctionGroup.h"
+#include "qore/comp/sem/FunctionScope.h"
 
 namespace qore {
 namespace comp {

@@ -34,10 +34,9 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "qore/comp/sem/Core.h"
+#include "qore/core/Function.h"
 #include "qore/comp/ast/Routine.h"
 #include "qore/comp/sem/Scope.h"
-#include "qore/core/Function.h"
 
 namespace qore {
 namespace comp {

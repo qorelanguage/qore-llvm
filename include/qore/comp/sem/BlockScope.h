@@ -33,7 +33,6 @@
 
 #include <map>
 #include <vector>
-#include "qore/comp/sem/LocalVariableInfo.h"
 #include "qore/comp/sem/Scope.h"
 #include "qore/comp/sem/stmt/Statement.h"
 #include "qore/comp/sem/stmt/CompoundStatement.h"

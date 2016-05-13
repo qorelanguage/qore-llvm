@@ -13,7 +13,6 @@ add_library(comp STATIC
     Token.cpp
     sem/Analyzer.cpp
     sem/Builder.cpp
-    sem/ClassScope.cpp
     sem/Core.cpp
     sem/FunctionGroupInfo.cpp
     sem/FunctionScope.cpp
