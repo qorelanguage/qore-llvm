@@ -480,7 +480,7 @@ private:
 class CallExpression : public Expression {
 
 public:
-    Expression::Ptr calee;                                  //!< The function to be called.
+    Expression::Ptr callee;                                 //!< The function to be called.
     ArgList::Ptr argList;                                   //!< The list of arguments.
 
 public:
@@ -489,12 +489,12 @@ public:
 public:
     /**
      * \brief Allocates a new node.
-     * \param calee the function to be called
+     * \param callee the function to be called
      * \param argList the list of arguments
      * \return a unique pointer to the allocated node
      */
-    static Ptr create(Expression::Ptr calee, ArgList::Ptr argList) {
-        return Ptr(new CallExpression(std::move(calee), std::move(argList)));
+    static Ptr create(Expression::Ptr callee, ArgList::Ptr argList) {
+        return Ptr(new CallExpression(std::move(callee), std::move(argList)));
     }
 
     Kind getKind() const override {
@@ -502,7 +502,7 @@ public:
     }
 
     SourceLocation getStart() const override {
-        return calee->getStart();
+        return callee->getStart();
     }
 
     SourceLocation getEnd() const override {
@@ -510,7 +510,8 @@ public:
     }
 
 private:
-    CallExpression(Expression::Ptr calee, ArgList::Ptr argList) : calee(std::move(calee)), argList(std::move(argList)) {
+    CallExpression(Expression::Ptr callee, ArgList::Ptr argList)
+            : callee(std::move(callee)), argList(std::move(argList)) {
     }
 };
 
