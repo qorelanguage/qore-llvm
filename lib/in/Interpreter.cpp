@@ -37,8 +37,8 @@ namespace qore {
 namespace in {
 
 void interpret(Function &f) {
-    FunctionContext functionContext(f.getTempCount(), f.getLocalVariables().size());
-    FunctionInterpreter fi(functionContext, f.getEntryBlock());
+    Frame frame(f.getTempCount(), f.getLocalVariables().size());
+    FunctionInterpreter fi(frame, f.getEntryBlock());
     fi.run();
 }
 

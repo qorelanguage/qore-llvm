@@ -74,7 +74,7 @@ public:
         builder.CreateRetVoid();
 
         for (auto &p : functions) {
-            FunctionCompiler fc(*p.first, strings, globals, p.second, helper);
+            FunctionCompiler fc(*p.first, strings, globals, functions, p.second, helper);
             fc.compile();
         }
 
@@ -157,10 +157,10 @@ private:
     std::unordered_map<const SourceInfo *, llvm::Value *> sourceInfos;
     FunctionContext::StringsMap strings;
     FunctionContext::GlobalsMap globals;
+    FunctionContext::FunctionsMap functions;
     llvm::Function *qstart;
     llvm::IRBuilder<> builder;
     std::unordered_map<const Type *, llvm::Value *> types;
-    std::unordered_map<const Function *, llvm::Function *> functions;
 };
 
 void CodeGen::process(Env &env) {
