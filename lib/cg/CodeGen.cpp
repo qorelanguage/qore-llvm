@@ -50,7 +50,7 @@ public:
         builder.SetInsertPoint(llvm::BasicBlock::Create(helper.ctx, "entry", qstart));
     }
 
-    std::unique_ptr<llvm::Module> compile(Env &env, Function *qMain) {
+    std::unique_ptr<llvm::Module> compile(Env &env) {
         llvm::Value *rtEnv = &*qstart->arg_begin();
         llvm::Value *rtNs = builder.CreateCall(helper.lf_env_getRootNamespace, rtEnv);
 
@@ -73,9 +73,6 @@ public:
         compile(rtNs, env.getRootNamespace());
         builder.CreateRetVoid();
 
-        if (qMain) {
-            declare("qmain", *qMain);
-        }
         for (auto &p : functions) {
             FunctionCompiler fc(*p.first, strings, globals, p.second, helper);
             fc.compile();
@@ -166,9 +163,9 @@ private:
     std::unordered_map<const Function *, llvm::Function *> functions;
 };
 
-void CodeGen::process(Env &env, Function *qMain) {
+void CodeGen::process(Env &env) {
     Compiler compiler;
-    std::unique_ptr<llvm::Module> module = compiler.compile(env, qMain);
+    std::unique_ptr<llvm::Module> module = compiler.compile(env);
 
     module->dump();
 

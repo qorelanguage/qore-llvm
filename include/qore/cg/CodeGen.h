@@ -48,9 +48,8 @@ public:
     /**
      * \brief Generates LLVM IR code.
      * \param env the runtime environment
-     * \param qMain the main function
      */
-    static void process(Env &env, Function *qMain);
+    static void process(Env &env);
 };
 
 } // namespace cg

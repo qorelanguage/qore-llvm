@@ -110,7 +110,7 @@ public:
      * \return newly created function
      */
     Function &addFunction(FunctionType type, SourceLocation location) {
-        Function::Ptr ptr = Function::Ptr(new Function(std::move(type), location));
+        Function::Ptr ptr = Function::Ptr(new Function(*this, std::move(type), location));
         Function &f = *ptr;
         functions.push_back(std::move(ptr));
         return f;

@@ -111,9 +111,8 @@ public:
      * \param ctx the compiler context
      * \param node the AST node representing the script
      * \return the synthesized function
-     * \todo the function should be probably added to the root namespace under some name
      */
-    static Function::Ptr analyze(Context &ctx, ast::Script &node);
+    static Function *analyze(Context &ctx, ast::Script &node);
 
 private:
     Core core;

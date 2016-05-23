@@ -150,8 +150,8 @@ public:
     }
 
     void visit(const InvokeFunction &ins) {
-        //FIXME dump function name and signature
-        os << "InvokeFunction " << &ins.getFunction() << " " << temp(ins.getDest());
+        os << "InvokeFunction " << ins.getFunction().getGroup().getFullName()
+                << "[" << ins.getFunction().getType() << "] " << temp(ins.getDest());
         for (auto &arg : ins.getArgs()) {
             os << ", " << temp(arg);
         }

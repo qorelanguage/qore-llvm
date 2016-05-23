@@ -68,17 +68,14 @@ void test(bool file, std::string str) {
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    qore::Function::Ptr qinit = qore::comp::sem::Analyzer::analyze(ctx, *script);
+    qore::Function *qinit = qore::comp::sem::Analyzer::analyze(ctx, *script);
     qore::dump(std::cout, env);
-    if (qinit) {
-        dump(std::cout, "<qinit>", *qinit);
-    }
     LOG("-------------------------------------------------------------------------------");
     if (qinit) {
         qore::in::interpret(*qinit);
     }
     LOG("-------------------------------------------------------------------------------");
-    qore::cg::CodeGen::process(env, qinit.get());
+    qore::cg::CodeGen::process(env);
 }
 
 /// \endcond NoDoxygen

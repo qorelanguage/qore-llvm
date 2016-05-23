@@ -69,7 +69,7 @@ void Analyzer::doPass2(Builder &builder, Statement &stmt) {
     StatementAnalyzerPass2::analyze(core, builder, stmt);
 }
 
-Function::Ptr Analyzer::analyze(Context &ctx, ast::Script &node) {
+Function *Analyzer::analyze(Context &ctx, ast::Script &node) {
     Analyzer analyzer(ctx);
 
     for (auto &decl : node.members) {
@@ -77,7 +77,7 @@ Function::Ptr Analyzer::analyze(Context &ctx, ast::Script &node) {
     }
     analyzer.processPendingDeclarations();
 
-    Function::Ptr qMain;
+    Function *qInit = nullptr;
     auto initializers = analyzer.takeInitializers();
     if (!node.statements.empty() || !initializers.empty()) {
         ast::Routine::Ptr r = ast::Routine::create();
@@ -85,12 +85,13 @@ Function::Ptr Analyzer::analyze(Context &ctx, ast::Script &node) {
         r->body->statements = std::move(node.statements);
         r->type = ast::Type::createImplicit(SourceLocation());
 
-        qMain = Function::Ptr(new Function(FunctionType(Type::Nothing), SourceLocation()));
-        FunctionScope mainFs(*qMain, analyzer.core, analyzer.root, *r);
+        qInit = &analyzer.getRootNamespaceScope().getRt().addFunctionGroup("<qinit>")
+                .addFunction(FunctionType(Type::Nothing), SourceLocation());
+        FunctionScope mainFs(*qInit, analyzer.core, analyzer.root, *r);
         mainFs.analyze(&initializers);
     }
 
-    return std::move(qMain);
+    return qInit;
 }
 
 } // namespace sem
