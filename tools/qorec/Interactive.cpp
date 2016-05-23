@@ -78,8 +78,8 @@ private:
     using LocalVariableInfo = comp::sem::LocalVariableInfo;
 
 public:
-    InteractiveScope(comp::Context &ctx, const Scope &rootScope, in::FunctionContext &topLevelCtx)
-            : ctx(ctx), rootScope(rootScope), topLevelCtx(topLevelCtx) {
+    InteractiveScope(comp::Context &ctx, const Scope &rootScope, in::Frame &topLevelFrame)
+            : ctx(ctx), rootScope(rootScope), topLevelFrame(topLevelFrame) {
     }
 
     const Type &resolveType(const comp::ast::Type &node) const override {
@@ -95,7 +95,7 @@ public:
                 ctx.getString(name), type, location));
         lv.setRt(*ptr2);
         locals.push_back(std::move(ptr2));
-        topLevelCtx.locals.resize(locals.size());
+        topLevelFrame.locals.resize(locals.size());
         return lv;
     }
 
@@ -115,7 +115,7 @@ public:
 private:
     comp::Context &ctx;
     const Scope &rootScope;
-    in::FunctionContext &topLevelCtx;
+    in::Frame &topLevelFrame;
     std::vector<LocalVariableInfo::Ptr> localInfos;
     std::vector<LocalVariable::Ptr> locals;
 };
@@ -123,14 +123,14 @@ private:
 class IBuilder : public comp::sem::Builder {
 
 public:
-    explicit IBuilder(in::FunctionContext &topLevelCtx) : topLevelCtx(topLevelCtx) {
+    explicit IBuilder(in::Frame &topLevelFrame) : topLevelFrame(topLevelFrame) {
         entry = createBlock();
         setCurrentBlock(entry);
     }
 
     code::Temp createTemp() override {
-        Index i = topLevelCtx.temps.size();
-        topLevelCtx.temps.resize(i + 1);
+        Index i = topLevelFrame.temps.size();
+        topLevelFrame.temps.resize(i + 1);
         return code::Temp(i);
     }
 
@@ -150,7 +150,7 @@ public:
     }
 
 private:
-    in::FunctionContext &topLevelCtx;
+    in::Frame &topLevelFrame;
     std::vector<code::Block::Ptr> blocks;
     code::Block *entry;
 };
@@ -169,10 +169,10 @@ void interactive() {
 
     StdinWrapper dp(ctx);
     comp::Parser parser(ctx, dp);
-    in::FunctionContext topLevelCtx(0, 0);
-    IBuilder mainBuilder(topLevelCtx);
+    in::Frame topLevelFrame(0, 0);
+    IBuilder mainBuilder(topLevelFrame);
     comp::sem::Analyzer analyzer(ctx);
-    InteractiveScope topScope(ctx, analyzer.getRootNamespaceScope(), topLevelCtx);
+    InteractiveScope topScope(ctx, analyzer.getRootNamespaceScope(), topLevelFrame);
     comp::sem::BlockScope blockScope(topScope);
     {
         comp::sem::LocalsStackMarker marker(mainBuilder);
@@ -188,14 +188,14 @@ void interactive() {
                     analyzer.doPass2(mainBuilder, *stmt);
                 }
                 analyzer.doPass2(mainBuilder, *stmt);
-                in::FunctionInterpreter fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
+                in::FunctionInterpreter fi(topLevelFrame, mainBuilder.getEntryForInteractiveMode());
                 fi.run();
             } else {
                 break;
             }
         }
     }
-    in::FunctionInterpreter fi(topLevelCtx, mainBuilder.getEntryForInteractiveMode());
+    in::FunctionInterpreter fi(topLevelFrame, mainBuilder.getEntryForInteractiveMode());
     fi.run();
 }
 

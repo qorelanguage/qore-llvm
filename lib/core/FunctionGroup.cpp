@@ -25,34 +25,29 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the code generator.
+/// \brief Implementation of FunctionGroup methods.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CG_CODEGEN_H_
-#define INCLUDE_QORE_CG_CODEGEN_H_
-
-#include <memory>
-#include <string>
+#include "qore/core/FunctionGroup.h"
 #include <vector>
-#include "qore/core/Env.h"
 
 namespace qore {
-namespace cg {
 
-/**
- * \brief LLVM IR code generator.
- */
-class CodeGen {
+OverloadResolutionResult FunctionGroup::resolveOverload(const std::vector<const Type *> &argTypes) {
+    if (functions.size() != 1) {
+        QORE_NOT_IMPLEMENTED("");
+    }
+    Function &f = *functions[0];
+    const FunctionType &t = f.getType();
+    if (argTypes.size() != t.getParameterCount()) {
+        QORE_NOT_IMPLEMENTED("");
+    }
+    std::vector<const Conversion *> conversions;
+    for (Index i = 0; i < t.getParameterCount(); ++i) {
+        const Conversion *c = Conversion::find(*argTypes[i], t.getParameterType(i));
+        conversions.push_back(c);
+    }
+    return OverloadResolutionResult(f, std::move(conversions));
+}
 
-public:
-    /**
-     * \brief Generates LLVM IR code.
-     * \param env the runtime environment
-     */
-    static void process(Env &env);
-};
-
-} // namespace cg
-} // namespace qore
-
-#endif // INCLUDE_QORE_CG_CODEGEN_H_
+} //namespace qore

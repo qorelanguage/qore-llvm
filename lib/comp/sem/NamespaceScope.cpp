@@ -242,6 +242,10 @@ Symbol NamespaceScope::resolveSymbol(const ast::Name &name) const {
         if (it != globalVariables.end()) {
             return Symbol(*it->second);
         }
+        auto it2 = functions.find(name.last().str);
+        if (it2 != functions.end()) {
+            return Symbol(*it2->second);
+        }
     }
     QORE_NOT_IMPLEMENTED("");
 }

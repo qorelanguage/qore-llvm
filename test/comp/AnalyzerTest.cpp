@@ -42,11 +42,8 @@ TEST_P(AnalyzerTest, Run) {
     DirectiveProcessor dp(ctx, getSrc());
     Parser parser(ctx, dp);
     ast::Script::Ptr scriptNode = parser.parseScript();
-    Function::Ptr qinit = Analyzer::analyze(ctx, *scriptNode);
+    Analyzer::analyze(ctx, *scriptNode);
     dump(output, env);
-    if (qinit) {
-        dump(output, "<qinit>", *qinit);
-    }
 }
 
 QTIF_TEST_CASE(AnalyzerTest, "semantic/");

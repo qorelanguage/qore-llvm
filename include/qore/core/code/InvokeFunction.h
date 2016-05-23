@@ -25,38 +25,41 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the InvokeConversion instruction.
+/// \brief Defines the InvokeFunction instruction.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CORE_CODE_INVOKECONVERSION_H_
-#define INCLUDE_QORE_CORE_CODE_INVOKECONVERSION_H_
+#ifndef INCLUDE_QORE_CORE_CODE_INVOKEFUNCTION_H_
+#define INCLUDE_QORE_CORE_CODE_INVOKEFUNCTION_H_
 
-#include "qore/core/Conversion.h"
+#include <vector>
 #include "qore/core/code/Instruction.h"
 #include "qore/core/code/Temp.h"
 
 namespace qore {
+
+class Function;
+
 namespace code {
 
 /**
- * \brief Instruction that executes a conversion of a temporary value and stores the result in another temporary.
+ * \brief Instruction that executes a function and stores the return value in a temporary.
  */
-class InvokeConversion : public Instruction {
+class InvokeFunction : public Instruction {
 
 public:
     /**
      * \brief Constructor.
      * \param dest the destination temporary
-     * \param conversion the conversion
-     * \param arg the temporary holding the value to convert
+     * \param function the function
+     * \param args the temporaries holding the arguments
      * \param lpad optional landing pad in case an exception occurs
      */
-    InvokeConversion(Temp dest, const Conversion &conversion, Temp arg, const Block *lpad)
-            : dest(dest), conversion(conversion), arg(arg), lpad(lpad) {
+    InvokeFunction(Temp dest, const Function &function, std::vector<Temp> args, const Block *lpad)
+            : dest(dest), function(function), args(std::move(args)), lpad(lpad) {
     }
 
     Kind getKind() const override {
-        return Kind::InvokeConversion;
+        return Kind::InvokeFunction;
     }
 
     const Block *getLpad() const override {
@@ -72,29 +75,29 @@ public:
     }
 
     /**
-     * \brief Returns the conversion.
-     * \return the conversion
+     * \brief Returns the function.
+     * \return the function
      */
-    const Conversion &getConversion() const {
-        return conversion;
+    const Function &getFunction() const {
+        return function;
     }
 
     /**
-     * \brief Returns the temporary holding the value to convert.
-     * \return the temporary holding the value to convert
+     * \brief Returns the temporaries holding the arguments.
+     * \return the temporaries holding the arguments
      */
-    Temp getArg() const {
-        return arg;
+    const std::vector<Temp> &getArgs() const {
+        return args;
     }
 
 private:
     Temp dest;
-    const Conversion &conversion;
-    Temp arg;
+    const Function &function;
+    std::vector<Temp> args;
     const Block *lpad;
 };
 
 } // namespace code
 } // namespace qore
 
-#endif // INCLUDE_QORE_CORE_CODE_INVOKECONVERSION_H_
+#endif // INCLUDE_QORE_CORE_CODE_INVOKEFUNCTION_H_

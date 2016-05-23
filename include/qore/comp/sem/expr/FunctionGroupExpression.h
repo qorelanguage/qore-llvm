@@ -25,34 +25,63 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the code generator.
+/// \brief FunctionGroupExpression definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CG_CODEGEN_H_
-#define INCLUDE_QORE_CG_CODEGEN_H_
+#ifndef INCLUDE_QORE_COMP_SEM_EXPR_FUNCTIONGROUPEXPRESSION_H_
+#define INCLUDE_QORE_COMP_SEM_EXPR_FUNCTIONGROUPEXPRESSION_H_
 
-#include <memory>
-#include <string>
-#include <vector>
-#include "qore/core/Env.h"
+#include "qore/comp/sem/FunctionGroupInfo.h"
+#include "qore/comp/sem/expr/Expression.h"
 
 namespace qore {
-namespace cg {
+namespace comp {
+namespace sem {
 
 /**
- * \brief LLVM IR code generator.
+ * \brief Represents a resolved function group.
  */
-class CodeGen {
+class FunctionGroupExpression : public Expression {
+
+public:
+    using Ptr = std::unique_ptr<FunctionGroupExpression>;           //!< Pointer type.
 
 public:
     /**
-     * \brief Generates LLVM IR code.
-     * \param env the runtime environment
+     * \brief Creates a new instance.
+     * \param functionGroup the function group represented by the expression
+     * \return the new instance
      */
-    static void process(Env &env);
+    static Ptr create(const FunctionGroupInfo &functionGroup) {
+        return Ptr(new FunctionGroupExpression(functionGroup));
+    }
+
+    Kind getKind() const override {
+        return Kind::FunctionGroup;
+    }
+
+    const Type &getType() const override {
+        return Type::FunctionGroup;
+    }
+
+    /**
+     * \brief Returns the function group represented by the expression.
+     * \return the function group represented by the expression
+     */
+    const FunctionGroupInfo &getFunctionGroup() const {
+        return functionGroup;
+    }
+
+private:
+    explicit FunctionGroupExpression(const FunctionGroupInfo &functionGroup) : functionGroup(functionGroup) {
+    }
+
+private:
+    const FunctionGroupInfo &functionGroup;
 };
 
-} // namespace cg
+} // namespace sem
+} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_CG_CODEGEN_H_
+#endif // INCLUDE_QORE_COMP_SEM_EXPR_FUNCTIONGROUPEXPRESSION_H_

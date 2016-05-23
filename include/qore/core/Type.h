@@ -50,19 +50,20 @@ private:
      * \brief Enumeration of all kinds of types.
      */
     enum class Kind {
-        Error,      //!< Special type used during semantic analysis for error recovery.
-        Any,        //!< The `any` type.
-        Nothing,    //!< The 'nothing' type used by functions with no return value and the NOTHING literal.
-        Bool,       //!< The 'bool' type.
-        SoftBool,   //!< The 'softbool' type.
-        Int,        //!< The 'int' type.
-        IntOpt,     //!< The '*int' type.
-        SoftInt,    //!< The 'softint' type.
-        String,     //!< The 'string' type.
-        StringOpt,  //!< The '*string' type.
-        SoftString, //!< The 'softstring' type.
-        Object,     //!< The 'object' type.
-        ObjectOpt,  //!< The '*object' type.
+        Error,          //!< Special type used during semantic analysis for error recovery.
+        FunctionGroup,  //!< Special type used during semantic analysis for FunctionGroupExpression.
+        Any,            //!< The `any` type.
+        Nothing,        //!< The 'nothing' type used by functions with no return value and the NOTHING literal.
+        Bool,           //!< The 'bool' type.
+        SoftBool,       //!< The 'softbool' type.
+        Int,            //!< The 'int' type.
+        IntOpt,         //!< The '*int' type.
+        SoftInt,        //!< The 'softint' type.
+        String,         //!< The 'string' type.
+        StringOpt,      //!< The '*string' type.
+        SoftString,     //!< The 'softstring' type.
+        Object,         //!< The 'object' type.
+        ObjectOpt,      //!< The '*object' type.
     };
 
 public:
@@ -144,6 +145,7 @@ private:
 
 public:
     static const Type Error;        //!< Special type used during semantic analysis for error recovery.
+    static const Type FunctionGroup;//!< Special type used during semantic analysis for FunctionGroupExpression.
     static const Type Any;          //!< The `any` type.
     static const Type Nothing;      //!< The type used by functions with no return value and the NOTHING literal.
     static const Type Bool;         //!< The 'bool' type.

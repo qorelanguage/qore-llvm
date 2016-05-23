@@ -61,7 +61,7 @@ public:
      * \param left the type of the left operand
      * \param right the type of the right operand
      * \return the binary operator
-     * \throws Exception when no implicit conversion of `from` to `to` exists
+     * \throws Exception when no binary operator is applicable to given argument types
      */
     static const BinaryOperator &find(Kind kind, const Type &left, const Type &right);
 

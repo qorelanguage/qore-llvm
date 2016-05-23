@@ -42,19 +42,21 @@ namespace qore {
 namespace in {
 
 /**
- * \brief Context for functions interpreter - holds the values of locals and temporaries.
+ * \brief A stack frame, a.k.a activation record. Holds the values of locals and temporaries.
  */
-struct FunctionContext {
+struct Frame {
     /**
      * \brief Constructor.
      * \param tempsCount the (initial) number of temporaries
      * \param localsCount the (initial) number of local variables
      */
-    FunctionContext(Size tempsCount, Size localsCount) : temps(tempsCount), locals(localsCount) {
+    Frame(Size tempsCount, Size localsCount) : temps(tempsCount), locals(localsCount) {
+        returnValue.p = nullptr;
     }
 
     std::vector<qvalue> temps;      //!< The values of temporaries.
     std::vector<qvalue> locals;     //!< The values of local variables.
+    qvalue returnValue;
 };
 
 /**
@@ -65,11 +67,11 @@ class FunctionInterpreter {
 public:
     /**
      * \brief Constructor.
-     * \param functionContext the function context with locals and temporaries
+     * \param frame the stack frame
      * \param entryBlock the entry block of the function
      */
-    FunctionInterpreter(FunctionContext &functionContext, code::Block &entryBlock)
-            : functionContext(functionContext), done(false), it(entryBlock.begin()) {
+    FunctionInterpreter(Frame &frame, code::Block &entryBlock)
+            : frame(frame), done(false), it(entryBlock.begin()) {
     }
 
     /**
@@ -154,6 +156,17 @@ public:
         setTemp(ins.getDest(), ins.getConversion().getFunction()(getTemp(ins.getArg())));
     }
 
+    void visit(const code::InvokeFunction &ins) {
+        const Function &f = ins.getFunction();
+        Frame newFrame(f.getTempCount(), f.getLocalVariables().size());
+        for (Index i = 0; i < ins.getArgs().size(); ++i) {
+            newFrame.locals[i] = getTemp(ins.getArgs()[i]);
+        }
+        FunctionInterpreter fi(newFrame, f.getEntryBlock());
+        fi.run();
+        setTemp(ins.getDest(), newFrame.returnValue);
+    }
+
     void visit(const code::Jump &ins) {
         it = ins.getDest().begin();
     }
@@ -181,6 +194,11 @@ public:
         }
     }
 
+    void visit(const code::Ret &ins) {
+        frame.returnValue = getTemp(ins.getValue());
+        done = true;
+    }
+
     void visit(const code::RetVoid &ins) {
         done = true;
     }
@@ -192,23 +210,23 @@ public:
 
 private:
     void setLocal(const LocalVariable &lv, qvalue value) {
-        functionContext.locals[lv.getIndex()] = value;
+        frame.locals[lv.getIndex()] = value;
     }
 
     qvalue getLocal(const LocalVariable &lv) {
-        return functionContext.locals[lv.getIndex()];
+        return frame.locals[lv.getIndex()];
     }
 
     void setTemp(code::Temp temp, qvalue value) {
-        functionContext.temps[temp.getIndex()] = value;
+        frame.temps[temp.getIndex()] = value;
     }
 
     qvalue getTemp(code::Temp temp) {
-        return functionContext.temps[temp.getIndex()];
+        return frame.temps[temp.getIndex()];
     }
 
 private:
-    FunctionContext &functionContext;
+    Frame &frame;
     bool done;
     code::Block::Iterator it;
 };

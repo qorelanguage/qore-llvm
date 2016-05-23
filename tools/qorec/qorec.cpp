@@ -68,14 +68,14 @@ void test(bool file, std::string str) {
     qore::comp::ast::Script::Ptr script = parser.parseScript();
     qore::comp::ast::dump(ctx, std::cout, *script);
     LOG("-------------------------------------------------------------------------------");
-    qore::Function::Ptr qinit = qore::comp::sem::Analyzer::analyze(ctx, *script);
+    qore::Function *qinit = qore::comp::sem::Analyzer::analyze(ctx, *script);
     qore::dump(std::cout, env);
     LOG("-------------------------------------------------------------------------------");
     if (qinit) {
         qore::in::interpret(*qinit);
     }
     LOG("-------------------------------------------------------------------------------");
-    qore::cg::CodeGen::process(env, qinit.get());
+    qore::cg::CodeGen::process(env);
 }
 
 /// \endcond NoDoxygen
@@ -93,28 +93,11 @@ any sub f(int i) {
     return 42;
 }
 
-int i;
-our string s;
-s = string s1 = "A";
-i = i + 1;
-s = s + i;
-i += "2";
-s += i;
-
-any a = 1;
-a = a + 2;
-a += "8";
-if (i) a = 1; else a = 2;
-
-sub f2() {
-    string s = "A";
-    try {
-        string s2 = "B";
-        s = "1";
-    } catch (hash e) {
-        string s3 = "C";
-    }
+any sub f2(string s1, any s2, string s3) {
+    return s1 + s2 + s3;
 }
+
+f2("A", f(4), "C" + "D");
 )";
 
 //    std::istringstream stream(src);

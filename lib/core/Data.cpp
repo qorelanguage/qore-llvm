@@ -40,6 +40,7 @@ namespace qore {
 /// \cond NoDoxygen
 #define TYPE(KIND, NAME)     const Type Type::KIND(Type::Kind::KIND, NAME)
     TYPE(Error,         "<error>");
+    TYPE(FunctionGroup, "<function group>");
     TYPE(Any,           "any");
     TYPE(Nothing,       "nothing");
     TYPE(Bool,          "bool");

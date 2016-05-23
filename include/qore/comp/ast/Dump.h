@@ -288,7 +288,7 @@ public:
     })
 
     NODE(CallExpression, {
-            VISIT(calee);
+            VISIT(callee);
             VISIT_DIRECT(argList);
     })
 

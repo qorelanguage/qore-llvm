@@ -61,7 +61,7 @@ public:
 
     /**
      * \brief Returns the index of the local variable.
-     * @return the index of the local variable
+     * \return the index of the local variable
      */
     Index getIndex() const {
         return index;
@@ -69,7 +69,7 @@ public:
 
     /**
      * \brief Returns the name of the local variable.
-     * @return the name of the local variable
+     * \return the name of the local variable
      */
     const std::string &getName() const {
         return name;
@@ -77,7 +77,7 @@ public:
 
     /**
      * \brief Returns the type of the local variable.
-     * @return the type of the local variable
+     * \return the type of the local variable
      */
     const Type &getType() const {
         return type;

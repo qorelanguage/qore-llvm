@@ -149,6 +149,14 @@ public:
                 << ", " << temp(ins.getArg());
     }
 
+    void visit(const InvokeFunction &ins) {
+        os << "InvokeFunction " << ins.getFunction().getGroup().getFullName()
+                << "[" << ins.getFunction().getType() << "] " << temp(ins.getDest());
+        for (auto &arg : ins.getArgs()) {
+            os << ", " << temp(arg);
+        }
+    }
+
     void visit(const Jump &ins) {
         os << "Jump " << block(ins.getDest());
     }

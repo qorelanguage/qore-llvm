@@ -41,6 +41,8 @@
 
 namespace qore {
 
+class FunctionGroup;
+
 /**
  * \brief Runtime representation of a function.
  */
@@ -53,10 +55,20 @@ public:
 public:
     /**
      * \brief Creates the function.
+     * \param group the parent function group
      * \param type the type of the function
      * \param location the location of the declaration
      */
-    Function(FunctionType type, SourceLocation location) : type(std::move(type)), location(location), tempCount(0) {
+    Function(const FunctionGroup &group, FunctionType type, SourceLocation location)
+            : group(group), type(std::move(type)), location(location), tempCount(0) {
+    }
+
+    /**
+     * \brief Returns the parent function group.
+     * \return the parent function group
+     */
+    const FunctionGroup &getGroup() const {
+        return group;
     }
 
     /**
@@ -137,6 +149,15 @@ public:
         return util::IteratorRange<LocalVariableIterator>(locals);
     }
 
+    /**
+     * \brief Returns false if it is guaranteed that the function cannot throw an exception.
+     * \return false if it is guaranteed that the function cannot throw an exception
+     */
+    bool canThrow() const {
+        //TODO Function::canThrow()
+        return true;
+    }
+
 private:
     Function(const Function &) = delete;
     Function(Function &&) = delete;
@@ -144,6 +165,7 @@ private:
     Function &operator=(Function &&) = delete;
 
 private:
+    const FunctionGroup &group;
     FunctionType type;
     SourceLocation location;
 

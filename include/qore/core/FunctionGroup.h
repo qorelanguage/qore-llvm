@@ -39,13 +39,52 @@
 namespace qore {
 
 /**
+ * \brief Describes the result of overload resolution.
+ *
+ * The result of a successful overload resolution contains the function overload to be called and a list of
+ * conversions that need to be applied to the arguments.
+ */
+class OverloadResolutionResult {
+
+public:
+    /**
+     * \brief Constructor.
+     * \param function the resolved function overload
+     * \param argConversions the list of conversions that need to be applied to the arguments
+     */
+    OverloadResolutionResult(const Function &function, std::vector<const Conversion *> argConversions)
+            : function(function), argConversions(std::move(argConversions)) {
+    }
+
+    /**
+     * \brief Returns the resolved function overload.
+     * \return the resolved function overload
+     */
+    const Function &getFunction() const {
+        return function;
+    }
+
+    /**
+     * \brief Returns the list of conversions that need to be applied to the arguments.
+     * \return the list of conversions that need to be applied to the arguments
+     */
+    const std::vector<const Conversion *> getArgConversions() const {
+        return argConversions;
+    }
+
+private:
+    const Function &function;
+    std::vector<const Conversion *> argConversions;
+};
+
+/**
  * \brief Runtime representation of a group of function overloads.
  */
 class FunctionGroup {
 
 public:
     using Ptr = std::unique_ptr<FunctionGroup>;                             //!< Pointer type.
-    using FunctionItartor = util::VectorOfPtrIteratorAdapter<Function>;     //!< Function iterator.
+    using FunctionIterator = util::VectorOfPtrIteratorAdapter<Function>;    //!< Function iterator.
 
 public:
     /**
@@ -71,7 +110,7 @@ public:
      * \return newly created function
      */
     Function &addFunction(FunctionType type, SourceLocation location) {
-        Function::Ptr ptr = Function::Ptr(new Function(std::move(type), location));
+        Function::Ptr ptr = Function::Ptr(new Function(*this, std::move(type), location));
         Function &f = *ptr;
         functions.push_back(std::move(ptr));
         return f;
@@ -81,9 +120,17 @@ public:
      * \brief Returns a range for iterating functions.
      * \return a range for iterating functions
      */
-    util::IteratorRange<FunctionItartor> getFunctions() const {
-        return util::IteratorRange<FunctionItartor>(functions);
+    util::IteratorRange<FunctionIterator> getFunctions() const {
+        return util::IteratorRange<FunctionIterator>(functions);
     }
+
+    /**
+     * \brief Finds the function overload that best matches the given argument types.
+     * \param argTypes the types of the arguments
+     * \return the resolved overload with conversions needed for arguments
+     * \throws Exception when no function matches the argument types
+     */
+    OverloadResolutionResult resolveOverload(const std::vector<const Type *> &argTypes);
 
 private:
     FunctionGroup(const FunctionGroup &) = delete;

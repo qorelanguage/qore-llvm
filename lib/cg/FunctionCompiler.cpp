@@ -119,6 +119,14 @@ public:
                 ctx.temps[ins.getArg().getIndex()]);
     }
 
+    void visit(const code::InvokeFunction &ins) {
+        std::vector<llvm::Value *> args;
+        for (const code::Temp &arg : ins.getArgs()) {
+            args.push_back(ctx.temps[arg.getIndex()]);
+        }
+        ctx.temps[ins.getDest().getIndex()] = makeCallOrInvoke(ins, ctx.functions[&ins.getFunction()], args);
+    }
+
     void visit(const code::Jump &ins) {
         builder.CreateBr(mapBlock(ins.getDest(), "jump.dest"));
     }

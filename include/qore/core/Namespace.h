@@ -49,10 +49,10 @@ class Namespace {
 
 public:
     using Ptr = std::unique_ptr<Namespace>;                                             //!< Pointer type.
-    using NamespaceItartor = util::VectorOfPtrIteratorAdapter<Namespace>;               //!< Namespace iterator.
-    using ClassItartor = util::VectorOfPtrIteratorAdapter<Class>;                       //!< Class iterator.
-    using GlobalVariableItartor = util::VectorOfPtrIteratorAdapter<GlobalVariable>;     //!< Globals iterator.
-    using FunctionGroupItartor = util::VectorOfPtrIteratorAdapter<FunctionGroup>;       //!< Function groups iterator.
+    using NamespaceIterator = util::VectorOfPtrIteratorAdapter<Namespace>;              //!< Namespace iterator.
+    using ClassIterator = util::VectorOfPtrIteratorAdapter<Class>;                      //!< Class iterator.
+    using GlobalVariableIterator = util::VectorOfPtrIteratorAdapter<GlobalVariable>;    //!< Globals iterator.
+    using FunctionGroupIterator = util::VectorOfPtrIteratorAdapter<FunctionGroup>;      //!< Function groups iterator.
 
 public:
     /**
@@ -142,32 +142,32 @@ public:
      * \brief Returns a range for iterating namespaces.
      * \return a range for iterating namespaces
      */
-    util::IteratorRange<NamespaceItartor> getNamespaces() const {
-        return util::IteratorRange<NamespaceItartor>(namespaces);
+    util::IteratorRange<NamespaceIterator> getNamespaces() const {
+        return util::IteratorRange<NamespaceIterator>(namespaces);
     }
 
     /**
      * \brief Returns a range for iterating classes.
      * \return a range for iterating classes
      */
-    util::IteratorRange<ClassItartor> getClasses() const {
-        return util::IteratorRange<ClassItartor>(classes);
+    util::IteratorRange<ClassIterator> getClasses() const {
+        return util::IteratorRange<ClassIterator>(classes);
     }
 
     /**
      * \brief Returns a range for iterating global variables.
      * \return a range for iterating global variables
      */
-    util::IteratorRange<GlobalVariableItartor> getGlobalVariables() const {
-        return util::IteratorRange<GlobalVariableItartor>(globalVariables);
+    util::IteratorRange<GlobalVariableIterator> getGlobalVariables() const {
+        return util::IteratorRange<GlobalVariableIterator>(globalVariables);
     }
 
     /**
      * \brief Returns a range for iterating function groups.
      * \return a range for iterating function groups
      */
-    util::IteratorRange<FunctionGroupItartor> getFunctionGroups() const {
-        return util::IteratorRange<FunctionGroupItartor>(functionGroups);
+    util::IteratorRange<FunctionGroupIterator> getFunctionGroups() const {
+        return util::IteratorRange<FunctionGroupIterator>(functionGroups);
     }
 
 private:
