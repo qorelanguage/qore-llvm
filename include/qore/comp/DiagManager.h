@@ -68,6 +68,8 @@ private:
     IDiagProcessor &operator=(IDiagProcessor &&) = delete;
 };
 
+class DiagBuilder;
+
 /**
  * \brief Template for custom arguments of diagnostic messages.
  *
@@ -76,7 +78,7 @@ private:
  * \param t the value of the argument
  */
 template<typename T>
-void toDiagArg(class DiagBuilder &b, const T &t);
+void toDiagArg(DiagBuilder &b, const T &t);
 
 /**
  * \brief A helper class for building diagnostic messages with additional parameters.

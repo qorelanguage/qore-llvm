@@ -30,6 +30,7 @@
 //------------------------------------------------------------------------------
 #include "qore/core/String.h"
 #include <iostream>
+#include <sstream>
 
 namespace qore {
 
