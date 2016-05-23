@@ -49,6 +49,7 @@ class GlobalWriteLock;
 class GlobalWriteUnlock;
 class InvokeBinaryOperator;
 class InvokeConversion;
+class InvokeFunction;
 class Jump;
 class LocalGet;
 class LocalSet;
@@ -85,6 +86,7 @@ public:
         GlobalWriteUnlock,          //!< Identifies an instance of \ref GlobalWriteUnlock.
         InvokeBinaryOperator,       //!< Identifies an instance of \ref InvokeBinaryOperator.
         InvokeConversion,           //!< Identifies an instance of \ref InvokeConversion.
+        InvokeFunction,             //!< Identifies an instance of \ref InvokeFunction.
         Jump,                       //!< Identifies an instance of \ref Jump.
         LocalGet,                   //!< Identifies an instance of \ref LocalGet.
         LocalSet,                   //!< Identifies an instance of \ref LocalSet.
@@ -156,6 +158,7 @@ public:
             CASE(GlobalWriteUnlock);
             CASE(InvokeBinaryOperator);
             CASE(InvokeConversion);
+            CASE(InvokeFunction);
             CASE(Jump);
             CASE(LocalGet);
             CASE(LocalSet);

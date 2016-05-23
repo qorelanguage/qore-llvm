@@ -50,11 +50,19 @@ public:
      * \brief Identifies the type of the resolved symbol.
      */
     enum class Kind {
-        Global,     //!< Identifies a resolved global variable.
-        Local,      //!< Identifies a resolved local variable.
+        FunctionGroup,  //!< Identifies a resolved function group.
+        Global,         //!< Identifies a resolved global variable.
+        Local,          //!< Identifies a resolved local variable.
     };
 
 public:
+    /**
+     * \brief Creates an instance representing a function group.
+     * \param fg the resolved function group
+     */
+    explicit Symbol(const FunctionGroupInfo &fg) : kind(Kind::FunctionGroup), ptr(&fg) {
+    }
+
     /**
      * \brief Creates an instance representing a global variable.
      * \param gv the resolved global variable
@@ -75,6 +83,17 @@ public:
      */
     Kind getKind() const {
         return kind;
+    }
+
+    /**
+     * \brief Returns the resolved symbol as a function group.
+     *
+     * This method can be used only if \ref getKind() returns \ref Kind::FunctionGroup.
+     * \return the resolved symbol as a function group
+     */
+    const FunctionGroupInfo &asFunctionGroup() const {
+        assert(kind == Kind::FunctionGroup);
+        return *static_cast<const FunctionGroupInfo *>(ptr);
     }
 
     /**

@@ -40,6 +40,8 @@ namespace sem {
 
 class AssignmentExpression;
 class CompoundAssignmentExpression;
+class FunctionCallExpression;
+class FunctionGroupExpression;
 class GlobalVariableRefExpression;
 class IntLiteralExpression;
 class InvokeBinaryOperatorExpression;
@@ -61,6 +63,8 @@ public:
     enum class Kind {
         Assignment,             //!< Identifies an instance of \ref AssignmentExpression.
         CompoundAssignment,     //!< Identifies an instance of \ref CompoundAssignmentExpression.
+        FunctionCall,           //!< Identifies an instance of \ref FunctionCallExpression.
+        FunctionGroup,          //!< Identifies an instance of \ref FunctionGroupExpression.
         GlobalVariableRef,      //!< Identifies an instance of \ref GlobalVariableRefExpression.
         IntLiteral,             //!< Identifies an instance of \ref IntLiteralExpression.
         InvokeBinaryOperator,   //!< Identifies an instance of \ref InvokeBinaryOperatorExpression.
@@ -103,6 +107,8 @@ public:
         switch (getKind()) {
             CASE(Assignment);
             CASE(CompoundAssignment);
+            CASE(FunctionCall);
+            CASE(FunctionGroup);
             CASE(GlobalVariableRef);
             CASE(IntLiteral);
             CASE(InvokeBinaryOperator);

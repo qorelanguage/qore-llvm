@@ -137,6 +137,15 @@ public:
         return util::IteratorRange<LocalVariableIterator>(locals);
     }
 
+    /**
+     * \brief Returns false if it is guaranteed that the function cannot throw an exception.
+     * \return false if it is guaranteed that the function cannot throw an exception
+     */
+    bool canThrow() const {
+        //TODO Function::canThrow()
+        return true;
+    }
+
 private:
     Function(const Function &) = delete;
     Function(Function &&) = delete;

@@ -66,7 +66,7 @@ public:
 
     /**
      * \brief Returns the destination temporary.
-     * @return the destination temporary
+     * \return the destination temporary
      */
     Temp getDest() const {
         return dest;
@@ -74,7 +74,7 @@ public:
 
     /**
      * \brief Returns the binary operator.
-     * @return the binary operator
+     * \return the binary operator
      */
     const BinaryOperator &getOperator() const {
         return op;
@@ -82,7 +82,7 @@ public:
 
     /**
      * \brief Returns the temporary holding the left operand.
-     * @return the temporary holding the left operand
+     * \return the temporary holding the left operand
      */
     Temp getLeft() const {
         return left;
@@ -90,7 +90,7 @@ public:
 
     /**
      * \brief Returns the temporary holding the right operand.
-     * @return the temporary holding the right operand
+     * \return the temporary holding the right operand
      */
     Temp getRight() const {
         return right;

@@ -75,7 +75,7 @@ protected:
     /**
      * \brief Writes a textual representation to an output stream.
      * \param os the output stream
-     * @return the output stream
+     * \return the output stream
      */
     virtual std::ostream &writeToLog(std::ostream &os) const {
         return os << "abstract";

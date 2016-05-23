@@ -149,6 +149,14 @@ public:
                 << ", " << temp(ins.getArg());
     }
 
+    void visit(const InvokeFunction &ins) {
+        //FIXME dump function name and signature
+        os << "InvokeFunction " << &ins.getFunction() << " " << temp(ins.getDest());
+        for (auto &arg : ins.getArgs()) {
+            os << ", " << temp(arg);
+        }
+    }
+
     void visit(const Jump &ins) {
         os << "Jump " << block(ins.getDest());
     }

@@ -25,76 +25,63 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the InvokeConversion instruction.
+/// \brief FunctionGroupExpression definition.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_CORE_CODE_INVOKECONVERSION_H_
-#define INCLUDE_QORE_CORE_CODE_INVOKECONVERSION_H_
+#ifndef INCLUDE_QORE_COMP_SEM_EXPR_FUNCTIONGROUPEXPRESSION_H_
+#define INCLUDE_QORE_COMP_SEM_EXPR_FUNCTIONGROUPEXPRESSION_H_
 
-#include "qore/core/Conversion.h"
-#include "qore/core/code/Instruction.h"
-#include "qore/core/code/Temp.h"
+#include "qore/comp/sem/FunctionGroupInfo.h"
+#include "qore/comp/sem/expr/Expression.h"
 
 namespace qore {
-namespace code {
+namespace comp {
+namespace sem {
 
 /**
- * \brief Instruction that executes a conversion of a temporary value and stores the result in another temporary.
+ * \brief Represents a resolved function group.
  */
-class InvokeConversion : public Instruction {
+class FunctionGroupExpression : public Expression {
+
+public:
+    using Ptr = std::unique_ptr<FunctionGroupExpression>;           //!< Pointer type.
 
 public:
     /**
-     * \brief Constructor.
-     * \param dest the destination temporary
-     * \param conversion the conversion
-     * \param arg the temporary holding the value to convert
-     * \param lpad optional landing pad in case an exception occurs
+     * \brief Creates a new instance.
+     * \param functionGroup the function group represented by the expression
+     * \return the new instance
      */
-    InvokeConversion(Temp dest, const Conversion &conversion, Temp arg, const Block *lpad)
-            : dest(dest), conversion(conversion), arg(arg), lpad(lpad) {
+    static Ptr create(const FunctionGroupInfo &functionGroup) {
+        return Ptr(new FunctionGroupExpression(functionGroup));
     }
 
     Kind getKind() const override {
-        return Kind::InvokeConversion;
+        return Kind::FunctionGroup;
     }
 
-    const Block *getLpad() const override {
-        return lpad;
-    }
-
-    /**
-     * \brief Returns the destination temporary.
-     * \return the destination temporary
-     */
-    Temp getDest() const {
-        return dest;
+    const Type &getType() const override {
+        return Type::FunctionGroup;
     }
 
     /**
-     * \brief Returns the conversion.
-     * \return the conversion
+     * \brief Returns the function group represented by the expression.
+     * \return the function group represented by the expression
      */
-    const Conversion &getConversion() const {
-        return conversion;
-    }
-
-    /**
-     * \brief Returns the temporary holding the value to convert.
-     * \return the temporary holding the value to convert
-     */
-    Temp getArg() const {
-        return arg;
+    const FunctionGroupInfo &getFunctionGroup() const {
+        return functionGroup;
     }
 
 private:
-    Temp dest;
-    const Conversion &conversion;
-    Temp arg;
-    const Block *lpad;
+    explicit FunctionGroupExpression(const FunctionGroupInfo &functionGroup) : functionGroup(functionGroup) {
+    }
+
+private:
+    const FunctionGroupInfo &functionGroup;
 };
 
-} // namespace code
+} // namespace sem
+} // namespace comp
 } // namespace qore
 
-#endif // INCLUDE_QORE_CORE_CODE_INVOKECONVERSION_H_
+#endif // INCLUDE_QORE_COMP_SEM_EXPR_FUNCTIONGROUPEXPRESSION_H_

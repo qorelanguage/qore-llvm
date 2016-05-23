@@ -69,6 +69,14 @@ public:
     }
 
     /**
+     * \brief Returns the runtime object representing the function group.
+     * \return the runtime object representing the function group
+     */
+    FunctionGroup &getRt() const {
+        return rt;
+    }
+
+    /**
      * \brief Adds an overload to the group.
      * \param node the AST node of the function
      * \param location the location of the overload

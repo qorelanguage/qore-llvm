@@ -180,6 +180,12 @@ public:
         currentBlock->appendInvokeConversion(dest, conversion, arg, conversion.canThrow() ? getLandingPad() : nullptr);
     }
 
+    void createInvokeFunction(code::Temp dest, const Function &function, const std::vector<class TempHelper> &args) {
+        checkNotTerminated();
+        currentBlock->appendInvokeFunction(dest, function, std::vector<code::Temp>(args.begin(), args.end()),
+                function.canThrow() ? getLandingPad() : nullptr);
+    }
+
     void createJump(const code::Block &dest) {
         checkNotTerminated();
         currentBlock->appendJump(dest);
@@ -370,7 +376,7 @@ public:
      * \brief Creates an instance that allocates and deallocated the temporary automatically.
      * \param builder the code builder
      */
-    explicit TempHelper(Builder &builder) : builder(builder), temp(builder.getFreeTemp()),
+    explicit TempHelper(Builder &builder) : builder(&builder), temp(builder.getFreeTemp()),
             external(false), needsDeref(false) {
     }
 
@@ -379,7 +385,7 @@ public:
      * \param builder the code builder
      * \param temp the temporary
      */
-    TempHelper(Builder &builder, code::Temp temp) : builder(builder), temp(temp), external(true), needsDeref(false) {
+    TempHelper(Builder &builder, code::Temp temp) : builder(&builder), temp(temp), external(true), needsDeref(false) {
     }
 
     /**
@@ -389,13 +395,39 @@ public:
      * Deallocates the temporary unless it has been provided externally in the constructor.
      */
     ~TempHelper() {
-        if (needsDeref) {
-            builder.derefDone(temp);
-            builder.createRefDec(temp);
+        if (builder) {
+            if (needsDeref) {
+                builder->derefDone(temp);
+                builder->createRefDec(temp);
+            }
+            if (!external) {
+                builder->setTempFree(temp);
+            }
         }
-        if (!external) {
-            builder.setTempFree(temp);
-        }
+    }
+
+    /**
+     * \brief Move constructor.
+     * \param src the source instance
+     */
+    TempHelper(TempHelper &&src) : builder(src.builder), temp(src.temp), external(src.external),
+            needsDeref(src.needsDeref) {
+        src.builder = nullptr;
+    }
+
+    /**
+     * \brief Move assignment.
+     * \param src the source instance
+     * \return *this
+     */
+    TempHelper &operator=(TempHelper &&src) {
+        assert(!builder);
+        builder = src.builder;
+        temp = src.temp;
+        external = src.external;
+        needsDeref = src.needsDeref;
+        src.builder = nullptr;
+        return *this;
     }
 
     /**
@@ -410,9 +442,10 @@ public:
      * \param isRef true if the type of the value is reference-counted
      */
     void derefNeeded(bool isRef) {
+        assert(builder);
         if (isRef) {
             needsDeref = true;
-            builder.derefNeeded(temp);
+            builder->derefNeeded(temp);
         }
     }
 
@@ -420,8 +453,9 @@ public:
      * \brief Relinquishes the responsibility of dereferencing the temporary.
      */
     void derefDone() {
+        assert(builder);
         if (needsDeref) {
-            builder.derefDone(temp);
+            builder->derefDone(temp);
             needsDeref = false;
         }
     }
@@ -435,7 +469,11 @@ public:
     }
 
 private:
-    Builder &builder;
+    TempHelper(const TempHelper &) = delete;
+    TempHelper &operator=(const TempHelper &) = delete;
+
+private:
+    Builder *builder;
     code::Temp temp;
     bool external;
     bool needsDeref;

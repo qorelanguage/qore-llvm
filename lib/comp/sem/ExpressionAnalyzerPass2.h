@@ -31,6 +31,7 @@
 #ifndef LIB_COMP_SEM_EXPRESSIONANALYZERPASS2_H_
 #define LIB_COMP_SEM_EXPRESSIONANALYZERPASS2_H_
 
+#include <vector>
 #include "qore/comp/sem/Builder.h"
 #include "qore/comp/sem/expr/AssignmentExpression.h"
 #include "qore/comp/sem/expr/CompoundAssignmentExpression.h"
@@ -127,6 +128,21 @@ public:
         left.set(dest);
     }
 
+    void visit(const FunctionCallExpression &expr) {
+        std::vector<TempHelper> args;
+        for (const Expression &arg : expr.getArgs()) {
+            args.emplace_back(builder);
+            evaluate(args.back(), arg);
+            args.back().derefNeeded(refCounted(arg));
+        }
+        builder.createInvokeFunction(dest, expr.getFunction(), args);
+        dest.derefNeeded(expr.getFunction().getType().getReturnType().isRefCounted());
+    }
+
+    void visit(const FunctionGroupExpression &expr) {
+        QORE_UNREACHABLE("FunctionGroupExpression should be handled by pass 1");
+    }
+
     void visit(const GlobalVariableRefExpression &expr) {
         noSideEffect();
         const GlobalVariableInfo &gv = expr.getGlobalVariable();
@@ -218,7 +234,9 @@ private:
     }
 
     ~ExpressionAnalyzerPass2() {
-        dest.derefDone();
+        if (dest.isExternallyProvided()) {
+            dest.derefDone();
+        }
     }
 
     template<typename T>

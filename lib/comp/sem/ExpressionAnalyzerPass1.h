@@ -32,12 +32,15 @@
 #define LIB_COMP_SEM_EXPRESSIONANALYZERPASS1_H_
 
 #include <string>
+#include <vector>
 #include "qore/core/util/Debug.h"
 #include "qore/comp/ast/Expression.h"
 #include "qore/comp/ast/Closure.h"
 #include "qore/comp/sem/expr/Expression.h"
 #include "qore/comp/sem/expr/AssignmentExpression.h"
 #include "qore/comp/sem/expr/CompoundAssignmentExpression.h"
+#include "qore/comp/sem/expr/FunctionCallExpression.h"
+#include "qore/comp/sem/expr/FunctionGroupExpression.h"
 #include "qore/comp/sem/expr/GlobalVariableRefExpression.h"
 #include "qore/comp/sem/expr/IntLiteralExpression.h"
 #include "qore/comp/sem/expr/InvokeBinaryOperatorExpression.h"
@@ -117,12 +120,15 @@ public:
 
     Expression::Ptr visit(const ast::NameExpression &node) {
         Symbol s = scope.resolveSymbol(node.name);
-        if (s.getKind() == Symbol::Kind::Global) {
-            return GlobalVariableRefExpression::create(s.asGlobal());
-        } else if (s.getKind() == Symbol::Kind::Local) {
-            return LocalVariableRefExpression::create(s.asLocal());
-        } else {
-            QORE_NOT_IMPLEMENTED("");
+        switch (s.getKind()) {
+            case Symbol::Kind::FunctionGroup:
+                return FunctionGroupExpression::create(s.asFunctionGroup());
+            case Symbol::Kind::Global:
+                return GlobalVariableRefExpression::create(s.asGlobal());
+            case Symbol::Kind::Local:
+                return LocalVariableRefExpression::create(s.asLocal());
+            default:
+                QORE_NOT_IMPLEMENTED("");
         }
     }
 
@@ -163,11 +169,38 @@ public:
         }
     }
 
+    Expression::Ptr visit(const ast::CallExpression &node) {
+        std::vector<Expression::Ptr> args;
+        std::vector<const Type *> argTypes;
+        for (auto &arg : node.argList->data) {
+            Expression::Ptr e = eval(*arg);
+            argTypes.push_back(&e->getType());
+            args.push_back(std::move(e));
+        }
+        Expression::Ptr callee = eval(*node.callee);
+        if (callee->getKind() == Expression::Kind::FunctionGroup) {
+            //FIXME catch exception and report diagnostic
+            OverloadResolutionResult overload = static_cast<FunctionGroupExpression &>(*callee).getFunctionGroup()
+                    .getRt().resolveOverload(argTypes);
+            std::vector<const Conversion *> conversions = overload.getArgConversions();
+            assert(args.size() == conversions.size());
+            for (Index i = 0; i < args.size(); ++i) {
+                if (conversions[i]) {
+                    args[i] = InvokeConversionExpression::create(*conversions[i], std::move(args[i]));
+                }
+            }
+            return FunctionCallExpression::create(overload.getFunction(), std::move(args));
+            QORE_NOT_IMPLEMENTED("");
+        } else {
+            //the type of callee should be either a reference to code, closure, or any
+            QORE_NOT_IMPLEMENTED("");
+        }
+    }
+
     Expression::Ptr visit(const ast::ErrorExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::ListExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::HashExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::CastExpression &node) { QORE_NOT_IMPLEMENTED(""); }
-    Expression::Ptr visit(const ast::CallExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::UnaryExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::IndexExpression &node) { QORE_NOT_IMPLEMENTED(""); }
     Expression::Ptr visit(const ast::AccessExpression &node) { QORE_NOT_IMPLEMENTED(""); }

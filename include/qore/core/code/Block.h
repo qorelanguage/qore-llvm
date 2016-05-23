@@ -46,6 +46,7 @@
 #include "qore/core/code/GlobalWriteUnlock.h"
 #include "qore/core/code/InvokeBinaryOperator.h"
 #include "qore/core/code/InvokeConversion.h"
+#include "qore/core/code/InvokeFunction.h"
 #include "qore/core/code/Jump.h"
 #include "qore/core/code/LocalGet.h"
 #include "qore/core/code/LocalSet.h"
@@ -222,6 +223,17 @@ public:
      */
     void appendInvokeConversion(Temp dest, const Conversion &conversion, Temp arg, const Block *lpad) {
         append<InvokeConversion>(dest, conversion, arg, lpad);
+    }
+
+    /**
+     * \brief Appends an InvokeFunction instruction to the end of the block.
+     * \param dest the destination temporary
+     * \param function the function
+     * \param args the temporaries holding the arguments
+     * \param lpad optional landing pad in case an exception occurs
+     */
+    void appendInvokeFunction(Temp dest, const Function &function, std::vector<Temp> args, const Block *lpad) {
+        append<InvokeFunction>(dest, function, std::move(args), lpad);
     }
 
     /**
