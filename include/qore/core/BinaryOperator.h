@@ -77,7 +77,7 @@ public:
      * \brief Returns a reference to the function that implements the binary operator.
      * \return a reference to the function that implements the binary operator
      */
-    const Function &getFunction() const {
+    Function &getFunction() const {
         return function;
     }
 
@@ -114,7 +114,7 @@ public:
     }
 
 private:
-    BinaryOperator(std::string functionName, const Function &function, Kind kind, const Type &left, const Type &right,
+    BinaryOperator(std::string functionName, Function &function, Kind kind, const Type &left, const Type &right,
             const Type &result, bool throws) : functionName(std::move(functionName)), function(function),
             kind(kind), left(left), right(right), result(result), throws(throws) {
     }
@@ -133,7 +133,7 @@ private:
 
 private:
     std::string functionName;
-    const Function &function;
+    Function &function;
     Kind kind;
     const Type &left;
     const Type &right;

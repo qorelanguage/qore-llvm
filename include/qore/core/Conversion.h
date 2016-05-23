@@ -67,7 +67,7 @@ public:
      * \brief Returns a reference to the function that implements the conversion.
      * \return a reference to the function that implements the conversion
      */
-    const Function &getFunction() const {
+    Function &getFunction() const {
         return function;
     }
 
@@ -88,7 +88,7 @@ public:
     }
 
 private:
-    Conversion(std::string functionName, const Function &function, const Type &from, const Type &to, bool throws)
+    Conversion(std::string functionName, Function &function, const Type &from, const Type &to, bool throws)
             : functionName(std::move(functionName)), function(function), from(from), to(to), throws(throws) {
     }
 
@@ -107,7 +107,7 @@ private:
 
 private:
     std::string functionName;
-    const Function &function;
+    Function &function;
     const Type &from;
     const Type &to;
     bool throws;
