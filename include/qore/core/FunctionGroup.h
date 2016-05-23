@@ -130,7 +130,7 @@ public:
      * \return the resolved overload with conversions needed for arguments
      * \throws Exception when no function matches the argument types
      */
-    OverloadResolutionResult resolveOverload(const std::vector<const Type *> argTypes);
+    OverloadResolutionResult resolveOverload(const std::vector<const Type *> &argTypes);
 
 private:
     FunctionGroup(const FunctionGroup &) = delete;

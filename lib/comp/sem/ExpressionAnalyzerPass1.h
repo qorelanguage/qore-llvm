@@ -190,7 +190,6 @@ public:
                 }
             }
             return FunctionCallExpression::create(overload.getFunction(), std::move(args));
-            QORE_NOT_IMPLEMENTED("");
         } else {
             //the type of callee should be either a reference to code, closure, or any
             QORE_NOT_IMPLEMENTED("");

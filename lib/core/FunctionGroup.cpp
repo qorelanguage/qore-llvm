@@ -33,7 +33,7 @@
 
 namespace qore {
 
-OverloadResolutionResult FunctionGroup::resolveOverload(const std::vector<const Type *> argTypes) {
+OverloadResolutionResult FunctionGroup::resolveOverload(const std::vector<const Type *> &argTypes) {
     if (functions.size() != 1) {
         QORE_NOT_IMPLEMENTED("");
     }
