@@ -8,6 +8,7 @@ include(cmake/coverage.txt)
 include(cmake/doxygen.txt)
 include(cmake/cppcheck.txt)
 include(cmake/llvm.txt)
+include(cmake/ffi.txt)
 
 enable_testing()
 

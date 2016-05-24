@@ -9,3 +9,6 @@ add_library(core STATIC
     impl/Conversions.cpp
     util/Logging.cpp
 )
+
+target_link_libraries(core ${FFI_LIBRARY_PATH})
+target_include_directories(core PRIVATE ${FFI_INCLUDE_PATH})

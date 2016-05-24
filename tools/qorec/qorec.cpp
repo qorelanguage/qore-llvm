@@ -23,6 +23,7 @@
 //  DEALINGS IN THE SOFTWARE.
 //
 //------------------------------------------------------------------------------
+#include <ffi.h>
 #include <iostream>
 #include <string>
 #include "qore/core/util/Debug.h"
@@ -80,6 +81,22 @@ void test(bool file, std::string str) {
 
 /// \endcond NoDoxygen
 
+void ex() {
+    ffi_cif cif;
+    ffi_type *arg_types[1];
+
+    arg_types[0] = &ffi_type_pointer;
+    if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ffi_type_uint, arg_types) == FFI_OK) {
+        const char *arg1 = "Hello, World!";
+
+        void *arg_values[1];
+        arg_values[0] = &arg1;
+
+        ffi_arg rc;
+        ffi_call(&cif, FFI_FN(puts), &rc, arg_values);
+    }
+}
+
 int main(int argc, char *argv[]) {
 #ifdef QORE_LOGGING
     LogFilter logFilter;
@@ -107,6 +124,9 @@ f2("A", f(4), "C" + "D");
 
 //    test(true, argv[1]);
     test(false, src);
+
+
+    ex();
 
     return 0;
 }
