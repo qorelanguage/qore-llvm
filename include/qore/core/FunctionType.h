@@ -57,13 +57,6 @@ public:
     FunctionType(FunctionType &&src) = default;
 
     /**
-     * \brief Default move assignment.
-     * \param src the source instance
-     * \return this instance
-     */
-    FunctionType &operator=(FunctionType &&src) = default;
-
-    /**
      * \brief Returns the type of the function's return value.
      * \return the type of the function's return value
      */
@@ -112,8 +105,9 @@ private:
  * \param ft the function type
  * \return the output stream
  */
+/*
 template<typename OS>
-inline OS &operator<<(OS &os, const FunctionType &ft) {
+OS &operator<<(OS &os, const FunctionType &ft) {
     os << ft.getReturnType() << "(";
     for (Size i = 0; i < ft.getParameterCount(); ++i) {
         if (i > 0) {
@@ -122,6 +116,19 @@ inline OS &operator<<(OS &os, const FunctionType &ft) {
         os << ft.getParameterType(i);
     }
     return os << ")";
+}
+*/
+
+inline std::ostream& operator<<(std::ostream &os, const FunctionType &ft) {
+    os << ft.getReturnType() << "(";
+    for (Size i = 0; i < ft.getParameterCount(); ++i) {
+        if (i > 0) {
+            os << ", ";
+        }
+        os << ft.getParameterType(i);
+    }
+    os << ")";
+    return os;
 }
 
 } // namespace qore

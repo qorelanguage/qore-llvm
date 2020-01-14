@@ -5,6 +5,7 @@ add_library(core STATIC
     FunctionGroup.cpp
     SourceInfo.cpp
     String.cpp
+    code/Instruction.cpp
     impl/BinaryOperators.cpp
     impl/Conversions.cpp
     util/Logging.cpp

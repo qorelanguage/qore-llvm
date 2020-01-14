@@ -32,6 +32,7 @@
 #define INCLUDE_QORE_COMP_SEM_EXPR_COMPOUNDASSIGNMENTEXPRESSION_H_
 
 #include "qore/comp/sem/expr/Expression.h"
+#include "qore/core/BinaryOperator.h"
 
 namespace qore {
 namespace comp {

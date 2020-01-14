@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -25,25 +25,51 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the FunctionScope class.
+/// \brief Token functions.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_
-#define INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_
-
-#include <map>
-#include <string>
-#include <vector>
-#include "qore/core/Function.h"
-#include "qore/comp/ast/Routine.h"
-#include "qore/comp/sem/Scope.h"
+#include "qore/comp/sem/TempHelper.h"
+#include "qore/comp/sem/Builder.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
+TempHelper::TempHelper(Builder &builder) : builder(&builder), temp(builder.getFreeTemp()),
+        external(false), needsDeref(false) {
+}
+
+TempHelper::~TempHelper() {
+    if (builder) {
+        if (needsDeref) {
+            builder->derefDone(temp);
+            builder->createRefDec(temp);
+        }
+        if (!external) {
+            builder->setTempFree(temp);
+        }
+    }
+}
+
+void TempHelper::derefNeeded(bool isRef) {
+    assert(builder);
+    if (isRef) {
+        needsDeref = true;
+        builder->derefNeeded(temp);
+    }
+}
+
+/**
+ * \brief Relinquishes the responsibility of dereferencing the temporary.
+ */
+void TempHelper::derefDone() {
+    assert(builder);
+    if (needsDeref) {
+        builder->derefDone(temp);
+        needsDeref = false;
+    }
+}
+
 } // namespace sem
 } // namespace comp
 } // namespace qore
-
-#endif // INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_

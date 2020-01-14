@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -33,7 +33,7 @@
 
 #include <memory>
 #include <vector>
-#include "qore/core/code/Branch.h"
+#include "qore/core/code/Instruction.h"
 #include "qore/core/code/ConstInt.h"
 #include "qore/core/code/ConstNothing.h"
 #include "qore/core/code/ConstString.h"

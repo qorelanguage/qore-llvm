@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -37,6 +37,8 @@
 namespace qore {
 namespace comp {
 namespace sem {
+
+class FunctionGroupInfo;
 
 /**
  * \brief Represents a resolved function group.

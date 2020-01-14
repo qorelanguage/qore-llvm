@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -81,22 +81,7 @@ public:
      * \tparam V the type of the visitor
      */
     template<typename V>
-    typename V::ReturnType accept(V &visitor) const {
-        /// \cond NoDoxygen
-        #define CASE(K) case Kind::K:   return visitor.visit(static_cast<const K ## Statement &>(*this))
-        /// \endcond NoDoxygen
-        switch (getKind()) {
-            CASE(Compound);
-            CASE(Expression);
-            CASE(GlobalVariableInitialization);
-            CASE(If);
-            CASE(Return);
-            CASE(Try);
-            default:
-                QORE_UNREACHABLE("Invalid Statement::Kind: " << static_cast<int>(getKind()));
-        }
-        #undef CASE
-    }
+    typename V::ReturnType accept(V &visitor) const;
 
 protected:
     Statement() = default;
@@ -107,6 +92,39 @@ private:
     Statement &operator=(const Statement &) = delete;
     Statement &operator=(Statement &&) = delete;
 };
+
+} // namespace sem
+} // namespace comp
+} // namespace qore
+
+#include "qore/comp/sem/stmt/CompoundStatement.h"
+#include "qore/comp/sem/stmt/ExpressionStatement.h"
+#include "qore/comp/sem/stmt/ReturnStatement.h"
+#include "qore/comp/sem/stmt/GlobalVariableInitializationStatement.h"
+#include "qore/comp/sem/stmt/IfStatement.h"
+#include "qore/comp/sem/stmt/TryStatement.h"
+
+namespace qore {
+namespace comp {
+namespace sem {
+
+template<typename V>
+typename V::ReturnType Statement::accept(V &visitor) const {
+    /// \cond NoDoxygen
+    #define CASE(K) case Kind::K:   return visitor.visit(static_cast<const K ## Statement &>(*this))
+    /// \endcond NoDoxygen
+    switch (getKind()) {
+        CASE(Compound);
+        CASE(Expression);
+        CASE(GlobalVariableInitialization);
+        CASE(If);
+        CASE(Return);
+        CASE(Try);
+        default:
+            QORE_UNREACHABLE("Invalid Statement::Kind: " << static_cast<int>(getKind()));
+    }
+    #undef CASE
+}
 
 } // namespace sem
 } // namespace comp

@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -33,12 +33,21 @@
 
 #include "qore/core/Type.h"
 #include "qore/comp/ast/Type.h"
+#include "qore/core/Function.h"
+#include "qore/comp/ast/Routine.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/LocalVariableInfo.h"
+#include "qore/comp/sem/stmt/Statement.h"
 
 namespace qore {
+
+class FunctionGroup;
+
 namespace comp {
 namespace sem {
+
+class FunctionGroupInfo;
+class GlobalVariableInfo;
 
 /**
  * \brief Represents the result of symbol resolution.
@@ -187,6 +196,115 @@ private:
     Scope(Scope &&) = delete;
     Scope &operator=(const Scope &) = delete;
     Scope &operator=(Scope &&) = delete;
+};
+
+class Core;
+
+/**
+ * \brief Describes a function during semantic analysis and implements its scope.
+ */
+class FunctionScope : public Scope {
+
+public:
+    using Ptr = std::unique_ptr<FunctionScope>;     //!< Pointer type.
+
+public:
+    /**
+     * \brief Constructor.
+     * \param rt the runtime object representing the function
+     * \param core the shared state of the analyzer
+     * \param parent the parent namespace scope
+     * \param node the AST node
+     */
+    FunctionScope(Function &rt, Core &core, Scope &parent, ast::Routine &node);
+
+    const Type &resolveType(const ast::Type &node) const override;
+
+    LocalVariableInfo &createLocalVariable(String::Ref name, SourceLocation location, const Type &type) override;
+
+    Symbol resolveSymbol(const ast::Name &name) const override;
+
+    LocalVariableInfo &declareLocalVariable(String::Ref name, SourceLocation location, const Type &type) override {
+        QORE_UNREACHABLE("");
+    }
+
+    const Type &getReturnType() const override {
+        return rt.getType().getReturnType();
+    }
+
+    /**
+     * \brief Performs the analysis of the function's body, i.e. translation to the \ref qore::code representation.
+     * \param initializers optional initializer statements to prepend before the function's body
+     */
+    void analyze(std::vector<Statement::Ptr> *initializers = nullptr);
+
+private:
+    Function &rt;
+    Core &core;
+    Scope &parent;
+    ast::Routine &node;
+    std::vector<LocalVariableInfo::Ptr> locals;
+    std::map<String::Ref, LocalVariableInfo *> args;
+};
+
+/**
+ * \brief Describes a group of function overloads during semantic analysis.
+ */
+class FunctionGroupInfo {
+
+public:
+    using Ptr = std::unique_ptr<FunctionGroupInfo>;     //!< Pointer type.
+
+public:
+    /**
+     * \brief Constructor.
+     * \param rt the runtime object representing the group of function overloads
+     * \param core the shared state of the analyzer
+     * \param parent the parent namespace scope
+     * \param location the location of the (first) declaration
+     */
+    FunctionGroupInfo(FunctionGroup &rt, Core &core, Scope &parent, SourceLocation location)
+            : rt(rt), core(core), parent(parent), location(location) {
+    }
+
+    /**
+     * \brief Returns the location of the first declaration.
+     * \return the location of the first declaration
+     */
+    SourceLocation getLocation() const {
+        return location;
+    }
+
+    /**
+     * \brief Returns the runtime object representing the function group.
+     * \return the runtime object representing the function group
+     */
+    FunctionGroup &getRt() const {
+        return rt;
+    }
+
+    /**
+     * \brief Adds an overload to the group.
+     * \param node the AST node of the function
+     * \param location the location of the overload
+     */
+    void addOverload(ast::Routine &node, SourceLocation location);
+
+    /**
+     * \brief Resolves the types of the overloads and check for uniqueness.
+     */
+    void pass2();
+
+private:
+    void checkOverload(FunctionType &type);
+
+private:
+    FunctionGroup &rt;
+    Core &core;
+    Scope &parent;
+    SourceLocation location;
+    std::vector<std::pair<ast::Routine *, SourceLocation>> queue;
+    std::vector<FunctionScope::Ptr> functions;
 };
 
 } // namespace sem

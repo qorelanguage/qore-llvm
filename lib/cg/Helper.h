@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -32,6 +32,7 @@
 #define LIB_CG_HELPER_H_
 
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
@@ -39,6 +40,8 @@
 #include "llvm/IR/Module.h"
 #include "qore/core/util/Debug.h"
 #include "qore/core/util/Util.h"
+#include "qore/core/Conversion.h"
+#include "qore/core/BinaryOperator.h"
 
 namespace qore {
 namespace cg {
@@ -47,7 +50,7 @@ namespace cg {
 class Helper {
 
 public:
-    Helper() : ctx(llvm::getGlobalContext()) {
+    Helper() {
         module = util::make_unique<llvm::Module>("Q", ctx);
 
         //basic ("C") types
@@ -56,7 +59,12 @@ public:
         lt_bool = llvm::Type::getInt1Ty(ctx);
         lt_char_ptr = llvm::Type::getInt8PtrTy(ctx);
         lt_int32 = llvm::Type::getInt32Ty(ctx);
-        lt_exc = llvm::StructType::get(lt_char_ptr, lt_int32, nullptr);
+        {
+            std::vector<llvm::Type*> members;
+            members.push_back(lt_char_ptr);
+            members.push_back(lt_int32);
+            lt_exc = llvm::StructType::get(ctx, members);
+        }
 
         //Qore core types
         lt_qint = llvm::Type::getInt64Ty(ctx);
@@ -171,7 +179,9 @@ public:
     }
 
 public:
-    llvm::LLVMContext &ctx;
+    static llvm::LLVMContext myGlobalContext;
+
+    llvm::LLVMContext &ctx = myGlobalContext;
     std::unique_ptr<llvm::Module> module;
 
     ///\name Types

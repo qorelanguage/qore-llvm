@@ -40,6 +40,9 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+class Core;
+class NamespaceScope;
+
 /**
  * \brief Describes a global variable during semantic analysis.
  */

@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -140,39 +140,7 @@ public:
      * \tparam V the type of the visitor
      */
     template<typename V>
-    typename V::ReturnType accept(V &visitor) const {
-        /// \cond NoDoxygen
-        #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K &>(*this));
-        /// \endcond NoDoxygen
-        switch (getKind()) {
-            CASE(Branch);
-            CASE(ConstInt);
-            CASE(ConstNothing);
-            CASE(ConstString);
-            CASE(GlobalGet);
-            CASE(GlobalInit);
-            CASE(GlobalReadLock);
-            CASE(GlobalReadUnlock);
-            CASE(GlobalSet);
-            CASE(GlobalWriteLock);
-            CASE(GlobalWriteUnlock);
-            CASE(InvokeBinaryOperator);
-            CASE(InvokeConversion);
-            CASE(InvokeFunction);
-            CASE(Jump);
-            CASE(LocalGet);
-            CASE(LocalSet);
-            CASE(RefDec);
-            CASE(RefDecNoexcept);
-            CASE(RefInc);
-            CASE(ResumeUnwind);
-            CASE(Ret);
-            CASE(RetVoid);
-            default:
-                QORE_UNREACHABLE("Invalid Instruction::Kind: " << static_cast<int>(getKind()));
-        }
-        #undef CASE
-    }
+    typename V::ReturnType accept(V &visitor) const;
 
 protected:
     /**
@@ -190,5 +158,76 @@ private:
 
 } // namespace code
 } // namespace qore
+
+#include "qore/core/code/Branch.h"
+#include "qore/core/code/ConstInt.h"
+#include "qore/core/code/ConstNothing.h"
+#include "qore/core/code/ConstString.h"
+#include "qore/core/code/GlobalGet.h"
+#include "qore/core/code/GlobalInit.h"
+#include "qore/core/code/GlobalReadLock.h"
+#include "qore/core/code/GlobalReadUnlock.h"
+#include "qore/core/code/GlobalSet.h"
+#include "qore/core/code/GlobalWriteLock.h"
+#include "qore/core/code/GlobalWriteUnlock.h"
+#include "qore/core/code/InvokeBinaryOperator.h"
+#include "qore/core/code/InvokeConversion.h"
+#include "qore/core/code/InvokeFunction.h"
+#include "qore/core/code/Jump.h"
+#include "qore/core/code/LocalGet.h"
+#include "qore/core/code/LocalSet.h"
+#include "qore/core/code/RefDec.h"
+#include "qore/core/code/RefDecNoexcept.h"
+#include "qore/core/code/RefInc.h"
+#include "qore/core/code/ResumeUnwind.h"
+#include "qore/core/code/Ret.h"
+#include "qore/core/code/RetVoid.h"
+
+namespace qore {
+namespace code {
+
+/**
+ * \brief Calls visitor's `visit()` method appropriate for the concrete type of the Instruction.
+ * \param visitor the visitor to call
+ * \return the value returned from the visitor
+ * \tparam V the type of the visitor
+ */
+template<typename V>
+typename V::ReturnType Instruction::accept(V &visitor) const {
+    /// \cond NoDoxygen
+    #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K &>(*this));
+    /// \endcond NoDoxygen
+    switch (getKind()) {
+        CASE(Branch);
+        CASE(ConstInt);
+        CASE(ConstNothing);
+        CASE(ConstString);
+        CASE(GlobalGet);
+        CASE(GlobalInit);
+        CASE(GlobalReadLock);
+        CASE(GlobalReadUnlock);
+        CASE(GlobalSet);
+        CASE(GlobalWriteLock);
+        CASE(GlobalWriteUnlock);
+        CASE(InvokeBinaryOperator);
+        CASE(InvokeConversion);
+        CASE(InvokeFunction);
+        CASE(Jump);
+        CASE(LocalGet);
+        CASE(LocalSet);
+        CASE(RefDec);
+        CASE(RefDecNoexcept);
+        CASE(RefInc);
+        CASE(ResumeUnwind);
+        CASE(Ret);
+        CASE(RetVoid);
+        default:
+            QORE_UNREACHABLE("Invalid Instruction::Kind: " << static_cast<int>(getKind()));
+    }
+    #undef CASE
+}
+} //namespace code
+} //namespace qore
+
 
 #endif // INCLUDE_QORE_CORE_CODE_INSTRUCTION_H_

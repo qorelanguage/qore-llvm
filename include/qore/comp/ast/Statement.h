@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -31,8 +31,9 @@
 #ifndef INCLUDE_QORE_COMP_AST_STATEMENT_H_
 #define INCLUDE_QORE_COMP_AST_STATEMENT_H_
 
+#include "qore/comp/ast/Node.h"
+
 #include <vector>
-#include "qore/comp/ast/Expression.h"
 
 namespace qore {
 namespace comp {
@@ -95,30 +96,7 @@ public:
      * \tparam V the type of the visitor
      */
     template<typename V>
-    typename V::ReturnType accept(V &visitor) const {
-        /// \cond NoDoxygen
-        #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Statement &>(*this))
-        /// \endcond NoDoxygen
-        switch (getKind()) {
-            CASE(Empty);
-            CASE(Expression);
-            CASE(Compound);
-            CASE(Return);
-            CASE(If);
-            CASE(Try);
-            CASE(Foreach);
-            CASE(Throw);
-            CASE(Simple);
-            CASE(ScopeGuard);
-            CASE(While);
-            CASE(DoWhile);
-            CASE(For);
-            CASE(Switch);
-            default:
-                QORE_UNREACHABLE("");
-        }
-        #undef CASE
-    }
+    typename V::ReturnType accept(V &visitor) const;
 };
 
 /**
@@ -160,6 +138,55 @@ private:
 };
 
 /**
+ * \brief Represents a block.
+ */
+class CompoundStatement : public Statement {
+
+public:
+    SourceLocation start;                                   //!< The location of the opening curly brace.
+    SourceLocation end;                                     //!< The location of the closing curly brace.
+    std::vector<Statement::Ptr> statements;                 //!< The statements in the block.
+
+public:
+    using Ptr = std::unique_ptr<CompoundStatement>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create() {
+        return Ptr(new CompoundStatement());
+    }
+
+    Kind getKind() const override {
+        return Kind::Compound;
+    }
+
+    SourceLocation getStart() const override {
+        return start;
+    }
+
+    SourceLocation getEnd() const override {
+        return end;
+    }
+
+private:
+    CompoundStatement() {
+    }
+};
+
+} // namespace ast
+} // namespace comp
+} // namespace qore
+
+#include "qore/comp/ast/Expression.h"
+
+namespace qore {
+namespace comp {
+namespace ast {
+
+/**
  * \brief Represents an expression statement.
  */
 class ExpressionStatement : public Statement {
@@ -196,45 +223,6 @@ public:
 
 private:
     ExpressionStatement() {
-    }
-};
-
-/**
- * \brief Represents a block.
- */
-class CompoundStatement : public Statement {
-
-public:
-    SourceLocation start;                                   //!< The location of the opening curly brace.
-    SourceLocation end;                                     //!< The location of the closing curly brace.
-    std::vector<Statement::Ptr> statements;                 //!< The statements in the block.
-
-public:
-    using Ptr = std::unique_ptr<CompoundStatement>;         //!< Pointer type.
-
-public:
-    /**
-     * \brief Allocates a new node.
-     * \return a unique pointer to the allocated node
-     */
-    static Ptr create() {
-        return Ptr(new CompoundStatement());
-    }
-
-    Kind getKind() const override {
-        return Kind::Compound;
-    }
-
-    SourceLocation getStart() const override {
-        return start;
-    }
-
-    SourceLocation getEnd() const override {
-        return end;
-    }
-
-private:
-    CompoundStatement() {
     }
 };
 
@@ -698,6 +686,32 @@ private:
     SwitchStatement() {
     }
 };
+
+template<typename V>
+typename V::ReturnType Statement::accept(V &visitor) const {
+    /// \cond NoDoxygen
+    #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Statement &>(*this))
+    /// \endcond NoDoxygen
+    switch (getKind()) {
+        CASE(Empty);
+        CASE(Expression);
+        CASE(Compound);
+        CASE(Return);
+        CASE(If);
+        CASE(Try);
+        CASE(Foreach);
+        CASE(Throw);
+        CASE(Simple);
+        CASE(ScopeGuard);
+        CASE(While);
+        CASE(DoWhile);
+        CASE(For);
+        CASE(Switch);
+        default:
+            QORE_UNREACHABLE("");
+    }
+    #undef CASE
+}
 
 } // namespace ast
 } // namespace comp

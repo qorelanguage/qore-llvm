@@ -38,6 +38,8 @@ namespace qore {
 namespace comp {
 namespace sem {
 
+class GlobalVariableInfo;
+
 /**
  * \brief Represents an expression that references a global variable.
  */
@@ -60,9 +62,7 @@ public:
         return Kind::GlobalVariableRef;
     }
 
-    const Type &getType() const override {
-        return globalVariable.getType();
-    }
+    const Type &getType() const override;
 
     /**
      * \brief Returns the global variable referenced by the expression.

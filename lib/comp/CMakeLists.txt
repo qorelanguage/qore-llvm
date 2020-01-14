@@ -11,13 +11,17 @@ add_library(comp STATIC
     Scanner.cpp
     SourceManager.cpp
     Token.cpp
+    ast/Closure.cpp
     sem/Analyzer.cpp
     sem/Builder.cpp
     sem/Core.cpp
+    sem/ExpressionAnalyzerPass1.cpp
     sem/FunctionGroupInfo.cpp
     sem/FunctionScope.cpp
     sem/GlobalVariableInfo.cpp
+    sem/GlobalVariableRefExpression.cpp
     sem/NamespaceScope.cpp
+    sem/TempHelper.cpp
 )
 
 target_link_libraries(comp

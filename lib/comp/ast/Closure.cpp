@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -25,58 +25,32 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the ClosureExpression AST node.
+/// \brief Closure functions.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_AST_CLOSURE_H_
-#define INCLUDE_QORE_COMP_AST_CLOSURE_H_
-
+#include "qore/comp/ast/Expression.h"
 #include "qore/comp/ast/Routine.h"
 
 namespace qore {
 namespace comp {
 namespace ast {
 
-/**
- * \brief Represents a closure - a routine that is also an expression.
- */
-class ClosureExpression : public Expression {
+ClosureExpression::Ptr ClosureExpression::create(std::unique_ptr<Routine> routine) {
+    return Ptr(new ClosureExpression(std::move(routine)));
+}
 
-public:
-    Routine::Ptr routine;                                   //!< The closure routine.
+SourceLocation ClosureExpression::getStart() const {
+    return routine->getStart();
+}
 
-public:
-    using Ptr = std::unique_ptr<ClosureExpression>;         //!< Pointer type.
+SourceLocation ClosureExpression::getEnd() const {
+    return routine->getEnd();
+}
 
-public:
-    /**
-     * \brief Allocates a new node.
-     * \param routine the closure routine
-     * \return a unique pointer to the allocated node
-     */
-    static Ptr create(Routine::Ptr routine) {
-        return Ptr(new ClosureExpression(std::move(routine)));
-    }
-
-    Kind getKind() const override {
-        return Kind::Closure;
-    }
-
-    SourceLocation getStart() const override {
-        return routine->getStart();
-    }
-
-    SourceLocation getEnd() const override {
-        return routine->getEnd();
-    }
-
-private:
-    explicit ClosureExpression(Routine::Ptr routine) : routine(std::move(routine)) {
-    }
-};
+// private function
+ClosureExpression::ClosureExpression(std::unique_ptr<Routine> routine) : routine(std::move(routine)) {
+}
 
 } // namespace ast
 } // namespace comp
 } // namespace qore
-
-#endif // INCLUDE_QORE_COMP_AST_CLOSURE_H_

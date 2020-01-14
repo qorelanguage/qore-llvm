@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -37,8 +37,10 @@
 #include "qore/core/Function.h"
 #include "qore/core/code/Block.h"
 #include "qore/core/util/Util.h"
+#include "qore/core/String.h"
 #include "qore/comp/sem/GlobalVariableInfo.h"
 #include "qore/comp/sem/LocalVariableInfo.h"
+#include "qore/comp/sem/TempHelper.h"
 
 namespace qore {
 namespace comp {
@@ -130,7 +132,7 @@ public:
         currentBlock->appendConstNothing(dest);
     }
 
-    void createConstString(code::Temp dest, qore::String &string) {
+    void createConstString(code::Temp dest, ::qore::String &string) {
         checkNotTerminated();
         currentBlock->appendConstString(dest, string);
     }
@@ -350,133 +352,6 @@ public:
 
 private:
     Function &f;
-};
-
-/**
- * \brief Helper class for handling temporary values.
- *
- * Basic usage is:
- * \code
- *     {
- *         TempHelper t1(builder);                              //allocates a temporary for t1
- *         //generate code that stores a value to t1
- *         t1.derefNeeded(type_of_t1_value.isRefCounted());     //makes sure that t1 is dereferenced
- *         //generate code that uses the value of t1
- *         //optionally call t1.derefDone() to take over the responsibility of dereferencing t1
- *     }                                                        //destructor dereferences and deallocates t1
- * \endcode
- *
- * The temporary can also be optionally provided externally (in the constructor) in which case the destructor
- * does not deallocate it.
- */
-class TempHelper {
-
-public:
-    /**
-     * \brief Creates an instance that allocates and deallocated the temporary automatically.
-     * \param builder the code builder
-     */
-    explicit TempHelper(Builder &builder) : builder(&builder), temp(builder.getFreeTemp()),
-            external(false), needsDeref(false) {
-    }
-
-    /**
-     * \brief Creates an instance that wraps an externally provided temporary.
-     * \param builder the code builder
-     * \param temp the temporary
-     */
-    TempHelper(Builder &builder, code::Temp temp) : builder(&builder), temp(temp), external(true), needsDeref(false) {
-    }
-
-    /**
-     * \brief Destructor.
-     *
-     * Dereferences the value if \ref derefNeeded() has been called with `true` but no \ref derefDone() has been called.
-     * Deallocates the temporary unless it has been provided externally in the constructor.
-     */
-    ~TempHelper() {
-        if (builder) {
-            if (needsDeref) {
-                builder->derefDone(temp);
-                builder->createRefDec(temp);
-            }
-            if (!external) {
-                builder->setTempFree(temp);
-            }
-        }
-    }
-
-    /**
-     * \brief Move constructor.
-     * \param src the source instance
-     */
-    TempHelper(TempHelper &&src) : builder(src.builder), temp(src.temp), external(src.external),
-            needsDeref(src.needsDeref) {
-        src.builder = nullptr;
-    }
-
-    /**
-     * \brief Move assignment.
-     * \param src the source instance
-     * \return *this
-     */
-    TempHelper &operator=(TempHelper &&src) {
-        assert(!builder);
-        builder = src.builder;
-        temp = src.temp;
-        external = src.external;
-        needsDeref = src.needsDeref;
-        src.builder = nullptr;
-        return *this;
-    }
-
-    /**
-     * \brief Implicit conversion to \ref code::Temp.
-     */
-    operator code::Temp() const {
-        return temp;
-    }
-
-    /**
-     * \brief Adds the temporary value to the list of values that need their reference count decreased.
-     * \param isRef true if the type of the value is reference-counted
-     */
-    void derefNeeded(bool isRef) {
-        assert(builder);
-        if (isRef) {
-            needsDeref = true;
-            builder->derefNeeded(temp);
-        }
-    }
-
-    /**
-     * \brief Relinquishes the responsibility of dereferencing the temporary.
-     */
-    void derefDone() {
-        assert(builder);
-        if (needsDeref) {
-            builder->derefDone(temp);
-            needsDeref = false;
-        }
-    }
-
-    /**
-     * \brief Returns true if the temporary has been provided externally in the constructor.
-     * \return true if the temporary has been provided externally in the constructor
-     */
-    bool isExternallyProvided() const {
-        return external;
-    }
-
-private:
-    TempHelper(const TempHelper &) = delete;
-    TempHelper &operator=(const TempHelper &) = delete;
-
-private:
-    Builder *builder;
-    code::Temp temp;
-    bool external;
-    bool needsDeref;
 };
 
 /**

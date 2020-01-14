@@ -131,7 +131,7 @@ private:
         llvm::Constant *val = llvm::ConstantDataArray::getString(helper.ctx, str, true);
         llvm::GlobalVariable *gv = new llvm::GlobalVariable(*helper.module, val->getType(), true,
                 llvm::GlobalValue::PrivateLinkage, val, name);
-        gv->setUnnamedAddr(true);
+        gv->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
         return builder.CreateConstGEP2_32(nullptr, gv, 0, 0);
     }
 
@@ -167,7 +167,7 @@ void CodeGen::process(Env &env) {
     Compiler compiler;
     std::unique_ptr<llvm::Module> module = compiler.compile(env);
 
-    module->dump();
+    module->print(llvm::errs(), nullptr);
 
     std::cerr.flush();
     llvm::raw_os_ostream sss(std::cerr);

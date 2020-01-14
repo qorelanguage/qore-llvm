@@ -44,17 +44,23 @@ public:
     LineTestOutput &operator<<(const std::string &str);
     LineTestOutput &operator<<(int i);
 
+/*
     template<typename T>
     LineTestOutput &operator<<(const T &t) {
         return *this << static_cast<std::ostringstream&>(std::ostringstream().flush() << t).str();
     }
-
+*/
     void flush();
 
 private:
     class LineTest &lineTest;
     std::string buffer;
 };
+
+template<typename T>
+LineTestOutput &operator<<(LineTestOutput& os, const T &t) {
+    return os << static_cast<std::ostringstream&>(std::ostringstream().flush() << t).str();
+}
 
 class LineTestDiagProcessor : public qore::comp::IDiagProcessor {
 public:

@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -100,28 +100,7 @@ public:
      * \tparam V the type of the visitor
      */
     template<typename V>
-    typename V::ReturnType accept(V &visitor) const {
-        /// \cond NoDoxygen
-        #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Expression &>(*this));
-        /// \endcond NoDoxygen
-        switch (getKind()) {
-            CASE(Assignment);
-            CASE(CompoundAssignment);
-            CASE(FunctionCall);
-            CASE(FunctionGroup);
-            CASE(GlobalVariableRef);
-            CASE(IntLiteral);
-            CASE(InvokeBinaryOperator);
-            CASE(InvokeConversion);
-            CASE(LocalVariableInit);
-            CASE(LocalVariableRef);
-            CASE(NothingLiteral);
-            CASE(StringLiteralRef);
-            default:
-                QORE_UNREACHABLE("Invalid Expression::Kind: " << static_cast<int>(getKind()));
-        }
-        #undef CASE
-    }
+    typename V::ReturnType accept(V &visitor) const;
 
 protected:
     Expression() = default;
@@ -132,6 +111,51 @@ private:
     Expression &operator=(const Expression &) = delete;
     Expression &operator=(Expression &&) = delete;
 };
+
+} // namespace sem
+} // namespace comp
+} // namespace qore
+
+#include "qore/comp/sem/expr/AssignmentExpression.h"
+#include "qore/comp/sem/expr/CompoundAssignmentExpression.h"
+#include "qore/comp/sem/expr/FunctionCallExpression.h"
+#include "qore/comp/sem/expr/FunctionGroupExpression.h"
+#include "qore/comp/sem/expr/GlobalVariableRefExpression.h"
+#include "qore/comp/sem/expr/IntLiteralExpression.h"
+#include "qore/comp/sem/expr/InvokeBinaryOperatorExpression.h"
+#include "qore/comp/sem/expr/InvokeConversionExpression.h"
+#include "qore/comp/sem/expr/LocalVariableInitExpression.h"
+#include "qore/comp/sem/expr/LocalVariableRefExpression.h"
+#include "qore/comp/sem/expr/NothingLiteralExpression.h"
+#include "qore/comp/sem/expr/StringLiteralRefExpression.h"
+
+namespace qore {
+namespace comp {
+namespace sem {
+
+template<typename V>
+typename V::ReturnType Expression::accept(V &visitor) const {
+    /// \cond NoDoxygen
+    #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Expression &>(*this));
+    /// \endcond NoDoxygen
+    switch (getKind()) {
+        CASE(Assignment);
+        CASE(CompoundAssignment);
+        CASE(FunctionCall);
+        CASE(FunctionGroup);
+        CASE(GlobalVariableRef);
+        CASE(IntLiteral);
+        CASE(InvokeBinaryOperator);
+        CASE(InvokeConversion);
+        CASE(LocalVariableInit);
+        CASE(LocalVariableRef);
+        CASE(NothingLiteral);
+        CASE(StringLiteralRef);
+        default:
+            QORE_UNREACHABLE("Invalid Expression::Kind: " << static_cast<int>(getKind()));
+    }
+    #undef CASE
+}
 
 } // namespace sem
 } // namespace comp

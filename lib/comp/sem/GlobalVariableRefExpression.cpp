@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -25,25 +25,20 @@
 //------------------------------------------------------------------------------
 ///
 /// \file
-/// \brief Defines the FunctionScope class.
+/// \brief Implements the GlobalVariableInfo class.
 ///
 //------------------------------------------------------------------------------
-#ifndef INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_
-#define INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_
-
-#include <map>
-#include <string>
-#include <vector>
-#include "qore/core/Function.h"
-#include "qore/comp/ast/Routine.h"
-#include "qore/comp/sem/Scope.h"
+#include "qore/comp/sem/expr/Expression.h"
+#include "qore/comp/sem/GlobalVariableInfo.h"
 
 namespace qore {
 namespace comp {
 namespace sem {
 
+const Type& GlobalVariableRefExpression::getType() const {
+    return globalVariable.getType();
+}
+
 } // namespace sem
 } // namespace comp
 } // namespace qore
-
-#endif // INCLUDE_QORE_COMP_SEM_FUNCTIONSCOPE_H_

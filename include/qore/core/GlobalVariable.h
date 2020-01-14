@@ -35,6 +35,7 @@
 #include "qore/core/SourceLocation.h"
 #include "qore/core/Type.h"
 #include "qore/core/Value.h"
+#include "qore/core/Any.h"
 
 namespace qore {
 

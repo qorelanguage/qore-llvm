@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies, s.r.o.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -36,7 +36,7 @@
 #include "qore/core/util/Util.h"
 #include "qore/comp/ast/Script.h"
 #include "qore/comp/ast/Class.h"
-#include "qore/comp/ast/Closure.h"
+#include "qore/comp/ast/Expression.h"
 #include "qore/comp/Context.h"
 #include "qore/comp/DiagManager.h"
 #include "qore/comp/Token.h"

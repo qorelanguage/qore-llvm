@@ -65,6 +65,13 @@ void FunctionGroupInfo::checkOverload(FunctionType &type) {
     }
 }
 
+void FunctionGroupInfo::addOverload(ast::Routine &node, SourceLocation location) {
+    if (queue.empty()) {
+        core.addToQueue(*this);
+    }
+    queue.emplace_back(&node, location);
+}
+
 } // namespace sem
 } // namespace comp
 } // namespace qore

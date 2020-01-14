@@ -2,7 +2,7 @@
 //
 //  Qore Programming Language
 //
-//  Copyright (C) 2015 Qore Technologies
+//  Copyright (C) 2015 - 2020 Qore Technologies
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -109,35 +109,7 @@ public:
      * \tparam V the type of the visitor
      */
     template<typename V>
-    typename V::ReturnType accept(V &visitor) const {
-        /// \cond NoDoxygen
-        #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Expression &>(*this))
-        /// \endcond NoDoxygen
-        switch (getKind()) {
-            CASE(Error);
-            CASE(Literal);
-            CASE(Name);
-            CASE(List);
-            CASE(Hash);
-            CASE(VarDecl);
-            CASE(Cast);
-            CASE(Call);
-            CASE(Unary);
-            CASE(Index);
-            CASE(Access);
-            CASE(New);
-            CASE(Binary);
-            CASE(Instanceof);
-            CASE(Conditional);
-            CASE(Assignment);
-            CASE(ListOperation);
-            CASE(Regex);
-            CASE(Closure);
-            default:
-                QORE_UNREACHABLE("");
-        }
-        #undef CASE
-    }
+    typename V::ReturnType accept(V &visitor) const;
 };
 
 /**
@@ -934,6 +906,70 @@ private:
     RegexExpression(Expression::Ptr left, Token op, Token regex) : left(std::move(left)), op(op), regex(regex) {
     }
 };
+
+class Routine;
+
+/**
+ * \brief Represents a closure - a routine that is also an expression.
+ */
+class ClosureExpression : public Expression {
+
+public:
+    std::unique_ptr<Routine> routine;                                   //!< The closure routine.
+
+public:
+    using Ptr = std::unique_ptr<ClosureExpression>;         //!< Pointer type.
+
+public:
+    /**
+     * \brief Allocates a new node.
+     * \param routine the closure routine
+     * \return a unique pointer to the allocated node
+     */
+    static Ptr create(std::unique_ptr<Routine> routine);
+
+    Kind getKind() const override {
+        return Kind::Closure;
+    }
+
+    SourceLocation getStart() const override;
+
+    SourceLocation getEnd() const override;
+
+private:
+    explicit ClosureExpression(std::unique_ptr<Routine> routine);
+};
+
+template<typename V>
+typename V::ReturnType Expression::accept(V &visitor) const {
+    /// \cond NoDoxygen
+    #define CASE(K) case Kind::K: return visitor.visit(static_cast<const K ## Expression &>(*this))
+    /// \endcond NoDoxygen
+    switch (getKind()) {
+        CASE(Error);
+        CASE(Literal);
+        CASE(Name);
+        CASE(List);
+        CASE(Hash);
+        CASE(VarDecl);
+        CASE(Cast);
+        CASE(Call);
+        CASE(Unary);
+        CASE(Index);
+        CASE(Access);
+        CASE(New);
+        CASE(Binary);
+        CASE(Instanceof);
+        CASE(Conditional);
+        CASE(Assignment);
+        CASE(ListOperation);
+        CASE(Regex);
+        CASE(Closure);
+        default:
+            QORE_UNREACHABLE("");
+    }
+    #undef CASE
+}
 
 } // namespace ast
 } // namespace comp
